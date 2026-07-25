@@ -1908,31 +1908,33 @@ function mostrarSubmenu(tipo){
             class="module-card"
             onclick="mostrarABMBancos('menu')">
 
-            Bancos
+                Bancos
 
             </button>
 
-           <button class="module-card">
+            <button
+            class="module-card"
+            onclick="mostrarABMCentrosOperativos('menu')">
 
-            Centros Operativos
-
-            </button>
-
-            <button class="module-card">
-
-            Proveedores
+                Centros Operativos
 
             </button>
 
             <button class="module-card">
 
-            Tipos de gasto
+                Proveedores
 
             </button>
 
             <button class="module-card">
 
-            Relacionados con
+                Tipos de gasto
+
+            </button>
+
+            <button class="module-card">
+
+                Relacionados con
 
             </button>
 
@@ -2001,6 +2003,156 @@ function mostrarModificarEmpresa(){
     document.getElementById(
          "botonera-modificar"
     ).style.display = "flex";
+
+}
+
+async function mostrarABMCentrosOperativos(origen = "menu"){
+
+    origenABM = origen;
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM = null;
+
+    }
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+        while(contenidoOperativo.firstChild){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+    const respuesta = await fetch(
+        `/listar-centros-operativos/?empresa=${empresa}`
+    );
+
+    if(!respuesta.ok){
+
+        alert(
+            "No se pudo cargar el módulo de centros operativos."
+        );
+
+        return;
+
+    }
+
+    const datos =
+        await respuesta.json();
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "none";
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+    iniciarABMCentrosOperativos();
+
+}
+
+function volverDesdeABMCentrosOperativos(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        actualizarCentroOperativoDelRegistro();
+
+        return;
+
+    }
+
+    contenidoAnteriorABM = null;
+
+    mostrarSubmenu("abms");
+
+}
+
+async function actualizarCentroOperativoDelRegistro(){
+
+    if(
+        typeof cargarSelectCentrosOperativos !==
+        "function"
+    ){
+
+        return;
+
+    }
+
+    await cargarSelectCentrosOperativos();
+
+    const select =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    if(
+        select &&
+        ultimoCentroOperativoCreado
+    ){
+
+        const opcion =
+            select.querySelector(
+                `option[value="${ultimoCentroOperativoCreado}"]`
+            );
+
+        if(opcion){
+
+            select.value =
+                ultimoCentroOperativoCreado;
+
+        }
+
+    }
+
+    ultimoCentroOperativoCreado =
+        null;
 
 }
 
@@ -2615,12 +2767,13 @@ gap:10px;
 ">
 
 <select
+id="centroOperativoRegistro"
 class="input-box"
 style="flex:1;">
 
-<option>
+<option value="">
 
-Dirección Real
+Seleccione...
 
 </option>
 
@@ -2628,7 +2781,8 @@ Dirección Real
 
 <button
 type="button"
-class="action-btn">
+class="action-btn"
+onclick="mostrarABMCentrosOperativos('registro')">
 
 +
 
@@ -3100,6 +3254,114 @@ gap:12px;
 `;
 
 cargarSelectBancos();
+
+cargarSelectCentrosOperativos();
+
+}
+
+async function cargarSelectCentrosOperativos(){
+
+    const empresaInput =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const select =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    if(!empresaInput || !select){
+
+        return;
+
+    }
+
+    const empresa =
+        empresaInput.value;
+
+    if(!empresa){
+
+        return;
+
+    }
+
+    const valorAnterior =
+        select.value;
+
+    try{
+
+        const respuesta = await fetch(
+            `/listar-centros-operativos/?empresa=${encodeURIComponent(empresa)}`
+        );
+
+        if(!respuesta.ok){
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}`
+            );
+
+        }
+
+        const datos =
+            await respuesta.json();
+
+        select.innerHTML = `
+            <option value="">
+                Seleccione...
+            </option>
+        `;
+
+        if(!Array.isArray(datos.centros)){
+
+            console.error(
+                "La respuesta no contiene datos.centros:",
+                datos
+            );
+
+            return;
+
+        }
+
+        datos.centros.forEach(centro => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                String(centro.id);
+
+            option.textContent =
+                centro.nombre;
+
+            select.appendChild(
+                option
+            );
+
+        });
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando centros operativos:",
+            error
+        );
+
+    }
 
 }
 
@@ -3773,6 +4035,7 @@ Sí
 
 <script src="{% static 'js/bancos.js' %}"></script>
 
-</body>
+<script src="{% static 'js/centros_operativos.js' %}"></script>
 
+</body>
 </html>

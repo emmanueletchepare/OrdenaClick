@@ -81,18 +81,28 @@
         ">
 
             <button
-            class="action-btn">
+            type="button"
+            class="action-btn"
+            onclick="modificarBanco(
+                '{{ banco.id }}',
+                '{{ banco.nombre|escapejs }}'
+            )">
 
                 Modificar
 
             </button>
 
             <button
+            type="button"
             class="action-btn"
             style="
             background:#7f1d1d;
             border-color:#991b1b;
-            ">
+            "
+            onclick="eliminarBanco(
+                '{{ banco.id }}',
+                '{{ banco.nombre|escapejs }}'
+            )">
 
                 Eliminar
 

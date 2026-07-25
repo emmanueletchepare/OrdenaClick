@@ -125,3 +125,182 @@ function obtenerCookie(nombre){
 
     return "";
 }
+
+async function modificarBanco(
+    bancoId,
+    nombreActual
+){
+
+    const nuevoNombre = prompt(
+        "Nuevo nombre del banco:",
+        nombreActual
+    );
+
+    if(nuevoNombre === null){
+        return;
+    }
+
+    const nombre =
+        nuevoNombre.trim();
+
+    if(!nombre){
+
+        alert(
+            "Ingrese el nombre del banco."
+        );
+
+        return;
+    }
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    const formulario =
+        new FormData();
+
+    formulario.append(
+        "banco",
+        bancoId
+    );
+
+    formulario.append(
+        "empresa",
+        empresa
+    );
+
+    formulario.append(
+        "nombre",
+        nombre
+    );
+
+    try{
+
+        const respuesta = await fetch(
+            "/modificar-banco/",
+            {
+                method: "POST",
+
+                headers: {
+                    "X-CSRFToken": obtenerCookie(
+                        "csrftoken"
+                    )
+                },
+
+                body: formulario
+            }
+        );
+
+        const resultado =
+            await respuesta.json();
+
+        if(!respuesta.ok || !resultado.ok){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo modificar el banco."
+            );
+
+            return;
+        }
+
+        await mostrarABMBancos(
+            origenABM
+        );
+
+    }catch(error){
+
+        console.error(
+            "Error modificando banco:",
+            error
+        );
+
+        alert(
+            "Ocurrió un error al modificar el banco."
+        );
+
+    }
+
+}
+
+
+async function eliminarBanco(
+    bancoId,
+    nombreBanco
+){
+
+    const confirmado = confirm(
+        `¿Eliminar el banco "${nombreBanco}"?`
+    );
+
+    if(!confirmado){
+        return;
+    }
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    const formulario =
+        new FormData();
+
+    formulario.append(
+        "banco",
+        bancoId
+    );
+
+    formulario.append(
+        "empresa",
+        empresa
+    );
+
+    try{
+
+        const respuesta = await fetch(
+            "/eliminar-banco/",
+            {
+                method: "POST",
+
+                headers: {
+                    "X-CSRFToken": obtenerCookie(
+                        "csrftoken"
+                    )
+                },
+
+                body: formulario
+            }
+        );
+
+        const resultado =
+            await respuesta.json();
+
+        if(!respuesta.ok || !resultado.ok){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo eliminar el banco."
+            );
+
+            return;
+        }
+
+        await mostrarABMBancos(
+            origenABM
+        );
+
+    }catch(error){
+
+        console.error(
+            "Error eliminando banco:",
+            error
+        );
+
+        alert(
+            "Ocurrió un error al eliminar el banco."
+        );
+
+    }
+
+}

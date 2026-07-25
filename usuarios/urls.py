@@ -2,13 +2,18 @@ from django.urls import path
 
 from .views import (
     listar_bancos,
+    listar_centros_operativos,
     panel_admin,
     exportar_empresa,
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    guardar_banco
-  
+    guardar_banco,
+    guardar_centro_operativo,
+    modificar_banco,
+    eliminar_banco,
+    modificar_centro_operativo,
+    eliminar_centro_operativo
 )
 
 urlpatterns = [
@@ -53,6 +58,42 @@ urlpatterns = [
         "listar-bancos/",
         listar_bancos,
         name="listar_bancos"
+    ),
+
+    path(
+        "modificar-banco/",
+        modificar_banco,
+        name="modificar_banco"
+        ),
+
+    path(
+        "eliminar-banco/",
+        eliminar_banco,
+        name="eliminar_banco"
+    ),
+
+    path(
+        "guardar-centro-operativo/",
+        guardar_centro_operativo,
+        name="guardar_centro_operativo"
+    ),
+
+    path(
+        "listar-centros-operativos/",
+        listar_centros_operativos,
+        name="listar_centros_operativos"
+    ),
+
+    path(
+        "modificar-centro-operativo/",
+        modificar_centro_operativo,
+        name="modificar_centro_operativo"
+    ),
+
+    path(
+        "eliminar-centro-operativo/",
+        eliminar_centro_operativo,
+        name="eliminar_centro_operativo"
     ),
 
 ]
