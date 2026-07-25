@@ -1,0 +1,104 @@
+
+ORDENACLICK
+│
+├── Login
+│		├── Selección de Rol
+│		│		├ADMINISTRADOR
+│		│		│	├Alta nueva empresa
+│		│		│	├Seleccionar Empresa
+│		│		│	│	├Empresa Seleccionada
+│		│		│	│	│	├ Registros
+│		│		│ 	│  	│	│	├ Carga Simple
+│		│		│	│	│	│	├ Carga Planificada
+│		│		│	│	│	│	├ Registrar Pago
+│		│		│	│	│	│	└ Modificar / Eliminar
+│		│		│	│	│	├ Dashboard
+│		│		│	│	│	├ Próximos Vencimientos
+│		│		│	│	│	├ Reportes
+│		│		│	│	│	├ Estado de Resultados
+│		│		│	│	│	├ Balance
+│		│		│	│	│	├ ABMs
+│		│		│	│	│	│	├ Centros Operativos
+│		│		│	│	│	│	├ Roles Operativos
+│		│		│	│	│	│	│	├ Vendedor
+│		│		│	│	│	│	│	├ Jerárquico / Supervisor
+│		│		│	│	│	│	│	├ Administración General
+│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Proveedores
+│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	├ Configuración
+│		│		│	│	│	│	├ Modificar Empresa
+│		│		│	│	│	│	└ Designar Colaboradores
+│		│		│	│	│	├ Cambiar Empresa
+│		│		│	│	│	└ Volver a inicio
+│		│		│	│	└Volver
+│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
+│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│		│		├COLABORADOR
+│		│		│	├Submenu a desarrollar (Se postula o acepta solicitudes para trabajar con empresas)
+│		│		│	├Seleccionar Empresa (El listado sale de empresas que acepto o lo aceptaron del submenú anterior)
+│		│		│	│	├Empresa Seleccionada
+│		│		│	│	│	├ Registros
+│		│		│ 	│  	│	│	├ Carga Simple
+│		│		│	│	│	│	├ Carga Planificada
+│		│		│	│	│	│	├ Registrar Pago
+│		│		│	│	│	│	└ Modificar / Eliminar
+│		│		│	│	│	├ Dashboard (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Próximos Vencimientos (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Reportes (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Estado de Resultados (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
+│		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
+│		│		│	│	│	│	├ Centros Operativos
+│		│		│	│	│	│	├ Roles Operativos
+│		│		│	│	│	│	│	├ Vendedor
+│		│		│	│	│	│	│	├ Jerárquico / Supervisor
+│		│		│	│	│	│	│	├ Administración General
+│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Proveedores
+│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	├ Configuración (si o si oculto)
+│		│		│	│	│	│	├ Modificar Empresa
+│		│		│	│	│	│	└ Designar Colaboradores
+│		│		│	│	│	├ Cambiar Empresa
+│		│		│	│	│	└ Volver a inicio
+│		│		│	│	└Volver
+│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
+│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│		│		├CONTADOR/ES
+│		│		│	├Submenu a desarrollar (Donde se postula o acepta solicitudes para trabajar con empresas)
+│		│		│	│
+│		│		│	├Seleccionar Empresa (El listado no sale de empresas que creo el sino de las que acepto o lo aceptaron del submenú anterior)
+│		│		│	│	├Empresa Seleccionada
+│		│		│	│	│	├ Registros
+│		│		│ 	│  	│	│	├ Carga Simple
+│		│		│	│	│	│	├ Carga Planificada
+│		│		│	│	│	│	├ Registrar Pago
+│		│		│	│	│	│	└ Modificar / Eliminar
+│		│		│	│	│	├ Dashboard (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Próximos Vencimientos (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Reportes (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Estado de Resultados (Admin decide si oculta en permisos)
+│		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
+│		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
+│		│		│	│	│	│	├ Centros Operativos
+│		│		│	│	│	│	├ Roles Operativos
+│		│		│	│	│	│	│	├ Vendedor
+│		│		│	│	│	│	│	├ Jerárquico / Supervisor
+│		│		│	│	│	│	│	├ Administración General
+│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Proveedores
+│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	├ Configuración (Admin decide si oculta en permisos)
+│		│		│	│	│	│	├ Modificar Empresa
+│		│		│	│	│	│	└ Designar Colaboradores
+│		│		│	│	│	├ Cambiar Empresa
+│		│		│	│	│	└ Volver a inicio
+│		│		│	│	└Volver
+│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
+│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│		│		├ABOGADO/S (Vera casos y posiblemente algo de lo contable... por ahora a desarrollar)
+│		│		├MODIFICAR DATOS PERSONALES
+│		│		└CERRAR SESION
+x	└Registrarse
+

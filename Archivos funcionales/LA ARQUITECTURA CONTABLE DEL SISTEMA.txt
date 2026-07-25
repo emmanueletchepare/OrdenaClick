@@ -1,0 +1,83 @@
+EMPRESA
+
+Debe guardar datos relativamente permanentes:
+
+razón social
+CUIT
+domicilios
+condición fiscal
+teléfonos
+email
+EJERCICIO CONTABLE
+
+(es el núcleo real)
+
+Debe guardar:
+
+fecha inicio
+fecha cierre
+estado (abierto/cerrado)
+presidente
+vicepresidente
+documentación del ejercicio
+balances
+resultados
+MOVIMIENTOS
+
+pertenecen a:
+
+Empresa + Ejercicio + Mes
+
+no solamente a empresa.
+
+RUBROS / SUBRUBROS
+
+son:
+
+clasificación contable
+
+y después van a permitir:
+
+balances automáticos
+reportes
+gráficos
+resultados mensuales
+comparativas
+BALANCES
+
+van a ser snapshots históricos.
+
+O sea:
+
+NO se recalculan eternamente
+
+cuando un ejercicio cierra:
+
+✅ se genera balance
+✅ se congela
+✅ queda histórico
+
+exactamente como en contabilidad real.
+
+Y además ya apareció otro concepto importante:
+AUTORIDADES HISTÓRICAS
+
+Porque:
+
+presidente cambia
+vicepresidente cambia
+designaciones cambian
+
+y eso pertenece al ejercicio, no a la empresa.
+
+Sobre el problema visual actual
+
+Como la URL sí queda:
+
+?empresa=1
+
+entonces:
+
+✅ backend funciona
+✅ selección funciona
+✅ empresa activa existe

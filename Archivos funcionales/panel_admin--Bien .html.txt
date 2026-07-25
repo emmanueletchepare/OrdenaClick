@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+
+<title>Ordenaclick</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --bg:#0f1115;
+    --sidebar:#151922;
+    --panel:#171c26;
+    --panel-2:#1b2130;
+    --input:#0f131b;
+
+    --border:#252c3d;
+    --border-2:#2b3447;
+
+    --text:#f1f5f9;
+    --muted:#8b93a7;
+
+    --primary:#3b82f6;
+    --primary-hover:#2563eb;
+}
+
+body{
+
+    background:var(--bg);
+
+    font-family:Inter,Arial,sans-serif;
+
+    color:var(--text);
+
+    min-height:100vh;
+
+    display:flex;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar{
+
+    width:290px;
+
+    background:var(--sidebar);
+
+    border-right:1px solid #242938;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:space-between;
+
+    padding:28px 22px;
+}
+
+.logo{
+
+    font-size:28px;
+
+    font-weight:700;
+
+    margin-bottom:40px;
+}
+
+.logo span{
+    color:var(--primary);
+}
+
+.user-box{
+
+    background:var(--panel-2);
+
+    border:1px solid #2a3142;
+
+    border-radius:16px;
+
+    padding:18px;
+
+    margin-bottom:24px;
+}
+
+.user-label{
+
+    font-size:12px;
+
+    color:var(--muted);
+
+    margin-bottom:6px;
+}
+
+.user-name{
+
+    font-size:16px;
+
+    font-weight:600;
+}
+
+.menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+}
+
+.sidebar-btn{
+
+    width:100%;
+
+    min-height:48px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    color:#dbe3ef;
+
+    text-decoration:none;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:12px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    font-size:14px;
+
+    font-weight:500;
+}
+
+.sidebar-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+
+    color:#ffffff;
+}
+
+.sidebar-btn.ativo{
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    border-color:#3b82f6;
+
+    color:white;
+
+    box-shadow:0 0 20px rgba(37,99,235,.35);
+}
+
+.back-btn{
+
+    margin-top:28px;
+
+    width:100%;
+
+    height:48px;
+
+    border-radius:14px;
+
+    background:#1b2130;
+
+    border:1px solid var(--border-2);
+
+    color:#dbe3ef;
+
+    text-decoration:none;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.2s;
+}
+
+.back-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main{
+
+    flex:1;
+
+    padding:40px;
+}
+
+.topbar{
+
+    margin-bottom:28px;
+}
+
+.title{
+
+    font-size:34px;
+
+    font-weight:700;
+
+    margin-bottom:8px;
+}
+
+.title span{
+    color:var(--primary);
+}
+
+.subtitle{
+
+    color:var(--muted);
+
+    font-size:15px;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.card{
+
+    background:var(--panel);
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    padding:32px;
+
+    min-height:500px;
+}
+
+.empty-state{
+
+    color:var(--muted);
+
+    line-height:1.8;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:18px;
+}
+
+.field{
+
+    display:flex;
+
+    flex-direction:column;
+}
+
+.field-full{
+
+    grid-column:1 / -1;
+}
+
+.label{
+
+    font-size:13px;
+
+    color:#98a2b3;
+
+    margin-bottom:8px;
+}
+
+.input-box{
+
+    width:100%;
+
+    height:50px;
+
+    background:var(--input);
+
+    border:1px solid var(--border-2);
+
+    border-radius:14px;
+
+    padding:0 16px;
+
+    color:var(--text);
+
+    font-size:14px;
+}
+
+.guardar{
+
+    margin-top:24px;
+
+    width:100%;
+
+    height:52px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:var(--primary);
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+.guardar:hover{
+    background:var(--primary-hover);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+/* =========================
+   MODULOS
+========================= */
+
+.modules{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:14px;
+
+    margin-top:24px;
+}
+
+.modules{
+    overflow:visible;
+}
+
+.module-card{
+
+    position:relative;
+
+    padding:14px 22px;
+
+    border-radius:14px;
+
+    background:#1b2130;
+
+    border:1px solid #2b3447;
+
+    color:#ffffff;
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    transition:.2s;
+}
+
+.module-card{
+    z-index:1;
+}
+
+.module-card:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+
+    transform:translateY(-2px);
+}
+
+.module-card:hover{
+    z-index:999;
+}
+
+.module-tooltip{
+
+    position:absolute;
+
+    top:55px;
+
+    bottom:auto;
+
+    z-index:9999;
+
+    left:0;
+
+    background:#111827;
+
+    border:1px solid #2b3447;
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    width:220px;
+
+    color:#9ca3af;
+
+    font-size:12px;
+
+    line-height:1.5;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transition:.2s;
+
+    z-index:100;
+}
+
+.module-card:hover .module-tooltip{
+
+    opacity:1;
+}
+
+.exercise-info{
+
+    color:#9ca3af;
+
+    margin-top:8px;
+
+    font-size:15px;
+}
+
+/* =========================
+   MOVIMIENTOS
+========================= */
+
+.section-title{
+
+    font-size:24px;
+
+    font-weight:700;
+
+    margin-top:40px;
+
+    margin-bottom:24px;
+}
+
+.movimientos{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+    margin-top:28px;
+}
+
+.movimiento-card{
+
+    background:#1b2130;
+
+    border:1px solid #2b3447;
+
+    border-radius:18px;
+
+    padding:20px;
+}
+
+.movimiento-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:14px;
+}
+
+.movimiento-titulo{
+
+    font-size:16px;
+
+    font-weight:600;
+}
+
+.movimiento-importe{
+
+    color:#60a5fa;
+
+    font-size:18px;
+
+    font-weight:700;
+}
+
+.movimiento-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr 1fr;
+
+    gap:12px;
+
+    color:#9ca3af;
+
+    font-size:13px;
+}
+
+.estado{
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:max-content;
+}
+
+.estado-pendiente{
+
+    background:#3b2f12;
+
+    color:#facc15;
+}
+
+.estado-pagado{
+
+    background:#12351f;
+
+    color:#4ade80;
+}
+
+.estado-vencido{
+
+    background:#3a1717;
+
+    color:#f87171;
+}
+
+/* =========================
+   FILE BUTTONS
+========================= */
+
+.file-btn{
+
+    width:100%;
+
+    height:50px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    color:#dbe3ef;
+
+    font-size:14px;
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+.file-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+
+.file-btn input{
+
+    position:absolute;
+
+    width:100%;
+
+    height:100%;
+
+    opacity:0;
+
+    cursor:pointer;
+}
+
+/* =========================
+   PANEL EMPRESA
+========================= */
+
+.top-actions{
+
+    display:flex;
+
+    gap:14px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:30px;
+}
+
+.action-btn{
+
+    height:44px;
+
+    padding:0 22px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    color:#dbe3ef;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.action-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+
+@media(max-width:1000px){
+
+    body{
+        flex-direction:column;
+    }
+
+    .sidebar{
+
+        width:100%;
+
+        border-right:none;
+
+        border-bottom:1px solid #242938;
+    }
+
+    .main{
+        padding:24px;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<aside class="sidebar">
+
+<div>
+
+<div class="logo">
+Ordena<span>click</span>
+</div>
+
+<div class="user-box">
+
+<div class="user-label">
+Administrador conectado
+</div>
+
+<div class="user-name">
+Usuario
+</div>
+
+</div>
+
+{% if not empresa_actual %}
+
+<div class="menu" id="menu-principal">
+
+<button
+class="sidebar-btn"
+type="button"
+onclick="mostrarAltaEmpresa()">
+
+Alta nueva empresa
+
+</button>
+
+<button
+class="sidebar-btn"
+type="button"
+onclick="mostrarEmpresas()">
+
+Seleccionar empresa
+
+</button>
+
+<button
+class="sidebar-btn"
+type="button">
+
+Volver a roles
+
+</button>
+
+<button
+class="sidebar-btn"
+type="button">
+
+Salir
+
+</button>
+
+</div>
+
+{% endif %}
+
+{% if empresa_actual %}
+
+<div class="menu" id="menu-empresa">
+
+<button
+class="sidebar-btn"
+onclick="mostrarSubmenu('registros')">
+
+Registros
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarContenido('Dashboard')">
+
+Dashboard
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarContenido('Próximos vencimientos')">
+
+Próximos vencimientos
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarContenido('Reportes')">
+
+Reportes
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarContenido('Estado de Resultados')">
+
+Estado de Resultados
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarContenido('Balance')">
+
+Balance
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarSubmenu('abms')">
+
+ABMs
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="mostrarSubmenu('configuracion')">
+
+Configuración
+
+<button
+type="button"
+class="sidebar-btn"
+onclick="console.log('CAMBIAR'); mostrarEmpresas();">
+
+Cambiar empresa
+
+</button>
+
+<button
+class="sidebar-btn"
+onclick="window.location.href='/'">
+
+Volver al inicio
+
+</button>
+
+</div>
+
+{% endif %}
+
+<!-- MENU EMPRESAS -->
+
+<div
+class="menu"
+id="menu-empresas"
+style="display:none;">
+
+{% for empresa in empresas %}
+
+<a
+href="?empresa={{ empresa.id }}"
+class="sidebar-btn">
+
+{{ empresa.nombre_fantasia|default:empresa.razon_social }}
+
+</a>
+
+{% empty %}
+
+<div class="sidebar-btn">
+
+Sin empresas cargadas
+
+</div>
+
+{% endfor %}
+
+<button
+class="sidebar-btn"
+type="button"
+onclick="window.location.reload()">
+
+← Volver
+
+</button>
+
+</div>
+
+</div>
+
+</aside>
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="main">
+
+<div class="topbar">
+
+<div class="title" id="titulo-panel">
+
+{% if empresa_actual %}
+
+{{ empresa_actual.nombre_fantasia|default:empresa_actual.razon_social }}
+
+{% else %}
+
+Panel <span>administrativo</span>
+
+{% endif %}
+
+</div>
+
+{% if empresa_actual %}
+
+<div id="panel-empresa">
+
+<div class="exercise-info">
+
+{% with ejercicio=empresa_actual.ejercicios.first %}
+
+{% if ejercicio %}
+
+Ejercicio Nº {{ ejercicio.numero }}
+•
+{{ ejercicio.fecha_inicio|date:"d/m/Y" }}
+→
+{{ ejercicio.fecha_cierre|date:"d/m/Y" }}
+
+{% endif %}
+
+{% endwith %}
+
+</div>
+
+<div
+id="submenu-dinamico"
+class="modules"
+style="margin-top:20px;">
+</div>
+
+<div
+id="contenido-operativo"
+style="margin-top:25px;">
+
+<div class="empty-state">
+
+Seleccione una opción del menú lateral
+
+</div>
+
+</div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+
+</div>
+
+<div
+id="bloque-alta-empresa"
+{% if empresa_importada %}
+style="display:block;"
+{% else %}
+style="display:none;"
+{% endif %}>
+
+<div class="card">
+
+<div
+class="empty-state"
+id="contenido"
+{% if empresa_importada %}
+style="display:none;"
+{% endif %}>
+
+Seleccioná una empresa desde el panel lateral
+o creá una nueva empresa para comenzar.
+
+</div>
+
+<form
+id="form-importacion"
+method="post"
+action="/importar-empresa/"
+enctype="multipart/form-data"
+style="display:none;">
+
+{% csrf_token %}
+
+<input
+type="hidden"
+name="confirmar_reemplazo"
+id="confirmar_reemplazo"
+value="0">
+
+<input
+type="file"
+id="archivo-importacion"
+name="archivo_zip"
+accept=".zip"
+hidden
+onchange="document.getElementById('form-importacion').submit()">
+
+</form>
+
+{% csrf_token %}
+
+<input
+type="file"
+id="archivo-importacion"
+name="archivo_zip"
+accept=".zip"
+hidden
+onchange="document.getElementById('form-importacion').submit()">
+
+</form>
+
+<!-- FORMULARIO -->
+
+<form
+id="form-alta"
+{% if empresa_importada %}
+style="display:block;"
+{% else %}
+style="display:none;"
+{% endif %}
+method="POST"
+enctype="multipart/form-data">
+
+{% csrf_token %}
+
+<div class="form-grid">
+
+<div class="field">
+
+<label class="label">
+Razón social
+</label>
+
+<input
+type="text"
+name="razon_social"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.razon_social }}{% elif empresa_actual %}{{ empresa_actual.razon_social }}{% endif %}"
+placeholder="Razón social">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Nombre fantasía
+</label>
+
+<input
+type="text"
+name="nombre_fantasia"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.nombre_fantasia }}{% elif empresa_actual %}{{ empresa_actual.nombre_fantasia }}{% endif %}"
+placeholder="Nombre fantasía">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Condición fiscal
+</label>
+
+<select
+name="condicion_fiscal"
+class="input-box">
+
+<option value="">Seleccionar</option>
+
+<option
+value="Responsable inscripto"
+{% if empresa_actual.condicion_fiscal == "Responsable inscripto" or empresa_importada.condicion_fiscal == "Responsable inscripto" %}selected{% endif %}>
+Responsable inscripto
+</option>
+
+<option
+value="Monotributo"
+{% if empresa_actual.condicion_fiscal == "Monotributo" or empresa_importada.condicion_fiscal == "Monotributo" %}selected{% endif %}>
+Monotributo
+</option>
+
+<option
+value="Exento"
+{% if empresa_actual.condicion_fiscal == "Exento" or empresa_importada.condicion_fiscal == "Exento" %}selected{% endif %}>
+Exento
+</option>
+
+<option
+value="Consumidor final"
+{% if empresa_actual.condicion_fiscal == "Consumidor final" or empresa_importada.condicion_fiscal == "Consumidor final" %}selected{% endif %}>
+Consumidor final
+</option>
+
+</select>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+CUIT
+</label>
+
+<input
+type="text"
+name="cuit"
+class="input-box"
+placeholder="20-12345678-9"
+value="{% if empresa_importada %}{{ empresa_importada.cuit }}{% elif empresa_actual %}{{ empresa_actual.cuit }}{% endif %}"
+maxlength="13"
+pattern="[0-9]{2}-[0-9]{8}-[0-9]{1}"
+required>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Inicio actividades
+</label>
+
+<input
+type="date"
+name="inicio_actividades"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.inicio_actividades }}{% elif empresa_actual %}{{ empresa_actual.inicio_actividades|date:'Y-m-d' }}{% endif %}">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Inicio contable
+</label>
+
+<input
+type="date"
+name="inicio_contable"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.inicio_contable }}{% elif empresa_actual %}{{ empresa_actual.inicio_contable|date:'Y-m-d' }}{% endif %}">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Dirección fiscal
+</label>
+
+<input
+type="text"
+name="direccion_fiscal"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.direccion_fiscal }}{% elif empresa_actual %}{{ empresa_actual.direccion_fiscal }}{% endif %}"
+placeholder="Dirección fiscal">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Dirección real
+</label>
+
+<input
+type="text"
+name="direccion_real"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.direccion_real }}{% elif empresa_actual %}{{ empresa_actual.direccion_real }}{% endif %}"
+placeholder="Dirección real">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Teléfono principal
+</label>
+
+<input
+type="text"
+name="telefono1"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.telefono1 }}{% elif empresa_actual %}{{ empresa_actual.telefono1 }}{% endif %}"
+placeholder="Teléfono principal">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Teléfono secundario
+</label>
+
+<input
+type="text"
+name="telefono2"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.telefono2 }}{% elif empresa_actual %}{{ empresa_actual.telefono2 }}{% endif %}"
+placeholder="Teléfono secundario">
+
+</div>
+
+<div class="field field-full">
+
+<label class="label">
+Correo electrónico
+</label>
+
+<input
+type="email"
+name="email"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.email }}{% elif empresa_actual %}{{ empresa_actual.email }}{% endif %}"
+placeholder="Correo electrónico">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Presidente
+</label>
+
+<input
+type="text"
+name="presidente"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.presidente }}{% elif empresa_actual %}{{ empresa_actual.presidente }}{% endif %}"
+placeholder="Presidente">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+Vicepresidente
+</label>
+
+<input
+type="text"
+name="vicepresidente"
+class="input-box"
+value="{% if empresa_importada %}{{ empresa_importada.vicepresidente }}{% elif empresa_actual %}{{ empresa_actual.vicepresidente }}{% endif %}"
+placeholder="Vicepresidente">
+
+</div>
+
+</div>
+```
+
+
+<div
+
+style="
+margin-top:30px;
+margin-bottom:20px;
+padding-bottom:10px;
+border-bottom:1px solid #334155;
+font-size:16px;
+font-weight:600;
+color:#cbd5e1;
+">
+
+Documentación societaria
+
+</div>
+
+<div class="form-grid">
+
+<div class="field">
+
+<label
+class="label"
+style="
+display:block;
+margin-top:20px;
+">
+
+Estatuto
+
+</label>
+
+{% if empresa_actual and empresa_actual.estatuto %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Archivo cargado:
+
+<strong>
+
+{{ empresa_actual.estatuto.name|cut:"documentos/" }}
+
+</strong>
+
+<br>
+
+Fecha:
+
+{{ empresa_actual.fecha_estatuto|date:"d/m/Y" }}
+
+</div>
+
+<a
+href="{{ empresa_actual.estatuto.url }}"
+target="_blank"
+class="sidebar-btn"
+style="
+height:38px;
+font-size:13px;
+margin-bottom:8px;
+">
+
+Ver archivo
+
+</a>
+
+{% else %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Sin archivo cargado
+
+</div>
+
+{% endif %}
+
+<label class="file-btn">
+
+<span id="texto-estatuto">
+📄 Adjuntar archivo
+</span>
+
+<input
+type="file"
+name="estatuto"
+hidden
+onchange="mostrarNombreArchivo(this,'texto-estatuto')">
+
+</label>
+
+</div>
+
+<div class="field">
+
+<label
+class="label"
+style="
+display:block;
+margin-top:20px;
+">
+
+Acta Asamblea
+
+</label>
+
+{% if empresa_actual and empresa_actual.acta %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Archivo cargado:
+
+<strong>
+
+{{ empresa_actual.acta.name|cut:"documentos/" }}
+
+</strong>
+
+<br>
+
+Fecha:
+
+{{ empresa_actual.fecha_acta|date:"d/m/Y" }}
+
+</div>
+
+<a
+href="{{ empresa_actual.acta.url }}"
+target="_blank"
+class="sidebar-btn"
+style="
+height:38px;
+font-size:13px;
+margin-bottom:8px;
+">
+
+Ver archivo
+
+</a>
+
+{% else %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Sin archivo cargado
+
+</div>
+
+{% endif %}
+
+<label class="file-btn">
+
+<span id="texto-acta">
+
+📄 Adjuntar archivo
+
+</span>
+
+<input
+type="file"
+name="acta"
+hidden
+onchange="mostrarNombreArchivo(this,'texto-acta')">
+
+</label>
+
+</div>
+
+<div class="field field-full">
+
+<label
+class="label"
+style="
+display:block;
+margin-top:20px;
+">
+
+Designación
+
+</label>
+
+{% if empresa_actual and empresa_actual.designacion %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Archivo cargado:
+
+<strong>
+
+{{ empresa_actual.designacion.name|cut:"documentos/" }}
+
+</strong>
+
+<br>
+
+Fecha:
+
+{{ empresa_actual.fecha_designacion|date:"d/m/Y" }}
+
+</div>
+
+<a
+href="{{ empresa_actual.designacion.url }}"
+target="_blank"
+class="sidebar-btn"
+style="
+height:38px;
+font-size:13px;
+margin-bottom:8px;
+">
+
+Ver archivo
+
+</a>
+
+{% else %}
+
+<div style="
+margin-bottom:8px;
+font-size:13px;
+color:#64748b;
+">
+
+Sin archivo cargado
+
+</div>
+
+{% endif %}
+
+<label class="file-btn">
+
+<span id="texto-designacion">
+
+📄 Adjuntar archivo
+
+</span>
+
+<input
+type="file"
+name="designacion"
+hidden
+onchange="mostrarNombreArchivo(this,'texto-designacion')">
+
+</label>
+
+</div>
+
+</div>
+
+</div>
+
+<div
+id="botonera-alta"
+style="
+display:flex;
+gap:12px;
+margin-top:24px;
+">
+
+<button
+type="button"
+class="action-btn"
+onclick="document.getElementById('archivo-importacion').click()">
+
+📦 Importar Empresa
+
+</button>
+
+<button
+type="submit"
+name="guardar_empresa"
+value="1"
+class="guardar"
+style="
+margin-top:0;
+flex:1;
+">
+
+Guardar Empresa
+
+</button>
+
+</div>
+
+<div
+id="botonera-modificar"
+style="
+display:none;
+flex-direction:column;
+gap:12px;
+margin-top:24px;
+">
+
+<button
+type="submit"
+name="guardar_cambios_empresa"
+value="1"
+class="guardar">
+
+Guardar Cambios
+
+</button>
+
+<a
+href="/exportar-empresa/{{ empresa_actual.id }}/"
+class="action-btn"
+style="
+height:52px;
+display:flex;
+align-items:center;
+justify-content:center;
+text-decoration:none;
+">
+
+Exportar Empresa
+
+</a>
+
+<button
+type="button"
+style="
+height:52px;
+border:none;
+border-radius:16px;
+background:#dc2626;
+color:white;
+font-weight:600;
+cursor:pointer;
+"
+onclick="confirmarEliminarEmpresa()">
+
+Eliminar Empresa
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+
+</div>
+
+</main>
+
+<script>
+
+function limpiarPanelOperativo(){
+
+    const submenu =
+    document.getElementById(
+        "submenu-dinamico"
+    );
+
+    if(submenu){
+
+        submenu.innerHTML = "";
+
+    }
+
+    const contenido =
+    document.getElementById(
+        "contenido-operativo"
+    );
+
+    if(contenido){
+
+        contenido.innerHTML = "";
+
+    }
+
+}
+
+function mostrarAltaEmpresa(){
+
+    limpiarPanelOperativo();
+
+    const panelEmpresa =
+    document.getElementById(
+        "panel-empresa"
+    );
+
+    if(panelEmpresa){
+
+        panelEmpresa.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "block";
+
+    const form =
+    document.getElementById("form-alta");
+
+    const contenido =
+    document.getElementById("contenido");
+
+    const titulo =
+    document.getElementById("titulo-panel");
+
+    titulo.innerHTML =
+    'Alta nueva <span>empresa</span>';
+
+    if(contenido){
+
+        contenido.style.display = "none";
+
+    }
+
+    if(form){
+
+        form.style.display = "block";
+
+    }
+
+    document.getElementById(
+        "botonera-alta"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "botonera-modificar"
+    ).style.display = "none";
+}
+
+function mostrarEmpresas(){
+
+    console.log("1");
+
+    limpiarPanelOperativo();
+
+    console.log("2");
+
+    const bloqueAlta =
+    document.getElementById(
+        "bloque-alta-empresa"
+    );
+
+    console.log("3", bloqueAlta);
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display = "none";
+
+    }
+
+    console.log("4");
+
+    const panelEmpresa =
+    document.getElementById(
+        "panel-empresa"
+    );
+
+    console.log("5", panelEmpresa);
+
+    if(panelEmpresa){
+
+        panelEmpresa.style.display = "block";
+
+    }
+
+    console.log("6");
+
+    const menuPrincipal =
+    document.getElementById(
+        "menu-principal"
+    );
+
+    console.log("7", menuPrincipal);
+
+    if(menuPrincipal){
+
+        menuPrincipal.style.display = "none";
+
+    }
+
+    console.log("8");
+
+    const menuEmpresa =
+    document.getElementById(
+        "menu-empresa"
+    );
+
+    if(menuEmpresa){
+
+        menuEmpresa.style.display = "none";
+
+    }
+
+    const menuEmpresas =
+    document.getElementById(
+        "menu-empresas"
+    );
+
+    console.log("9", menuEmpresas);
+
+    if(menuEmpresas){
+
+        menuEmpresas.style.display = "flex";
+
+    }
+
+    console.log("10");
+}
+
+function volverMenuPrincipal(){
+
+    limpiarPanelOperativo();
+
+    const menuPrincipal =
+    document.getElementById(
+        "menu-principal"
+    );
+
+    if(menuPrincipal){
+
+        menuPrincipal.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "menu-empresas"
+    ).style.display = "none";
+}
+
+function mostrarNombreArchivo(input,id){
+
+    if(input.files.length > 0){
+
+        document.getElementById(id).innerText =
+        input.files[0].name;
+
+    }
+
+}
+
+function mostrarContenido(titulo){
+
+    const bloqueAlta =
+    document.getElementById(
+        "bloque-alta-empresa"
+    );
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "submenu-dinamico"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "contenido-operativo"
+    ).innerHTML = `
+        <div class="empty-state">
+            ${titulo} en desarrollo
+        </div>
+    `;
+}
+
+function mostrarSubmenu(tipo){
+
+    const bloqueAlta =
+    document.getElementById(
+        "bloque-alta-empresa"
+    );
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display = "none";
+
+    }
+
+    let html = "";
+
+    if(tipo === "registros"){
+
+        html = `
+            <button class="module-card">
+                Carga Simple
+            </button>
+
+            <button class="module-card">
+                Carga Planificada
+            </button>
+
+            <button class="module-card">
+                Registrar Pago
+            </button>
+
+            <button class="module-card">
+                Modificar / Eliminar
+            </button>
+        `;
+    }
+
+    if(tipo === "abms"){
+
+        html = `
+            <button class="module-card">
+                Centros Operativos
+            </button>
+
+            <button class="module-card">
+                Proveedores
+            </button>
+
+            <button class="module-card">
+                Cuentas
+            </button>
+        `;
+    }
+
+    if(tipo === "configuracion"){
+
+        html = `
+            <button
+               class="module-card"
+               onclick="mostrarModificarEmpresa()">
+
+               Modificar Empresa
+
+            </button>
+
+            <button
+               class="module-card">
+
+               Designar Colaboradores
+
+            </button>
+        `;
+    }
+
+    document.getElementById(
+        "submenu-dinamico"
+    ).innerHTML = html;
+
+    document.getElementById(
+        "contenido-operativo"
+    ).innerHTML = `
+        <div class="empty-state">
+            Seleccione una opción
+        </div>
+    `;
+}
+
+function mostrarModificarEmpresa(){
+
+    limpiarPanelOperativo();
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "block";
+
+    document.getElementById(
+        "form-alta"
+    ).style.display = "block";
+
+    document.getElementById(
+        "contenido"
+    ).style.display = "none";
+
+    document.getElementById(
+        "titulo-panel"
+    ).innerHTML =
+    'Modificar <span>Empresa</span>';
+
+    document.getElementById(
+        "botonera-alta"
+    ).style.display = "none";
+
+    document.getElementById(
+         "botonera-modificar"
+    ).style.display = "flex";
+
+}
+
+function confirmarEliminarEmpresa(){
+
+    document.getElementById(
+        "modal-eliminar-empresa"
+    ).style.display = "flex";
+
+}
+
+function cerrarModalEliminarEmpresa(){
+
+    document.getElementById(
+        "modal-eliminar-empresa"
+    ).style.display = "none";
+
+}
+
+</script>
+
+<div
+id="modal-eliminar-empresa"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.6);
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div
+style="
+background:#1e293b;
+padding:24px;
+border-radius:16px;
+width:500px;
+max-width:90%;
+color:white;
+">
+
+<h3
+style="
+margin-top:0;
+text-align:center;
+">
+
+⚠️ Eliminar empresa
+
+</h3>
+
+<div
+style="
+text-align:center;
+line-height:1.8;
+margin-top:15px;
+margin-bottom:20px;
+">
+
+<div>
+
+Se eliminarán:
+
+</div>
+
+<div>
+
+• Datos de la empresa
+
+</div>
+
+<div>
+
+• Documentación asociada
+
+</div>
+
+<br>
+
+<div>
+
+Se recomienda generar una copia de
+
+<strong>
+
+{{ empresa_actual.nombre_fantasia }}
+
+</strong>
+
+antes de continuar.
+
+</div>
+
+</div>
+
+<div
+style="
+display:flex;
+gap:12px;
+justify-content:center;
+align-items:center;
+margin-top:25px;
+flex-wrap:wrap;
+">
+
+<button
+type="button"
+class="sidebar-btn"
+onclick="cerrarModalEliminarEmpresa()">
+
+Cancelar
+
+</button>
+
+<a
+href="/eliminar-empresa/{{ empresa_actual.id }}/"
+class="sidebar-btn"
+style="
+text-decoration:none;
+background:#dc2626;
+">
+
+Eliminar
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+{% if empresa_existente %}
+
+<div
+id="modal-reemplazar"
+style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.60);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+<div
+style="
+background:#1e293b;
+padding:30px;
+border-radius:18px;
+width:460px;
+max-width:90%;
+text-align:center;
+">
+
+<h2>
+
+Empresa existente
+
+</h2>
+
+<p style="margin:20px 0;line-height:1.8;">
+
+Ya existe una empresa con ese CUIT.
+
+<br><br>
+
+¿Desea reemplazarla?
+
+</p>
+
+<div
+style="
+display:flex;
+gap:12px;
+justify-content:center;
+">
+
+<button
+type="button"
+class="sidebar-btn"
+onclick="window.location='/'">
+
+No
+
+</button>
+
+<button
+type="button"
+class="sidebar-btn"
+onclick="
+window.location='/confirmar-reemplazo/';
+">
+
+Sí
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+{% endif %}
+
+</body>
+
+</html>

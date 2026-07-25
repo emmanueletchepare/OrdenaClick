@@ -1,0 +1,110 @@
+Sobre Gastos simples:
+
+FORMULARIO: CARGA SIMPLE DE GASTO
+
+
+1. 📌 Datos principales del comprobante
+
+Proveedor (obligatorio)
+→ Selector / búsqueda (razón social + CUIT)
+Cuenta contable (obligatorio)
+→ Plan de cuentas (ej: Gastos operativos, Servicios, Insumos)
+Fecha del comprobante (obligatorio)
+→ Fecha real del documento
+Fecha de vencimiento (opcional / recomendada)
+→ Para control de pagos
+
+
+2. 💰 Imputación del gasto
+
+Neto gravado
+→ Monto base sin impuestos
+IVA (selector obligatorio si hay neto gravado)
+0% (exento)
+10.5%
+21%
+27%
+Otros (editable)
+Percepciones de IIBB
+→ Monto numérico
+Otras percepciones (campo flexible)
+Ejemplos:
+Ganancias
+IVA percepción
+Municipales
+Retenciones varias
+Impuestos varios
+→ Campo libre (para casos no tipificados)
+Conceptos no gravados
+→ Ej: gastos exentos, tasas, etc.
+
+
+3. 🧮 Total automático
+
+TOTAL GASTO (calculado)
+Fórmula:
+Total =
+Neto gravado
++ IVA calculado
++ Percepciones IIBB
++ Otras percepciones
++ Impuestos varios
++ Conceptos no gravados
+
+👉 Este campo debe ser solo lectura
+
+
+
+4. 🏢 Centro operativo
+
+Centro operativo (obligatorio)
+→ Ej: Sucursal, área, depósito, proyecto
+
+Ej:
+
+Casa Central
+Sucursal Norte
+Logística
+Administración
+Taller
+
+
+5. 👤 Responsable del gasto
+
+Campo: “Realizado por”
+
+Dropdown con roles operativos:
+
+🔹 Vendedor
+Genera gastos asociados a ventas
+Ej: viáticos, combustible, comidas comerciales
+🔹 Jerárquico / Supervisor
+Jefes de área
+Aprueba o genera gastos de equipo
+🔹 Administración General
+Gastos centrales
+Servicios, impuestos, contabilidad
+🔹 Operativo
+Personal de campo o ejecución
+Compras menores, insumos, herramientas
+🔹 Sistema / Automático (opcional futuro)
+Gastos generados por reglas o integraciones
+
+
+6. 🧷 Botones de acción
+
+💾 Guardar gasto
+📄 Guardar y cargar otro
+❌ Cancelar
+🧠 Sugerencia funcional (importante)
+
+Para mejorar el sistema:
+
+✔️ Validaciones clave
+No permitir guardar sin proveedor + cuenta + fecha
+IVA obligatorio si hay neto gravado
+Total siempre recalculado en tiempo real
+✔️ UX recomendado
+Formulario en 2 columnas
+Panel derecho con “Resumen del gasto”
+Autocálculo instantáneo del total

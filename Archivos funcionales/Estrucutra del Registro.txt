@@ -1,0 +1,87 @@
+Estrucutra del Registro:
+
+Carga simple
+├Tipo de gasto
+│	├ Elige del listado
+│	└  Carga nuevo
+│
+├Proveedor
+│	├ Elige del listado
+│	└  Carga nuevo
+│
+├Fecha
+│
+├Fecha Vto
+│
+├Tipo comprobante
+│	├ A
+│	├ B
+│	├ C
+│	└ X
+│
+├Numero [0000-00000000]
+│
+├Neto Gravado $
+│
+├No Gravado / Exento $     
+│ 
+├IVA 21% $
+│
+├IVA 27% $
+│
+├IVA 10.5% $
+│
+├Percepciones $ ( Después vamos a agregar los tipos )
+│
+├Ajuste Redondeo $
+│
+├Total $ (Suma los ítems anteriores)
+│
+├Centro operativo
+│	├ Elige del listado (Predefinido dirección real cargada en alta empresa)
+│	└ Carga nuevo
+│
+├Relacionado con
+│	├ Elige del listado
+│	│	├ Operativo
+│	│	├ Vendedor 1
+│	│	├ Vendedor 2
+│	│	├ Gerencia 1
+│	│	├ Unid. Reparto 1
+│	│	├ Unid. Reparto 2
+│	│	├ Impositivo
+│	│	├ Sueldos
+│	│	├ Honorarios Contables
+│	└ Carga nuevo
+│
+├Pago / Plan
+│	├ Datos del Pago
+│	│	├ Fecha Pago
+│	│	├ Efectivo
+│	│	├ Tarjeta
+│	│	├ Cheques
+│	│	│	├Cheque / Echeq
+│	│	│	├Banco
+│	│	│	├Numero
+│	│	│	├Fecha emisión
+│	│	│	├Fecha acreditación
+│	│	│	├Importe
+│	│	│	└ Propio / Tercero
+│	│	│		├Propio = Genera alerta en registro
+│	│	│		└ Tercero = De quien lo recibimos
+│	│	│	{Este formulario se repite cuando se agrega mas de un cheque y aparece grilla con cheques cargados}
+│	│	│
+│	│	├Retenciones $ ( Después vamos a agregar los tipos )
+│	│	└Saldo (La suma de lo anterior y si es menor que el saldo del gasto genera / modifica alerta al guardar)
+│	├ Convertir a plan
+│		├ Anticipo / Pago previo
+│		├ Cantidad de cuotas
+│			├Cuota 1 (Este bucle se repite tantas veces como cuotas haya elegido en una matriz y genera alerta para cada una al guardar)
+│				├Vencimiento / Debito
+│				├Capital $
+│				└Interes $
+└Guardar / cancelar 
+
+	
+
+

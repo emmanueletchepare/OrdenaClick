@@ -1,0 +1,103 @@
+***************
+* OrdenaClick *
+***************
+
+
+Ordenaclick es una herramienta orientada a la organización administrativa de pequeñas y medianas estructuras.
+
+Su misión es ordenar información administrativa y contable, preveer cancelacion compromisos, documentar actividad, etc.
+
+Intenta ser una herramienta de uso frecuente para solucionar la parte que los sistemas de gestión no tienen en cuenta. Tales como evitar que compromisos generen intereses por no tenerse en cuenta a tiempo. Llevar un control sobre los gastas y presentarlos de forma ordenada para anticiparse a fugas de capital.
+tambien ser el nexo entre el contador y su cliente a fin de presentar en tiempo y forma toda la info necesaria para liquidaciones y balances.
+
+
+Mandamientos:
+
+1 - El flujo de navegación debe ser intuitiva.
+
+
+
+
+
+
+
+Reglas de diseño 
+
+N°1 (la dejaría fija)
+
+Todo ABM que pueda abrirse desde un formulario tendrá dos modos de funcionamiento.
+
+Modo 1 - Normal
+
+Se entra desde el Sidebar.
+
+ABM Proveedores
+
+Guardar
+Cancelar
+
+Al guardar:
+
+vuelve al listado de proveedores.
+Modo 2 - Llamado rápido
+
+Se entra desde un "+" de un formulario.
+
+Por ejemplo:
+
+Carga Simple
+
+Proveedor
+
+[Seleccionar ▼]   [+]
+
+
+El "+" abre el mismo ABM.
+
+Pero el botón cambia automáticamente a:
+
+Guardar y volver al Registro
+
+Al guardar:
+
+crea el proveedor.
+vuelve automáticamente a Carga Simple.
+deja seleccionado ese proveedor.
+el usuario sigue cargando el gasto.
+
+No pierde nada de lo que había escrito.
+
+Y exactamente la misma lógica para:
+
+Tipo de gasto
+Proveedor
+Centro Operativo
+Relacionado con
+(y cualquier otro ABM que aparezca en el futuro)
+
+N°2
+Cuando un formulario abra un ABM rápido, al volver debe conservar absolutamente todo lo que el usuario ya había cargado.
+
+Ejemplo:
+
+Ya escribió:
+
+Fecha
+Factura
+Neto
+IVA
+Centro Operativo
+
+Se dio cuenta de que falta el proveedor.
+
+Hace clic en "+"
+
+Carga el proveedor.
+
+Pulsa:
+
+Guardar y volver al Registro
+
+Y vuelve encontrando todo exactamente como estaba, con el nuevo proveedor ya seleccionado.
+
+Eso da una sensación de continuidad enorme y evita frustraciones.
