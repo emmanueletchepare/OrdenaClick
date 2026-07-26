@@ -1920,7 +1920,9 @@ function mostrarSubmenu(tipo){
 
             </button>
 
-            <button class="module-card">
+            <button
+            class="module-card"
+            onclick="mostrarABMProveedores('menu')">
 
                 Proveedores
 
@@ -2153,6 +2155,154 @@ async function actualizarCentroOperativoDelRegistro(){
 
     ultimoCentroOperativoCreado =
         null;
+
+}
+
+async function mostrarABMProveedores(
+    origen = "menu"
+){
+
+    origenABM = origen;
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM = null;
+
+    }
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+    const respuesta = await fetch(
+        `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+    );
+
+    if(!respuesta.ok){
+
+        alert(
+            "No se pudo cargar el módulo de proveedores."
+        );
+
+        return;
+
+    }
+
+    const datos =
+        await respuesta.json();
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "none";
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+    iniciarABMProveedores();
+
+}
+
+
+function volverDesdeABMProveedores(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        actualizarProveedorDelRegistro();
+
+        return;
+
+    }
+
+    contenidoAnteriorABM = null;
+
+    mostrarSubmenu(
+        "abms"
+    );
+
+}
+
+
+async function actualizarProveedorDelRegistro(){
+
+    await cargarSelectProveedores();
+
+    const select =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    if(
+        select &&
+        ultimoProveedorCreado
+    ){
+
+        const opcion =
+            select.querySelector(
+                `option[value="${ultimoProveedorCreado}"]`
+            );
+
+        if(opcion){
+
+            select.value =
+                ultimoProveedorCreado;
+
+        }
+
+    }
+
+    ultimoProveedorCreado = null;
 
 }
 
@@ -2427,10 +2577,11 @@ gap:10px;
 ">
 
 <select
+id="proveedorRegistro"
 class="input-box"
 style="flex:1;">
 
-<option>
+<option value="">
 
 Seleccione...
 
@@ -2440,7 +2591,8 @@ Seleccione...
 
 <button
 type="button"
-class="action-btn">
+class="action-btn"
+onclick="mostrarABMProveedores('registro')">
 
 +
 
@@ -3257,6 +3409,8 @@ cargarSelectBancos();
 
 cargarSelectCentrosOperativos();
 
+cargarSelectProveedores();
+
 }
 
 async function cargarSelectCentrosOperativos(){
@@ -3358,6 +3512,118 @@ async function cargarSelectCentrosOperativos(){
 
         console.error(
             "Error cargando centros operativos:",
+            error
+        );
+
+    }
+
+}
+
+async function cargarSelectProveedores(){
+
+    const empresaInput =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const select =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    if(
+        !empresaInput ||
+        !select
+    ){
+
+        return;
+
+    }
+
+    const empresa =
+        empresaInput.value;
+
+    if(!empresa){
+
+        return;
+
+    }
+
+    const valorAnterior =
+        select.value;
+
+    try{
+
+        const respuesta = await fetch(
+            `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+        );
+
+        if(!respuesta.ok){
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}`
+            );
+
+        }
+
+        const datos =
+            await respuesta.json();
+
+        select.innerHTML = `
+            <option value="">
+                Seleccione...
+            </option>
+        `;
+
+        if(
+            !Array.isArray(
+                datos.proveedores
+            )
+        ){
+
+            return;
+
+        }
+
+        datos.proveedores.forEach(
+            proveedor => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    String(
+                        proveedor.id
+                    );
+
+                option.textContent =
+                    `${proveedor.razon_social} · ${proveedor.cuit}`;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando proveedores:",
             error
         );
 
@@ -4036,6 +4302,8 @@ Sí
 <script src="{% static 'js/bancos.js' %}"></script>
 
 <script src="{% static 'js/centros_operativos.js' %}?v=4"></script>
+
+<script src="{% static 'js/proveedores.js' %}?v=2"></script>
 
 </body>
 </html>

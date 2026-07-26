@@ -13,7 +13,12 @@ from .views import (
     modificar_banco,
     eliminar_banco,
     modificar_centro_operativo,
-    eliminar_centro_operativo
+    eliminar_centro_operativo,
+    listar_proveedores,
+    guardar_proveedor,
+    modificar_proveedor,
+    eliminar_proveedor,
+    reactivar_proveedor
 )
 
 urlpatterns = [
@@ -94,6 +99,36 @@ urlpatterns = [
         "eliminar-centro-operativo/",
         eliminar_centro_operativo,
         name="eliminar_centro_operativo"
+    ),
+
+        path(
+        "listar-proveedores/",
+        listar_proveedores,
+        name="listar_proveedores"
+    ),
+
+    path(
+        "guardar-proveedor/",
+        guardar_proveedor,
+        name="guardar_proveedor"
+    ),
+
+    path(
+        "modificar-proveedor/",
+        modificar_proveedor,
+        name="modificar_proveedor"
+    ),
+
+    path(
+        "eliminar-proveedor/",
+        eliminar_proveedor,
+        name="eliminar_proveedor"
+    ),
+
+    path(
+        "reactivar-proveedor/",
+        reactivar_proveedor,
+        name="reactivar_proveedor"
     ),
 
 ]

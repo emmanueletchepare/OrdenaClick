@@ -380,25 +380,60 @@ class Banco(models.Model):
 
         return self.nombre
 
+# =========================================
+# PROVEEDORES
+# =========================================
 class Proveedor(models.Model):
 
     empresa = models.ForeignKey(
         Empresa,
         on_delete=models.CASCADE,
-        related_name='proveedores'
+        related_name="proveedores"
     )
 
-    nombre = models.CharField(
-        max_length=150
+    razon_social = models.CharField(
+        max_length=200,
     )
 
     cuit = models.CharField(
-        max_length=13,
+        max_length=13
+    )
+
+    direccion = models.CharField(
+        max_length=255,
         blank=True
     )
 
-    telefono = models.CharField(
+    localidad = models.CharField(
+        max_length=120,
+        blank=True
+    )
+
+    contacto1_nombre = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    contacto1_telefono = models.CharField(
         max_length=50,
+        blank=True
+    )
+
+    contacto1_email = models.EmailField(
+        blank=True
+    )
+
+    contacto2_nombre = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    contacto2_telefono = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    contacto2_email = models.EmailField(
         blank=True
     )
 
@@ -414,6 +449,24 @@ class Proveedor(models.Model):
         default=True
     )
 
+    class Meta:
+
+        ordering = [
+            "razon_social"
+        ]
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "cuit"
+                ],
+                name="proveedor_cuit_unico_por_empresa"
+            )
+
+        ]
+
     def __str__(self):
 
-        return self.nombre
+        return self.razon_social
