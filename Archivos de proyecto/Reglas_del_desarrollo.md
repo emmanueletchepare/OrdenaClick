@@ -1,4 +1,6 @@
-no JavaScripts inline
-no eliminar comentarios importantes
-cada funcion debe tener docstrings
-la arquitectura se respeta de la navegacion se respeta siempre (Estructuras del menu.txt)
+-no JavaScripts inline
+-no eliminar comentarios importantes
+-cada funcion debe tener docstrings
+-la arquitectura se respeta de la navegacion se respeta siempre (Estructuras del menu.txt)
+-mantener el mismo estilo de codigo del proyecto
+-Siempre que un abm es llamado desde el centro de ABMs como de un Boton [+] de algun formulario debe volver al lugar desde donde fue llamado en el estado en el que estaba.

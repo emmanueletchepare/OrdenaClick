@@ -1,7 +1,12 @@
+let bancoEditandoId = null;
+
+
 function iniciarABMBancos(){
 
     const btnGuardar =
-        document.getElementById("btnGuardarBanco");
+        document.getElementById(
+            "btnGuardarBanco"
+        );
 
     if(btnGuardar){
 
@@ -12,8 +17,24 @@ function iniciarABMBancos(){
 
     }
 
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarBanco"
+        );
+
+    if(btnCancelar){
+
+        btnCancelar.addEventListener(
+            "click",
+            cancelarEdicionBanco
+        );
+
+    }
+
     const btnVolver =
-        document.getElementById("btnVolverBanco");
+        document.getElementById(
+            "btnVolverBanco"
+        );
 
     if(btnVolver){
 
@@ -26,20 +47,27 @@ function iniciarABMBancos(){
 
 }
 
+
 async function guardarBanco(){
 
     const input =
-        document.getElementById("nuevoBanco");
+        document.getElementById(
+            "nuevoBanco"
+        );
 
     const empresa =
-        document.getElementById("empresaActiva").value;
+        document.getElementById(
+            "empresaActiva"
+        ).value;
 
     const nombre =
         input.value.trim();
 
     if(!nombre){
 
-        alert("Ingrese el nombre del banco.");
+        alert(
+            "Ingrese el nombre del banco."
+        );
 
         input.focus();
 
@@ -60,125 +88,25 @@ async function guardarBanco(){
         nombre
     );
 
-    const respuesta = await fetch(
-        "/guardar-banco/",
-        {
-            method: "POST",
+    let url =
+        "/guardar-banco/";
 
-            headers: {
-                "X-CSRFToken": obtenerCookie(
-                    "csrftoken"
-                )
-            },
+    if(bancoEditandoId){
 
-            body: formulario
-        }
-    );
+        url =
+            "/modificar-banco/";
 
-    const resultado =
-        await respuesta.json();
-
-    if(!resultado.ok){
-
-        alert(
-            resultado.mensaje ||
-            "No se pudo guardar el banco."
+        formulario.append(
+            "banco",
+            bancoEditandoId
         );
 
-        return;
-
     }
-
-    await mostrarABMBancos(
-        origenABM
-    );
-
-}
-
-function obtenerCookie(nombre){
-
-    const cookies =
-        document.cookie
-            ? document.cookie.split(";")
-            : [];
-
-    for(const cookieActual of cookies){
-
-        const cookie =
-            cookieActual.trim();
-
-        if(
-            cookie.startsWith(
-                `${nombre}=`
-            )
-        ){
-
-            return decodeURIComponent(
-                cookie.substring(
-                    nombre.length + 1
-                )
-            );
-
-        }
-
-    }
-
-    return "";
-}
-
-async function modificarBanco(
-    bancoId,
-    nombreActual
-){
-
-    const nuevoNombre = prompt(
-        "Nuevo nombre del banco:",
-        nombreActual
-    );
-
-    if(nuevoNombre === null){
-        return;
-    }
-
-    const nombre =
-        nuevoNombre.trim();
-
-    if(!nombre){
-
-        alert(
-            "Ingrese el nombre del banco."
-        );
-
-        return;
-    }
-
-    const empresa =
-        document.getElementById(
-            "empresaActiva"
-        ).value;
-
-    const formulario =
-        new FormData();
-
-    formulario.append(
-        "banco",
-        bancoId
-    );
-
-    formulario.append(
-        "empresa",
-        empresa
-    );
-
-    formulario.append(
-        "nombre",
-        nombre
-    );
 
     try{
 
         const respuesta = await fetch(
-            "/modificar-banco/",
+            url,
             {
                 method: "POST",
 
@@ -199,11 +127,18 @@ async function modificarBanco(
 
             alert(
                 resultado.mensaje ||
-                "No se pudo modificar el banco."
+                (
+                    bancoEditandoId
+                        ? "No se pudo modificar el banco."
+                        : "No se pudo guardar el banco."
+                )
             );
 
             return;
+
         }
+
+        bancoEditandoId = null;
 
         await mostrarABMBancos(
             origenABM
@@ -212,13 +147,110 @@ async function modificarBanco(
     }catch(error){
 
         console.error(
-            "Error modificando banco:",
+            "Error guardando banco:",
             error
         );
 
         alert(
-            "Ocurrió un error al modificar el banco."
+            bancoEditandoId
+                ? "Ocurrió un error al modificar el banco."
+                : "Ocurrió un error al guardar el banco."
         );
+
+    }
+
+}
+
+
+function modificarBanco(
+    bancoId,
+    nombreActual
+){
+
+    bancoEditandoId =
+        String(bancoId);
+
+    const input =
+        document.getElementById(
+            "nuevoBanco"
+        );
+
+    const btnGuardar =
+        document.getElementById(
+            "btnGuardarBanco"
+        );
+
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarBanco"
+        );
+
+    if(input){
+
+        input.value =
+            nombreActual;
+
+        input.focus();
+
+        input.select();
+
+    }
+
+    if(btnGuardar){
+
+        btnGuardar.textContent =
+            "Actualizar";
+
+    }
+
+    if(btnCancelar){
+
+        btnCancelar.style.display =
+            "inline-block";
+
+    }
+
+}
+
+
+function cancelarEdicionBanco(){
+
+    bancoEditandoId = null;
+
+    const input =
+        document.getElementById(
+            "nuevoBanco"
+        );
+
+    const btnGuardar =
+        document.getElementById(
+            "btnGuardarBanco"
+        );
+
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarBanco"
+        );
+
+    if(input){
+
+        input.value = "";
+
+        input.focus();
+
+    }
+
+    if(btnGuardar){
+
+        btnGuardar.textContent =
+            "Guardar";
+
+    }
+
+    if(btnCancelar){
+
+        btnCancelar.style.display =
+            "none";
 
     }
 
@@ -284,6 +316,16 @@ async function eliminarBanco(
             );
 
             return;
+
+        }
+
+        if(
+            bancoEditandoId ===
+            String(bancoId)
+        ){
+
+            bancoEditandoId = null;
+
         }
 
         await mostrarABMBancos(
@@ -302,5 +344,38 @@ async function eliminarBanco(
         );
 
     }
+
+}
+
+
+function obtenerCookie(nombre){
+
+    const cookies =
+        document.cookie
+            ? document.cookie.split(";")
+            : [];
+
+    for(const cookieActual of cookies){
+
+        const cookie =
+            cookieActual.trim();
+
+        if(
+            cookie.startsWith(
+                `${nombre}=`
+            )
+        ){
+
+            return decodeURIComponent(
+                cookie.substring(
+                    nombre.length + 1
+                )
+            );
+
+        }
+
+    }
+
+    return "";
 
 }

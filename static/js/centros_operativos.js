@@ -1,4 +1,6 @@
 let ultimoCentroOperativoCreado = null;
+let centroOperativoEditandoId = null;
+
 
 function iniciarABMCentrosOperativos(){
 
@@ -12,6 +14,20 @@ function iniciarABMCentrosOperativos(){
         btnGuardar.addEventListener(
             "click",
             guardarCentroOperativo
+        );
+
+    }
+
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarCentroOperativo"
+        );
+
+    if(btnCancelar){
+
+        btnCancelar.addEventListener(
+            "click",
+            cancelarEdicionCentroOperativo
         );
 
     }
@@ -50,10 +66,28 @@ async function guardarCentroOperativo(){
             "direccionCentroOperativo"
         );
 
-    const empresa =
+    const inputEmpresa =
         document.getElementById(
             "empresaActiva"
-        ).value;
+        );
+
+    if(
+        !inputNombre ||
+        !selectTipo ||
+        !inputDireccion ||
+        !inputEmpresa
+    ){
+
+        console.error(
+            "No se encontraron todos los elementos del formulario de centros operativos."
+        );
+
+        return;
+
+    }
+
+    const empresa =
+        inputEmpresa.value;
 
     const nombre =
         inputNombre.value.trim();
@@ -63,6 +97,16 @@ async function guardarCentroOperativo(){
 
     const direccion =
         inputDireccion.value.trim();
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa activa seleccionada."
+        );
+
+        return;
+
+    }
 
     if(!nombre){
 
@@ -111,160 +155,42 @@ async function guardarCentroOperativo(){
         direccion
     );
 
-    const respuesta = await fetch(
-        "/guardar-centro-operativo/",
-        {
-            method: "POST",
+    const estaEditando =
+        centroOperativoEditandoId !== null;
 
-            headers: {
-                "X-CSRFToken": obtenerCookie(
-                    "csrftoken"
-                )
-            },
+    let url =
+        "/guardar-centro-operativo/";
 
-            body: formulario
-        }
-    );
+    if(estaEditando){
 
-    const resultado =
-        await respuesta.json();
+        url =
+            "/modificar-centro-operativo/";
 
-    if(!resultado.ok){
-
-        alert(
-            resultado.mensaje ||
-            "No se pudo guardar el centro operativo."
+        formulario.append(
+            "centro",
+            centroOperativoEditandoId
         );
 
-        return;
-
     }
-
-    ultimoCentroOperativoCreado =
-        resultado.centro
-            ? String(resultado.centro.id)
-            : null;
-
-    await mostrarABMCentrosOperativos(
-        origenABM
-    );
-
-}
-
-async function modificarCentroOperativo(
-    centroId,
-    nombreActual,
-    tipoActual,
-    direccionActual
-){
-
-    const nuevoNombre = prompt(
-        "Nuevo nombre del centro operativo:",
-        nombreActual
-    );
-
-    if(nuevoNombre === null){
-        return;
-    }
-
-    const nombre =
-        nuevoNombre.trim();
-
-    if(!nombre){
-
-        alert(
-            "Ingrese el nombre del centro operativo."
-        );
-
-        return;
-    }
-
-    const nuevoTipo = prompt(
-        "Tipo: Casa Central, Sucursal, Deposito o Mostrador",
-        tipoActual
-    );
-
-    if(nuevoTipo === null){
-        return;
-    }
-
-    const tipo =
-        nuevoTipo.trim();
-
-    const tiposValidos = [
-        "Casa Central",
-        "Sucursal",
-        "Deposito",
-        "Mostrador"
-    ];
-
-    if(!tiposValidos.includes(tipo)){
-
-        alert(
-            "El tipo debe ser Casa Central, Sucursal, Deposito o Mostrador."
-        );
-
-        return;
-    }
-
-    const nuevaDireccion = prompt(
-        "Nueva dirección:",
-        direccionActual || ""
-    );
-
-    if(nuevaDireccion === null){
-        return;
-    }
-
-    const empresa =
-        document.getElementById(
-            "empresaActiva"
-        ).value;
-
-    const formulario =
-        new FormData();
-
-    formulario.append(
-        "centro",
-        centroId
-    );
-
-    formulario.append(
-        "empresa",
-        empresa
-    );
-
-    formulario.append(
-        "nombre",
-        nombre
-    );
-
-    formulario.append(
-        "tipo",
-        tipo
-    );
-
-    formulario.append(
-        "direccion",
-        nuevaDireccion.trim()
-    );
 
     try{
 
-        const respuesta = await fetch(
-            "/modificar-centro-operativo/",
-            {
-                method: "POST",
+        const respuesta =
+            await fetch(
+                url,
+                {
+                    method: "POST",
 
-                headers: {
-                    "X-CSRFToken": obtenerCookie(
-                        "csrftoken"
-                    )
-                },
+                    headers: {
+                        "X-CSRFToken":
+                            obtenerCookie(
+                                "csrftoken"
+                            )
+                    },
 
-                body: formulario
-            }
-        );
+                    body: formulario
+                }
+            );
 
         const resultado =
             await respuesta.json();
@@ -273,11 +199,29 @@ async function modificarCentroOperativo(
 
             alert(
                 resultado.mensaje ||
-                "No se pudo modificar el centro operativo."
+                (
+                    estaEditando
+                        ? "No se pudo modificar el centro operativo."
+                        : "No se pudo guardar el centro operativo."
+                )
             );
 
             return;
+
         }
+
+        if(!estaEditando){
+
+            ultimoCentroOperativoCreado =
+                resultado.centro
+                    ? String(
+                        resultado.centro.id
+                    )
+                    : null;
+
+        }
+
+        centroOperativoEditandoId = null;
 
         await mostrarABMCentrosOperativos(
             origenABM
@@ -286,13 +230,172 @@ async function modificarCentroOperativo(
     }catch(error){
 
         console.error(
-            "Error modificando centro operativo:",
+            "Error guardando centro operativo:",
             error
         );
 
         alert(
-            "Ocurrió un error al modificar el centro operativo."
+            estaEditando
+                ? "Ocurrió un error al modificar el centro operativo."
+                : "Ocurrió un error al guardar el centro operativo."
         );
+
+    }
+
+}
+
+
+function modificarCentroOperativo(
+    centroId,
+    nombreActual,
+    tipoActual,
+    direccionActual
+){
+
+    centroOperativoEditandoId =
+        String(centroId);
+
+    const inputNombre =
+        document.getElementById(
+            "nuevoCentroOperativo"
+        );
+
+    const selectTipo =
+        document.getElementById(
+            "tipoCentroOperativo"
+        );
+
+    const inputDireccion =
+        document.getElementById(
+            "direccionCentroOperativo"
+        );
+
+    const btnGuardar =
+        document.getElementById(
+            "btnGuardarCentroOperativo"
+        );
+
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarCentroOperativo"
+        );
+
+    if(inputNombre){
+
+        inputNombre.value =
+            nombreActual || "";
+
+    }
+
+    if(selectTipo){
+
+        selectTipo.value =
+            tipoActual || "";
+
+    }
+
+    if(inputDireccion){
+
+        inputDireccion.value =
+            direccionActual || "";
+
+    }
+
+    if(btnGuardar){
+
+        btnGuardar.textContent =
+            "Actualizar";
+
+    }
+
+    if(btnCancelar){
+
+        btnCancelar.style.display =
+            "inline-block";
+
+    }
+
+    if(inputNombre){
+
+        inputNombre.focus();
+        inputNombre.select();
+
+    }
+
+}
+
+
+function cancelarEdicionCentroOperativo(){
+
+    centroOperativoEditandoId = null;
+
+    limpiarFormularioCentroOperativo();
+
+}
+
+
+function limpiarFormularioCentroOperativo(){
+
+    const inputNombre =
+        document.getElementById(
+            "nuevoCentroOperativo"
+        );
+
+    const selectTipo =
+        document.getElementById(
+            "tipoCentroOperativo"
+        );
+
+    const inputDireccion =
+        document.getElementById(
+            "direccionCentroOperativo"
+        );
+
+    const btnGuardar =
+        document.getElementById(
+            "btnGuardarCentroOperativo"
+        );
+
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarCentroOperativo"
+        );
+
+    if(inputNombre){
+
+        inputNombre.value = "";
+
+    }
+
+    if(selectTipo){
+
+        selectTipo.value = "";
+
+    }
+
+    if(inputDireccion){
+
+        inputDireccion.value = "";
+
+    }
+
+    if(btnGuardar){
+
+        btnGuardar.textContent =
+            "Guardar";
+
+    }
+
+    if(btnCancelar){
+
+        btnCancelar.style.display =
+            "none";
+
+    }
+
+    if(inputNombre){
+
+        inputNombre.focus();
 
     }
 
@@ -304,19 +407,32 @@ async function eliminarCentroOperativo(
     nombreCentro
 ){
 
-    const confirmado = confirm(
-        `¿Eliminar el centro operativo "${nombreCentro}"?\n\n` +
-        "La empresa debe conservar al menos un centro operativo activo."
-    );
+    const confirmado =
+        confirm(
+            `¿Eliminar el centro operativo "${nombreCentro}"?\n\n` +
+            "La empresa debe conservar al menos un centro operativo activo."
+        );
 
     if(!confirmado){
+
         return;
+
     }
 
-    const empresa =
+    const inputEmpresa =
         document.getElementById(
             "empresaActiva"
-        ).value;
+        );
+
+    if(!inputEmpresa || !inputEmpresa.value){
+
+        alert(
+            "No hay una empresa activa seleccionada."
+        );
+
+        return;
+
+    }
 
     const formulario =
         new FormData();
@@ -328,25 +444,27 @@ async function eliminarCentroOperativo(
 
     formulario.append(
         "empresa",
-        empresa
+        inputEmpresa.value
     );
 
     try{
 
-        const respuesta = await fetch(
-            "/eliminar-centro-operativo/",
-            {
-                method: "POST",
+        const respuesta =
+            await fetch(
+                "/eliminar-centro-operativo/",
+                {
+                    method: "POST",
 
-                headers: {
-                    "X-CSRFToken": obtenerCookie(
-                        "csrftoken"
-                    )
-                },
+                    headers: {
+                        "X-CSRFToken":
+                            obtenerCookie(
+                                "csrftoken"
+                            )
+                    },
 
-                body: formulario
-            }
-        );
+                    body: formulario
+                }
+            );
 
         const resultado =
             await respuesta.json();
@@ -359,6 +477,16 @@ async function eliminarCentroOperativo(
             );
 
             return;
+
+        }
+
+        if(
+            centroOperativoEditandoId ===
+            String(centroId)
+        ){
+
+            centroOperativoEditandoId = null;
+
         }
 
         await mostrarABMCentrosOperativos(

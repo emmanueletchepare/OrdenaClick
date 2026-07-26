@@ -1,28 +1,57 @@
+# ==========================
 # Entornos virtuales
+# ==========================
 venv/
 .venv/
+env/
 
+# ==========================
 # Caché de Python
+# ==========================
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 
+# ==========================
 # Variables de entorno
+# ==========================
 .env
 
-# VS Code
-.vscode/
-
-# Windows
-Thumbs.db
-
-# macOS
-.DS_Store
-
-# Logs
-*.log
-
-# SQLite (si usás Django)
+# ==========================
+# Base de datos local
+# (si usás SQLite)
+# ==========================
 db.sqlite3
 
+# ==========================
 # Archivos estáticos generados
+# ==========================
 staticfiles/
+
+# ==========================
+# Archivos subidos
+# (si media no debe versionarse)
+# ==========================
+media/
+
+# ==========================
+# VS Code
+# ==========================
+.vscode/
+
+# ==========================
+# PyCharm
+# ==========================
+.idea/
+
+# ==========================
+# Logs
+# ==========================
+*.log
+
+# ==========================
+# Sistema operativo
+# ==========================
+Thumbs.db
+.DS_Store
