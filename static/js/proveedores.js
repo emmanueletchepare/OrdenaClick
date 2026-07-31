@@ -422,15 +422,34 @@ async function guardarProveedor(){
         }
 
 
+        /*
+         * Guardamos los datos del proveedor nuevo o reactivado.
+         *
+         * No se actualiza durante una modificación normal,
+         * porque en ese caso no existe un proveedor nuevo
+         * que deba seleccionarse automáticamente.
+         */
         if(
             !estaEditando &&
             resultado.proveedor
         ){
 
-            ultimoProveedorCreado =
-                String(
-                    resultado.proveedor.id
-                );
+            ultimoProveedorCreado = {
+
+                id:
+                    String(
+                        resultado.proveedor.id
+                    ),
+
+                razon_social:
+                    resultado.proveedor.razon_social ||
+                    razonSocial,
+
+                cuit:
+                    resultado.proveedor.cuit ||
+                    cuit
+
+            };
 
         }
 

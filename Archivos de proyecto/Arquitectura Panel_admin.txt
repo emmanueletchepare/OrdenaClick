@@ -19,13 +19,17 @@ ORDENACLICK
 │		│		│	│	│	├ Balance
 │		│		│	│	│	├ ABMs
 │		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Roles Operativos
-│		│		│	│	│	│	│	├ Vendedor
-│		│		│	│	│	│	│	├ Jerárquico / Supervisor
-│		│		│	│	│	│	│	├ Administración General
-│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Recursos Operativos
+│		│		│	│	│	│	│	├ Personas
+│		│		│	│	│	│	│	├ Vehiculos
+│		│		│	│	│	│	│	├ Inmuebles
+│		│		│	│	│	│	│	├ Equipos
+│		│		│	│	│	│	│	└  Otros
+│		│		│	│	│	│	├ Tipos de Gastos
+│		│		│	│	│	│	│	├ Proveedores relacionados
+│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
 │		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
 │		│		│	│	│	├ Configuración
 │		│		│	│	│	│	├ Modificar Empresa
 │		│		│	│	│	│	└ Designar Colaboradores
@@ -50,13 +54,17 @@ ORDENACLICK
 │		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
 │		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
 │		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Roles Operativos
-│		│		│	│	│	│	│	├ Vendedor
-│		│		│	│	│	│	│	├ Jerárquico / Supervisor
-│		│		│	│	│	│	│	├ Administración General
-│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Recursos Operativos
+│		│		│	│	│	│	│	├ Personas
+│		│		│	│	│	│	│	├ Vehiculos
+│		│		│	│	│	│	│	├ Inmuebles
+│		│		│	│	│	│	│	├ Equipos
+│		│		│	│	│	│	│	└  Otros
+│		│		│	│	│	│	├ Tipos de Gastos
+│		│		│	│	│	│	│	├ Proveedores relacionados
+│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
 │		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
 │		│		│	│	│	├ Configuración (si o si oculto)
 │		│		│	│	│	│	├ Modificar Empresa
 │		│		│	│	│	│	└ Designar Colaboradores
@@ -82,13 +90,17 @@ ORDENACLICK
 │		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
 │		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
 │		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Roles Operativos
-│		│		│	│	│	│	│	├ Vendedor
-│		│		│	│	│	│	│	├ Jerárquico / Supervisor
-│		│		│	│	│	│	│	├ Administración General
-│		│		│	│	│	│	│	├ Operativo
+│		│		│	│	│	│	├ Recursos Operativos
+│		│		│	│	│	│	│	├ Personas
+│		│		│	│	│	│	│	├ Vehiculos
+│		│		│	│	│	│	│	├ Inmuebles
+│		│		│	│	│	│	│	├ Equipos
+│		│		│	│	│	│	│	└  Otros
+│		│		│	│	│	│	├ Tipos de Gastos
+│		│		│	│	│	│	│	├ Proveedores relacionados
+│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
 │		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Cuentas
+│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
 │		│		│	│	│	├ Configuración (Admin decide si oculta en permisos)
 │		│		│	│	│	│	├ Modificar Empresa
 │		│		│	│	│	│	└ Designar Colaboradores

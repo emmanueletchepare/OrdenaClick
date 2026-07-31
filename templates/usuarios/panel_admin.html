@@ -1648,6 +1648,8 @@ let origenABM = "menu";
 
 let contenidoAnteriorABM = null;
 
+let proveedoresCargaSimple = [];
+
 function limpiarPanelOperativo(){
 
     const submenu =
@@ -1928,10 +1930,12 @@ function mostrarSubmenu(tipo){
 
             </button>
 
-            <button class="module-card">
-
+            <button
+                type="button"
+                class="module-card"
+                onclick="mostrarABMTiposGasto('menu')"
+            >
                 Tipos de gasto
-
             </button>
 
             <button class="module-card">
@@ -2162,21 +2166,108 @@ async function mostrarABMProveedores(
     origen = "menu"
 ){
 
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    if(
+        !contenidoOperativo ||
+        !empresaActiva
+    ){
+
+        alert(
+            "No se pudo preparar el módulo de proveedores."
+        );
+
+        return;
+
+    }
+
+    const empresa =
+        empresaActiva.value;
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+    let datos;
+
+    try{
+
+        const respuesta = await fetch(
+            `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+        );
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de proveedores."
+            );
+
+            return;
+
+        }
+
+        datos =
+            await respuesta.json();
+
+    }
+    catch(error){
+
+        console.error(
+            "Error al cargar el ABM de proveedores:",
+            error
+        );
+
+        alert(
+            "No se pudo conectar con el módulo de proveedores."
+        );
+
+        return;
+
+    }
+
+    /*
+     * El origen se establece solamente después de comprobar
+     * que el módulo de proveedores pudo cargarse.
+     */
     origenABM = origen;
 
+    /*
+     * Cuando se abre desde el menú no hay un formulario
+     * anterior que deba restaurarse.
+     */
     if(origen === "menu"){
 
         contenidoAnteriorABM = null;
 
     }
 
-    const contenidoOperativo =
-        document.getElementById(
-            "contenido-operativo"
-        );
-
+    /*
+     * Cuando Proveedores se abre como ABM anidado,
+     * conservamos físicamente el contenido completo
+     * del módulo que lo llamó.
+     *
+     * Esto mantiene valores, selecciones, edición activa
+     * y demás estado de los controles.
+     */
     if(
-        origen === "registro" &&
+        (
+            origen === "registro" ||
+            origen === "tipo_gasto"
+        ) &&
         contenidoAnteriorABM === null
     ){
 
@@ -2195,10 +2286,75 @@ async function mostrarABMProveedores(
 
     }
 
-    const empresa =
+    const bloqueAltaEmpresa =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+    if(bloqueAltaEmpresa){
+
+        bloqueAltaEmpresa.style.display =
+            "none";
+
+    }
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+    if(
+        typeof iniciarABMProveedores ===
+        "function"
+    ){
+
+        iniciarABMProveedores();
+
+    }
+    else{
+
+        console.error(
+            "No se encontró la función iniciarABMProveedores()."
+        );
+
+        alert(
+            "El módulo de proveedores se cargó, pero no pudo iniciarse."
+        );
+
+    }
+
+}
+
+async function mostrarABMTiposGasto(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaActiva =
         document.getElementById(
             "empresaActiva"
-        ).value;
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresaActiva
+    ){
+
+        alert(
+            "No se pudo preparar el módulo de tipos de gasto."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        empresaActiva.value;
+
 
     if(!empresa){
 
@@ -2210,42 +2366,232 @@ async function mostrarABMProveedores(
 
     }
 
-    const respuesta = await fetch(
-        `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
-    );
 
-    if(!respuesta.ok){
+    /*
+     * Primero validamos y cargamos el ABM.
+     * De esta forma no retiramos Carga Simple
+     * si ocurre un error de conexión.
+     */
+    let datos;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/tipos-gasto/?empresa=${encodeURIComponent(empresa)}`
+
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de tipos de gasto."
+            );
+
+            return;
+
+        }
+
+
+        datos =
+            await respuesta.json();
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando tipos de gasto:",
+            error
+        );
 
         alert(
-            "No se pudo cargar el módulo de proveedores."
+            "No se pudo conectar con el módulo de tipos de gasto."
         );
 
         return;
 
     }
 
-    const datos =
-        await respuesta.json();
 
-    document.getElementById(
-        "bloque-alta-empresa"
-    ).style.display = "none";
+    origenABM = origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM = null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAltaEmpresa =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAltaEmpresa){
+
+        bloqueAltaEmpresa.style.display =
+            "none";
+
+    }
+
 
     contenidoOperativo.innerHTML =
         datos.html;
 
-    iniciarABMProveedores();
+
+    if(
+        typeof iniciarABMTiposGasto ===
+        "function"
+    ){
+
+        iniciarABMTiposGasto();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMTiposGasto()."
+        );
+
+        alert(
+            "El módulo se cargó, pero no pudo iniciarse."
+        );
+
+    }
 
 }
 
+function actualizarTipoGastoDelRegistro(){
 
-function volverDesdeABMProveedores(){
+    const select =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+
+    if(!select){
+
+        ultimoTipoGastoCreado = null;
+
+        return;
+
+    }
+
+
+    if(!ultimoTipoGastoCreado){
+
+        return;
+
+    }
+
+
+    const tipoGastoId =
+        typeof ultimoTipoGastoCreado === "object"
+
+            ? String(
+                ultimoTipoGastoCreado.id
+            )
+
+            : String(
+                ultimoTipoGastoCreado
+            );
+
+
+    const tipoGastoNombre =
+        typeof ultimoTipoGastoCreado === "object"
+
+            ? ultimoTipoGastoCreado.nombre
+
+            : "Tipo de gasto creado";
+
+
+    let opcion =
+        select.querySelector(
+
+            `option[value="${tipoGastoId}"]`
+
+        );
+
+
+    if(!opcion){
+
+        opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value =
+            tipoGastoId;
+
+
+        opcion.textContent =
+            tipoGastoNombre ||
+            "Tipo de gasto creado";
+
+
+        select.appendChild(
+            opcion
+        );
+
+    }
+
+
+    select.value =
+        tipoGastoId;
+
+
+    ultimoTipoGastoCreado =
+        null;
+
+}
+
+async function volverDesdeABMProveedores(){
 
     const contenidoOperativo =
         document.getElementById(
             "contenido-operativo"
         );
 
+    if(!contenidoOperativo){
+
+        alert(
+            "No se pudo recuperar el módulo anterior."
+        );
+
+        return;
+
+    }
+
+    /*
+     * Proveedores abierto desde Carga Simple.
+     */
     if(
         origenABM === "registro" &&
         contenidoAnteriorABM
@@ -2259,13 +2605,67 @@ function volverDesdeABMProveedores(){
 
         contenidoAnteriorABM = null;
 
-        actualizarProveedorDelRegistro();
+        if(
+            typeof actualizarProveedorDelRegistro ===
+            "function"
+        ){
+
+            await actualizarProveedorDelRegistro();
+
+        }
+
+        origenABM = "registro";
 
         return;
 
     }
 
+    /*
+     * Proveedores abierto desde Tipos de Gasto.
+     *
+     * Se restaura el mismo contenido que estaba en pantalla,
+     * por lo que se conservan el nombre, la descripción,
+     * las selecciones y el registro que pudiera estar
+     * siendo modificado.
+     */
+    if(
+        origenABM === "tipo_gasto" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        /*
+         * Esta función se agregará en tipos_gasto.js.
+         * Actualizará la lista y seleccionará automáticamente
+         * el proveedor creado o reactivado.
+         */
+        if(
+            typeof actualizarProveedoresDelTipoGasto ===
+            "function"
+        ){
+
+            await actualizarProveedoresDelTipoGasto();
+
+        }
+
+        origenABM = "tipo_gasto";
+
+        return;
+
+    }
+
+    /*
+     * Proveedores abierto directamente desde el menú.
+     */
     contenidoAnteriorABM = null;
+    origenABM = "menu";
 
     mostrarSubmenu(
         "abms"
@@ -2489,6 +2889,484 @@ Eliminar
 
 }
 
+async function iniciarEventosCargaSimple(){
+
+    const selectTipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+    const selectProveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    const botonAgregarTipoGasto =
+        document.getElementById(
+            "btnAgregarTipoGastoRegistro"
+        );
+
+    const botonAgregarProveedor =
+        document.getElementById(
+            "btnAgregarProveedorRegistro"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !selectTipoGasto ||
+        !selectProveedor ||
+        !empresaActiva
+    ){
+
+        console.error(
+            "No se encontraron los controles de Tipo de Gasto y Proveedor."
+        );
+
+        return;
+
+    }
+
+
+    selectProveedor.disabled = true;
+
+    selectProveedor.innerHTML = `
+        <option value="">
+            Seleccione primero un tipo de gasto...
+        </option>
+    `;
+
+
+    if(botonAgregarProveedor){
+
+        botonAgregarProveedor.disabled = true;
+
+    }
+
+
+    if(
+        botonAgregarTipoGasto &&
+        !botonAgregarTipoGasto.dataset.eventoAsignado
+    ){
+
+        botonAgregarTipoGasto.addEventListener(
+
+            "click",
+
+            function(){
+
+                mostrarABMTiposGasto(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarTipoGasto.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        botonAgregarProveedor &&
+        !botonAgregarProveedor.dataset.eventoAsignado
+    ){
+
+        botonAgregarProveedor.addEventListener(
+
+            "click",
+
+            function(){
+
+                if(!selectTipoGasto.value){
+
+                    return;
+
+                }
+
+                mostrarABMProveedores(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarProveedor.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        !selectTipoGasto.dataset.eventoProveedorAsignado
+    ){
+
+        selectTipoGasto.addEventListener(
+
+            "change",
+
+            actualizarProveedoresPorTipoGasto
+
+        );
+
+
+        selectTipoGasto.dataset.eventoProveedorAsignado =
+            "true";
+
+    }
+
+
+    const empresa =
+        empresaActiva.value;
+
+
+    if(!empresa){
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuestas =
+            await Promise.all([
+
+                fetch(
+                    `/tipos-gasto/?empresa=${encodeURIComponent(empresa)}`
+                ),
+
+                fetch(
+                    `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+                )
+
+            ]);
+
+
+        const respuestaTipos =
+            respuestas[0];
+
+        const respuestaProveedores =
+            respuestas[1];
+
+
+        const resultadoTipos =
+            await respuestaTipos.json();
+
+        const resultadoProveedores =
+            await respuestaProveedores.json();
+
+
+        if(
+            !respuestaTipos.ok ||
+            !resultadoTipos.ok
+        ){
+
+            console.error(
+                resultadoTipos.mensaje ||
+                "No se pudieron cargar los tipos de gasto."
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !respuestaProveedores.ok ||
+            !Array.isArray(
+                resultadoProveedores.proveedores
+            )
+        ){
+
+            console.error(
+                "No se pudieron cargar los proveedores."
+            );
+
+            return;
+
+        }
+
+
+        proveedoresCargaSimple =
+            resultadoProveedores.proveedores;
+
+
+        selectTipoGasto.innerHTML = `
+            <option value=""></option>
+        `;
+
+
+        const tiposGasto =
+            Array.isArray(
+                resultadoTipos.tipos_gasto
+            )
+                ? resultadoTipos.tipos_gasto
+                : [];
+
+
+        tiposGasto.forEach(
+
+            function(tipoGasto){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        tipoGasto.id
+                    );
+
+
+                opcion.textContent =
+                    tipoGasto.nombre;
+
+
+                opcion.dataset.proveedores =
+                    JSON.stringify(
+
+                        Array.isArray(
+                            tipoGasto.proveedores
+                        )
+                            ? tipoGasto.proveedores
+                                .map(function(proveedor){
+
+                                    if(
+                                        proveedor &&
+                                        typeof proveedor === "object"
+                                    ){
+
+                                        return String(
+                                            proveedor.id ??
+                                            proveedor.proveedor_id ??
+                                            ""
+                                        );
+
+                                    }
+
+                                    return String(proveedor);
+
+                                })
+                                .filter(function(id){
+
+                                    return id !== "";
+
+                                })
+                            : []
+
+                    );
+
+
+                selectTipoGasto.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+
+        if(ultimoTipoGastoCreado){
+
+            actualizarTipoGastoDelRegistro();
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando Tipos de Gasto y Proveedores:",
+            error
+        );
+
+    }
+
+}
+
+function actualizarProveedoresPorTipoGasto(){
+
+    const selectTipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+    const selectProveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    const botonAgregarProveedor =
+        document.getElementById(
+            "btnAgregarProveedorRegistro"
+        );
+
+
+    if(
+        !selectTipoGasto ||
+        !selectProveedor
+    ){
+
+        return;
+
+    }
+
+
+    selectProveedor.value = "";
+
+    selectProveedor.innerHTML = "";
+
+
+    if(!selectTipoGasto.value){
+
+        const opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value = "";
+
+        opcion.textContent =
+            "Seleccione primero un tipo de gasto...";
+
+
+        selectProveedor.appendChild(
+            opcion
+        );
+
+
+        selectProveedor.disabled = true;
+
+
+        if(botonAgregarProveedor){
+
+            botonAgregarProveedor.disabled = true;
+
+        }
+
+
+        return;
+
+    }
+
+
+    selectProveedor.disabled = false;
+
+
+    if(botonAgregarProveedor){
+
+        botonAgregarProveedor.disabled = false;
+
+    }
+
+
+    const opcionInicial =
+        document.createElement(
+            "option"
+        );
+
+
+    opcionInicial.value = "";
+
+    opcionInicial.textContent =
+        "Seleccione...";
+
+
+    selectProveedor.appendChild(
+        opcionInicial
+    );
+
+
+    const opcionTipoGasto =
+        selectTipoGasto.options[
+            selectTipoGasto.selectedIndex
+        ];
+
+
+    let proveedoresRelacionados = [];
+
+
+    try{
+
+        proveedoresRelacionados =
+            JSON.parse(
+                opcionTipoGasto.dataset.proveedores ||
+                "[]"
+            );
+
+    }catch(error){
+
+        console.error(
+            "No se pudieron interpretar los proveedores asociados:",
+            error
+        );
+
+    }
+
+
+    proveedoresCargaSimple
+
+        .filter(
+
+            function(proveedor){
+
+                return proveedoresRelacionados.includes(
+                    String(
+                        proveedor.id
+                    )
+                );
+
+            }
+
+        )
+
+        .forEach(
+
+            function(proveedor){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        proveedor.id
+                    );
+
+
+                opcion.textContent =
+                    proveedor.cuit
+
+                        ? `${proveedor.razon_social} · ${proveedor.cuit}`
+
+                        : proveedor.razon_social;
+
+
+                selectProveedor.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+}
+
 function mostrarCargaSimple(){
 
     document.getElementById(
@@ -2526,7 +3404,9 @@ Registro manual de un gasto.
 
 <div class="field">
 
-<label class="label">
+<label
+class="label"
+for="tipoGastoRegistro">
 
 Tipo de gasto
 
@@ -2539,32 +3419,42 @@ gap:10px;
 ">
 
 <select
+id="tipoGastoRegistro"
 class="input-box"
 style="flex:1;">
 
-<option>
+<div
+style="
+display:flex;
+gap:10px;
+">
 
-Seleccione...
+<select
+id="tipoGastoRegistro"
+class="input-box"
+style="flex:1;">
 
-</option>
+<option value=""></option>
 
 </select>
 
 <button
 type="button"
-class="action-btn">
+class="action-btn"
+onclick="mostrarABMTiposGasto('registro')">
 
 +
 
 </button>
 
 </div>
-
 </div>
 
 <div class="field">
 
-<label class="label">
+<label
+class="label"
+for="proveedorRegistro">
 
 Proveedor
 
@@ -2579,20 +3469,22 @@ gap:10px;
 <select
 id="proveedorRegistro"
 class="input-box"
-style="flex:1;">
+style="flex:1;"
+disabled>
 
 <option value="">
 
-Seleccione...
+Seleccione primero un tipo de gasto...
 
 </option>
 
 </select>
 
 <button
+id="btnAgregarProveedorRegistro"
 type="button"
 class="action-btn"
-onclick="mostrarABMProveedores('registro')">
+disabled>
 
 +
 
@@ -3409,9 +4301,10 @@ cargarSelectBancos();
 
 cargarSelectCentrosOperativos();
 
-cargarSelectProveedores();
+iniciarEventosCargaSimple();
 
 }
+
 
 async function cargarSelectCentrosOperativos(){
 
@@ -4304,6 +5197,8 @@ Sí
 <script src="{% static 'js/centros_operativos.js' %}?v=4"></script>
 
 <script src="{% static 'js/proveedores.js' %}?v=2"></script>
+
+<script src="{% static 'js/tipos_gasto.js' %}?v=2"></script>
 
 </body>
 </html>

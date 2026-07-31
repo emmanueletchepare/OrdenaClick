@@ -18,7 +18,13 @@ from .views import (
     guardar_proveedor,
     modificar_proveedor,
     eliminar_proveedor,
-    reactivar_proveedor
+    reactivar_proveedor,
+    listar_tipos_gasto,
+    guardar_tipo_gasto,
+    modificar_tipo_gasto,
+    eliminar_tipo_gasto,
+    reactivar_tipo_gasto
+    
 )
 
 urlpatterns = [
@@ -129,6 +135,40 @@ urlpatterns = [
         "reactivar-proveedor/",
         reactivar_proveedor,
         name="reactivar_proveedor"
+    ),
+
+    # =========================================
+    # TIPOS DE GASTO
+    # =========================================
+
+    path(
+        "tipos-gasto/",
+        listar_tipos_gasto,
+        name="listar_tipos_gasto"
+    ),
+
+    path(
+     "tipos-gasto/guardar/",
+     guardar_tipo_gasto,
+     name="guardar_tipo_gasto"
+    ),
+
+    path(
+     "tipos-gasto/modificar/",
+     modificar_tipo_gasto,
+     name="modificar_tipo_gasto"
+    ),
+
+    path(
+     "tipos-gasto/eliminar/",
+        eliminar_tipo_gasto,
+        name="eliminar_tipo_gasto"
+    ),
+
+    path(
+     "tipos-gasto/reactivar/",
+     reactivar_tipo_gasto,
+     name="reactivar_tipo_gasto"
     ),
 
 ]

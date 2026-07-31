@@ -193,40 +193,101 @@ class Ejercicio(models.Model):
         return f"Ejercicio {self.numero} - {self.empresa}"
 
 # =========================================
-# RUBROS
+# TIPOS DE GASTO
 # =========================================
 
-class Rubro(models.Model):
+class TipoGasto(models.Model):
+    """
+    Clasifica el motivo económico u operativo de un gasto.
+
+    Cada tipo de gasto pertenece exclusivamente a una empresa y puede
+    relacionarse con cero, uno o varios proveedores.
+    """
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name="tipos_gasto"
+    )
 
     nombre = models.CharField(
         max_length=150
     )
 
-    def __str__(self):
+    descripcion = models.TextField(
+        blank=True
+    )
 
+    activo = models.BooleanField(
+        default=True
+    )
+
+    class Meta:
+        ordering = [
+            "nombre"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "nombre"
+                ],
+                name="tipo_gasto_nombre_unico_por_empresa"
+            )
+        ]
+
+    def __str__(self):
+        """
+        Devuelve el nombre del tipo de gasto.
+        """
         return self.nombre
 
 
 # =========================================
-# SUBRUBROS
+# TIPOS DE GASTO - PROVEEDORES
 # =========================================
 
-class Subrubro(models.Model):
+class TipoGastoProveedor(models.Model):
+    """
+    Relación explícita entre un tipo de gasto y un proveedor.
 
-    rubro = models.ForeignKey(
-        Rubro,
+    Se utiliza un modelo intermedio para permitir agregar en el futuro
+    información como proveedor preferido, orden, vigencia u observaciones.
+    """
+
+    tipo_gasto = models.ForeignKey(
+        TipoGasto,
         on_delete=models.CASCADE,
-        related_name='subrubros'
+        related_name="relaciones_proveedores"
     )
 
-    nombre = models.CharField(
-        max_length=150
+    proveedor = models.ForeignKey(
+        "Proveedor",
+        on_delete=models.CASCADE,
+        related_name="relaciones_tipos_gasto"
     )
+
+    class Meta:
+        ordering = [
+            "proveedor__razon_social"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "tipo_gasto",
+                    "proveedor"
+                ],
+                name="tipo_gasto_proveedor_unico"
+            )
+        ]
 
     def __str__(self):
-
-        return f"{self.rubro} / {self.nombre}"
-
+        """
+        Devuelve una representación de la relación.
+        """
+        return f"{self.tipo_gasto} - {self.proveedor}"
 
 # =========================================
 # MOVIMIENTOS
@@ -255,15 +316,10 @@ class Movimiento(models.Model):
     blank=True
 )
 
-    rubro = models.ForeignKey(
-        Rubro,
-        on_delete=models.SET_NULL,
-        null=True
-    )
-
-    subrubro = models.ForeignKey(
-        Subrubro,
-        on_delete=models.SET_NULL,
+    tipo_gasto = models.ForeignKey(
+        TipoGasto,
+        on_delete=models.PROTECT,
+        related_name="movimientos",
         null=True,
         blank=True
     )

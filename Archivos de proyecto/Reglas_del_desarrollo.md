@@ -31,3 +31,24 @@ Estilo
 ✅ Mismo CSS.
 ✅ Mismos botones.
 ✅ Mismo comportamiento que Bancos y Centros Operativos.
+✅ Toda tabla maestra usa baja lógica.
+✅ Si existe un registro inactivo no se crea otro: se reactiva.
+✅ Todos los ABM deben permitir edición integrada.
+✅ Todo ABM debe funcionar desde el menú y desde [+].
+✅ Todo ABM debe volver al origen.
+✅ Si se abrió desde Registro, debe quedar seleccionado automáticamente.
+✅ Las bajas físicas sólo se permiten en casos excepcionales (como Empresa, por decisión explícita).
+
+Decisiones que considero cerradas para cargas simples
+
+A partir de ahora tomaría estas reglas como definitivas:
+
+Tipo de Gasto reemplaza conceptualmente al Rubro simple.
+Tipo de Gasto y Proveedor tienen relación muchos a muchos.
+Relacionado con pasa a llamarse Recurso Operativo.
+Todo Recurso Operativo debe estar vinculado a un Centro Operativo mediante una asignación.
+El movimiento conserva el recurso y el centro imputado históricamente.
+Usuario y Recurso Operativo son entidades independientes, vinculables en el futuro.
+Los archivos de movimientos serán registros independientes y múltiples.
+Cuenta contable quedará visible pero deshabilitada hasta desarrollar el Plan Contable.
+No vamos a implementar todavía Giras/Rendiciones, pero el modelo no debe impedirlas.
