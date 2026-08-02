@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -130,3 +132,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# =========================================
+# GESTIÓN DE CLAVES
+# =========================================
+
+GESTION_CLAVES_KEY = os.environ.get(
+    "ORDENACLICK_CLAVES_KEY",
+    ""
+)

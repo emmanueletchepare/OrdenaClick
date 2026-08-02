@@ -23,7 +23,13 @@ from .views import (
     guardar_tipo_gasto,
     modificar_tipo_gasto,
     eliminar_tipo_gasto,
-    reactivar_tipo_gasto
+    reactivar_tipo_gasto,
+    listar_gestion_claves,
+    guardar_gestion_clave,
+    ver_gestion_clave,
+    modificar_gestion_clave,
+    eliminar_gestion_clave,
+    reactivar_gestion_clave
     
 )
 
@@ -169,6 +175,46 @@ urlpatterns = [
      "tipos-gasto/reactivar/",
      reactivar_tipo_gasto,
      name="reactivar_tipo_gasto"
+    ),
+
+    # =========================================
+    # GESTIÓN DE CLAVES
+    # =========================================
+
+    path(
+        "gestion-claves/",
+        listar_gestion_claves,
+        name="listar_gestion_claves"
+    ),
+
+    path(
+        "gestion-claves/guardar/",
+        guardar_gestion_clave,
+        name="guardar_gestion_clave"
+    ),
+
+    path(
+        "gestion-claves/ver/",
+        ver_gestion_clave,
+        name="ver_gestion_clave"
+    ),
+
+    path(
+        "gestion-claves/modificar/",
+        modificar_gestion_clave,
+        name="modificar_gestion_clave"
+    ),
+
+    path(
+        "gestion-claves/eliminar/",
+        eliminar_gestion_clave,
+        name="eliminar_gestion_clave"
+    ),
+
+    path(
+        "gestion-claves/reactivar/",
+        reactivar_gestion_clave,
+        name="reactivar_gestion_clave"
     ),
 
 ]

@@ -1,0 +1,437 @@
+<div>
+
+    <div
+        style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:24px;
+        "
+    >
+
+        <div>
+
+            <div
+                style="
+                font-size:22px;
+                font-weight:700;
+                "
+            >
+                Gestión de claves
+            </div>
+
+            <div
+                style="
+                color:#8b93a7;
+                font-size:13px;
+                margin-top:5px;
+                "
+            >
+                Credenciales y accesos de la empresa
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <div
+        style="
+        background:#171c26;
+        border:1px solid #252c3d;
+        border-radius:18px;
+        padding:24px;
+        "
+    >
+
+        <div class="form-grid">
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="nombreGestionClave"
+                >
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="nombreGestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="sitioGestionClave"
+                >
+                    Sitio
+                </label>
+
+                <input
+                    type="text"
+                    id="sitioGestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="usuarioGestionClave"
+                >
+                    Usuario
+                </label>
+
+                <input
+                    type="text"
+                    id="usuarioGestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="correoGestionClave"
+                >
+                    Correo
+                </label>
+
+                <input
+                    type="email"
+                    id="correoGestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field field-full">
+
+                <label
+                    class="label"
+                    for="contrasenaGestionClave"
+                >
+                    Contraseña
+                </label>
+
+                <div
+                    style="
+                    display:flex;
+                    gap:10px;
+                    "
+                >
+
+                    <input
+                        type="password"
+                        id="contrasenaGestionClave"
+                        class="input-box"
+                        autocomplete="new-password"
+                        style="flex:1;"
+                    >
+
+                    <button
+                        type="button"
+                        class="action-btn"
+                        id="btnVerContrasenaGestionClave"
+                    >
+                        Ver
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-btn"
+                        id="btnCopiarContrasenaGestionClave"
+                    >
+                        Copiar
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="referencia1GestionClave"
+                >
+                    Referencia de recuperación 1
+                </label>
+
+                <input
+                    type="text"
+                    id="referencia1GestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="referencia2GestionClave"
+                >
+                    Referencia de recuperación 2
+                </label>
+
+                <input
+                    type="text"
+                    id="referencia2GestionClave"
+                    class="input-box"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="field field-full">
+
+                <label
+                    class="label"
+                    for="observacionesGestionClave"
+                >
+                    Observaciones
+                </label>
+
+                <textarea
+                    id="observacionesGestionClave"
+                    class="input-box"
+                    style="
+                    min-height:110px;
+                    padding-top:14px;
+                    resize:vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+            display:flex;
+            gap:12px;
+            margin-top:22px;
+            "
+        >
+
+            <button
+                type="button"
+                class="guardar"
+                id="btnGuardarGestionClave"
+                style="
+                margin-top:0;
+                flex:1;
+                "
+            >
+                Guardar
+            </button>
+
+            <button
+                type="button"
+                class="action-btn"
+                id="btnCancelarGestionClave"
+                style="
+                display:none;
+                align-items:center;
+                justify-content:center;
+                "
+            >
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+        margin-top:30px;
+        "
+    >
+
+        <div
+            style="
+            font-size:18px;
+            font-weight:600;
+            margin-bottom:16px;
+            "
+        >
+            Claves registradas
+        </div>
+
+
+        <div
+            id="listaGestionClaves"
+            style="
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            "
+        >
+
+            {% for clave in claves %}
+
+                <div
+                    style="
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                    padding:16px 18px;
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:20px;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                            font-weight:600;
+                            font-size:15px;
+                            "
+                        >
+                            {{ clave.nombre }}
+                        </div>
+
+                        {% if clave.sitio %}
+
+                            <div
+                                style="
+                                margin-top:5px;
+                                color:#8b93a7;
+                                font-size:13px;
+                                "
+                            >
+                                {{ clave.sitio }}
+                            </div>
+
+                        {% endif %}
+
+                        {% if clave.usuario or clave.correo %}
+
+                            <div
+                                style="
+                                margin-top:4px;
+                                color:#8b93a7;
+                                font-size:13px;
+                                "
+                            >
+
+                                {% if clave.usuario %}
+                                    {{ clave.usuario }}
+                                {% endif %}
+
+                                {% if clave.usuario and clave.correo %}
+                                    ·
+                                {% endif %}
+
+                                {% if clave.correo %}
+                                    {{ clave.correo }}
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div
+                        style="
+                        display:flex;
+                        gap:8px;
+                        flex-wrap:wrap;
+                        "
+                    >
+
+                        <button
+                            type="button"
+                            class="action-btn btn-ver-gestion-clave"
+                            data-clave-id="{{ clave.id }}"
+                        >
+                            Ver
+                        </button>
+
+                        <button
+                            type="button"
+                            class="action-btn btn-modificar-gestion-clave"
+                            data-clave-id="{{ clave.id }}"
+                        >
+                            Modificar
+                        </button>
+
+                        <button
+                            type="button"
+                            class="action-btn btn-eliminar-gestion-clave"
+                            data-clave-id="{{ clave.id }}"
+                            style="
+                            background:#7f1d1d;
+                            border-color:#991b1b;
+                            "
+                        >
+                            Eliminar
+                        </button>
+
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <div
+                    class="empty-state"
+                    id="sinGestionClaves"
+                >
+                    No hay claves registradas.
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <div
+    style="
+    margin-top:30px;
+    "
+>
+
+    <button
+        type="button"
+        class="sidebar-btn"
+        id="btnVolverGestionClaves"
+    >
+        ← Volver
+    </button>
+
+    </div>
+</div>

@@ -526,3 +526,88 @@ class Proveedor(models.Model):
     def __str__(self):
 
         return self.razon_social
+
+# =========================================
+# GESTIÓN DE CLAVES
+# =========================================
+
+class GestionClave(models.Model):
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name="claves"
+    )
+
+    nombre = models.CharField(
+        max_length=150
+    )
+
+    sitio = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    usuario = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    correo = models.EmailField(
+        blank=True
+    )
+
+    contrasena_cifrada = models.TextField(
+        blank=True
+    )
+
+    referencia_recuperacion_1 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    referencia_recuperacion_2 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        ordering = [
+            "nombre"
+        ]
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "nombre"
+                ],
+                condition=models.Q(
+                    activo=True
+                ),
+                name="unique_gestion_clave_activa_empresa_nombre"
+            )
+
+        ]
+
+    def __str__(self):
+
+        return self.nombre
