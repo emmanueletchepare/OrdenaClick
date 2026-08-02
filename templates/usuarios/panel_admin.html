@@ -1656,6 +1656,8 @@ let origenABM = "menu";
 
 let contenidoAnteriorABM = null;
 
+let contenidoAnteriorABMProveedores = null;
+
 let proveedoresCargaSimple = [];
 
 function limpiarPanelOperativo(){
@@ -2324,8 +2326,10 @@ async function mostrarABMProveedores(
 
     }
 
+
     const empresa =
         empresaActiva.value;
+
 
     if(!empresa){
 
@@ -2337,13 +2341,17 @@ async function mostrarABMProveedores(
 
     }
 
+
     let datos;
+
 
     try{
 
-        const respuesta = await fetch(
-            `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
-        );
+        const respuesta =
+            await fetch(
+                `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+            );
+
 
         if(!respuesta.ok){
 
@@ -2354,6 +2362,7 @@ async function mostrarABMProveedores(
             return;
 
         }
+
 
         datos =
             await respuesta.json();
@@ -2374,57 +2383,51 @@ async function mostrarABMProveedores(
 
     }
 
-    /*
-     * El origen se establece solamente después de comprobar
-     * que el módulo de proveedores pudo cargarse.
-     */
-    origenABM = origen;
 
-    /*
-     * Cuando se abre desde el menú no hay un formulario
-     * anterior que deba restaurarse.
-     */
+    origenABM =
+        origen;
+
+
     if(origen === "menu"){
 
-        contenidoAnteriorABM = null;
+        contenidoAnteriorABMProveedores =
+            null;
 
     }
 
-    /*
-     * Cuando Proveedores se abre como ABM anidado,
-     * conservamos físicamente el contenido completo
-     * del módulo que lo llamó.
-     *
-     * Esto mantiene valores, selecciones, edición activa
-     * y demás estado de los controles.
-     */
+
     if(
         (
             origen === "registro" ||
             origen === "tipo_gasto"
         ) &&
-        contenidoAnteriorABM === null
+        contenidoAnteriorABMProveedores ===
+            null
     ){
 
-        contenidoAnteriorABM =
+        contenidoAnteriorABMProveedores =
             document.createDocumentFragment();
+
 
         while(
             contenidoOperativo.firstChild
         ){
 
-            contenidoAnteriorABM.appendChild(
-                contenidoOperativo.firstChild
-            );
+            contenidoAnteriorABMProveedores
+                .appendChild(
+                    contenidoOperativo.firstChild
+                );
 
         }
 
     }
 
+
     const bloqueAltaEmpresa =
         document.getElementById(
             "bloque-alta-empresa"
         );
+
 
     if(bloqueAltaEmpresa){
 
@@ -2433,8 +2436,10 @@ async function mostrarABMProveedores(
 
     }
 
+
     contenidoOperativo.innerHTML =
         datos.html;
+
 
     if(
         typeof iniciarABMProveedores ===
@@ -2714,6 +2719,7 @@ async function volverDesdeABMProveedores(){
             "contenido-operativo"
         );
 
+
     if(!contenidoOperativo){
 
         alert(
@@ -2724,21 +2730,27 @@ async function volverDesdeABMProveedores(){
 
     }
 
+
     /*
      * Proveedores abierto desde Carga Simple.
      */
     if(
         origenABM === "registro" &&
-        contenidoAnteriorABM
+        contenidoAnteriorABMProveedores
     ){
 
-        contenidoOperativo.innerHTML = "";
+        contenidoOperativo.innerHTML =
+            "";
+
 
         contenidoOperativo.appendChild(
-            contenidoAnteriorABM
+            contenidoAnteriorABMProveedores
         );
 
-        contenidoAnteriorABM = null;
+
+        contenidoAnteriorABMProveedores =
+            null;
+
 
         if(
             typeof actualizarProveedorDelRegistro ===
@@ -2749,38 +2761,37 @@ async function volverDesdeABMProveedores(){
 
         }
 
-        origenABM = "registro";
+
+        origenABM =
+            "registro";
+
 
         return;
 
     }
 
+
     /*
-     * Proveedores abierto desde Tipos de Gasto.
-     *
-     * Se restaura el mismo contenido que estaba en pantalla,
-     * por lo que se conservan el nombre, la descripción,
-     * las selecciones y el registro que pudiera estar
-     * siendo modificado.
+     * Proveedores abierto desde Tipo de Gasto.
      */
     if(
         origenABM === "tipo_gasto" &&
-        contenidoAnteriorABM
+        contenidoAnteriorABMProveedores
     ){
 
-        contenidoOperativo.innerHTML = "";
+        contenidoOperativo.innerHTML =
+            "";
+
 
         contenidoOperativo.appendChild(
-            contenidoAnteriorABM
+            contenidoAnteriorABMProveedores
         );
 
-        contenidoAnteriorABM = null;
 
-        /*
-         * Esta función se agregará en tipos_gasto.js.
-         * Actualizará la lista y seleccionará automáticamente
-         * el proveedor creado o reactivado.
-         */
+        contenidoAnteriorABMProveedores =
+            null;
+
+
         if(
             typeof actualizarProveedoresDelTipoGasto ===
             "function"
@@ -2790,17 +2801,25 @@ async function volverDesdeABMProveedores(){
 
         }
 
-        origenABM = "tipo_gasto";
+
+        origenABM =
+            "tipo_gasto";
+
 
         return;
 
     }
 
+
     /*
      * Proveedores abierto directamente desde el menú.
      */
-    contenidoAnteriorABM = null;
-    origenABM = "menu";
+    contenidoAnteriorABMProveedores =
+        null;
+
+    origenABM =
+        "menu";
+
 
     mostrarSubmenu(
         "abms"
@@ -5698,15 +5717,15 @@ Sí
 
 {% load static %}
 
-<script src="{% static 'js/bancos.js' %}"></script>
+<script src="{% static 'js/bancos.js' %}?v=2"></script>
 
-<script src="{% static 'js/centros_operativos.js' %}?v=4"></script>
+<script src="{% static 'js/centros_operativos.js' %}?v=5"></script>
 
-<script src="{% static 'js/proveedores.js' %}?v=2"></script>
+<script src="{% static 'js/proveedores.js' %}?v=3"></script>
 
-<script src="{% static 'js/tipos_gasto.js' %}?v=2"></script>
+<script src="{% static 'js/tipos_gasto.js' %}?v=3"></script>
 
-<script src="{% static 'js/gestion_claves.js' %}?v=1"></script>
+<script src="{% static 'js/gestion_claves.js' %}?v=2"></script>
 
 </body>
 </html>

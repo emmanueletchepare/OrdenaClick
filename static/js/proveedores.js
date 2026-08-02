@@ -28,7 +28,11 @@ function iniciarABMProveedores(){
         document.getElementById(
             "cuitProveedor"
         );
-
+    
+    const buscador =
+    document.getElementById(
+        "buscarProveedorABM"
+    );
 
     if(btnGuardar){
 
@@ -76,8 +80,93 @@ function iniciarABMProveedores(){
 
     }
 
+    if(buscador){
+
+        buscador.addEventListener(
+            "input",
+            filtrarProveedoresABM
+        );
+
+    }
+
 }
 
+function filtrarProveedoresABM(){
+
+    const buscador =
+        document.getElementById(
+            "buscarProveedorABM"
+        );
+
+    const mensajeSinResultados =
+        document.getElementById(
+            "sinResultadosProveedorABM"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".tarjeta-proveedor-abm"
+        );
+
+
+    let visibles = 0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensajeSinResultados){
+
+        mensajeSinResultados.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
+
+}
 
 /* =========================================
    FUNCIONES AUXILIARES

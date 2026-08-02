@@ -47,6 +47,7 @@
                     margin-bottom:10px;
                 "
             >
+
                 <label
                     class="label"
                     style="margin-bottom:0;"
@@ -58,7 +59,6 @@
                     id="btnAgregarProveedorTipoGasto"
                     type="button"
                     class="action-btn"
-                    title="Abrir el ABM de Proveedores"
                     style="
                         width:auto;
                         min-width:150px;
@@ -67,16 +67,15 @@
                 >
                     [+] Proveedor
                 </button>
+
             </div>
+
 
             <div
                 id="proveedoresTipoGasto"
                 style="
-                    display:grid;
-                    grid-template-columns:repeat(
-                        auto-fit,
-                        minmax(240px,1fr)
-                    );
+                    display:flex;
+                    flex-direction:column;
                     gap:10px;
                     padding:14px;
                     background:#1b2130;
@@ -85,63 +84,19 @@
                 "
             >
 
-                {% for proveedor in proveedores %}
-
-                <label
-                    class="opcion-proveedor-tipo-gasto"
-                    data-proveedor-id="{{ proveedor.id }}"
-                    style="
-                        display:flex;
-                        align-items:center;
-                        gap:10px;
-                        padding:10px 12px;
-                        background:#151a26;
-                        border:1px solid #2b3447;
-                        border-radius:10px;
-                        cursor:pointer;
-                    "
-                >
-                    <input
-                        type="checkbox"
-                        class="proveedor-tipo-gasto"
-                        value="{{ proveedor.id }}"
-                    >
-
-                    <span>
-                        {{ proveedor.razon_social }}
-
-                        {% if proveedor.cuit %}
-
-                        <span
-                            style="
-                                color:#8b93a7;
-                                font-size:13px;
-                            "
-                        >
-                            · {{ proveedor.cuit }}
-                        </span>
-
-                        {% endif %}
-                    </span>
-                </label>
-
-                {% empty %}
-
                 <div
-                    class="mensaje-sin-proveedores-tipo-gasto"
+                    id="mensajeSinProveedoresTipoGasto"
                     style="
                         color:#8b93a7;
                         padding:12px;
                         text-align:center;
-                        grid-column:1 / -1;
                     "
                 >
-                    No hay proveedores activos disponibles.
+                    No hay proveedores relacionados.
                 </div>
 
-                {% endfor %}
-
             </div>
+
 
             <div
                 style="
@@ -242,6 +197,36 @@
     </div>
 
     <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarTipoGastoABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar tipo de gasto
+        </label>
+
+        <input
+            id="buscarTipoGastoABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por nombre, descripción o proveedor"
+            autocomplete="off"
+        >
+
+    </div>
+
+    <div
         id="grillaTiposGasto"
         style="
             display:flex;
@@ -257,6 +242,16 @@
             data-tipo-gasto-id="{{ tipo_gasto.id }}"
             data-tipo-gasto-nombre="{{ tipo_gasto.nombre|escape }}"
             data-tipo-gasto-descripcion="{{ tipo_gasto.descripcion|escape }}"
+
+            data-busqueda="
+                {{ tipo_gasto.nombre|default:''|escape }}
+                {{ tipo_gasto.descripcion|default:''|escape }}
+                {% for relacion in tipo_gasto.relaciones_proveedores.all %}
+                    {{ relacion.proveedor.razon_social|default:''|escape }}
+                    {{ relacion.proveedor.cuit|default:''|escape }}
+                {% endfor %}
+            "
+            
             data-proveedores="{% for relacion in tipo_gasto.relaciones_proveedores.all %}{{ relacion.proveedor_id }}{% if not forloop.last %},{% endif %}{% endfor %}"
             style="
                 display:flex;
@@ -361,6 +356,18 @@
 
     </div>
 
+    <div
+        id="sinResultadosTipoGastoABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron tipos de gasto.
+    </div>
+
 </div>
 
 <div
@@ -377,4 +384,198 @@
     >
         ← Volver
     </button>
+</div>
+
+<div
+    id="modalProveedoresTipoGasto"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.65);
+        z-index:2000;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+    "
+>
+
+    <div
+        style="
+            width:min(760px,100%);
+            max-height:85vh;
+            overflow:auto;
+            background:#171c26;
+            border:1px solid #2b3447;
+            border-radius:18px;
+            padding:24px;
+        "
+    >
+
+        <div
+            style="
+                font-size:22px;
+                font-weight:700;
+                margin-bottom:20px;
+            "
+        >
+            Agregar proveedores
+        </div>
+
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:minmax(0,1fr) auto;
+                gap:12px;
+                align-items:end;
+                margin-bottom:20px;
+            "
+        >
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="buscarProveedorTipoGasto"
+                >
+                    Proveedor
+                </label>
+
+                <input
+                    id="buscarProveedorTipoGasto"
+                    type="text"
+                    class="input-box"
+                    placeholder="Buscar por nombre o CUIT"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <button
+                id="btnNuevoProveedorDesdeModalTipoGasto"
+                type="button"
+                class="action-btn"
+                style="
+                    width:auto;
+                    min-width:150px;
+                    margin:0;
+                "
+            >
+                [+] Proveedor
+            </button>
+
+        </div>
+
+
+        <div
+            id="listaProveedoresModalTipoGasto"
+            style="
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+            "
+        >
+
+            {% for proveedor in proveedores %}
+
+                <label
+                    class="tarjeta-proveedor-modal-tipo-gasto"
+                    data-proveedor-id="{{ proveedor.id }}"
+                    data-proveedor-nombre="{{ proveedor.razon_social|escape }}"
+                    data-proveedor-cuit="{{ proveedor.cuit|default:''|escape }}"
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:12px;
+                        padding:12px 14px;
+                        background:#151a26;
+                        border:1px solid #2b3447;
+                        border-radius:10px;
+                        cursor:pointer;
+                    "
+                >
+
+                    <input
+                        type="checkbox"
+                        class="proveedor-modal-tipo-gasto"
+                        value="{{ proveedor.id }}"
+                    >
+
+                    <div>
+
+                        <div>
+                            {{ proveedor.razon_social }}
+                        </div>
+
+                        {% if proveedor.cuit %}
+
+                            <div
+                                style="
+                                    color:#8b93a7;
+                                    font-size:13px;
+                                    margin-top:3px;
+                                "
+                            >
+                                {{ proveedor.cuit }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </label>
+
+            {% empty %}
+
+                <div
+                    id="mensajeSinProveedoresModalTipoGasto"
+                    style="
+                        color:#8b93a7;
+                        padding:20px;
+                        text-align:center;
+                    "
+                >
+                    No hay proveedores disponibles.
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+        <div
+            style="
+                display:flex;
+                justify-content:flex-end;
+                gap:12px;
+                margin-top:24px;
+            "
+        >
+
+            <button
+                id="btnCancelarModalProveedoresTipoGasto"
+                type="button"
+                class="action-btn"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                id="btnGuardarModalProveedoresTipoGasto"
+                type="button"
+                class="guardar"
+                style="
+                    width:180px;
+                    margin-top:0;
+                "
+            >
+                Guardar
+            </button>
+
+        </div>
+
+    </div>
+
 </div>

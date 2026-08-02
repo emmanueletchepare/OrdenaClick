@@ -8,6 +8,22 @@ function iniciarABMBancos(){
             "btnGuardarBanco"
         );
 
+    const btnCancelar =
+        document.getElementById(
+            "btnCancelarBanco"
+        );
+
+    const btnVolver =
+        document.getElementById(
+            "btnVolverBanco"
+        );
+
+    const buscador =
+        document.getElementById(
+            "buscarBancoABM"
+        );
+
+
     if(btnGuardar){
 
         btnGuardar.addEventListener(
@@ -17,10 +33,6 @@ function iniciarABMBancos(){
 
     }
 
-    const btnCancelar =
-        document.getElementById(
-            "btnCancelarBanco"
-        );
 
     if(btnCancelar){
 
@@ -31,10 +43,6 @@ function iniciarABMBancos(){
 
     }
 
-    const btnVolver =
-        document.getElementById(
-            "btnVolverBanco"
-        );
 
     if(btnVolver){
 
@@ -45,8 +53,94 @@ function iniciarABMBancos(){
 
     }
 
+
+    if(buscador){
+
+        buscador.addEventListener(
+            "input",
+            filtrarBancosABM
+        );
+
+    }
+
 }
 
+function filtrarBancosABM(){
+
+    const buscador =
+        document.getElementById(
+            "buscarBancoABM"
+        );
+
+    const mensajeSinResultados =
+        document.getElementById(
+            "sinResultadosBancoABM"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".tarjeta-banco-abm"
+        );
+
+
+    let visibles = 0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensajeSinResultados){
+
+        mensajeSinResultados.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
+
+}
 
 async function guardarBanco(){
 

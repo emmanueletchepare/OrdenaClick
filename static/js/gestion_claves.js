@@ -613,29 +613,6 @@ async function modificarGestionClave(
         );
 
 
-        /*
-         * Por seguridad, al modificar no dejamos
-         * la contraseña descifrada cargada.
-         *
-         * Si queda vacía, el backend conserva
-         * la contraseña actual.
-         */
-        const inputContrasena =
-            document.getElementById(
-                "contrasenaGestionClave"
-            );
-
-        if(inputContrasena){
-
-            inputContrasena.value =
-                "";
-
-            inputContrasena.type =
-                "password";
-
-        }
-
-
         gestionClaveModoVer =
             false;
 
@@ -676,6 +653,32 @@ async function modificarGestionClave(
 
             btnCancelar.style.display =
                 "inline-flex";
+
+        }
+
+
+        const inputContrasena =
+            document.getElementById(
+                "contrasenaGestionClave"
+            );
+
+        if(inputContrasena){
+
+            inputContrasena.type =
+                "password";
+
+        }
+
+
+        const btnVerContrasena =
+            document.getElementById(
+                "btnVerContrasenaGestionClave"
+            );
+
+        if(btnVerContrasena){
+
+            btnVerContrasena.textContent =
+                "Ver";
 
         }
 

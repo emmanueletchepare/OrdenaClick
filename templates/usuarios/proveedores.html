@@ -82,11 +82,62 @@
         </button>
     </div>
 
+    <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarProveedorABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar proveedor
+        </label>
+
+        <input
+            id="buscarProveedorABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por razón social, CUIT, localidad, dirección o e-mail"
+            autocomplete="off"
+        >
+
+    </div>
+
     <div id="grillaProveedores" style="display:flex;flex-direction:column;gap:10px;">
 
         {% for proveedor in proveedores %}
 
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:16px 18px;background:#1b2130;border:1px solid #2b3447;border-radius:14px;">
+        <div
+            class="tarjeta-proveedor-abm"
+            data-busqueda="
+                {{ proveedor.razon_social|default:''|escape }}
+                {{ proveedor.cuit|default:''|escape }}
+                {{ proveedor.localidad|default:''|escape }}
+                {{ proveedor.direccion|default:''|escape }}
+                {{ proveedor.email|default:''|escape }}
+                {{ proveedor.contacto1_nombre|default:''|escape }}
+                {{ proveedor.contacto2_nombre|default:''|escape }}
+            "
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:20px;
+                padding:16px 18px;
+                background:#1b2130;
+                border:1px solid #2b3447;
+                border-radius:14px;
+            "
+        >
 
             <div style="min-width:0;">
                 <div style="font-weight:700;margin-bottom:6px;">
@@ -138,6 +189,18 @@
 
         {% endfor %}
 
+    </div>
+
+    <div
+        id="sinResultadosProveedorABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron proveedores.
     </div>
 
 </div>

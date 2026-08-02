@@ -3,6 +3,8 @@ let tipoGastoEditandoId = null;
 let tipoGastoReactivandoId = null;
 let estadoFormularioTipoGasto = null;
 
+let proveedoresRelacionadosTipoGasto = new Set();
+
 
 /* =========================================
    INICIALIZACIÓN
@@ -29,6 +31,34 @@ function iniciarABMTiposGasto(){
         document.getElementById(
             "btnAgregarProveedorTipoGasto"
         );
+
+    const btnCancelarModal =
+        document.getElementById(
+            "btnCancelarModalProveedoresTipoGasto"
+        );
+
+    const btnGuardarModal =
+        document.getElementById(
+            "btnGuardarModalProveedoresTipoGasto"
+        );
+
+    const btnNuevoProveedorModal =
+        document.getElementById(
+            "btnNuevoProveedorDesdeModalTipoGasto"
+        );
+
+    const buscador =
+        document.getElementById(
+            "buscarProveedorTipoGasto"
+        );
+
+    const buscadorTiposGasto =
+    document.getElementById(
+        "buscarTipoGastoABM"
+    );
+
+    proveedoresRelacionadosTipoGasto =
+        new Set();
 
 
     if(btnGuardar){
@@ -65,26 +95,69 @@ function iniciarABMTiposGasto(){
 
         btnAgregarProveedor.addEventListener(
             "click",
+            abrirModalProveedoresTipoGasto
+        );
+
+    }
+
+
+    if(btnCancelarModal){
+
+        btnCancelarModal.addEventListener(
+            "click",
+            cerrarModalProveedoresTipoGasto
+        );
+
+    }
+
+
+    if(btnGuardarModal){
+
+        btnGuardarModal.addEventListener(
+            "click",
+            guardarSeleccionProveedoresTipoGasto
+        );
+
+    }
+
+
+    if(btnNuevoProveedorModal){
+
+        btnNuevoProveedorModal.addEventListener(
+            "click",
             abrirABMProveedoresDesdeTipoGasto
         );
 
     }
 
 
-    document
+    if(buscador){
 
+        buscador.addEventListener(
+            "input",
+            filtrarProveedoresModalTipoGasto
+        );
+
+    }
+
+    if(buscadorTiposGasto){
+
+        buscadorTiposGasto.addEventListener(
+            "input",
+            filtrarTiposGastoABM
+        );
+
+    }
+
+    document
         .querySelectorAll(
             ".btn-modificar-tipo-gasto"
         )
-
         .forEach(
-
             function(boton){
 
                 boton.addEventListener(
-
                     "click",
-
                     function(){
 
                         const fila =
@@ -111,28 +184,21 @@ function iniciarABMTiposGasto(){
                         );
 
                     }
-
                 );
 
             }
-
         );
 
 
     document
-
         .querySelectorAll(
             ".btn-eliminar-tipo-gasto"
         )
-
         .forEach(
-
             function(boton){
 
                 boton.addEventListener(
-
                     "click",
-
                     function(){
 
                         const tipoGastoId =
@@ -149,15 +215,92 @@ function iniciarABMTiposGasto(){
                         );
 
                     }
-
                 );
 
             }
-
         );
+
+
+    renderizarProveedoresRelacionadosTipoGasto();
 
 }
 
+function filtrarTiposGastoABM(){
+
+    const buscador =
+        document.getElementById(
+            "buscarTipoGastoABM"
+        );
+
+    const mensajeSinResultados =
+        document.getElementById(
+            "sinResultadosTipoGastoABM"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".fila-tipo-gasto"
+        );
+
+
+    let visibles = 0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensajeSinResultados){
+
+        mensajeSinResultados.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
+
+}
 
 /* =========================================
    FUNCIONES AUXILIARES
@@ -179,45 +322,506 @@ function valorTipoGasto(id){
 
 function proveedoresSeleccionadosTipoGasto(){
 
+    return Array.from(
+        proveedoresRelacionadosTipoGasto
+    );
+
+}
+
+function proveedoresMarcadosModalTipoGasto(){
+
     return Array
-
         .from(
-
             document.querySelectorAll(
-                ".proveedor-tipo-gasto:checked"
+                ".proveedor-modal-tipo-gasto:checked"
             )
-
         )
-
         .map(
+            function(check){
 
-            checkbox => checkbox.value
+                return String(
+                    check.value
+                );
 
+            }
         );
+
+}
+
+function abrirModalProveedoresTipoGasto(){
+
+    const modal =
+        document.getElementById(
+            "modalProveedoresTipoGasto"
+        );
+
+    const buscador =
+        document.getElementById(
+            "buscarProveedorTipoGasto"
+        );
+
+
+    if(!modal){
+
+        return;
+
+    }
+
+
+    document
+        .querySelectorAll(
+            ".proveedor-modal-tipo-gasto"
+        )
+        .forEach(
+            function(check){
+
+                check.checked =
+                    proveedoresRelacionadosTipoGasto
+                        .has(
+                            String(
+                                check.value
+                            )
+                        );
+
+            }
+        );
+
+
+    if(buscador){
+
+        buscador.value = "";
+
+    }
+
+
+    filtrarProveedoresModalTipoGasto();
+
+
+    modal.style.display =
+        "flex";
+
+
+    if(buscador){
+
+        buscador.focus();
+
+    }
+
+}
+
+function cerrarModalProveedoresTipoGasto(){
+
+    const modal =
+        document.getElementById(
+            "modalProveedoresTipoGasto"
+        );
+
+
+    if(!modal){
+
+        return;
+
+    }
+
+
+    modal.style.display =
+        "none";
+
+}
+
+function filtrarProveedoresModalTipoGasto(){
+
+    const buscador =
+        document.getElementById(
+            "buscarProveedorTipoGasto"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    document
+        .querySelectorAll(
+            ".tarjeta-proveedor-modal-tipo-gasto"
+        )
+        .forEach(
+            function(tarjeta){
+
+                const nombre =
+                    (
+                        tarjeta.dataset
+                            .proveedorNombre ||
+                        ""
+                    )
+                    .toLowerCase();
+
+                const cuit =
+                    (
+                        tarjeta.dataset
+                            .proveedorCuit ||
+                        ""
+                    )
+                    .toLowerCase();
+
+
+                const coincide =
+                    nombre.includes(
+                        texto
+                    ) ||
+                    cuit.includes(
+                        texto
+                    );
+
+
+                tarjeta.style.display =
+                    coincide
+                        ? "flex"
+                        : "none";
+
+            }
+        );
+
+}
+
+function guardarSeleccionProveedoresTipoGasto(){
+
+    const seleccionados =
+        document.querySelectorAll(
+            ".proveedor-modal-tipo-gasto:checked"
+        );
+
+
+    proveedoresRelacionadosTipoGasto =
+        new Set(
+            Array
+                .from(
+                    seleccionados
+                )
+                .map(
+                    function(check){
+
+                        return String(
+                            check.value
+                        );
+
+                    }
+                )
+        );
+
+
+    renderizarProveedoresRelacionadosTipoGasto();
+
+    cerrarModalProveedoresTipoGasto();
+
+}
+
+function renderizarProveedoresRelacionadosTipoGasto(){
+
+    const contenedor =
+        document.getElementById(
+            "proveedoresTipoGasto"
+        );
+
+
+    if(!contenedor){
+
+        return;
+
+    }
+
+
+    contenedor.innerHTML = "";
+
+
+    if(
+        proveedoresRelacionadosTipoGasto
+            .size === 0
+    ){
+
+        const mensaje =
+            document.createElement(
+                "div"
+            );
+
+
+        mensaje.id =
+            "mensajeSinProveedoresTipoGasto";
+
+
+        mensaje.style.color =
+            "#8b93a7";
+
+        mensaje.style.padding =
+            "12px";
+
+        mensaje.style.textAlign =
+            "center";
+
+
+        mensaje.textContent =
+            "No hay proveedores relacionados.";
+
+
+        contenedor.appendChild(
+            mensaje
+        );
+
+
+        return;
+
+    }
+
+
+    proveedoresRelacionadosTipoGasto
+        .forEach(
+            function(proveedorId){
+
+                const tarjetaModal =
+                    document.querySelector(
+                        '.tarjeta-proveedor-modal-tipo-gasto' +
+                        '[data-proveedor-id="' +
+                        proveedorId +
+                        '"]'
+                    );
+
+
+                if(!tarjetaModal){
+
+                    return;
+
+                }
+
+
+                const nombre =
+                    tarjetaModal.dataset
+                        .proveedorNombre ||
+                    "Proveedor";
+
+
+                const cuit =
+                    tarjetaModal.dataset
+                        .proveedorCuit ||
+                    "";
+
+
+                const fila =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                fila.dataset.proveedorId =
+                    proveedorId;
+
+
+                fila.style.display =
+                    "flex";
+
+                fila.style.alignItems =
+                    "center";
+
+                fila.style.justifyContent =
+                    "space-between";
+
+                fila.style.gap =
+                    "12px";
+
+                fila.style.padding =
+                    "10px 12px";
+
+                fila.style.background =
+                    "#151a26";
+
+                fila.style.border =
+                    "1px solid #2b3447";
+
+                fila.style.borderRadius =
+                    "10px";
+
+
+                const texto =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const nombreElemento =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                nombreElemento.textContent =
+                    nombre;
+
+
+                texto.appendChild(
+                    nombreElemento
+                );
+
+
+                if(cuit){
+
+                    const cuitElemento =
+                        document.createElement(
+                            "span"
+                        );
+
+
+                    cuitElemento.style.color =
+                        "#8b93a7";
+
+                    cuitElemento.style.fontSize =
+                        "13px";
+
+
+                    cuitElemento.textContent =
+                        ` · ${cuit}`;
+
+
+                    texto.appendChild(
+                        cuitElemento
+                    );
+
+                }
+
+
+                const botonEliminar =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                botonEliminar.type =
+                    "button";
+
+                botonEliminar.className =
+                    "action-btn";
+
+                botonEliminar.title =
+                    "Quitar proveedor relacionado";
+
+                botonEliminar.textContent =
+                    "🗑";
+
+
+                botonEliminar.style.width =
+                    "38px";
+
+                botonEliminar.style.minWidth =
+                    "38px";
+
+                botonEliminar.style.padding =
+                    "6px";
+
+                botonEliminar.style.margin =
+                    "0";
+
+                botonEliminar.style.background =
+                    "#7f1d1d";
+
+                botonEliminar.style.borderColor =
+                    "#991b1b";
+
+
+                botonEliminar.addEventListener(
+                    "click",
+                    function(){
+
+                        quitarProveedorRelacionadoTipoGasto(
+                            proveedorId
+                        );
+
+                    }
+                );
+
+
+                fila.appendChild(
+                    texto
+                );
+
+
+                fila.appendChild(
+                    botonEliminar
+                );
+
+
+                contenedor.appendChild(
+                    fila
+                );
+
+            }
+        );
+
+}
+
+function quitarProveedorRelacionadoTipoGasto(
+    proveedorId
+){
+
+    proveedoresRelacionadosTipoGasto
+        .delete(
+            String(
+                proveedorId
+            )
+        );
+
+
+    const check =
+        document.querySelector(
+            '.proveedor-modal-tipo-gasto[value="' +
+            proveedorId +
+            '"]'
+        );
+
+
+    if(check){
+
+        check.checked =
+            false;
+
+    }
+
+
+    renderizarProveedoresRelacionadosTipoGasto();
 
 }
 
 function guardarEstadoFormularioTipoGasto(){
 
+    const nombre =
+        document.getElementById(
+            "nombreTipoGasto"
+        );
+
+    const descripcion =
+        document.getElementById(
+            "descripcionTipoGasto"
+        );
+
+
     estadoFormularioTipoGasto = {
 
         nombre:
-
-            document
-                .getElementById(
-                    "nombreTipoGasto"
-                ).value,
+            nombre
+                ? nombre.value
+                : "",
 
         descripcion:
-
-            document
-                .getElementById(
-                    "descripcionTipoGasto"
-                ).value,
+            descripcion
+                ? descripcion.value
+                : "",
 
         proveedores:
+            proveedoresSeleccionadosTipoGasto(),
 
-            proveedoresSeleccionadosTipoGasto()
+        proveedoresModal:
+            proveedoresMarcadosModalTipoGasto()
 
     };
 
@@ -232,51 +836,104 @@ function restaurarEstadoFormularioTipoGasto(){
 
     }
 
-    document
-        .getElementById(
+
+    const nombre =
+        document.getElementById(
             "nombreTipoGasto"
-        ).value =
-        estadoFormularioTipoGasto.nombre;
+        );
 
-    document
-        .getElementById(
+    const descripcion =
+        document.getElementById(
             "descripcionTipoGasto"
-        ).value =
-        estadoFormularioTipoGasto.descripcion;
+        );
+
+
+    if(nombre){
+
+        nombre.value =
+            estadoFormularioTipoGasto.nombre || "";
+
+    }
+
+
+    if(descripcion){
+
+        descripcion.value =
+            estadoFormularioTipoGasto.descripcion || "";
+
+    }
+
+
+    proveedoresRelacionadosTipoGasto =
+        new Set(
+            (
+                estadoFormularioTipoGasto
+                    .proveedores ||
+                []
+            )
+            .map(
+                function(id){
+
+                    return String(id);
+
+                }
+            )
+        );
+
 
     document
-
         .querySelectorAll(
-            ".proveedor-tipo-gasto"
+            ".proveedor-modal-tipo-gasto"
         )
-
         .forEach(
-
             function(check){
 
-                check.checked =
+                check.checked = false;
 
-                    estadoFormularioTipoGasto
-                        .proveedores
+            }
+        );
 
-                        .includes(
-                            check.value
-                        );
+
+    const seleccionModal =
+        estadoFormularioTipoGasto
+            .proveedoresModal ||
+        [];
+
+
+    seleccionModal.forEach(
+        function(proveedorId){
+
+            const check =
+                document.querySelector(
+                    '.proveedor-modal-tipo-gasto[value="' +
+                    proveedorId +
+                    '"]'
+                );
+
+
+            if(check){
+
+                check.checked = true;
 
             }
 
-        );
+        }
+    );
+
+
+    renderizarProveedoresRelacionadosTipoGasto();
 
 }
 
 
-function actualizarProveedoresDelTipoGasto(){
+async function actualizarProveedoresDelTipoGasto(){
 
     restaurarEstadoFormularioTipoGasto();
 
 
     if(
-        typeof ultimoProveedorCreado === "undefined" ||
+        typeof ultimoProveedorCreado ===
+            "undefined" ||
         !ultimoProveedorCreado
     ){
 
@@ -285,19 +942,20 @@ function actualizarProveedoresDelTipoGasto(){
     }
 
 
-    const contenedor =
+    const lista =
         document.getElementById(
-            "proveedoresTipoGasto"
+            "listaProveedoresModalTipoGasto"
         );
 
 
-    if(!contenedor){
+    if(!lista){
 
         console.error(
-            "No se encontró el contenedor de proveedores del tipo de gasto."
+            "No se encontró la lista del modal de proveedores."
         );
 
-        ultimoProveedorCreado = null;
+        ultimoProveedorCreado =
+            null;
 
         return;
 
@@ -310,98 +968,125 @@ function actualizarProveedoresDelTipoGasto(){
         );
 
 
-    let checkbox =
-        contenedor.querySelector(
-            `.proveedor-tipo-gasto[value="${proveedorId}"]`
+    let tarjeta =
+        lista.querySelector(
+            '.tarjeta-proveedor-modal-tipo-gasto' +
+            '[data-proveedor-id="' +
+            proveedorId +
+            '"]'
         );
 
 
-    /*
-     * El formulario restaurado contiene la lista anterior.
-     * Si el proveedor recién creado todavía no aparece,
-     * lo incorporamos al listado sin recargar todo el ABM.
-     */
-    if(!checkbox){
+    if(!tarjeta){
 
-        const mensajeSinProveedores =
-            contenedor.querySelector(
-                ".mensaje-sin-proveedores"
+        const mensaje =
+            document.getElementById(
+                "mensajeSinProveedoresModalTipoGasto"
             );
 
 
-        if(mensajeSinProveedores){
+        if(mensaje){
 
-            mensajeSinProveedores.remove();
+            mensaje.remove();
 
         }
 
 
-        const etiqueta =
+        tarjeta =
             document.createElement(
                 "label"
             );
 
 
-        etiqueta.style.display =
+        tarjeta.className =
+            "tarjeta-proveedor-modal-tipo-gasto";
+
+
+        tarjeta.dataset.proveedorId =
+            proveedorId;
+
+        tarjeta.dataset.proveedorNombre =
+            ultimoProveedorCreado.razon_social ||
+            "";
+
+        tarjeta.dataset.proveedorCuit =
+            ultimoProveedorCreado.cuit ||
+            "";
+
+
+        tarjeta.style.display =
             "flex";
 
-        etiqueta.style.alignItems =
+        tarjeta.style.alignItems =
             "center";
 
-        etiqueta.style.gap =
-            "10px";
+        tarjeta.style.gap =
+            "12px";
 
-        etiqueta.style.padding =
-            "10px 12px";
+        tarjeta.style.padding =
+            "12px 14px";
 
-        etiqueta.style.background =
+        tarjeta.style.background =
             "#151a26";
 
-        etiqueta.style.border =
+        tarjeta.style.border =
             "1px solid #2b3447";
 
-        etiqueta.style.borderRadius =
+        tarjeta.style.borderRadius =
             "10px";
 
-        etiqueta.style.cursor =
+        tarjeta.style.cursor =
             "pointer";
 
 
-        checkbox =
+        const check =
             document.createElement(
                 "input"
             );
 
 
-        checkbox.type =
+        check.type =
             "checkbox";
 
-        checkbox.className =
-            "proveedor-tipo-gasto";
+        check.className =
+            "proveedor-modal-tipo-gasto";
 
-        checkbox.value =
+        check.value =
             proveedorId;
+
+        check.checked =
+            true;
 
 
         const texto =
             document.createElement(
-                "span"
+                "div"
             );
 
 
+        const nombre =
+            document.createElement(
+                "div"
+            );
+
+
+        nombre.textContent =
+            ultimoProveedorCreado.razon_social ||
+            "Proveedor";
+
+
         texto.appendChild(
-            document.createTextNode(
-                ultimoProveedorCreado.razon_social ||
-                "Proveedor"
-            )
+            nombre
         );
 
 
-        if(ultimoProveedorCreado.cuit){
+        if(
+            ultimoProveedorCreado.cuit
+        ){
 
             const cuit =
                 document.createElement(
-                    "span"
+                    "div"
                 );
 
 
@@ -411,9 +1096,12 @@ function actualizarProveedoresDelTipoGasto(){
             cuit.style.fontSize =
                 "13px";
 
+            cuit.style.marginTop =
+                "3px";
+
 
             cuit.textContent =
-                ` · ${ultimoProveedorCreado.cuit}`;
+                ultimoProveedorCreado.cuit;
 
 
             texto.appendChild(
@@ -423,41 +1111,81 @@ function actualizarProveedoresDelTipoGasto(){
         }
 
 
-        etiqueta.appendChild(
-            checkbox
+        tarjeta.appendChild(
+            check
         );
 
-
-        etiqueta.appendChild(
+        tarjeta.appendChild(
             texto
         );
 
-
-        contenedor.appendChild(
-            etiqueta
+        lista.appendChild(
+            tarjeta
         );
 
+    }else{
+
+        const check =
+            tarjeta.querySelector(
+                ".proveedor-modal-tipo-gasto"
+            );
+
+
+        if(check){
+
+            check.checked =
+                true;
+
+        }
+
     }
 
 
-    checkbox.checked = true;
-
-
+    /*
+     * Lo incorporamos también al estado temporal
+     * del modal para que no se pierda.
+     */
     if(
-        estadoFormularioTipoGasto &&
-        !estadoFormularioTipoGasto
-            .proveedores
-            .includes(proveedorId)
+        estadoFormularioTipoGasto
     ){
 
-        estadoFormularioTipoGasto
-            .proveedores
-            .push(proveedorId);
+        if(
+            !Array.isArray(
+                estadoFormularioTipoGasto
+                    .proveedoresModal
+            )
+        ){
+
+            estadoFormularioTipoGasto
+                .proveedoresModal = [];
+
+        }
+
+
+        if(
+            !estadoFormularioTipoGasto
+                .proveedoresModal
+                .includes(
+                    proveedorId
+                )
+        ){
+
+            estadoFormularioTipoGasto
+                .proveedoresModal
+                .push(
+                    proveedorId
+                );
+
+        }
 
     }
 
 
-    ultimoProveedorCreado = null;
+    ultimoProveedorCreado =
+        null;
+
+
+    filtrarProveedoresModalTipoGasto();
 
 }
 
@@ -474,6 +1202,7 @@ function abrirABMProveedoresDesdeTipoGasto(){
     );
 
 }
+
 /* =========================================
    GUARDAR / ACTUALIZAR
 ========================================= */
@@ -730,7 +1459,8 @@ function cargarTipoGastoParaReactivar(
     tipoGasto
 ){
 
-    tipoGastoEditandoId = null;
+    tipoGastoEditandoId =
+        null;
 
     tipoGastoReactivandoId =
         String(
@@ -738,79 +1468,69 @@ function cargarTipoGastoParaReactivar(
         );
 
 
-    const valores = {
+    const nombre =
+        document.getElementById(
+            "nombreTipoGasto"
+        );
 
-        nombreTipoGasto:
-            tipoGasto.nombre,
-
-        descripcionTipoGasto:
-            tipoGasto.descripcion
-
-    };
+    const descripcion =
+        document.getElementById(
+            "descripcionTipoGasto"
+        );
 
 
-    Object.entries(
-        valores
-    ).forEach(
-        function([id, valor]){
+    if(nombre){
 
-            const elemento =
-                document.getElementById(
-                    id
-                );
+        nombre.value =
+            tipoGasto.nombre || "";
 
-            if(elemento){
+    }
 
-                elemento.value =
-                    valor || "";
 
-            }
+    if(descripcion){
 
-        }
-    );
+        descripcion.value =
+            tipoGasto.descripcion || "";
+
+    }
+
+
+    proveedoresRelacionadosTipoGasto =
+        new Set(
+            (
+                tipoGasto.proveedores ||
+                []
+            )
+            .map(
+                function(id){
+
+                    return String(id);
+
+                }
+            )
+        );
 
 
     document
-
         .querySelectorAll(
-            ".proveedor-tipo-gasto"
+            ".proveedor-modal-tipo-gasto"
         )
-
         .forEach(
-            function(checkbox){
+            function(check){
 
-                checkbox.checked = false;
+                check.checked =
+                    proveedoresRelacionadosTipoGasto
+                        .has(
+                            String(
+                                check.value
+                            )
+                        );
 
             }
         );
 
 
-    if(
-        tipoGasto.proveedores
-    ){
-
-        tipoGasto.proveedores.forEach(
-
-            function(idProveedor){
-
-                const checkbox =
-                    document.querySelector(
-                        '.proveedor-tipo-gasto[value="' +
-                        idProveedor +
-                        '"]'
-                    );
-
-                if(checkbox){
-
-                    checkbox.checked = true;
-
-                }
-
-            }
-
-        );
-
-    }
+    renderizarProveedoresRelacionadosTipoGasto();
 
 
     const btnGuardar =
@@ -840,16 +1560,10 @@ function cargarTipoGastoParaReactivar(
     }
 
 
-    const inputNombre =
-        document.getElementById(
-            "nombreTipoGasto"
-        );
+    if(nombre){
 
-
-    if(inputNombre){
-
-        inputNombre.focus();
-        inputNombre.select();
+        nombre.focus();
+        nombre.select();
 
     }
 
@@ -867,7 +1581,8 @@ function modificarTipoGasto(
     proveedores
 ){
 
-    tipoGastoReactivandoId = null;
+    tipoGastoReactivandoId =
+        null;
 
     tipoGastoEditandoId =
         String(
@@ -875,64 +1590,87 @@ function modificarTipoGasto(
         );
 
 
-    document.getElementById(
-        "nombreTipoGasto"
-    ).value =
-        nombre || "";
+    const inputNombre =
+        document.getElementById(
+            "nombreTipoGasto"
+        );
+
+    const inputDescripcion =
+        document.getElementById(
+            "descripcionTipoGasto"
+        );
 
 
-    document.getElementById(
-        "descripcionTipoGasto"
-    ).value =
-        descripcion || "";
+    if(inputNombre){
+
+        inputNombre.value =
+            nombre || "";
+
+    }
+
+
+    if(inputDescripcion){
+
+        inputDescripcion.value =
+            descripcion || "";
+
+    }
+
+
+    let idsProveedores = [];
+
+
+    if(proveedores){
+
+        idsProveedores =
+            String(
+                proveedores
+            )
+            .split(",")
+            .map(
+                function(valor){
+
+                    return valor.trim();
+
+                }
+            )
+            .filter(
+                function(valor){
+
+                    return valor !== "";
+
+                }
+            );
+
+    }
+
+
+    proveedoresRelacionadosTipoGasto =
+        new Set(
+            idsProveedores
+        );
 
 
     document
-
         .querySelectorAll(
-            ".proveedor-tipo-gasto"
+            ".proveedor-modal-tipo-gasto"
         )
-
         .forEach(
-            function(checkbox){
+            function(check){
 
-                checkbox.checked = false;
+                check.checked =
+                    proveedoresRelacionadosTipoGasto
+                        .has(
+                            String(
+                                check.value
+                            )
+                        );
 
             }
         );
 
 
-    if(proveedores){
-
-        proveedores
-            .split(",")
-
-            .filter(
-                valor => valor !== ""
-            )
-
-            .forEach(
-
-                function(idProveedor){
-
-                    const checkbox =
-                        document.querySelector(
-                            '.proveedor-tipo-gasto[value="' +
-                            idProveedor +
-                            '"]'
-                        );
-
-                    if(checkbox){
-
-                        checkbox.checked = true;
-
-                    }
-
-                }
-
-            );
-
-    }
+    renderizarProveedoresRelacionadosTipoGasto();
 
 
     const btnGuardar =
@@ -960,12 +1698,6 @@ function modificarTipoGasto(
             "inline-block";
 
     }
-
-
-    const inputNombre =
-        document.getElementById(
-            "nombreTipoGasto"
-        );
 
 
     if(inputNombre){
@@ -1001,29 +1733,68 @@ function cancelarEdicionTipoGasto(){
 
 function limpiarFormularioTipoGasto(){
 
-    document.getElementById(
-        "nombreTipoGasto"
-    ).value = "";
+    const nombre =
+        document.getElementById(
+            "nombreTipoGasto"
+        );
 
-    document.getElementById(
-        "descripcionTipoGasto"
-    ).value = "";
+    const descripcion =
+        document.getElementById(
+            "descripcionTipoGasto"
+        );
+
+
+    if(nombre){
+
+        nombre.value = "";
+
+    }
+
+
+    if(descripcion){
+
+        descripcion.value = "";
+
+    }
+
+
+    proveedoresRelacionadosTipoGasto =
+        new Set();
+
 
     document
-
         .querySelectorAll(
-            ".proveedor-tipo-gasto"
+            ".proveedor-modal-tipo-gasto"
         )
-
         .forEach(
+            function(check){
 
-            function(checkbox){
-
-                checkbox.checked = false;
+                check.checked =
+                    false;
 
             }
-
         );
+
+
+    const buscador =
+        document.getElementById(
+            "buscarProveedorTipoGasto"
+        );
+
+
+    if(buscador){
+
+        buscador.value = "";
+
+    }
+
+
+    renderizarProveedoresRelacionadosTipoGasto();
+
+    filtrarProveedoresModalTipoGasto();
+
+    cerrarModalProveedoresTipoGasto();
+
 
     const btnGuardar =
         document.getElementById(

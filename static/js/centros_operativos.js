@@ -46,8 +46,99 @@ function iniciarABMCentrosOperativos(){
 
     }
 
+    const buscador =
+        document.getElementById(
+            "buscarCentroOperativoABM"
+        );
+
+
+    if(buscador){
+
+        buscador.addEventListener(
+            "input",
+            filtrarCentrosOperativosABM
+        );
+
+    }
+
 }
 
+function filtrarCentrosOperativosABM(){
+
+    const buscador =
+        document.getElementById(
+            "buscarCentroOperativoABM"
+        );
+
+    const mensajeSinResultados =
+        document.getElementById(
+            "sinResultadosCentroOperativoABM"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".tarjeta-centro-operativo-abm"
+        );
+
+
+    let visibles = 0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensajeSinResultados){
+
+        mensajeSinResultados.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
+
+}
 
 async function guardarCentroOperativo(){
 

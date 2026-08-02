@@ -63,6 +63,37 @@
     </div>
 
     <div
+    style="
+    border-top:1px solid #2b3447;
+    margin-top:28px;
+    padding-top:24px;
+    margin-bottom:16px;
+    "
+    >
+
+        <label
+        class="label"
+        for="buscarBancoABM"
+        style="
+        display:block;
+        margin-bottom:8px;
+        "
+        >
+
+            Buscar banco
+
+        </label>
+
+        <input
+        id="buscarBancoABM"
+        type="text"
+        class="input-box"
+        placeholder="Buscar por nombre"
+        autocomplete="off">
+
+    </div>
+
+    <div
     id="grillaBancos"
     style="
     display:flex;
@@ -73,6 +104,8 @@
     {% for banco in bancos %}
 
     <div
+    class="tarjeta-banco-abm"
+    data-busqueda="{{ banco.nombre|default:''|escape }}"
     style="
     display:flex;
     justify-content:space-between;
@@ -124,6 +157,20 @@
             </button>
 
         </div>
+
+    </div>
+
+    <div
+    id="sinResultadosBancoABM"
+    style="
+    display:none;
+    color:#8b93a7;
+    padding:20px;
+    text-align:center;
+    "
+    >
+
+        No se encontraron bancos.
 
     </div>
 
