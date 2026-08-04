@@ -1,0 +1,387 @@
+<div class="card">
+
+    <div
+        style="
+            font-size:28px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Recursos Operativos
+    </div>
+
+    <div
+        style="
+            color:#8b93a7;
+            margin-bottom:30px;
+        "
+    >
+        Administración de recursos operativos.
+    </div>
+
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:2fr 1fr 2fr;
+            gap:12px;
+            margin-bottom:20px;
+        "
+    >
+
+        <div>
+
+            <label
+                class="label"
+                for="nombreRecursoOperativo"
+            >
+                Nombre
+            </label>
+
+            <input
+                id="nombreRecursoOperativo"
+                type="text"
+                class="input-box"
+                maxlength="120"
+                placeholder="Nombre del recurso operativo"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="tipoRecursoOperativo"
+            >
+                Tipo de recurso
+            </label>
+
+            <select
+                id="tipoRecursoOperativo"
+                class="input-box"
+            >
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                <option value="Persona">
+                    Personas
+                </option>
+
+                <option value="Vehiculo">
+                    Vehículos
+                </option>
+
+                <option value="Inmueble">
+                    Inmuebles
+                </option>
+
+                <option value="Equipo">
+                    Equipos
+                </option>
+
+                <option value="Otro">
+                    Otros
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="centroRecursoOperativo"
+            >
+                Centro Operativo
+            </label>
+
+            <select
+                id="centroRecursoOperativo"
+                class="input-box"
+            >
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                {% for centro in centros %}
+
+                    <option value="{{ centro.id }}">
+                        {{ centro.nombre }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="field"
+        style="
+            margin-bottom:20px;
+        "
+    >
+
+        <label
+            class="label"
+            for="descripcionRecursoOperativo"
+        >
+            Descripción
+        </label>
+
+        <textarea
+            id="descripcionRecursoOperativo"
+            class="input-box"
+            rows="4"
+            placeholder="Descripción opcional"
+        ></textarea>
+
+    </div>
+
+
+    <div
+        style="
+            display:flex;
+            gap:12px;
+            justify-content:flex-end;
+            margin:20px 0 30px;
+        "
+    >
+
+        <button
+            id="btnGuardarRecursoOperativo"
+            type="button"
+            class="guardar"
+            style="
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Guardar
+        </button>
+
+        <button
+            id="btnCancelarRecursoOperativo"
+            type="button"
+            class="action-btn"
+            style="
+                display:none;
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Cancelar
+        </button>
+
+    </div>
+
+
+    <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarRecursoOperativoABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar recurso operativo
+        </label>
+
+        <input
+            id="buscarRecursoOperativoABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por nombre, tipo, centro operativo o descripción"
+            autocomplete="off"
+        >
+
+    </div>
+
+
+    <div
+        id="grillaRecursosOperativos"
+        style="
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        "
+    >
+
+        {% for recurso in recursos %}
+
+            <div
+                class="tarjeta-recurso-operativo-abm"
+
+                data-recurso-id="{{ recurso.id }}"
+
+                data-recurso-nombre="{{ recurso.nombre|escape }}"
+
+                data-recurso-tipo="{{ recurso.tipo_recurso|escape }}"
+
+                data-recurso-centro="{{ recurso.centro_operativo_id }}"
+
+                data-recurso-descripcion="{{ recurso.descripcion|escape }}"
+
+                data-busqueda="
+                    {{ recurso.nombre|default:''|escape }}
+                    {{ recurso.get_tipo_recurso_display|default:''|escape }}
+                    {{ recurso.centro_operativo.nombre|default:''|escape }}
+                    {{ recurso.descripcion|default:''|escape }}
+                "
+
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:20px;
+                    padding:16px 18px;
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                "
+            >
+
+                <div
+                    style="
+                        min-width:0;
+                        flex:1;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-weight:700;
+                            margin-bottom:6px;
+                        "
+                    >
+                        {{ recurso.nombre }}
+                    </div>
+
+                    <div
+                        style="
+                            color:#8b93a7;
+                            font-size:14px;
+                            line-height:1.6;
+                        "
+                    >
+
+                        {{ recurso.get_tipo_recurso_display }}
+
+                        ·
+
+                        {{ recurso.centro_operativo.nombre }}
+
+                        {% if recurso.descripcion %}
+
+                            <br>
+
+                            {{ recurso.descripcion }}
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        flex-shrink:0;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="action-btn btn-modificar-recurso-operativo"
+                        data-recurso-id="{{ recurso.id }}"
+                    >
+                        Modificar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-btn btn-eliminar-recurso-operativo"
+                        data-recurso-id="{{ recurso.id }}"
+                        data-recurso-nombre="{{ recurso.nombre|escape }}"
+                        style="
+                            background:#7f1d1d;
+                            border-color:#991b1b;
+                        "
+                    >
+                        Eliminar
+                    </button>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div
+                style="
+                    color:#8b93a7;
+                    padding:20px;
+                    text-align:center;
+                "
+            >
+                No hay recursos operativos cargados.
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div
+        id="sinResultadosRecursoOperativoABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron recursos operativos.
+    </div>
+
+</div>
+
+
+<div
+    style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:30px;
+    "
+>
+
+    <button
+        id="btnVolverRecursoOperativo"
+        type="button"
+        class="action-btn"
+    >
+        ← Volver
+    </button>
+
+</div>

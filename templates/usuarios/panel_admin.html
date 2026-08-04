@@ -1660,6 +1660,8 @@ let contenidoAnteriorABMProveedores = null;
 
 let proveedoresCargaSimple = [];
 
+let recursosCargaSimple = [];
+
 function limpiarPanelOperativo(){
 
     const submenu =
@@ -1948,12 +1950,13 @@ function mostrarSubmenu(tipo){
                 Tipos de gasto
             </button>
 
-            <button class="module-card">
-
+            <button
+                type="button"
+                class="module-card"
+                onclick="mostrarABMRecursosOperativos('menu')"
+            >
                 Recurso operativo
-
             </button>
-
         `;
 
     }
@@ -2268,12 +2271,15 @@ async function actualizarCentroOperativoDelRegistro(){
 
     }
 
+
     await cargarSelectCentrosOperativos();
+
 
     const select =
         document.getElementById(
             "centroOperativoRegistro"
         );
+
 
     if(
         select &&
@@ -2285,6 +2291,7 @@ async function actualizarCentroOperativoDelRegistro(){
                 `option[value="${ultimoCentroOperativoCreado}"]`
             );
 
+
         if(opcion){
 
             select.value =
@@ -2294,8 +2301,19 @@ async function actualizarCentroOperativoDelRegistro(){
 
     }
 
+
     ultimoCentroOperativoCreado =
         null;
+
+
+    if(
+        typeof actualizarRecursosPorCentroOperativo ===
+        "function"
+    ){
+
+        actualizarRecursosPorCentroOperativo();
+
+    }
 
 }
 
@@ -2860,6 +2878,325 @@ async function actualizarProveedorDelRegistro(){
 
 }
 
+async function mostrarABMRecursosOperativos(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/recursos-operativos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar los recursos operativos."
+            );
+
+            return;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando recursos operativos:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar los recursos operativos."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Recién después de comprobar que el ABM cargó
+     * guardamos el origen.
+     */
+    origenABM =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
+
+    /*
+     * Si viene desde Carga Simple, retiramos físicamente
+     * el formulario y lo guardamos completo.
+     *
+     * Así conserva inputs, selects y demás estado.
+     */
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    if(
+        typeof iniciarABMRecursosOperativos ===
+        "function"
+    ){
+
+        iniciarABMRecursosOperativos();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMRecursosOperativos()."
+        );
+
+        alert(
+            "El módulo se cargó, pero no pudo iniciarse."
+        );
+
+    }
+
+}
+
+async function actualizarRecursoOperativoDelRegistro(){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const selectCentro =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    const selectRecurso =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !selectCentro ||
+        !selectRecurso
+    ){
+
+        ultimoRecursoOperativoCreado =
+            null;
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/recursos-operativos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.recursos
+            )
+        ){
+
+            return;
+
+        }
+
+
+        recursosCargaSimple =
+            resultado.recursos;
+
+
+        if(
+            ultimoRecursoOperativoCreado
+        ){
+
+            const recursoId =
+                typeof ultimoRecursoOperativoCreado ===
+                    "object"
+
+                    ? String(
+                        ultimoRecursoOperativoCreado.id
+                    )
+
+                    : String(
+                        ultimoRecursoOperativoCreado
+                    );
+
+
+            const recursoCreado =
+                recursosCargaSimple.find(
+
+                    function(recurso){
+
+                        return String(
+                            recurso.id
+                        ) === recursoId;
+
+                    }
+
+                );
+
+
+            if(recursoCreado){
+
+                const centroId =
+                    String(
+                        recursoCreado.centro_operativo_id
+                    );
+
+
+                const opcionCentro =
+                    selectCentro.querySelector(
+                        `option[value="${centroId}"]`
+                    );
+
+
+                if(opcionCentro){
+
+                    selectCentro.value =
+                        centroId;
+
+                }
+
+
+                actualizarRecursosPorCentroOperativo();
+
+
+                const opcionRecurso =
+                    selectRecurso.querySelector(
+                        `option[value="${recursoId}"]`
+                    );
+
+
+                if(opcionRecurso){
+
+                    selectRecurso.value =
+                        recursoId;
+
+                }
+
+            }else{
+
+                actualizarRecursosPorCentroOperativo();
+
+            }
+
+        }else{
+
+            actualizarRecursosPorCentroOperativo();
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error actualizando Recursos Operativos del registro:",
+            error
+        );
+
+    }
+
+
+    ultimoRecursoOperativoCreado =
+        null;
+
+}
+
 async function mostrarABMBancos(origen = "menu"){
 
     origenABM = origen;
@@ -3055,6 +3392,16 @@ async function iniciarEventosCargaSimple(){
             "proveedorRegistro"
         );
 
+    const selectCentroOperativo =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    const selectRecursoOperativo =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
     const botonAgregarTipoGasto =
         document.getElementById(
             "btnAgregarTipoGastoRegistro"
@@ -3063,6 +3410,11 @@ async function iniciarEventosCargaSimple(){
     const botonAgregarProveedor =
         document.getElementById(
             "btnAgregarProveedorRegistro"
+        );
+
+    const botonAgregarRecurso =
+        document.getElementById(
+            "btnAgregarRecursoOperativoRegistro"
         );
 
     const empresaActiva =
@@ -3074,11 +3426,13 @@ async function iniciarEventosCargaSimple(){
     if(
         !selectTipoGasto ||
         !selectProveedor ||
+        !selectCentroOperativo ||
+        !selectRecursoOperativo ||
         !empresaActiva
     ){
 
         console.error(
-            "No se encontraron los controles de Tipo de Gasto y Proveedor."
+            "No se encontraron todos los controles de Carga Simple."
         );
 
         return;
@@ -3086,18 +3440,51 @@ async function iniciarEventosCargaSimple(){
     }
 
 
-    selectProveedor.disabled = true;
+    /*
+     * Proveedor depende de Tipo de Gasto.
+     */
+    if(!selectTipoGasto.value){
 
-    selectProveedor.innerHTML = `
-        <option value="">
-            Seleccione primero un tipo de gasto...
-        </option>
-    `;
+        selectProveedor.disabled = true;
+
+        selectProveedor.innerHTML = `
+            <option value="">
+                Seleccione primero un tipo de gasto...
+            </option>
+        `;
 
 
-    if(botonAgregarProveedor){
+        if(botonAgregarProveedor){
 
-        botonAgregarProveedor.disabled = true;
+            botonAgregarProveedor.disabled =
+                true;
+
+        }
+
+    }
+
+
+    /*
+     * Recurso Operativo depende de Centro Operativo.
+     */
+    if(!selectCentroOperativo.value){
+
+        selectRecursoOperativo.disabled =
+            true;
+
+        selectRecursoOperativo.innerHTML = `
+            <option value="">
+                Seleccione primero un Centro Operativo...
+            </option>
+        `;
+
+
+        if(botonAgregarRecurso){
+
+            botonAgregarRecurso.disabled =
+                true;
+
+        }
 
     }
 
@@ -3145,6 +3532,7 @@ async function iniciarEventosCargaSimple(){
 
                 }
 
+
                 mostrarABMProveedores(
                     "registro"
                 );
@@ -3155,6 +3543,39 @@ async function iniciarEventosCargaSimple(){
 
 
         botonAgregarProveedor.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        botonAgregarRecurso &&
+        !botonAgregarRecurso.dataset.eventoAsignado
+    ){
+
+        botonAgregarRecurso.addEventListener(
+
+            "click",
+
+            function(){
+
+                if(!selectCentroOperativo.value){
+
+                    return;
+
+                }
+
+
+                mostrarABMRecursosOperativos(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarRecurso.dataset.eventoAsignado =
             "true";
 
     }
@@ -3174,6 +3595,25 @@ async function iniciarEventosCargaSimple(){
 
 
         selectTipoGasto.dataset.eventoProveedorAsignado =
+            "true";
+
+    }
+
+
+    if(
+        !selectCentroOperativo.dataset.eventoRecursoAsignado
+    ){
+
+        selectCentroOperativo.addEventListener(
+
+            "change",
+
+            actualizarRecursosPorCentroOperativo
+
+        );
+
+
+        selectCentroOperativo.dataset.eventoRecursoAsignado =
             "true";
 
     }
@@ -3201,6 +3641,10 @@ async function iniciarEventosCargaSimple(){
 
                 fetch(
                     `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+                ),
+
+                fetch(
+                    `/recursos-operativos/?empresa=${encodeURIComponent(empresa)}`
                 )
 
             ]);
@@ -3212,12 +3656,18 @@ async function iniciarEventosCargaSimple(){
         const respuestaProveedores =
             respuestas[1];
 
+        const respuestaRecursos =
+            respuestas[2];
+
 
         const resultadoTipos =
             await respuestaTipos.json();
 
         const resultadoProveedores =
             await respuestaProveedores.json();
+
+        const resultadoRecursos =
+            await respuestaRecursos.json();
 
 
         if(
@@ -3251,8 +3701,30 @@ async function iniciarEventosCargaSimple(){
         }
 
 
+        if(
+            !respuestaRecursos.ok ||
+            !resultadoRecursos.ok ||
+            !Array.isArray(
+                resultadoRecursos.recursos
+            )
+        ){
+
+            console.error(
+                resultadoRecursos.mensaje ||
+                "No se pudieron cargar los recursos operativos."
+            );
+
+            return;
+
+        }
+
+
         proveedoresCargaSimple =
             resultadoProveedores.proveedores;
+
+
+        recursosCargaSimple =
+            resultadoRecursos.recursos;
 
 
         selectTipoGasto.innerHTML = `
@@ -3310,7 +3782,10 @@ async function iniciarEventosCargaSimple(){
 
                                     }
 
-                                    return String(proveedor);
+
+                                    return String(
+                                        proveedor
+                                    );
 
                                 })
                                 .filter(function(id){
@@ -3318,6 +3793,7 @@ async function iniciarEventosCargaSimple(){
                                     return id !== "";
 
                                 })
+
                             : []
 
                     );
@@ -3339,10 +3815,17 @@ async function iniciarEventosCargaSimple(){
         }
 
 
+        /*
+         * Si Carga Simple fue restaurada desde un ABM,
+         * respetamos el Centro Operativo que ya tenía.
+         */
+        actualizarRecursosPorCentroOperativo();
+
+
     }catch(error){
 
         console.error(
-            "Error cargando Tipos de Gasto y Proveedores:",
+            "Error cargando datos de Carga Simple:",
             error
         );
 
@@ -3521,6 +4004,169 @@ function actualizarProveedoresPorTipoGasto(){
 
 }
 
+function actualizarRecursosPorCentroOperativo(){
+
+    const selectCentro =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    const selectRecurso =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+    const botonAgregarRecurso =
+        document.getElementById(
+            "btnAgregarRecursoOperativoRegistro"
+        );
+
+
+    if(
+        !selectCentro ||
+        !selectRecurso
+    ){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        selectRecurso.value;
+
+
+    selectRecurso.innerHTML = "";
+
+
+    if(!selectCentro.value){
+
+        const opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value = "";
+
+        opcion.textContent =
+            "Seleccione primero un Centro Operativo...";
+
+
+        selectRecurso.appendChild(
+            opcion
+        );
+
+
+        selectRecurso.disabled =
+            true;
+
+
+        if(botonAgregarRecurso){
+
+            botonAgregarRecurso.disabled =
+                true;
+
+        }
+
+
+        return;
+
+    }
+
+
+    selectRecurso.disabled =
+        false;
+
+
+    if(botonAgregarRecurso){
+
+        botonAgregarRecurso.disabled =
+            false;
+
+    }
+
+
+    const opcionInicial =
+        document.createElement(
+            "option"
+        );
+
+
+    opcionInicial.value = "";
+
+    opcionInicial.textContent =
+        "Seleccione...";
+
+
+    selectRecurso.appendChild(
+        opcionInicial
+    );
+
+
+    recursosCargaSimple
+
+        .filter(
+
+            function(recurso){
+
+                return String(
+                    recurso.centro_operativo_id
+                ) === String(
+                    selectCentro.value
+                );
+
+            }
+
+        )
+
+        .forEach(
+
+            function(recurso){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        recurso.id
+                    );
+
+
+                opcion.textContent =
+                    recurso.tipo_recurso_label
+
+                        ? `${recurso.nombre} · ${recurso.tipo_recurso_label}`
+
+                        : recurso.nombre;
+
+
+                selectRecurso.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+
+    if(
+        valorAnterior &&
+        selectRecurso.querySelector(
+            `option[value="${valorAnterior}"]`
+        )
+    ){
+
+        selectRecurso.value =
+            valorAnterior;
+
+    }
+
+}
+
 function mostrarCargaSimple(){
 
     document.getElementById(
@@ -3690,7 +4336,9 @@ onclick="mostrarABMCentrosOperativos('registro')">
 
 <div class="field">
 
-<label class="label">
+<label
+class="label"
+for="recursoOperativoRegistro">
 
 Recurso operativo
 
@@ -3703,20 +4351,24 @@ gap:10px;
 ">
 
 <select
+id="recursoOperativoRegistro"
 class="input-box"
-style="flex:1;">
+style="flex:1;"
+disabled>
 
-<option>
+<option value="">
 
-Operativo
+Seleccione primero un Centro Operativo...
 
 </option>
 
 </select>
 
 <button
+id="btnAgregarRecursoOperativoRegistro"
 type="button"
-class="action-btn">
+class="action-btn"
+disabled>
 
 +
 
@@ -3724,7 +4376,7 @@ class="action-btn">
 
 </div>
 
-</div> 
+</div>
 
 <div class="field">
 
@@ -4129,18 +4781,47 @@ Total del Registro
 
 </label>
 
+<div
+style="
+display:flex;
+align-items:center;
+gap:10px;
+">
+
 <input
 id="total_registro"
 type="number"
 step="0.01"
 class="input-box"
 style="
+flex:1;
 font-size:22px;
 font-weight:700;
 text-align:right;
 background:#111827;
 color:#60a5fa;"
 readonly>
+
+<button
+id="btnAdjuntarFacturaRegistro"
+type="button"
+class="action-btn"
+style="
+flex-shrink:0;
+padding:0 16px;
+">
+
+📎 Factura
+
+</button>
+
+<input
+id="archivoFacturaRegistro"
+type="file"
+accept=".pdf,.jpg,.jpeg,.png,.webp"
+hidden>
+
+</div>
 
 </div>
 
@@ -5519,6 +6200,121 @@ function cerrarModalEliminarEmpresa(){
 
 }
 
+function abrirSelectorFacturaRegistro(){
+
+    const input =
+        document.getElementById(
+            "archivoFacturaRegistro"
+        );
+
+
+    if(!input){
+
+        return;
+
+    }
+
+
+    input.click();
+
+}
+
+
+function actualizarFacturaSeleccionada(){
+
+    const input =
+        document.getElementById(
+            "archivoFacturaRegistro"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnAdjuntarFacturaRegistro"
+        );
+
+
+    if(
+        !input ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        !input.files ||
+        input.files.length === 0
+    ){
+
+        boton.textContent =
+            "📎 Factura";
+
+        boton.removeAttribute(
+            "title"
+        );
+
+        return;
+
+    }
+
+
+    const archivo =
+        input.files[0];
+
+
+    boton.textContent =
+        "📎 Factura ✓";
+
+
+    boton.title =
+        archivo.name;
+
+}
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        const boton =
+            event.target.closest(
+                "#btnAdjuntarFacturaRegistro"
+            );
+
+
+        if(!boton){
+
+            return;
+
+        }
+
+
+        abrirSelectorFacturaRegistro();
+
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        if(
+            event.target.id !==
+            "archivoFacturaRegistro"
+        ){
+
+            return;
+
+        }
+
+
+        actualizarFacturaSeleccionada();
+
+    }
+);
+
 </script>
 
 <div
@@ -5726,6 +6522,8 @@ Sí
 <script src="{% static 'js/tipos_gasto.js' %}?v=3"></script>
 
 <script src="{% static 'js/gestion_claves.js' %}?v=2"></script>
+
+<script src="{% static 'js/recursos_operativos.js' %}?v=2"></script>
 
 </body>
 </html>

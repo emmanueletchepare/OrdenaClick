@@ -1,0 +1,258 @@
+EXPORTACIÓN / IMPORTACIÓN DE EMPRESA - REGLAS DE ARQUITECTURA
+
+OBJETIVO
+
+La opción Exportar Empresa debe generar una copia completa y portable
+de toda la información perteneciente a una empresa.
+
+La exportación no debe limitarse a los datos visibles del formulario
+Modificar Empresa.
+
+Toda nueva entidad que dependa funcionalmente de Empresa debe evaluarse
+para su inclusión en Exportar/Importar Empresa.
+
+
+REGLA PRINCIPAL
+
+Si un dato se perdería al eliminar la empresa y volver a importarla,
+ese dato debe formar parte del backup, salvo que exista una razón
+explícita y documentada para excluirlo.
+
+
+DATOS QUE DEBEN FORMAR PARTE DE LA EXPORTACIÓN
+
+1. EMPRESA
+- Datos generales.
+- Datos fiscales.
+- Datos de contacto.
+- Autoridades.
+- Configuraciones propias de la empresa.
+
+2. DOCUMENTACIÓN SOCIETARIA
+- Estatuto.
+- Actas.
+- Designaciones.
+- Otros documentos societarios que se agreguen en el futuro.
+
+3. EJERCICIOS
+- Todos los ejercicios de la empresa.
+- Estado.
+- Fechas.
+- Autoridades asociadas si corresponde.
+
+4. CENTROS OPERATIVOS
+- Activos e inactivos.
+- Deben conservar sus identificadores lógicos para reconstruir relaciones.
+
+5. RECURSOS OPERATIVOS
+- Activos e inactivos.
+- Tipo de recurso.
+- Centro Operativo relacionado.
+- Descripción.
+
+6. BANCOS
+- Activos e inactivos.
+
+7. PROVEEDORES
+- Activos e inactivos.
+- Todos sus datos de contacto y observaciones.
+
+8. TIPOS DE GASTO
+- Activos e inactivos.
+- Descripción.
+- Relaciones con proveedores.
+
+9. GESTIÓN DE CLAVES
+- Debe incluirse solo mediante un mecanismo seguro.
+- Nunca exportar contraseñas en texto plano.
+- Definir cómo se trasladará el contenido cifrado entre instalaciones.
+- La clave de cifrado de la aplicación NO debe incluirse dentro del backup.
+
+10. MOVIMIENTOS
+- Todos los movimientos históricos.
+- Tipo de gasto.
+- Proveedor.
+- Centro Operativo.
+- Recurso Operativo.
+- Importes.
+- Fechas.
+- Estados.
+- Datos fiscales.
+- Archivos/facturas adjuntas.
+
+11. PAGOS
+- Todos los pagos asociados a movimientos.
+- Medios de pago.
+- Importes.
+- Fechas.
+- Bancos.
+- Comprobantes.
+- Cheques/e-Cheqs relacionados.
+
+12. PLANES DE PAGO
+- Condiciones del plan.
+- Saldo financiado.
+- Tasas.
+- Cantidad de cuotas.
+
+13. CUOTAS
+- Capital.
+- Interés.
+- Impuestos.
+- Vencimiento.
+- Punitorios.
+- Estado.
+- Pagos y comprobantes relacionados.
+
+14. VENCIMIENTOS
+- Pendientes y finalizados.
+- Origen.
+- Fecha.
+- Importe.
+- Estado.
+
+15. ALERTAS
+- Configuración de anticipación.
+- Estado de alertas cuando corresponda.
+- Configuración general de la empresa.
+
+16. ARCHIVOS ADJUNTOS
+- Facturas.
+- Comprobantes.
+- Documentación.
+- Todo archivo relacionado con entidades exportadas.
+
+
+RELACIONES
+
+Al importar una empresa deben reconstruirse correctamente todas las relaciones.
+
+No se debe depender de que los IDs de la base original coincidan con los
+IDs de la nueva base.
+
+La importación debe crear mapas entre IDs originales y nuevos IDs.
+
+Ejemplo:
+
+Centro original ID 16
+        ↓
+Centro nuevo ID 4
+
+Todo Recurso Operativo que apuntaba al Centro 16 debe pasar a apuntar
+al Centro 4.
+
+
+DATOS INACTIVOS
+
+Los registros dados de baja lógicamente también forman parte del backup.
+
+Ejemplos:
+- Centro Operativo cerrado.
+- Recurso Operativo inactivo.
+- Proveedor inactivo.
+- Tipo de gasto inactivo.
+
+Se conservan porque pueden participar en información histórica.
+
+
+SEGURIDAD
+
+Nunca incluir:
+- SECRET_KEY de Django.
+- Claves maestras de cifrado.
+- Variables de entorno del servidor.
+- Credenciales de infraestructura.
+- Contraseñas en texto plano.
+
+Los backups deben considerarse información sensible.
+
+
+COMPATIBILIDAD
+
+La exportación debe incluir un número de versión del formato.
+
+Ejemplo:
+
+{
+    "formato": "ordenaclick_empresa",
+    "version": 1
+}
+
+Si el formato cambia en el futuro, Importar Empresa debe poder detectar
+la versión y actuar en consecuencia.
+
+
+REGLA PARA DESARROLLO FUTURO
+
+Cada vez que se cree o modifique un modelo relacionado con Empresa,
+se debe revisar este documento y responder:
+
+1. ¿Debe exportarse?
+2. ¿Debe importarse?
+3. ¿Tiene archivos?
+4. ¿Tiene relaciones que deban reconstruirse?
+5. ¿Contiene información sensible?
+6. ¿Hay que mantener registros inactivos?
+7. ¿Afecta compatibilidad con backups anteriores?
+
+La funcionalidad Exportar/Importar Empresa no se considera completa
+hasta que todas las entidades definidas en este documento estén cubiertas.
+
+
+RETENCIONES DE PAGO
+- Tipo de retención.
+- Importe.
+- Comprobante/certificado.
+- Pago relacionado.
+
+CHEQUES / E-CHEQS
+- Todos los datos del instrumento.
+- Pago relacionado.
+- Banco.
+- Fechas.
+- Estado.
+- Vencimiento relacionado.
+
+ORDENES DE PAGO (futuro)
+- Cabecera.
+- Documentos cancelados.
+- Pagos relacionados.
+- Retenciones.
+- Comprobantes.
+
+CUENTAS BANCARIAS
+
+- Empresa.
+- Banco.
+- Nombre de la cuenta.
+- Tipo de cuenta.
+- Moneda.
+- Número de cuenta.
+- CBU.
+- Alias.
+- Estado activo/inactivo.
+
+Las Cuentas Bancarias forman parte del entorno Empresa.
+
+Al importar deben reconstruirse correctamente sus relaciones con:
+
+- Transferencias.
+- Cheques/e-Cheqs propios.
+- Planes con débito automático.
+- Vencimientos relacionados.
+- Futuras operaciones bancarias.
+
+
+APLICACIONES DE PAGO
+
+- Pago relacionado.
+- Movimiento o Cuota cancelada.
+- Importe aplicado.
+
+Las aplicaciones deben exportarse e importarse preservando las relaciones.
+
+Al importar deben reconstruirse después de haber reconstruido:
+- Pagos.
+- Movimientos.
+- Planes.
+- Cuotas.

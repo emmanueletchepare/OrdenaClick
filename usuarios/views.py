@@ -34,6 +34,7 @@ from .models import (
     CentroOperativo,
     Banco,
     GestionClave,
+    RecursoOperativo,
     Proveedor
 )
 
@@ -1118,6 +1119,505 @@ def eliminar_centro_operativo(request):
 
     return JsonResponse({
         "ok": True
+    })
+
+# =========================================
+# RECURSOS OPERATIVOS
+# =========================================
+
+
+def listar_recursos_operativos(request):
+
+    empresa_id = request.GET.get(
+        "empresa"
+    )
+
+    try:
+
+        empresa = Empresa.objects.get(
+            id=empresa_id
+        )
+
+    except Empresa.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "La empresa no existe."
+        }, status=404)
+
+    recursos = (
+        RecursoOperativo.objects
+        .filter(
+            empresa=empresa,
+            activo=True
+        )
+        .select_related(
+            "centro_operativo"
+        )
+        .order_by(
+            "tipo_recurso",
+            "nombre"
+        )
+    )
+
+    centros = (
+        CentroOperativo.objects
+        .filter(
+            empresa=empresa,
+            activo=True
+        )
+        .order_by(
+            "nombre"
+        )
+    )
+
+    html = render_to_string(
+        "usuarios/recursos_operativos.html",
+        {
+            "empresa": empresa,
+            "recursos": recursos,
+            "centros": centros
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "html": html,
+        "recursos": [
+            {
+                "id": recurso.id,
+                "nombre": recurso.nombre,
+                "tipo_recurso":
+                    recurso.tipo_recurso,
+                "tipo_recurso_label":
+                    recurso.get_tipo_recurso_display(),
+                "centro_operativo_id":
+                    recurso.centro_operativo_id,
+                "centro_operativo":
+                    recurso.centro_operativo.nombre,
+                "descripcion":
+                    recurso.descripcion
+            }
+            for recurso in recursos
+        ]
+    })
+
+
+def guardar_recurso_operativo(request):
+
+    if request.method != "POST":
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido."
+        }, status=405)
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    centro_id = request.POST.get(
+        "centro_operativo"
+    )
+
+    nombre = (
+        request.POST.get(
+            "nombre"
+        ) or ""
+    ).strip().upper()
+
+    tipo_recurso = (
+        request.POST.get(
+            "tipo_recurso"
+        ) or ""
+    ).strip()
+
+    descripcion = (
+        request.POST.get(
+            "descripcion"
+        ) or ""
+    ).strip()
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "Ingrese el nombre del recurso operativo."
+        })
+
+    tipos_validos = {
+        "Persona",
+        "Vehiculo",
+        "Inmueble",
+        "Equipo",
+        "Otro"
+    }
+
+    if tipo_recurso not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "Seleccione un tipo de recurso válido."
+        })
+
+    try:
+
+        centro = CentroOperativo.objects.get(
+            id=centro_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CentroOperativo.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "El centro operativo no existe o está inactivo."
+        }, status=404)
+
+    existente = (
+        RecursoOperativo.objects
+        .filter(
+            empresa_id=empresa_id,
+            nombre__iexact=nombre
+        )
+        .first()
+    )
+
+    if existente:
+
+        if existente.activo:
+
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "Ya existe un recurso operativo "
+                    "activo con ese nombre."
+                )
+            })
+
+        return JsonResponse({
+            "ok": False,
+            "requiere_reactivacion": True,
+            "mensaje": (
+                "Ya existe un recurso operativo "
+                "inactivo con ese nombre."
+            ),
+            "recurso": {
+                "id": existente.id,
+                "nombre": existente.nombre
+            }
+        })
+
+    recurso = RecursoOperativo.objects.create(
+        empresa_id=empresa_id,
+        centro_operativo=centro,
+        nombre=nombre,
+        tipo_recurso=tipo_recurso,
+        descripcion=descripcion
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "recurso": {
+            "id": recurso.id,
+            "nombre": recurso.nombre
+        }
+    })
+
+
+def modificar_recurso_operativo(request):
+
+    if request.method != "POST":
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido."
+        }, status=405)
+
+    recurso_id = request.POST.get(
+        "recurso"
+    )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    centro_id = request.POST.get(
+        "centro_operativo"
+    )
+
+    nombre = (
+        request.POST.get(
+            "nombre"
+        ) or ""
+    ).strip().upper()
+
+    tipo_recurso = (
+        request.POST.get(
+            "tipo_recurso"
+        ) or ""
+    ).strip()
+
+    descripcion = (
+        request.POST.get(
+            "descripcion"
+        ) or ""
+    ).strip()
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "Ingrese el nombre del recurso operativo."
+        })
+
+    tipos_validos = {
+        "Persona",
+        "Vehiculo",
+        "Inmueble",
+        "Equipo",
+        "Otro"
+    }
+
+    if tipo_recurso not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "Seleccione un tipo de recurso válido."
+        })
+
+    try:
+
+        recurso = RecursoOperativo.objects.get(
+            id=recurso_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except RecursoOperativo.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "El recurso operativo no existe."
+        }, status=404)
+
+    try:
+
+        centro = CentroOperativo.objects.get(
+            id=centro_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CentroOperativo.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "El centro operativo no existe o está inactivo."
+        }, status=404)
+
+    duplicado = (
+        RecursoOperativo.objects
+        .filter(
+            empresa_id=empresa_id,
+            nombre__iexact=nombre,
+            activo=True
+        )
+        .exclude(
+            id=recurso.id
+        )
+        .exists()
+    )
+
+    if duplicado:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otro recurso operativo "
+                "activo con ese nombre."
+            )
+        })
+
+    recurso.nombre = nombre
+    recurso.tipo_recurso = tipo_recurso
+    recurso.centro_operativo = centro
+    recurso.descripcion = descripcion
+
+    recurso.save(
+        update_fields=[
+            "nombre",
+            "tipo_recurso",
+            "centro_operativo",
+            "descripcion"
+        ]
+    )
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def eliminar_recurso_operativo(request):
+
+    if request.method != "POST":
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido."
+        }, status=405)
+
+    recurso_id = request.POST.get(
+        "recurso"
+    )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    try:
+
+        recurso = RecursoOperativo.objects.get(
+            id=recurso_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except RecursoOperativo.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje":
+                "El recurso operativo no existe."
+        }, status=404)
+
+
+    cantidad_activos = (
+        RecursoOperativo.objects
+        .filter(
+            empresa_id=empresa_id,
+            activo=True
+        )
+        .count()
+    )
+
+
+    if cantidad_activos <= 1:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "La empresa debe conservar al menos "
+                "un recurso operativo activo."
+            )
+        })
+
+
+    recurso.activo = False
+
+    recurso.save(
+        update_fields=[
+            "activo"
+        ]
+    )
+
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def reactivar_recurso_operativo(request):
+
+    if request.method != "POST":
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido."
+        }, status=405)
+
+    recurso_id = request.POST.get(
+        "recurso"
+    )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    try:
+
+        recurso = RecursoOperativo.objects.get(
+            id=recurso_id,
+            empresa_id=empresa_id,
+            activo=False
+        )
+
+    except RecursoOperativo.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "El recurso operativo inactivo "
+                "no existe o ya fue activado."
+            )
+        }, status=404)
+
+    if not recurso.centro_operativo.activo:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "No se puede reactivar el recurso "
+                "porque su centro operativo está inactivo."
+            )
+        })
+
+    duplicado = (
+        RecursoOperativo.objects
+        .filter(
+            empresa_id=empresa_id,
+            nombre__iexact=recurso.nombre,
+            activo=True
+        )
+        .exclude(
+            id=recurso.id
+        )
+        .exists()
+    )
+
+    if duplicado:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe un recurso operativo "
+                "activo con ese nombre."
+            )
+        })
+
+    recurso.activo = True
+
+    recurso.save(
+        update_fields=[
+            "activo"
+        ]
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "recurso": {
+            "id": recurso.id,
+            "nombre": recurso.nombre
+        }
     })
 
 # =========================================

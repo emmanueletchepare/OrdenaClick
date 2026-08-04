@@ -324,6 +324,22 @@ class Movimiento(models.Model):
         blank=True
     )
 
+    centro_operativo = models.ForeignKey(
+        'CentroOperativo',
+        on_delete=models.PROTECT,
+        related_name='movimientos',
+        null=True,
+        blank=True
+    )
+
+    recurso_operativo = models.ForeignKey(
+        'RecursoOperativo',
+        on_delete=models.PROTECT,
+        related_name='movimientos',
+        null=True,
+        blank=True
+    )
+
     descripcion = models.CharField(
         max_length=255
     )
@@ -333,7 +349,7 @@ class Movimiento(models.Model):
         decimal_places=2
     )
 
-    fecha_pago = models.DateField()
+    fecha_registro = models.DateField()
 
     fecha_vencimiento = models.DateField(
         blank=True,
@@ -367,6 +383,866 @@ class Movimiento(models.Model):
             return f"{self.ejercicio.empresa} - {self.descripcion}"
 
         return self.descripcion
+
+# =========================================
+# PAGOS
+# =========================================
+
+class Pago(models.Model):
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name='pagos'
+    )
+
+    fecha = models.DateField()
+
+    importe_efectivo = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"Pago {self.id} - "
+            f"{self.fecha}"
+        )
+
+# =========================================
+# APLICACIONES DE PAGO
+# =========================================
+
+class AplicacionPago(models.Model):
+
+    pago = models.ForeignKey(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='aplicaciones'
+    )
+
+    movimiento = models.ForeignKey(
+        Movimiento,
+        on_delete=models.PROTECT,
+        related_name='aplicaciones_pago',
+        blank=True,
+        null=True
+    )
+
+    cuota = models.ForeignKey(
+        'CuotaPlan',
+        on_delete=models.PROTECT,
+        related_name='aplicaciones_pago',
+        blank=True,
+        null=True
+    )
+
+    importe = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+
+        constraints = [
+
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        movimiento__isnull=False,
+                        cuota__isnull=True
+                    )
+                    |
+                    models.Q(
+                        movimiento__isnull=True,
+                        cuota__isnull=False
+                    )
+                ),
+                name='aplicacion_pago_un_solo_destino'
+            ),
+
+            models.CheckConstraint(
+                condition=models.Q(
+                    importe__gt=0
+                ),
+                name='aplicacion_pago_importe_positivo'
+            ),
+
+        ]
+
+    def __str__(self):
+
+        return (
+            f"Aplicación {self.id} - "
+            f"{self.importe}"
+        )
+
+# =========================================
+# TRANSFERENCIAS DE PAGO
+# =========================================
+
+class TransferenciaPago(models.Model):
+
+    pago = models.ForeignKey(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='transferencias'
+    )
+
+    cuenta_bancaria = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='transferencias_pago'
+    )
+
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    fecha = models.DateField()
+
+    referencia = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    comprobante = models.FileField(
+        upload_to='pagos/transferencias/',
+        blank=True,
+        null=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"Transferencia {self.id} - "
+            f"{self.importe}"
+        )
+
+
+# =========================================
+# DÉBITOS AUTOMÁTICOS DE PAGO
+# =========================================
+
+class DebitoAutomaticoPago(models.Model):
+
+    pago = models.ForeignKey(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='debitos_automaticos'
+    )
+
+    cuenta_bancaria = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='debitos_automaticos_pago'
+    )
+
+    importe = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    fecha_debito = models.DateField()
+
+    referencia = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    comprobante = models.FileField(
+        upload_to='pagos/debitos_automaticos/',
+        blank=True,
+        null=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"Débito automático {self.id} - "
+            f"{self.importe}"
+        )
+
+# =========================================
+# TARJETA DE PAGO
+# =========================================
+
+class TarjetaPago(models.Model):
+
+    pago = models.OneToOneField(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='tarjeta'
+    )
+
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    referencia = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    comprobante = models.FileField(
+        upload_to='pagos/tarjetas/',
+        blank=True,
+        null=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"Tarjeta - Pago {self.pago_id} - "
+            f"{self.importe}"
+        )
+
+
+# =========================================
+# RETENCIONES DE PAGO
+# =========================================
+
+class RetencionPago(models.Model):
+
+    pago = models.ForeignKey(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='retenciones'
+    )
+
+    tipo = models.CharField(
+        max_length=100
+    )
+
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    comprobante = models.FileField(
+        upload_to='pagos/retenciones/',
+        blank=True,
+        null=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"{self.tipo} - "
+            f"{self.importe}"
+        )
+
+# =========================================
+# CHEQUES / E-CHEQS
+# =========================================
+
+class Cheque(models.Model):
+
+    TIPOS_INSTRUMENTO = [
+
+        ('Cheque', 'Cheque físico'),
+        ('ECheq', 'e-Cheq'),
+
+    ]
+
+    ORIGENES = [
+
+        ('Propio', 'Propio'),
+        ('Tercero', 'Tercero'),
+
+    ]
+
+    TIPOS_CHEQUE = [
+
+        ('Comun', 'Cheque Común'),
+        ('Diferido', 'Cheque Diferido'),
+
+    ]
+
+    ESTADOS = [
+
+        ('Pendiente', 'Pendiente'),
+        ('EnCartera', 'En cartera'),
+        ('Entregado', 'Entregado'),
+        ('Depositado', 'Depositado'),
+        ('Cobrado', 'Cobrado'),
+        ('Debitado', 'Debitado'),
+        ('Vencido', 'Vencido'),
+        ('Rechazado', 'Rechazado'),
+        ('Devuelto', 'Devuelto'),
+        ('Anulado', 'Anulado'),
+
+    ]
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name='cheques'
+    )
+
+    pago = models.ForeignKey(
+        Pago,
+        on_delete=models.PROTECT,
+        related_name='cheques',
+        blank=True,
+        null=True
+    )
+
+    tipo_instrumento = models.CharField(
+        max_length=20,
+        choices=TIPOS_INSTRUMENTO
+    )
+
+    origen = models.CharField(
+        max_length=20,
+        choices=ORIGENES
+    )
+
+    tipo_cheque = models.CharField(
+        max_length=20,
+        choices=TIPOS_CHEQUE
+    )
+
+    banco = models.ForeignKey(
+        'Banco',
+        on_delete=models.PROTECT,
+        related_name='cheques',
+        blank=True,
+        null=True
+    )
+
+    cuenta_bancaria = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='cheques',
+        blank=True,
+        null=True
+    )
+
+    numero = models.CharField(
+        max_length=30
+    )
+
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    fecha_emision = models.DateField()
+
+    fecha_acreditacion = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    quien_entrega = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Pendiente'
+    )
+
+    comprobante = models.FileField(
+        upload_to='pagos/cheques/',
+        blank=True,
+        null=True
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"{self.get_tipo_instrumento_display()} "
+            f"{self.numero} - "
+            f"{self.importe}"
+        )
+
+# =========================================
+# PLANES DE PAGO
+# =========================================
+
+class PlanPago(models.Model):
+
+    PERIODICIDADES = [
+
+        ('Mensual', 'Mensual'),
+        ('Quincenal', 'Quincenal'),
+        ('Semanal', 'Semanal'),
+        ('Otra', 'Otra'),
+
+    ]
+
+    MODALIDADES_PAGO = [
+
+        ('Manual', 'Pago manual'),
+        ('DebitoAutomatico', 'Débito automático'),
+
+    ]
+
+    ESTADOS = [
+
+        ('Activo', 'Activo'),
+        ('Finalizado', 'Finalizado'),
+        ('Cancelado', 'Cancelado'),
+
+    ]
+
+    movimiento = models.OneToOneField(
+        Movimiento,
+        on_delete=models.PROTECT,
+        related_name='plan_pago'
+    )
+
+    saldo_original = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    cantidad_cuotas = models.PositiveIntegerField()
+
+    fecha_primer_vencimiento = models.DateField()
+
+    periodicidad = models.CharField(
+        max_length=20,
+        choices=PERIODICIDADES,
+        default='Mensual'
+    )
+
+    modalidad_pago = models.CharField(
+        max_length=30,
+        choices=MODALIDADES_PAGO,
+        default='Manual'
+    )
+
+    cuenta_debito = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='planes_debito_automatico',
+        blank=True,
+        null=True
+    )
+
+    referencia_debito = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    tasa_interes = models.DecimalField(
+        max_digits=8,
+        decimal_places=4,
+        default=0
+    )
+
+    porcentaje_impuesto = models.DecimalField(
+        max_digits=8,
+        decimal_places=4,
+        default=0
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Activo'
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"Plan {self.id} - "
+            f"{self.movimiento}"
+        )
+
+
+# =========================================
+# CUOTAS DE PLAN
+# =========================================
+
+class CuotaPlan(models.Model):
+
+    ESTADOS = [
+
+        ('Pendiente', 'Pendiente'),
+        ('Parcial', 'Parcial'),
+        ('Pagada', 'Pagada'),
+        ('Vencida', 'Vencida'),
+        ('Cancelada', 'Cancelada'),
+
+    ]
+
+    plan = models.ForeignKey(
+        PlanPago,
+        on_delete=models.PROTECT,
+        related_name='cuotas'
+    )
+
+    numero = models.PositiveIntegerField()
+
+    capital = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    interes = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+    impuesto = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+    punitorios = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+    fecha_vencimiento = models.DateField()
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Pendiente'
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        ordering = [
+            'numero'
+        ]
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    'plan',
+                    'numero'
+                ],
+                name='cuota_numero_unico_por_plan'
+            )
+
+        ]
+
+    @property
+    def total(self):
+
+        return (
+            self.capital +
+            self.interes +
+            self.impuesto +
+            self.punitorios
+        )
+
+    def __str__(self):
+
+        return (
+            f"Cuota {self.numero} - "
+            f"Plan {self.plan_id}"
+        )
+
+# =========================================
+# VENCIMIENTOS
+# =========================================
+
+class Vencimiento(models.Model):
+
+    TIPOS_ORIGEN = [
+
+        ('Movimiento', 'Movimiento'),
+        ('CuotaPlan', 'Cuota de plan'),
+        ('Cheque', 'Cheque / e-Cheq'),
+
+    ]
+
+    ESTADOS = [
+
+        ('Pendiente', 'Pendiente'),
+        ('Parcial', 'Parcial'),
+        ('Pagado', 'Pagado'),
+        ('Vencido', 'Vencido'),
+        ('Cancelado', 'Cancelado'),
+
+    ]
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name='vencimientos'
+    )
+
+    tipo_origen = models.CharField(
+        max_length=30,
+        choices=TIPOS_ORIGEN
+    )
+
+    movimiento = models.ForeignKey(
+        Movimiento,
+        on_delete=models.PROTECT,
+        related_name='vencimientos',
+        blank=True,
+        null=True
+    )
+
+    cuota = models.ForeignKey(
+        CuotaPlan,
+        on_delete=models.PROTECT,
+        related_name='vencimientos',
+        blank=True,
+        null=True
+    )
+
+    cheque = models.ForeignKey(
+        Cheque,
+        on_delete=models.PROTECT,
+        related_name='vencimientos',
+        blank=True,
+        null=True
+    )
+
+    fecha_vencimiento = models.DateField()
+
+    importe_original = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    importe_pendiente = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Pendiente'
+    )
+
+    banco = models.ForeignKey(
+        'Banco',
+        on_delete=models.PROTECT,
+        related_name='vencimientos',
+        blank=True,
+        null=True
+    )
+
+    cuenta_bancaria = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='vencimientos',
+        blank=True,
+        null=True
+    )
+
+    descripcion = models.CharField(
+        max_length=255
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        ordering = [
+            'fecha_vencimiento',
+            'id'
+        ]
+
+        constraints = [
+
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        movimiento__isnull=False,
+                        cuota__isnull=True,
+                        cheque__isnull=True
+                    )
+                    |
+                    models.Q(
+                        movimiento__isnull=True,
+                        cuota__isnull=False,
+                        cheque__isnull=True
+                    )
+                    |
+                    models.Q(
+                        movimiento__isnull=True,
+                        cuota__isnull=True,
+                        cheque__isnull=False
+                    )
+                ),
+                name='vencimiento_un_solo_origen'
+            )
+
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.descripcion} - "
+            f"{self.fecha_vencimiento}"
+        )
+
+# =========================================
+# ALERTAS
+# =========================================
+
+class Alerta(models.Model):
+
+    ESTADOS = [
+
+        ('Activa', 'Activa'),
+        ('Atendida', 'Atendida'),
+        ('Reprogramada', 'Reprogramada'),
+        ('Cancelada', 'Cancelada'),
+
+    ]
+
+    vencimiento = models.ForeignKey(
+        Vencimiento,
+        on_delete=models.PROTECT,
+        related_name='alertas'
+    )
+
+    fecha_alerta = models.DateField()
+
+    dias_anticipacion = models.PositiveIntegerField(
+        default=3
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='Activa'
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    atendida_en = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+
+        ordering = [
+            'fecha_alerta',
+            'id'
+        ]
+
+    def __str__(self):
+
+        return (
+            f"Alerta - "
+            f"{self.vencimiento}"
+        )
+
+# =========================================
+# CENTRO OPERATIVO
+# =========================================
 
 class CentroOperativo(models.Model):
     
@@ -404,6 +1280,62 @@ class CentroOperativo(models.Model):
         return self.nombre
 
 # =========================================
+# RECURSOS OPERATIVOS
+# =========================================
+
+class RecursoOperativo(models.Model):
+
+    TIPOS_RECURSO = [
+
+        ('Persona', 'Persona'),
+        ('Vehiculo', 'Vehículo'),
+        ('Inmueble', 'Inmueble'),
+        ('Equipo', 'Equipo'),
+        ('Otro', 'Otro'),
+
+    ]
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='recursos_operativos'
+    )
+
+    centro_operativo = models.ForeignKey(
+        CentroOperativo,
+        on_delete=models.PROTECT,
+        related_name='recursos_operativos'
+    )
+
+    nombre = models.CharField(
+        max_length=120
+    )
+
+    tipo_recurso = models.CharField(
+        max_length=20,
+        choices=TIPOS_RECURSO
+    )
+
+    descripcion = models.TextField(
+        blank=True
+    )
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+    class Meta:
+
+        ordering = [
+            'tipo_recurso',
+            'nombre'
+        ]
+
+    def __str__(self):
+
+        return self.nombre
+
+# =========================================
 # BANCOS
 # =========================================
 
@@ -435,6 +1367,80 @@ class Banco(models.Model):
     def __str__(self):
 
         return self.nombre
+
+# =========================================
+# CUENTAS BANCARIAS
+# =========================================
+
+class CuentaBancaria(models.Model):
+
+    TIPOS_CUENTA = [
+
+        ('CuentaCorriente', 'Cuenta corriente'),
+        ('CajaAhorro', 'Caja de ahorro'),
+        ('Otra', 'Otra'),
+
+    ]
+
+    MONEDAS = [
+
+        ('ARS', 'Pesos'),
+        ('USD', 'Dólares'),
+
+    ]
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='cuentas_bancarias'
+    )
+
+    banco = models.ForeignKey(
+        Banco,
+        on_delete=models.PROTECT,
+        related_name='cuentas'
+    )
+
+    nombre = models.CharField(
+        max_length=120
+    )
+
+    tipo_cuenta = models.CharField(
+        max_length=30,
+        choices=TIPOS_CUENTA
+    )
+
+    moneda = models.CharField(
+        max_length=10,
+        choices=MONEDAS,
+        default='ARS'
+    )
+
+    numero_cuenta = models.CharField(
+        max_length=80,
+        blank=True
+    )
+
+    cbu = models.CharField(
+        max_length=22,
+        blank=True
+    )
+
+    alias = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+    def __str__(self):
+
+        return (
+            f"{self.banco.nombre} - "
+            f"{self.nombre}"
+        )
 
 # =========================================
 # PROVEEDORES

@@ -14,6 +14,11 @@ from .views import (
     eliminar_banco,
     modificar_centro_operativo,
     eliminar_centro_operativo,
+    listar_recursos_operativos,
+    guardar_recurso_operativo,
+    modificar_recurso_operativo,
+    eliminar_recurso_operativo,
+    reactivar_recurso_operativo,
     listar_proveedores,
     guardar_proveedor,
     modificar_proveedor,
@@ -112,6 +117,44 @@ urlpatterns = [
         eliminar_centro_operativo,
         name="eliminar_centro_operativo"
     ),
+
+    # =========================================
+    # RECURSOS OPERATIVOS
+    # =========================================
+
+    path(
+        "recursos-operativos/",
+        listar_recursos_operativos,
+        name="listar_recursos_operativos"
+    ),
+
+    path(
+        "recursos-operativos/guardar/",
+        guardar_recurso_operativo,
+        name="guardar_recurso_operativo"
+    ),
+
+    path(
+        "recursos-operativos/modificar/",
+        modificar_recurso_operativo,
+        name="modificar_recurso_operativo"
+    ),
+
+    path(
+        "recursos-operativos/eliminar/",
+        eliminar_recurso_operativo,
+        name="eliminar_recurso_operativo"
+    ),
+
+    path(
+        "recursos-operativos/reactivar/",
+        reactivar_recurso_operativo,
+        name="reactivar_recurso_operativo"
+    ),
+
+    # =========================================
+    # PROVEEDORES
+    # =========================================
 
         path(
         "listar-proveedores/",

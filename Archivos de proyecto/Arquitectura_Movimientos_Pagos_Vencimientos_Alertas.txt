@@ -1,0 +1,1389 @@
+=========================================================
+ORDENACLICK
+ARQUITECTURA DE MOVIMIENTOS, PAGOS,
+VENCIMIENTOS Y ALERTAS
+=========================================================
+
+
+=========================================================
+1. OBJETIVO CENTRAL DE ORDENACLICK
+=========================================================
+
+OrdenaClick debe ayudar a que el dueño de la empresa no pierda control
+sobre pagos, cuotas, cheques y vencimientos, y al mismo tiempo generar
+información ordenada y útil para la gestión y la contabilidad.
+
+El sistema no debe limitarse a registrar lo que ya ocurrió.
+
+Debe ayudar activamente a impedir que el usuario olvide obligaciones
+económicas futuras.
+
+Especialmente:
+
+- Facturas pendientes.
+- Cuotas.
+- Cheques propios.
+- e-Cheqs propios.
+- Valores en cartera.
+- Cualquier compromiso económico con fecha futura.
+
+"Próximos vencimientos" y "Alertas" NO son agregados posteriores.
+
+Deben nacer como una parte central de la arquitectura porque distintos
+módulos del sistema alimentarán el mismo motor.
+
+Conceptualmente:
+
+MOVIMIENTOS / PAGOS / PLANES / CHEQUES
+                    │
+                    ▼
+              VENCIMIENTOS
+                    │
+                    ▼
+                 ALERTAS
+
+
+La parte contable constituye otra pata central de OrdenaClick.
+
+Pero Vencimientos y Alertas representan una de las funcionalidades
+principales del producto desde el punto de vista del dueño de la empresa.
+
+
+=========================================================
+2. PRINCIPIOS GENERALES DE DISEÑO
+=========================================================
+
+1. Registrar un Movimiento y registrar su Pago son hechos diferentes.
+
+2. Un Movimiento puede existir:
+   - Sin pago.
+   - Con pago parcial.
+   - Con pago total.
+   - Convertido a Plan de Pago.
+   - Con pagos previos antes de convertirse en Plan.
+
+3. Los Pagos deben ser entidades independientes.
+
+4. Un Movimiento puede tener múltiples Pagos.
+
+5. Un Pago puede estar compuesto simultáneamente por diferentes formas
+   de cancelación.
+
+6. Vencimiento y Alerta son conceptos diferentes.
+
+7. El Vencimiento representa el compromiso real.
+
+8. La Alerta representa cuándo y cómo se avisa al usuario.
+
+9. Una Alerta nunca debe modificar ni eliminar el Vencimiento.
+
+10. La información económica debe conservar histórico.
+
+11. Pagar, cancelar o vencer una obligación no debe borrar su historia.
+
+12. Los registros con impacto histórico, contable o financiero no deben
+    borrarse físicamente durante el funcionamiento normal del sistema.
+
+13. Próximos Vencimientos debe trabajar sobre una fuente común de
+    Vencimientos y no implementar una lógica diferente para cada módulo.
+
+14. Todo evento que tenga una fecha futura económicamente relevante debe
+    poder generar un Vencimiento.
+
+15. Toda nueva funcionalidad relacionada con obligaciones futuras debe
+    evaluarse respecto del sistema común de Vencimientos y Alertas.
+
+16. Toda nueva entidad perteneciente al entorno Empresa debe evaluarse
+    respecto de Exportación / Importación de Empresa.
+
+
+=========================================================
+3. ARQUITECTURA GENERAL
+=========================================================
+
+La estructura conceptual prevista es:
+
+MOVIMIENTO
+│
+├── Datos del gasto
+│
+├── Factura / archivo adjunto
+│
+├── PAGOS
+│   │
+│   ├── Efectivo
+│   ├── Transferencias *
+│   ├── Tarjeta
+│   ├── Cheques / e-Cheqs *
+│   └── Retenciones *
+│
+├── PLAN DE PAGO (opcional)
+│   │
+│   └── CUOTAS *
+│
+└── VENCIMIENTOS *
+        │
+        └── ALERTAS *
+
+
+* indica que pueden existir múltiples registros.
+
+
+Además:
+
+CHEQUE / E-CHEQ PROPIO
+        │
+        └── genera VENCIMIENTO
+
+
+CUOTA
+        │
+        └── genera VENCIMIENTO
+
+
+En el futuro:
+
+CHEQUE / E-CHEQ EN CARTERA
+        │
+        └── genera VENCIMIENTO
+
+
+=========================================================
+4. MOVIMIENTO
+=========================================================
+
+El Movimiento representa el gasto o documento original.
+
+Debe conservar como mínimo:
+
+- Empresa.
+- Ejercicio.
+- Tipo de gasto.
+- Proveedor.
+- Centro Operativo.
+- Recurso Operativo.
+- Fecha de registro.
+- Fecha de vencimiento original cuando corresponda.
+- Datos del comprobante.
+- Descripción.
+- Importes.
+- Impuestos.
+- Percepciones.
+- Total.
+- Factura / archivo adjunto.
+- Estado.
+- Observaciones.
+
+
+CENTRO OPERATIVO Y RECURSO OPERATIVO
+
+Ambos deben quedar guardados históricamente dentro del Movimiento.
+
+No deben deducirse posteriormente desde el estado actual del Recurso.
+
+Ejemplo:
+
+Si CAMIONETA 01 pertenecía a CASA CENTRAL cuando ocurrió un gasto y
+posteriormente se traslada a SUCURSAL AZUL, el Movimiento histórico debe
+seguir indicando CASA CENTRAL.
+
+
+El backend debe validar que:
+
+- El Centro Operativo pertenece a la Empresa activa.
+- El Recurso Operativo pertenece a la Empresa activa.
+- El Recurso pertenece al Centro seleccionado.
+
+
+ESTADOS PREVISTOS DEL MOVIMIENTO
+
+- Pendiente.
+- Parcial.
+- Pagado.
+- Vencido.
+- Cancelado.
+
+
+=========================================================
+5. FLUJO DE CARGA SIMPLE
+=========================================================
+
+La sección principal de Datos del Gasto debe permanecer estable.
+
+Una vez finalizada esta etapa del desarrollo debe evitarse modificarla
+salvo necesidad funcional real.
+
+
+Debe contener, entre otros:
+
+- Tipo de gasto.
+- Proveedor.
+- Centro Operativo.
+- Recurso Operativo.
+- Datos del comprobante.
+- Fecha.
+- Descripción.
+- Importes.
+- Impuestos.
+- Percepciones.
+- Total del Registro.
+- Factura / archivo adjunto.
+
+
+Al lado de Total del Registro existe:
+
+[ 📎 Factura ]
+
+
+La Factura pertenece al Movimiento, NO al Pago.
+
+
+Debajo de los Datos del Gasto debe existir la botonera:
+
+[ Guardar ] [ Cargar pago ] [ Convertir a plan ] [ Cancelar ]
+
+
+---------------------------------------------------------
+GUARDAR
+---------------------------------------------------------
+
+Permite registrar el Movimiento sin necesidad de registrar ningún Pago.
+
+Ejemplo:
+
+Movimiento: $100.000
+Pagado:     $0
+Saldo:      $100.000
+Estado:     Pendiente
+
+
+---------------------------------------------------------
+CARGAR PAGO
+---------------------------------------------------------
+
+Muestra el bloque de carga de Pago.
+
+La botonera principal continúa disponible debajo del bloque.
+
+El Movimiento puede recibir un Pago total o parcial.
+
+
+---------------------------------------------------------
+CONVERTIR A PLAN
+---------------------------------------------------------
+
+Muestra el bloque de Plan de Pago.
+
+Si el bloque de Pago estuviera desplegado, visualmente puede ocultarse.
+
+Los Pagos ya registrados o cargados NO se pierden.
+
+El saldo a financiar será:
+
+Saldo a financiar =
+Total del Movimiento - Pagos aplicados previamente.
+
+
+Si no existen Pagos:
+
+Saldo a financiar =
+Total del Movimiento.
+
+
+---------------------------------------------------------
+CANCELAR
+---------------------------------------------------------
+
+Cancela la operación de carga actual según las reglas de interfaz
+definidas para el sistema.
+
+
+=========================================================
+6. PAGO
+=========================================================
+
+Un Pago representa un acto de cancelación total o parcial de una obligación.
+
+NO debe existir un único campo genérico "medio de pago".
+
+Un mismo Pago puede estar compuesto simultáneamente por:
+
+- Efectivo.
+- Una o varias Transferencias.
+- Tarjeta.
+- Uno o varios Cheques / e-Cheqs.
+- Una o varias Retenciones.
+
+
+Ejemplo:
+
+Movimiento pendiente:       $1.000.000
+
+Pago:
+
+Efectivo                     $100.000
+Transferencia Galicia        $250.000
+Transferencia Nación         $150.000
+Cheque                       $200.000
+Retención Ganancias          $ 50.000
+-------------------------------------
+TOTAL PAGO                    $750.000
+
+
+Saldo restante:
+
+$1.000.000 - $750.000 = $250.000
+
+
+El Movimiento pasa a:
+
+PARCIAL
+
+
+Cuando:
+
+Saldo pendiente = 0
+
+el Movimiento pasa a:
+
+PAGADO
+
+
+El Pago debe conservarse históricamente aunque el Movimiento quede
+completamente cancelado.
+
+
+=========================================================
+7. EFECTIVO
+=========================================================
+
+El Efectivo constituye un componente propio del Pago.
+
+Debe registrar su importe independientemente de los demás componentes.
+
+No debe agruparse conceptualmente con Transferencias, Tarjetas,
+Cheques ni Retenciones.
+
+
+=========================================================
+8. TRANSFERENCIAS
+=========================================================
+
+Un Pago puede contener UNA O VARIAS Transferencias.
+
+Esto es obligatorio porque una empresa puede completar un mismo Pago
+utilizando dinero disponible en distintas cuentas bancarias.
+
+
+Cada Transferencia debe contemplar como mínimo:
+
+- Banco / cuenta de origen.
+- Importe.
+- Fecha.
+- Referencia / número de operación.
+- Comprobante.
+- Observaciones cuando corresponda.
+
+
+Ejemplo:
+
+Pago $500.000
+
+Transferencia Galicia    $300.000
+Transferencia Nación     $200.000
+
+
+Ambas forman parte del mismo Pago.
+
+
+=========================================================
+9. TARJETA
+=========================================================
+
+Tarjeta constituye otro componente independiente del Pago.
+
+Inicialmente se prevé una Tarjeta por Pago.
+
+Debe poder registrar como mínimo:
+
+- Importe.
+- Identificación / referencia.
+- Comprobante.
+- Información adicional que se defina durante su implementación.
+
+
+No debe agruparse en una entidad genérica junto con Efectivo o
+Transferencias.
+
+
+=========================================================
+10. RETENCIONES
+=========================================================
+
+Las Retenciones forman parte del importe aplicado al Pago.
+
+Un Pago puede contener múltiples Retenciones.
+
+
+La interfaz debe utilizar un sistema similar al desplegable de
+Percepciones existente en Datos del Gasto.
+
+
+Cada Retención debe registrar:
+
+- Tipo de Retención.
+- Importe.
+- Comprobante / certificado.
+- Archivo relacionado.
+
+
+Al lado de cada Retención debe existir un botón para adjuntar
+su comprobante.
+
+
+Ejemplo:
+
+Retención Ganancias    $50.000   [ 📎 Comprobante ]
+Retención IIBB         $20.000   [ 📎 Comprobante ]
+
+
+Los tipos exactos de Retenciones se definirán durante la implementación.
+
+
+=========================================================
+11. CHEQUES / E-CHEQS
+=========================================================
+
+Un Pago puede contener múltiples Cheques y/o e-Cheqs.
+
+Cada instrumento debe existir como entidad independiente.
+
+
+Debe contemplar como mínimo:
+
+- Tipo: Cheque / e-Cheq.
+- Propio / tercero.
+- Banco.
+- Número.
+- Importe.
+- Fecha de emisión.
+- Fecha de acreditación / débito / vencimiento según corresponda.
+- Origen.
+- Persona o empresa que lo entregó cuando corresponda.
+- Estado.
+- Pago relacionado.
+- Información adicional necesaria.
+
+
+---------------------------------------------------------
+CHEQUE / E-CHEQ PROPIO
+---------------------------------------------------------
+
+Cuando un Cheque propio se utiliza como forma de Pago ocurren DOS hechos
+diferentes.
+
+
+HECHO 1
+
+El importe se aplica inmediatamente a la cancelación total o parcial
+del Movimiento.
+
+
+HECHO 2
+
+Se genera una obligación futura para la Empresa.
+
+Por lo tanto, el Cheque debe generar automáticamente un Vencimiento.
+
+
+Ejemplo:
+
+Factura proveedor: $300.000
+
+Se paga con:
+
+Cheque propio: $300.000
+
+
+El Movimiento puede quedar:
+
+PAGADO
+
+
+Pero simultáneamente debe existir:
+
+Vencimiento
+Tipo: Cheque propio
+Importe: $300.000
+Banco: correspondiente
+Fecha: fecha de débito/presentación
+
+
+Esto permitirá generar:
+
+🔔 En 3 días se debita cheque de $300.000
+   Banco Galicia
+
+
+El objetivo es que el usuario recuerde disponer del dinero necesario
+en la cuenta.
+
+
+---------------------------------------------------------
+CHEQUES / E-CHEQS DE TERCEROS
+---------------------------------------------------------
+
+También deben existir como entidades independientes.
+
+Inicialmente podrán participar de Pagos.
+
+En una etapa futura formarán parte de:
+
+CARTERA DE VALORES
+
+
+Los Cheques/e-Cheqs en cartera deberán utilizar el MISMO motor de
+Vencimientos y Alertas.
+
+
+Ejemplo futuro:
+
+Cheque de tercero
+Importe: $150.000
+Fecha: 25/09/2026
+
+        ↓
+
+Vencimiento
+
+        ↓
+
+🔔 Cheque en cartera próximo a depositar/cobrar
+
+=========================================================
+VENCIMIENTO DE CHEQUES / E-CHEQS
+=========================================================
+Los Cheques y e-Cheqs pueden alcanzar estado VENCIDO.
+
+Esto aplica tanto a instrumentos propios como de terceros.
+
+Ejemplos:
+
+- Cheque de tercero que permaneció en cartera y no fue
+  depositado/cobrado dentro del plazo correspondiente.
+
+- Cheque propio cuya fecha llegó pero cuyo débito/presentación
+  todavía no fue confirmado.
+
+La llegada de la fecha NO implica automáticamente:
+
+- Debitado.
+- Cobrado.
+- Depositado.
+
+El estado financiero real del instrumento debe conservarse
+separado del hecho de haber alcanzado su vencimiento.
+
+El sistema de Vencimientos y Alertas debe advertir previamente
+estas situaciones para intentar evitar que ocurran.
+=========================================================
+12. PLAN DE PAGO
+=========================================================
+
+Un Movimiento puede convertirse total o parcialmente en Plan de Pago.
+
+
+El capital inicial del Plan será:
+
+Saldo pendiente del Movimiento.
+
+
+Por lo tanto:
+
+Capital a financiar =
+Total Movimiento - Pagos previamente aplicados.
+
+
+El Plan debe permitir definir como mínimo:
+
+- Cantidad de cuotas.
+- Fecha del primer vencimiento.
+- Periodicidad.
+- Interés.
+- Impuestos.
+- Condiciones adicionales que se definan durante la implementación.
+
+
+A partir de estos datos debe generarse automáticamente la grilla de Cuotas.
+
+
+=========================================================
+13. CUOTAS
+=========================================================
+
+Cada Cuota es una entidad independiente.
+
+NO es simplemente una fila dibujada en pantalla.
+
+
+Debe contener como mínimo:
+
+- Número de cuota.
+- Capital.
+- Interés.
+- Impuesto.
+- Fecha de vencimiento.
+- Intereses punitorios.
+- Total.
+- Estado.
+- Pago/s relacionados.
+- Comprobante cuando corresponda.
+
+
+Ejemplo:
+
+Cuota | Capital | Interés | Impuesto | Vencimiento | Punitorios | Total
+1     | 1000    | 100     | 21       | 01/09/2026  | 0          | 1121
+2     | 1000    | 100     | 21       | 01/10/2026  | 0          | 1121
+
+
+Cada Cuota debe generar automáticamente un Vencimiento.
+
+
+---------------------------------------------------------
+PUNITORIOS
+---------------------------------------------------------
+
+Los Intereses Punitorios NO deben fijarse definitivamente cuando se
+crea el Plan.
+
+Al crear una Cuota:
+
+Punitorios = 0
+
+
+Se calcularán cuando corresponda según:
+
+- Fecha de vencimiento.
+- Fecha real de Pago.
+- Días de atraso.
+- Reglas de punitorios definidas.
+
+
+Debe preservarse la posibilidad futura de distinguir:
+
+- Capital.
+- Interés financiero.
+- Impuesto sobre interés.
+- Interés punitorio.
+- Impuesto sobre punitorio.
+
+
+=========================================================
+14. PAGO DE CUOTAS
+=========================================================
+
+Una Cuota debe poder recibir Pagos.
+
+El Pago de una Cuota utilizará la misma arquitectura general de Pagos.
+
+Esto evita construir dos sistemas diferentes:
+
+- Pago normal de Movimiento.
+- Pago de Cuota.
+
+
+Debe reutilizarse la misma lógica siempre que sea posible.
+
+
+Inicialmente una Cuota pendiente puede mostrar:
+
+[ Registrar pago ]
+
+
+Una vez pagada:
+
+[ Ver comprobante ]
+
+
+Los pagos parciales de Cuotas deberán conservarse históricamente.
+
+
+=========================================================
+15. VENCIMIENTOS
+=========================================================
+
+Vencimientos constituye una CAPA CENTRAL del sistema.
+
+
+Un Vencimiento representa un compromiso económico u operativo real.
+
+
+Debe contener conceptualmente:
+
+- Empresa.
+- Origen.
+- Entidad relacionada.
+- Fecha real de vencimiento.
+- Importe original.
+- Importe pendiente.
+- Estado.
+- Información necesaria para identificar el compromiso.
+
+
+Pueden generar Vencimientos:
+
+- Movimientos pendientes.
+- Cuotas de Planes.
+- Cheques propios.
+- e-Cheqs propios.
+- Futuros Cheques/e-Cheqs en cartera.
+- Otros compromisos económicos futuros.
+
+
+ESTADOS MÍNIMOS:
+
+- Pendiente.
+- Pagado.
+- Cancelado.
+- Vencido.
+
+
+Los Vencimientos deben conservar histórico.
+
+
+---------------------------------------------------------
+PAGO PARCIAL
+---------------------------------------------------------
+
+Si una obligación recibe un Pago parcial:
+
+- NO desaparece.
+- Continúa pendiente.
+- Se actualiza su importe pendiente.
+- El Movimiento relacionado puede pasar a PARCIAL.
+- Continúa formando parte del sistema de Vencimientos.
+
+
+Ejemplo:
+
+Vencimiento original: $100.000
+Pago:                  $ 40.000
+
+Nuevo pendiente:       $ 60.000
+
+
+Las Alertas futuras deberán reflejar:
+
+$60.000 pendientes
+
+
+y no el importe original de $100.000.
+
+
+---------------------------------------------------------
+PAGO TOTAL
+---------------------------------------------------------
+
+Cuando:
+
+Importe pendiente = 0
+
+
+el Vencimiento pasa a:
+
+PAGADO
+
+
+Deja de formar parte de las Alertas activas.
+
+NO desaparece del histórico.
+
+
+=========================================================
+16. ALERTAS
+=========================================================
+
+Una Alerta NO es un Vencimiento.
+
+
+VENCIMIENTO
+
+Representa:
+
+"Esto debe pagarse / cobrarse / atenderse en esta fecha."
+
+
+ALERTA
+
+Representa:
+
+"Recordarle al usuario este compromiso en determinada fecha."
+
+
+La anticipación inicial prevista será:
+
+3 días antes.
+
+
+Ejemplo:
+
+Vencimiento: 15/08/2026
+Anticipación: 3 días
+
+Alerta desde: 12/08/2026
+
+
+En el futuro la anticipación deberá poder configurarse:
+
+- 3 días.
+- 5 días.
+- 7 días.
+- El mismo día.
+- Otros valores.
+
+
+Debe contemplarse configuración general por Empresa y eventualmente
+configuración particular por Vencimiento.
+
+
+ESTADOS / COMPORTAMIENTOS PREVISTOS:
+
+- Activa.
+- Atendida.
+- Reprogramada.
+- Cancelada.
+
+
+=========================================================
+17. ALERTAS VENCIDAS
+=========================================================
+
+Si llega la fecha real del Vencimiento y la obligación continúa pendiente,
+el registro NO desaparece.
+
+El Vencimiento pasa a:
+
+VENCIDO
+
+
+Debe continuar disponible para el usuario.
+
+
+Ejemplo:
+
+🔴 Cuota vencida
+
+Proveedor: X
+Pendiente: $125.000
+Venció: 01/09/2026
+
+[ Registrar pago ]
+[ Reprogramar alerta ]
+[ Cancelar alerta ]
+
+
+---------------------------------------------------------
+REPROGRAMAR ALERTA
+---------------------------------------------------------
+
+Reprogramar una Alerta NO modifica la fecha real del Vencimiento.
+
+
+Ejemplo:
+
+Vencimiento real: 01/09/2026
+
+El usuario solicita:
+
+Recordar nuevamente: 05/09/2026
+
+
+El sistema debe conservar:
+
+Vencimiento real: 01/09/2026
+Estado: VENCIDO
+Nueva alerta: 05/09/2026
+
+
+Por lo tanto podrá determinar que el compromiso lleva cuatro días vencido.
+
+
+---------------------------------------------------------
+CANCELAR ALERTA
+---------------------------------------------------------
+
+Cancelar una Alerta significa:
+
+"No volver a avisarme sobre este compromiso."
+
+
+NO significa:
+
+"Eliminar o cancelar automáticamente el Vencimiento."
+
+
+Es perfectamente válido:
+
+Vencimiento = VENCIDO
+Alerta = CANCELADA
+
+
+El compromiso debe seguir apareciendo en históricos e informes.
+
+
+=========================================================
+18. PRÓXIMOS VENCIMIENTOS
+=========================================================
+
+Próximos Vencimientos constituye una funcionalidad central de OrdenaClick.
+
+
+Debe existir como opción del Sidebar:
+
+[ Próximos vencimientos ]
+
+
+NO debe consultar por separado:
+
+- Cuotas.
+- Cheques.
+- Facturas.
+- Planes.
+- etc.
+
+
+Debe consultar la capa común:
+
+VENCIMIENTOS
+
+
+Conceptualmente:
+
+"Dame los vencimientos de esta Empresa dentro del período seleccionado."
+
+
+Debe permitir filtros como mínimo por:
+
+- Próximos.
+- Pendientes.
+- Vencidos.
+- Pagados.
+- Cancelados.
+
+
+En Informes deberá existir específicamente el filtro:
+
+VENCIDAS
+
+
+Una obligación vencida debe poder encontrarse allí aunque su Alerta
+haya sido reprogramada o cancelada.
+
+
+=========================================================
+19. CAMPANITA / CENTRO DE ALERTAS
+=========================================================
+
+Debe existir una notificación visible en la interfaz.
+
+
+Ejemplo:
+
+🔔 3
+
+
+El número representa:
+
+ALERTAS ACTIVAS / RELEVANTES
+
+
+NO representa todos los Vencimientos históricos.
+
+
+Ejemplo de contenido:
+
+Vence mañana
+Cuota 2 - Proveedor X
+$125.000
+
+
+En 2 días
+Cheque propio - Banco Nación
+$500.000
+
+
+En 3 días
+Cuota 4 - Leasing camioneta
+$80.000
+
+
+Desde cada Alerta debe poder accederse al registro relacionado.
+
+
+La Campanita representa el aviso inmediato.
+
+Próximos Vencimientos representa la vista completa de gestión.
+
+
+=========================================================
+20. HISTÓRICO
+=========================================================
+
+La información económica debe conservarse.
+
+
+No deben borrarse físicamente como parte del funcionamiento normal:
+
+- Movimientos.
+- Pagos.
+- Transferencias.
+- Retenciones.
+- Cheques.
+- e-Cheqs.
+- Planes.
+- Cuotas.
+- Vencimientos.
+- Alertas.
+- Comprobantes relacionados.
+
+
+Cuando corresponda deben utilizarse:
+
+- Estados.
+- Baja lógica.
+- Cancelación.
+
+
+Esto permitirá posteriormente obtener información como:
+
+- Pagos realizados a término.
+- Pagos vencidos.
+- Días promedio de atraso.
+- Historial de pagos parciales.
+- Historial de Vencimientos.
+- Obligaciones canceladas.
+- Alertas reprogramadas.
+
+
+=========================================================
+21. CENTROS Y RECURSOS OPERATIVOS
+=========================================================
+
+Los Centros Operativos y Recursos Operativos deben conservar relaciones
+históricas con los Movimientos.
+
+
+Si tienen historia asociada debe preferirse:
+
+INACTIVAR
+
+en lugar de:
+
+BORRAR
+
+
+El cierre de una sucursal o la baja de un Recurso no debe romper
+Movimientos históricos.
+
+
+=========================================================
+22. VERSIONES BÁSICA / MEDIA / FULL
+=========================================================
+
+La arquitectura interna NO debe depender de qué campos ve el usuario.
+
+
+En una futura versión Básica puede ocultarse al usuario:
+
+- Centro Operativo.
+- Recurso Operativo.
+
+
+Pero internamente deben continuar existiendo valores válidos.
+
+
+Al crear una Empresa se prevé:
+
+Centro Operativo:
+CASA CENTRAL
+
+
+Recurso Operativo:
+GENERAL
+
+Tipo:
+INMUEBLE
+
+Centro:
+CASA CENTRAL
+
+
+De esta forma todos los Movimientos conservan la misma arquitectura
+independientemente de la versión comercial utilizada.
+
+
+=========================================================
+23. ORDEN DE PAGO - FUNCIONALIDAD FUTURA
+=========================================================
+
+NO implementar todavía.
+
+Debe quedar prevista arquitectónicamente.
+
+
+Luego de guardar un Pago podrá mostrarse un modal:
+
+Pago registrado correctamente.
+
+¿Desea generar Orden de Pago?
+
+[ Generar ] [ Ahora no ]
+
+
+La Orden de Pago deberá poder mostrar como mínimo:
+
+- Empresa.
+- Proveedor.
+- Documento/s cancelado/s.
+- Referencia de qué se está pagando.
+- Efectivo.
+- Transferencias.
+- Tarjeta.
+- Cheques/e-Cheqs.
+- Retenciones.
+- Comprobantes.
+- Totales.
+
+
+En una etapa posterior deberá agregarse como opción independiente
+del módulo Registros.
+
+
+Desde allí deberá ser posible:
+
+- Seleccionar múltiples documentos pendientes.
+- Crear una Orden de Pago.
+- Aplicar un conjunto de medios de cancelación.
+- Cancelar total o parcialmente dichos documentos.
+
+
+Esta funcionalidad debe reutilizar la arquitectura de Pago existente
+y NO crear un segundo sistema independiente.
+
+
+=========================================================
+24. CARTERA DE CHEQUES / E-CHEQS - FUTURO
+=========================================================
+
+NO implementar todavía.
+
+
+En el futuro OrdenaClick deberá poder administrar:
+
+- Cheques de terceros.
+- e-Cheqs recibidos.
+- Valores disponibles.
+- Valores depositados.
+- Valores entregados.
+- Valores vencidos.
+
+
+La cartera deberá utilizar el mismo motor de:
+
+VENCIMIENTOS
+        ↓
+ALERTAS
+
+
+Ejemplo:
+
+Cheque en cartera
+Fecha: 20/09/2026
+
+        ↓
+
+Alerta previa
+
+        ↓
+
+"Recordar depositar/cobrar cheque"
+
+
+=========================================================
+25. EXPORTACIÓN / IMPORTACIÓN DE EMPRESA
+=========================================================
+
+Todas las entidades pertenecientes al entorno Empresa definidas en esta
+arquitectura deben contemplarse en:
+
+Archivos de proyecto/Reglas_Exportacion_Empresa.txt
+
+
+Como mínimo:
+
+- Movimientos.
+- Facturas adjuntas.
+- Pagos.
+- Datos de Efectivo cuando corresponda.
+- Transferencias.
+- Comprobantes de Transferencias.
+- Tarjetas.
+- Comprobantes de Tarjeta.
+- Retenciones.
+- Certificados de Retención.
+- Cheques.
+- e-Cheqs.
+- Planes de Pago.
+- Cuotas.
+- Vencimientos.
+- Alertas.
+- Futuras Órdenes de Pago.
+- Futura cartera de valores.
+
+
+REGLA OBLIGATORIA:
+
+Cada vez que durante el desarrollo se agregue una nueva entidad
+relacionada con Empresa se debe revisar inmediatamente:
+
+Reglas_Exportacion_Empresa.txt
+
+
+y determinar:
+
+1. Si debe exportarse.
+2. Si debe importarse.
+3. Qué relaciones deben reconstruirse.
+4. Qué archivos deben incluirse.
+5. Si contiene información sensible.
+6. Si deben conservarse registros inactivos.
+7. Cómo afecta backups anteriores.
+
+
+=========================================================
+26. REGLAS PARA DESARROLLO FUTURO
+=========================================================
+
+Antes de crear una funcionalidad nueva relacionada con Movimientos,
+Pagos o compromisos económicos se debe responder:
+
+
+1. ¿Genera una obligación futura?
+
+Si la respuesta es sí:
+
+Debe evaluarse si genera VENCIMIENTO.
+
+
+2. ¿El usuario necesita ser avisado?
+
+Si la respuesta es sí:
+
+Debe utilizar ALERTAS.
+
+
+3. ¿Tiene fecha económicamente relevante?
+
+Debe evaluarse su integración con Próximos Vencimientos.
+
+
+4. ¿Puede recibir Pagos parciales?
+
+Debe utilizar la arquitectura común de Pagos y saldos.
+
+
+5. ¿Tiene archivos o comprobantes?
+
+Deben quedar relacionados con la entidad correcta y contemplarse
+en Exportación / Importación.
+
+
+6. ¿Tiene impacto histórico?
+
+Debe evitarse el borrado físico durante el funcionamiento normal.
+
+
+7. ¿Pertenece al entorno Empresa?
+
+Debe actualizarse la documentación de Exportación / Importación.
+
+
+8. ¿Ya existe una entidad que resuelve el mismo problema?
+
+Debe reutilizarse antes de crear un sistema paralelo.
+
+
+=========================================================
+27. REGLA FUNDAMENTAL PARA NO DESVIARSE
+=========================================================
+
+El objetivo no es simplemente construir un sistema donde el usuario pueda
+cargar gastos.
+
+
+OrdenaClick debe transformar esos datos en información útil para administrar
+la empresa y, principalmente, ayudar a evitar pérdidas y olvidos.
+
+
+Por eso el diseño debe priorizar:
+
+- No olvidar obligaciones.
+- Dar visibilidad de próximos Vencimientos.
+- Detectar obligaciones vencidas.
+- Evitar cuotas impagas por olvido.
+- Evitar Cheques/e-Cheqs propios sin fondos disponibles.
+- Recordar valores en cartera que deban depositarse o cobrarse.
+- Conservar histórico.
+- Facilitar la gestión cotidiana del dueño de la Empresa.
+- Generar información ordenada para administración y contabilidad.
+
+
+Cuando exista una decisión de arquitectura entre resolver algo únicamente
+para una pantalla o construirlo de manera reutilizable para el sistema,
+debe preferirse la solución reutilizable cuando afecte:
+
+- Movimientos.
+- Pagos.
+- Saldos.
+- Cuotas.
+- Cheques/e-Cheqs.
+- Vencimientos.
+- Alertas.
+- Histórico.
+
+
+ORIGEN FINANCIERO DE LOS VENCIMIENTOS
+
+Los Vencimientos relacionados con movimientos bancarios deben permitir
+identificar el Banco y, cuando corresponda, la Cuenta Bancaria afectada.
+
+Esto permitirá filtrar Próximos Vencimientos por:
+
+- Banco.
+- Cuenta Bancaria.
+
+Ejemplo:
+
+Banco Galicia
+
+→ Cheques/e-Cheqs propios pendientes.
+→ Débitos automáticos pendientes.
+→ Otros compromisos futuros asociados a cuentas de Galicia.
+
+HISTÓRICO DE REPROGRAMACIONES
+
+Un Vencimiento puede tener múltiples Alertas.
+
+Cuando una Alerta se reprograma:
+
+- La Alerta anterior no se elimina.
+- Pasa a estado REPROGRAMADA.
+- Se crea una nueva Alerta ACTIVA para la nueva fecha.
+
+Esto permite conservar histórico de los avisos realizados y de las
+decisiones del usuario.
+
+=========================================================
+FIN DEL DOCUMENTO
+=========================================================
