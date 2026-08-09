@@ -33,6 +33,7 @@ from .models import (
     Movimiento,
     CentroOperativo,
     Banco,
+    CuentaBancaria,
     GestionClave,
     RecursoOperativo,
     Proveedor
@@ -394,7 +395,7 @@ def panel_admin(request):
 
             movimientos = Movimiento.objects.filter(
                 ejercicio=ejercicio_abierto
-            ).order_by('-fecha_pago')
+            ).order_by('-fecha_registro')
 
     return render(
 
@@ -563,6 +564,70 @@ def eliminar_empresa(
     request,
     empresa_id
 ):
+
+    empresa = Empresa.objects.get(
+        id=empresa_id
+    )
+
+
+    # =========================================
+    # ARCHIVOS DE LA EMPRESA
+    # =========================================
+
+    if empresa.estatuto:
+
+        empresa.estatuto.delete(
+            save=False
+        )
+
+
+    if empresa.acta:
+
+        empresa.acta.delete(
+            save=False
+        )
+
+
+    if empresa.designacion:
+
+        empresa.designacion.delete(
+            save=False
+        )
+
+
+    # =========================================
+    # ENTIDADES QUE PROTEGEN OTROS MAESTROS
+    # =========================================
+    #
+    # RecursoOperativo protege CentroOperativo.
+    # Por eso debe eliminarse antes de intentar
+    # eliminar la Empresa y sus Centros.
+    #
+
+    RecursoOperativo.objects.filter(
+        empresa=empresa
+    ).delete()
+
+
+    # CuentaBancaria protege Banco.
+    # Debe eliminarse antes de que la eliminación
+    # en cascada de Empresa intente borrar Bancos.
+
+    CuentaBancaria.objects.filter(
+        empresa=empresa
+    ).delete()
+
+
+    # =========================================
+    # EMPRESA
+    # =========================================
+
+    empresa.delete()
+
+
+    return redirect(
+        '/'
+    )
 
     empresa = Empresa.objects.get(
         id=empresa_id
@@ -740,17 +805,21 @@ def guardar_banco(request):
             "mensaje": "Ese banco ya existe."
         })
 
-    Banco.objects.create(
+    banco = Banco.objects.create(
 
         empresa=empresa,
 
         nombre=nombre
-
     )
 
     return JsonResponse({
 
-        "ok": True
+        "ok": True,
+
+        "banco": {
+            "id": banco.id,
+            "nombre": banco.nombre
+        }
 
     })
 
@@ -879,6 +948,605 @@ def eliminar_banco(request):
 
     banco.activo = False
     banco.save(update_fields=["activo"])
+
+    return JsonResponse({
+        "ok": True
+    })
+
+# =========================================
+# CUENTAS BANCARIAS
+# =========================================
+
+def listar_cuentas_bancarias(request):
+    """
+    Devuelve el ABM de cuentas bancarias correspondiente
+    a la empresa activa.
+    """
+
+    empresa_id = request.GET.get(
+        "empresa"
+    )
+
+    try:
+
+        empresa = Empresa.objects.get(
+            id=empresa_id
+        )
+
+    except Empresa.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La empresa no existe."
+            },
+            status=404
+        )
+
+    cuentas = CuentaBancaria.objects.filter(
+        empresa=empresa,
+        activo=True
+    ).select_related(
+        "banco"
+    ).order_by(
+        "banco__nombre",
+        "nombre"
+    )
+
+    bancos = Banco.objects.filter(
+        empresa=empresa,
+        activo=True
+    ).order_by(
+        "nombre"
+    )
+
+    html = render_to_string(
+        "usuarios/cuentas_bancarias.html",
+        {
+            "empresa": empresa,
+            "cuentas": cuentas,
+            "bancos": bancos,
+            "tipos_cuenta": CuentaBancaria.TIPOS_CUENTA,
+            "monedas": CuentaBancaria.MONEDAS,
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "html": html,
+        "cuentas": [
+            {
+                "id": cuenta.id,
+                "nombre": cuenta.nombre,
+                "banco_id": cuenta.banco_id,
+                "banco": cuenta.banco.nombre,
+                "tipo_cuenta": cuenta.tipo_cuenta,
+                "moneda": cuenta.moneda,
+                "numero_cuenta": cuenta.numero_cuenta,
+                "cbu": cuenta.cbu,
+                "alias": cuenta.alias,
+            }
+            for cuenta in cuentas
+        ]
+    })
+
+
+def guardar_cuenta_bancaria(request):
+    """
+    Crea una cuenta bancaria para la empresa activa.
+    Si existe una cuenta equivalente inactiva,
+    la reactiva en lugar de crear un duplicado.
+    """
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    banco_id = request.POST.get(
+        "banco"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_cuenta = (
+        request.POST.get("tipo_cuenta") or ""
+    ).strip()
+
+    moneda = (
+        request.POST.get("moneda") or ""
+    ).strip()
+
+    numero_cuenta = (
+        request.POST.get("numero_cuenta") or ""
+    ).strip()
+
+    cbu = (
+        request.POST.get("cbu") or ""
+    ).strip()
+
+    alias = (
+        request.POST.get("alias") or ""
+    ).strip().upper()
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Ingrese un nombre para la cuenta."
+        })
+
+    tipos_validos = {
+        valor
+        for valor, etiqueta
+        in CuentaBancaria.TIPOS_CUENTA
+    }
+
+    if tipo_cuenta not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un tipo de cuenta válido."
+        })
+
+    monedas_validas = {
+        valor
+        for valor, etiqueta
+        in CuentaBancaria.MONEDAS
+    }
+
+    if moneda not in monedas_validas:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione una moneda válida."
+        })
+
+    try:
+
+        empresa = Empresa.objects.get(
+            id=empresa_id
+        )
+
+    except Empresa.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La empresa no existe."
+            },
+            status=404
+        )
+
+    try:
+
+        banco = Banco.objects.get(
+            id=banco_id,
+            empresa=empresa,
+            activo=True
+        )
+
+    except Banco.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un banco válido."
+        })
+
+    cuenta_existente = CuentaBancaria.objects.filter(
+        empresa=empresa,
+        banco=banco,
+        nombre=nombre
+    ).first()
+
+    if cuenta_existente:
+
+        if cuenta_existente.activo:
+
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "Ya existe una cuenta bancaria "
+                    "con ese nombre para ese banco."
+                )
+            })
+
+        return JsonResponse({
+            "ok": False,
+            "inactiva": True,
+            "cuenta": {
+                "id": cuenta_existente.id,
+                "nombre": cuenta_existente.nombre,
+                "banco_id": cuenta_existente.banco_id,
+                "tipo_cuenta": cuenta_existente.tipo_cuenta,
+                "moneda": cuenta_existente.moneda,
+                "numero_cuenta": cuenta_existente.numero_cuenta,
+                "cbu": cuenta_existente.cbu,
+                "alias": cuenta_existente.alias,
+            },
+            "mensaje": (
+                "La cuenta bancaria ya existe pero está inactiva. "
+                "Puede reactivarla."
+            )
+        })
+
+    cuenta = CuentaBancaria.objects.create(
+        empresa=empresa,
+        banco=banco,
+        nombre=nombre,
+        tipo_cuenta=tipo_cuenta,
+        moneda=moneda,
+        numero_cuenta=numero_cuenta,
+        cbu=cbu,
+        alias=alias
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "cuenta": {
+            "id": cuenta.id,
+            "nombre": cuenta.nombre
+        }
+    })
+
+
+def modificar_cuenta_bancaria(request):
+    """
+    Modifica una cuenta bancaria activa perteneciente
+    a la empresa indicada.
+    """
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    cuenta_id = request.POST.get(
+        "cuenta"
+    )
+
+    banco_id = request.POST.get(
+        "banco"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_cuenta = (
+        request.POST.get("tipo_cuenta") or ""
+    ).strip()
+
+    moneda = (
+        request.POST.get("moneda") or ""
+    ).strip()
+
+    numero_cuenta = (
+        request.POST.get("numero_cuenta") or ""
+    ).strip()
+
+    cbu = (
+        request.POST.get("cbu") or ""
+    ).strip()
+
+    alias = (
+        request.POST.get("alias") or ""
+    ).strip().upper()
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Ingrese un nombre para la cuenta."
+        })
+
+    tipos_validos = {
+        valor
+        for valor, etiqueta
+        in CuentaBancaria.TIPOS_CUENTA
+    }
+
+    if tipo_cuenta not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un tipo de cuenta válido."
+        })
+
+    monedas_validas = {
+        valor
+        for valor, etiqueta
+        in CuentaBancaria.MONEDAS
+    }
+
+    if moneda not in monedas_validas:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione una moneda válida."
+        })
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La cuenta bancaria no existe."
+            },
+            status=404
+        )
+
+    try:
+
+        banco = Banco.objects.get(
+            id=banco_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except Banco.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un banco válido."
+        })
+
+    duplicada = CuentaBancaria.objects.filter(
+        empresa_id=empresa_id,
+        banco=banco,
+        nombre=nombre,
+        activo=True
+    ).exclude(
+        id=cuenta.id
+    ).exists()
+
+    if duplicada:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otra cuenta bancaria "
+                "con ese nombre para ese banco."
+            )
+        })
+
+    cuenta.banco = banco
+    cuenta.nombre = nombre
+    cuenta.tipo_cuenta = tipo_cuenta
+    cuenta.moneda = moneda
+    cuenta.numero_cuenta = numero_cuenta
+    cuenta.cbu = cbu
+    cuenta.alias = alias
+
+    cuenta.save(
+        update_fields=[
+            "banco",
+            "nombre",
+            "tipo_cuenta",
+            "moneda",
+            "numero_cuenta",
+            "cbu",
+            "alias",
+        ]
+    )
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def eliminar_cuenta_bancaria(request):
+    """
+    Realiza la baja lógica de una cuenta bancaria.
+    No elimina físicamente el registro.
+    """
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    cuenta_id = request.POST.get(
+        "cuenta"
+    )
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La cuenta bancaria no existe."
+            },
+            status=404
+        )
+
+    cuenta.activo = False
+
+    cuenta.save(
+        update_fields=[
+            "activo"
+        ]
+    )
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def reactivar_cuenta_bancaria(request):
+    """
+    Reactiva una cuenta bancaria inactiva y permite
+    actualizar sus datos antes de volver a utilizarla.
+    """
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    cuenta_id = request.POST.get(
+        "cuenta"
+    )
+
+    banco_id = request.POST.get(
+        "banco"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_cuenta = (
+        request.POST.get("tipo_cuenta") or ""
+    ).strip()
+
+    moneda = (
+        request.POST.get("moneda") or ""
+    ).strip()
+
+    numero_cuenta = (
+        request.POST.get("numero_cuenta") or ""
+    ).strip()
+
+    cbu = (
+        request.POST.get("cbu") or ""
+    ).strip()
+
+    alias = (
+        request.POST.get("alias") or ""
+    ).strip().upper()
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa_id=empresa_id,
+            activo=False
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "La cuenta bancaria inactiva "
+                    "no existe."
+                )
+            },
+            status=404
+        )
+
+    try:
+
+        banco = Banco.objects.get(
+            id=banco_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except Banco.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un banco válido."
+        })
+
+    duplicada = CuentaBancaria.objects.filter(
+        empresa_id=empresa_id,
+        banco=banco,
+        nombre=nombre,
+        activo=True
+    ).exclude(
+        id=cuenta.id
+    ).exists()
+
+    if duplicada:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otra cuenta bancaria activa "
+                "con ese nombre para ese banco."
+            )
+        })
+
+    cuenta.banco = banco
+    cuenta.nombre = nombre
+    cuenta.tipo_cuenta = tipo_cuenta
+    cuenta.moneda = moneda
+    cuenta.numero_cuenta = numero_cuenta
+    cuenta.cbu = cbu
+    cuenta.alias = alias
+    cuenta.activo = True
+
+    cuenta.save(
+        update_fields=[
+            "banco",
+            "nombre",
+            "tipo_cuenta",
+            "moneda",
+            "numero_cuenta",
+            "cbu",
+            "alias",
+            "activo",
+        ]
+    )
 
     return JsonResponse({
         "ok": True

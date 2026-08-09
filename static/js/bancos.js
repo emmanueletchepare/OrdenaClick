@@ -157,6 +157,7 @@ async function guardarBanco(){
     const nombre =
         input.value.trim();
 
+
     if(!nombre){
 
         alert(
@@ -169,8 +170,10 @@ async function guardarBanco(){
 
     }
 
+
     const formulario =
         new FormData();
+
 
     formulario.append(
         "empresa",
@@ -182,13 +185,22 @@ async function guardarBanco(){
         nombre
     );
 
+
     let url =
         "/guardar-banco/";
 
-    if(bancoEditandoId){
+
+    const estaEditando =
+        Boolean(
+            bancoEditandoId
+        );
+
+
+    if(estaEditando){
 
         url =
             "/modificar-banco/";
+
 
         formulario.append(
             "banco",
@@ -197,32 +209,42 @@ async function guardarBanco(){
 
     }
 
+
     try{
 
-        const respuesta = await fetch(
-            url,
-            {
-                method: "POST",
+        const respuesta =
+            await fetch(
+                url,
+                {
+                    method: "POST",
 
-                headers: {
-                    "X-CSRFToken": obtenerCookie(
-                        "csrftoken"
-                    )
-                },
+                    headers: {
 
-                body: formulario
-            }
-        );
+                        "X-CSRFToken":
+                            obtenerCookie(
+                                "csrftoken"
+                            )
+
+                    },
+
+                    body: formulario
+                }
+            );
+
 
         const resultado =
             await respuesta.json();
 
-        if(!respuesta.ok || !resultado.ok){
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
 
             alert(
                 resultado.mensaje ||
                 (
-                    bancoEditandoId
+                    estaEditando
                         ? "No se pudo modificar el banco."
                         : "No se pudo guardar el banco."
                 )
@@ -232,11 +254,68 @@ async function guardarBanco(){
 
         }
 
-        bancoEditandoId = null;
 
+        /*
+         * Si fue un alta nueva guardamos cuál fue
+         * el Banco recién creado.
+         */
+        if(
+            !estaEditando &&
+            resultado.banco &&
+            resultado.banco.id
+        ){
+
+            ultimoBancoCreado = {
+
+                id:
+                    String(
+                        resultado.banco.id
+                    ),
+
+                nombre:
+                    resultado.banco.nombre
+
+            };
+
+        }
+
+
+        const origenActual =
+            origenABM;
+
+
+        bancoEditandoId =
+            null;
+
+
+        /*
+         * Si Bancos fue abierto desde Cuentas Bancarias
+         * para resolver una dependencia, al crear el Banco
+         * volvemos automáticamente.
+         *
+         * volverDesdeABMBancos() restaurará el formulario
+         * de Cuenta Bancaria y actualizará su select.
+         */
+        if(
+            origenActual === "cuenta_bancaria" &&
+            ultimoBancoCreado
+        ){
+
+            await volverDesdeABMBancos();
+
+            return;
+
+        }
+
+
+        /*
+         * En el resto de los casos mantenemos
+         * el comportamiento normal del ABM.
+         */
         await mostrarABMBancos(
-            origenABM
+            origenActual
         );
+
 
     }catch(error){
 
@@ -245,8 +324,9 @@ async function guardarBanco(){
             error
         );
 
+
         alert(
-            bancoEditandoId
+            estaEditando
                 ? "Ocurrió un error al modificar el banco."
                 : "Ocurrió un error al guardar el banco."
         );

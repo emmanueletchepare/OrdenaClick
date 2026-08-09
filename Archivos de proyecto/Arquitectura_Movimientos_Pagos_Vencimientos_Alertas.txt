@@ -1385,5 +1385,407 @@ Esto permite conservar histórico de los avisos realizados y de las
 decisiones del usuario.
 
 =========================================================
+PENDIENTES FUNCIONALES YA DEFINIDOS
+=========================================================
+
+1. MÚLTIPLES PAGOS POR MOVIMIENTO
+
+Un Movimiento puede contener cero, uno o múltiples Pagos.
+
+En Carga Simple:
+
+- El Registro constituye la primera etapa visual.
+- Debajo del Registro existe una botonera:
+  [Guardar registro] [Agregar Pago] [Plan de Pago]
+
+- No debe mostrarse una tarjeta de Pago vacía por defecto.
+- Cada vez que se seleccione Agregar Pago se crea una nueva tarjeta:
+
+  Pago 1
+  Pago 2
+  Pago 3
+  ...
+
+- Cada tarjeta de Pago debe:
+  - poder plegarse/desplegarse;
+  - mostrar su importe total en la cabecera;
+  - permitir eliminar/cancelar el Pago;
+  - contener sus propios medios de pago;
+  - conservar independencia respecto de los demás Pagos.
+
+- Guardar registro guarda el Movimiento y todos los Pagos
+  agregados o modificados en la pantalla.
+
+
+2. PLAN DE PAGO Y PAGOS PREVIOS
+
+Un Movimiento puede convertirse en Plan de Pago después de
+haber recibido uno o más Pagos.
+
+El capital inicial del Plan será:
+
+Total del Movimiento
+- suma de Pagos previos
+= saldo a financiar.
+
+Al convertir a Plan:
+
+- los Pagos anteriores NO se eliminan;
+- continúan formando parte del histórico;
+- dejan de mostrarse como etapa activa de carga;
+- se muestra la tarjeta Plan de Pago;
+- Agregar Pago deja de estar disponible para pagos libres sobre
+  el Movimiento;
+- los pagos posteriores deberán aplicarse a las Cuotas del Plan.
+
+
+3. ELIMINACIÓN / REVERSIÓN DE PAGOS
+
+Eliminar un Pago existente no debe considerarse solamente una
+operación visual.
+
+Debe sincronizar todas las consecuencias que produjo ese Pago.
+
+Como mínimo deberá revisar:
+
+- aplicaciones del Pago;
+- saldo del Movimiento;
+- Cheques/e-Cheqs relacionados;
+- Vencimientos relacionados;
+- Alertas relacionadas;
+- estados de Plan/Cuotas si correspondiera.
+
+Los registros históricos no deberán desaparecer físicamente salvo
+correcciones controladas.
+
+
+4. FUTURA CARTERA DE CHEQUES / E-CHEQS
+
+Cuando exista el módulo Cartera:
+
+- Un cheque/e-Cheq de tercero recibido deberá poder ingresar a Cartera.
+- Si se utiliza para realizar un Pago, deberá quedar relacionado con
+  ese Pago.
+- Si posteriormente ese Pago se revierte/cancela y el cheque vuelve
+  a estar disponible, deberá regresar a Cartera.
+- Al volver a Cartera deberán reactivarse o regenerarse, según la
+  política que se defina, los Vencimientos y Alertas correspondientes.
+- Nunca se deberá crear un segundo motor de alertas para Cartera:
+  utilizará Vencimiento + Alerta ya existentes.
+
+
+5. FUTURO ABM DE CLIENTES
+
+Se incorporará un ABM de Clientes.
+
+En Cheques/e-Cheqs de terceros:
+
+- el campo actual "Quién lo entregó" es temporalmente texto libre;
+- cuando exista ABM Clientes deberá reemplazarse o complementarse
+  por selección/autocompletado de Cliente;
+- debe conservarse el flujo [+] para crear el Cliente sin perder
+  el formulario que se estaba completando.
+
+
+6. SALDO A FAVOR
+
+Debe quedar previsto el caso:
+
+Total del Movimiento < Total de Pagos.
+
+No se resolverá todavía.
+
+El excedente no deberá considerarse simplemente un error.
+En el futuro podrá transformarse en saldo a favor/crédito aplicable
+a otros documentos u Órdenes de Pago.
+
+
+7. MODIFICACIÓN DE MOVIMIENTOS Y PAGOS
+
+Cuando se implemente Modificar:
+
+- agregar, modificar o quitar un Pago debe recalcular el saldo;
+- modificar/quitar cheques debe sincronizar Vencimientos y Alertas;
+- las relaciones históricas deben preservarse;
+- toda consecuencia derivada deberá actualizarse de forma coherente.
+
+
+=========================================================
+FLUJO VISUAL Y FUNCIONAL DE PAGO
+=========================================================
+
+IMPORTANTE:
+
+La implementación inicial contenía un único bloque fijo
+"Datos del Pago".
+
+Ese bloque se reemplaza por tarjetas dinámicas de Pago,
+pero SU FLUJO FUNCIONAL NO DEBE PERDERSE.
+
+Un Movimiento puede tener:
+
+- cero Pagos;
+- un Pago;
+- múltiples Pagos;
+- Pagos parciales previos y posteriormente un Plan de Pago.
+
+
+---------------------------------------------------------
+ESTRUCTURA VISUAL
+---------------------------------------------------------
+
+La tarjeta principal corresponde exclusivamente al Registro.
+
+Termina en:
+
+Total del Registro + Archivo de Factura
+
+Debajo, fuera de esa tarjeta, se encuentra siempre la botonera:
+
+[Guardar registro] [+ Agregar Pago] [Plan de Pago]
+
+No debe existir una tarjeta Pago vacía por defecto.
+
+
+Al seleccionar:
+
+[+ Agregar Pago]
+
+se crea una tarjeta independiente:
+
+Pago 1        $ TOTAL        ▼        [Eliminar]
+
+Cada nuevo Pago genera otra tarjeta:
+
+Pago 2
+Pago 3
+etc.
+
+Cada tarjeta debe poder plegarse/desplegarse individualmente.
+
+El importe mostrado en la cabecera corresponde exclusivamente
+a la suma de los medios contenidos en ESE Pago.
+
+
+---------------------------------------------------------
+CONTENIDO DE CADA PAGO
+---------------------------------------------------------
+
+Cada Pago es independiente de los demás.
+
+Debe poder contener simultáneamente:
+
+- Efectivo.
+- Una o más Transferencias.
+- Tarjeta.
+- Varios Cheques / e-Cheqs.
+- Varias Retenciones.
+
+La suma de esos componentes constituye el importe total del Pago.
+
+Los valores y formularios de un Pago NO deben mezclarse con
+los de otro Pago.
+
+
+---------------------------------------------------------
+CHEQUES / E-CHEQS DENTRO DE CADA PAGO
+---------------------------------------------------------
+
+Debe conservarse el flujo funcional ya desarrollado.
+
+TIPO DE INSTRUMENTO:
+
+- Cheque físico.
+- e-Cheq.
+
+
+TIPO DE CHEQUE:
+
+- Común.
+- Diferido.
+
+
+CHEQUE COMÚN:
+
+- Fecha de emisión visible.
+- Fecha de acreditación oculta.
+- Internamente:
+  fecha_acreditacion = fecha_emision.
+- La regla acreditación > emisión NO aplica.
+
+
+CHEQUE DIFERIDO:
+
+- Fecha de emisión visible.
+- Fecha de acreditación visible.
+- Acreditación debe ser posterior a emisión.
+- No puede superar 360 días desde emisión.
+
+
+ORIGEN PROPIO:
+
+- Selector muestra Cuenta Bancaria.
+- [+] abre ABM Cuentas Bancarias.
+- Al volver:
+  - se conserva todo el formulario;
+  - la nueva cuenta queda seleccionada.
+
+
+ORIGEN TERCERO:
+
+- Selector muestra Banco.
+- [+] abre ABM Bancos.
+- Al volver:
+  - se conserva todo el formulario;
+  - el nuevo banco queda seleccionado.
+- Se muestra "Quién lo entregó".
+
+
+QUIÉN LO ENTREGÓ:
+
+Actualmente es texto libre.
+
+En el futuro deberá integrarse con ABM Clientes.
+
+
+LISTA DE CHEQUES:
+
+Cada cheque agregado debe:
+
+- pertenecer solamente al Pago correspondiente;
+- aparecer en la lista de ese Pago;
+- poder eliminarse;
+- sumar al total Cheques de ese Pago;
+- sumar al total general de ese Pago.
+
+Después de agregar un cheque:
+
+TODO el formulario de carga de cheque debe volver a su estado
+inicial, ya que no se presume ninguna relación entre un cheque
+y el siguiente.
+
+
+---------------------------------------------------------
+EFECTOS DE CHEQUES PROPIOS
+---------------------------------------------------------
+
+Los cheques propios NO deben generar Alertas al agregarlos
+visualmente a la tarjeta.
+
+Al guardar el Registro/Pago:
+
+- se revisan los cheques propios;
+- se generan sus Vencimientos;
+- se generan las Alertas según la configuración de la
+  Cuenta Bancaria correspondiente.
+
+Al modificar posteriormente un Pago:
+
+- cheques agregados deben generar sus efectos;
+- cheques modificados deben actualizar Vencimientos/Alertas;
+- cheques quitados deben sincronizar o cancelar sus efectos.
+
+
+---------------------------------------------------------
+ELIMINACIÓN / REVERSIÓN DE UN PAGO
+---------------------------------------------------------
+
+Eliminar una tarjeta antes de guardar solamente elimina
+el Pago en preparación.
+
+Eliminar/revertir un Pago YA GUARDADO requiere sincronización.
+
+En el futuro, cuando exista Cartera:
+
+Si un cheque de tercero perteneciente a Cartera fue utilizado
+en un Pago y posteriormente ese Pago se revierte:
+
+- el cheque debe volver a Cartera;
+- debe recuperar el estado que corresponda;
+- deben reactivarse/regenerarse sus Vencimientos y Alertas
+  cuando corresponda.
+
+No implementar todavía Cartera, pero la arquitectura actual
+no debe impedir este comportamiento futuro.
+
+
+---------------------------------------------------------
+RESUMEN DEL MOVIMIENTO
+---------------------------------------------------------
+
+Debe poder calcularse:
+
+Total del Registro
+Total de Pagos
+Saldo pendiente
+
+Si:
+
+Total Pagos < Total Registro
+
+existe saldo pendiente.
+
+Si:
+
+Total Pagos = Total Registro
+
+el Movimiento queda totalmente cancelado.
+
+Si:
+
+Total Pagos > Total Registro
+
+existe un saldo a favor.
+
+La utilización contable/operativa del saldo a favor queda
+pendiente de definición.
+
+
+---------------------------------------------------------
+PLAN DE PAGO
+---------------------------------------------------------
+
+Puede existir después de uno o más Pagos parciales.
+
+Capital a financiar:
+
+Total Registro
+- Pagos previos
+= Saldo pendiente
+
+Los Pagos previos NO se eliminan.
+
+Al convertir el saldo pendiente en Plan:
+
+- los Pagos anteriores permanecen en el histórico;
+- dejan de mostrarse como etapa activa;
+- aparece la tarjeta Plan de Pago;
+- se deshabilita/oculta Agregar Pago libre;
+- los pagos futuros se aplicarán a Cuotas del Plan.
+
+
+---------------------------------------------------------
+REGLA DE IMPLEMENTACIÓN
+---------------------------------------------------------
+
+La conversión del antiguo bloque fijo "Datos del Pago"
+a tarjetas dinámicas NO autoriza a simplificar ni eliminar
+funcionalidades que ya estaban resueltas.
+
+La nueva implementación debe reproducir el flujo anterior,
+pero haciendo que cada dato, medio de pago, cheque y total
+pertenezca explícitamente a su Pago.
+
+PENDIENTE / DEFINIDO
+
+- Crear ABM Tipos de Retención.
+- Cada Tipo de Retención podrá asociarse a una cuenta del Plan Contable.
+- Tipos de Retención forman parte de Exportar/Importar Empresa.
+- Retenciones dentro de Pago usan selector + [+] + retorno conservando formulario.
+- Si un Pago supera el saldo pendiente, mostrar modal de advertencia.
+- El exceso NO se bloquea: puede continuar y generar saldo a favor.
+- Revalidar el exceso también al Guardar Registro.
+
+=========================================================
 FIN DEL DOCUMENTO
 =========================================================

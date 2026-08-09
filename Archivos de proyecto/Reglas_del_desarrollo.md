@@ -52,3 +52,15 @@ Usuario y Recurso Operativo son entidades independientes, vinculables en el futu
 Los archivos de movimientos serán registros independientes y múltiples.
 Cuenta contable quedará visible pero deshabilitada hasta desarrollar el Plan Contable.
 No vamos a implementar todavía Giras/Rendiciones, pero el modelo no debe impedirlas.
+
+VISUAL
+La pantalla nueva debe parecer parte de OrdenaClick:
+mismos colores, radios, tamaños, botones, acordeones y espaciados.
+
+FLUJO
+Si desde un formulario se entra a un ABM con [+]:
+crear → volver → conservar formulario → seleccionar nuevo elemento.
+
+JERARQUÍA
+Registro, Pago y Plan son etapas relacionadas,
+pero no deben confundirse visualmente entre sí.

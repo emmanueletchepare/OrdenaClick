@@ -499,51 +499,184 @@ class AplicacionPago(models.Model):
 # TRANSFERENCIAS DE PAGO
 # =========================================
 
-class TransferenciaPago(models.Model):
+class OperacionBancariaPago(models.Model):
+
+    TIPOS_OPERACION = [
+
+        (
+            'Transferencia',
+            'Transferencia'
+        ),
+
+        (
+            'Deposito',
+            'Depósito'
+        ),
+
+    ]
+
+    MONEDAS = [
+
+        (
+            'ARS',
+            'Pesos'
+        ),
+
+        (
+            'USD',
+            'Dólares'
+        ),
+
+    ]
+
 
     pago = models.ForeignKey(
+
         Pago,
+
         on_delete=models.PROTECT,
-        related_name='transferencias'
+
+        related_name='operaciones_bancarias'
+
     )
 
-    cuenta_bancaria = models.ForeignKey(
-        'CuentaBancaria',
-        on_delete=models.PROTECT,
-        related_name='transferencias_pago'
+
+    tipo_operacion = models.CharField(
+
+        max_length=20,
+
+        choices=TIPOS_OPERACION,
+
+        default='Transferencia'
+
     )
+
+
+    cuenta_origen = models.ForeignKey(
+
+        'CuentaBancaria',
+
+        on_delete=models.PROTECT,
+
+        related_name='operaciones_pago_origen',
+
+        blank=True,
+
+        null=True
+
+    )
+
+
+    banco_destino = models.ForeignKey(
+
+        'Banco',
+
+        on_delete=models.PROTECT,
+
+        related_name='operaciones_pago_destino'
+
+    )
+
+
+    referencia_destino = models.CharField(
+
+        max_length=150,
+
+        blank=True
+
+    )
+
+
+    moneda = models.CharField(
+
+        max_length=10,
+
+        choices=MONEDAS,
+
+        default='ARS'
+
+    )
+
 
     importe = models.DecimalField(
-        max_digits=12,
+
+        max_digits=14,
+
         decimal_places=2
+
     )
+
 
     fecha = models.DateField()
 
-    referencia = models.CharField(
-        max_length=150,
-        blank=True
-    )
 
     comprobante = models.FileField(
-        upload_to='pagos/transferencias/',
+
+        upload_to='pagos/operaciones_bancarias/',
+
         blank=True,
+
         null=True
+
     )
+
 
     observaciones = models.TextField(
+
         blank=True
+
     )
 
+
     creado = models.DateTimeField(
+
         auto_now_add=True
+
     )
+
+
+    def clean(self):
+
+        from django.core.exceptions import ValidationError
+
+
+        if(
+            self.tipo_operacion ==
+            'Transferencia' and
+            not self.cuenta_origen
+        ):
+
+            raise ValidationError({
+
+                'cuenta_origen':
+                    'Una transferencia debe tener una cuenta bancaria de origen.'
+
+            })
+
+
+        if(
+            self.tipo_operacion ==
+            'Deposito' and
+            self.cuenta_origen
+        ):
+
+            raise ValidationError({
+
+                'cuenta_origen':
+                    'Un depósito no debe tener una cuenta bancaria de origen. Su origen es Caja.'
+
+            })
+
 
     def __str__(self):
 
         return (
-            f"Transferencia {self.id} - "
-            f"{self.importe}"
+
+            f"{self.get_tipo_operacion_display()} "
+            f"{self.id} - "
+            f"{self.importe} "
+            f"{self.moneda}"
+
         )
 
 
@@ -1429,6 +1562,10 @@ class CuentaBancaria(models.Model):
     alias = models.CharField(
         max_length=100,
         blank=True
+    )
+
+    dias_aviso_cheques_propios = models.PositiveIntegerField(
+        default=3
     )
 
     activo = models.BooleanField(

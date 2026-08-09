@@ -1,0 +1,547 @@
+<div class="card">
+
+    <div
+        style="
+            font-size:28px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Cuentas Bancarias
+    </div>
+
+    <div
+        style="
+            color:#8b93a7;
+            margin-bottom:30px;
+        "
+    >
+        Administración de cuentas bancarias de la empresa.
+    </div>
+
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:2fr 2fr 1.4fr 1.2fr;
+            gap:12px;
+            margin-bottom:20px;
+        "
+    >
+
+        <div>
+
+            <label
+                class="label"
+                for="nombreCuentaBancaria"
+            >
+                Nombre
+            </label>
+
+            <input
+                id="nombreCuentaBancaria"
+                type="text"
+                class="input-box"
+                maxlength="120"
+                placeholder="Ej.: Cuenta Corriente Principal"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="bancoCuentaBancaria"
+            >
+                Banco
+            </label>
+
+            <div
+                style="
+                    display:flex;
+                    gap:10px;
+                    align-items:center;
+                "
+            >
+
+                <select
+                    id="bancoCuentaBancaria"
+                    class="input-box"
+                    style="flex:1;"
+                >
+
+                    <option value="">
+                        Seleccione...
+                    </option>
+
+                    {% for banco in bancos %}
+
+                        <option value="{{ banco.id }}">
+                            {{ banco.nombre }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <button
+                    id="btnAgregarBancoCuentaBancaria"
+                    type="button"
+                    class="action-btn"
+                    title="Agregar banco"
+                >
+                    +
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="tipoCuentaBancaria"
+            >
+                Tipo de cuenta
+            </label>
+
+            <select
+                id="tipoCuentaBancaria"
+                class="input-box"
+            >
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                {% for valor, etiqueta in tipos_cuenta %}
+
+                    <option value="{{ valor }}">
+                        {{ etiqueta }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="monedaCuentaBancaria"
+            >
+                Moneda
+            </label>
+
+            <select
+                id="monedaCuentaBancaria"
+                class="input-box"
+            >
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                {% for valor, etiqueta in monedas %}
+
+                    <option value="{{ valor }}">
+                        {{ etiqueta }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:1.4fr 2fr 2fr 1.4fr;
+            gap:12px;
+            margin-bottom:20px;
+        "
+    >
+
+        <div>
+
+            <label
+                class="label"
+                for="numeroCuentaBancaria"
+            >
+                Número de cuenta
+            </label>
+
+            <input
+                id="numeroCuentaBancaria"
+                type="text"
+                class="input-box"
+                maxlength="80"
+                placeholder="Número de cuenta"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="cbuCuentaBancaria"
+            >
+                CBU
+            </label>
+
+            <input
+                id="cbuCuentaBancaria"
+                type="text"
+                class="input-box"
+                maxlength="22"
+                inputmode="numeric"
+                placeholder="22 dígitos"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="aliasCuentaBancaria"
+            >
+                Alias
+            </label>
+
+            <input
+                id="aliasCuentaBancaria"
+                type="text"
+                class="input-box"
+                maxlength="100"
+                placeholder="Alias de la cuenta"
+            >
+
+            <div>
+
+                <label
+                    class="label"
+                    for="diasAvisoChequesPropios"
+                >
+                    Avisar cheques propios
+                </label>
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:8px;
+                    "
+                >
+
+                    <input
+                        id="diasAvisoChequesPropios"
+                        type="number"
+                        min="0"
+                        max="365"
+                        step="1"
+                        value="3"
+                        class="input-box"
+                        style="
+                            text-align:right;
+                        "
+                    >
+
+                    <span
+                        style="
+                            color:#8b93a7;
+                            white-space:nowrap;
+                        "
+                    >
+                        días antes
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+            display:flex;
+            gap:12px;
+            justify-content:flex-end;
+            margin:20px 0 30px;
+        "
+    >
+
+        <button
+            id="btnGuardarCuentaBancaria"
+            type="button"
+            class="guardar"
+            style="
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Guardar
+        </button>
+
+        <button
+            id="btnCancelarCuentaBancaria"
+            type="button"
+            class="action-btn"
+            style="
+                display:none;
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Cancelar
+        </button>
+
+    </div>
+
+
+    <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarCuentaBancariaABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar cuenta bancaria
+        </label>
+
+        <input
+            id="buscarCuentaBancariaABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por nombre, banco, tipo, moneda, número, CBU o alias"
+            autocomplete="off"
+        >
+
+    </div>
+
+
+    <div
+        id="grillaCuentasBancarias"
+        style="
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        "
+    >
+
+        {% for cuenta in cuentas %}
+
+            <div
+                class="tarjeta-cuenta-bancaria-abm"
+
+                data-cuenta-id="{{ cuenta.id }}"
+
+                data-cuenta-nombre="{{ cuenta.nombre|escape }}"
+
+                data-cuenta-banco="{{ cuenta.banco_id }}"
+
+                data-cuenta-tipo="{{ cuenta.tipo_cuenta|escape }}"
+
+                data-cuenta-moneda="{{ cuenta.moneda|escape }}"
+
+                data-cuenta-numero="{{ cuenta.numero_cuenta|escape }}"
+
+                data-cuenta-cbu="{{ cuenta.cbu|escape }}"
+
+                data-cuenta-alias="{{ cuenta.alias|escape }}"
+
+                data-busqueda="
+                    {{ cuenta.nombre|default:''|escape }}
+                    {{ cuenta.banco.nombre|default:''|escape }}
+                    {{ cuenta.get_tipo_cuenta_display|default:''|escape }}
+                    {{ cuenta.get_moneda_display|default:''|escape }}
+                    {{ cuenta.numero_cuenta|default:''|escape }}
+                    {{ cuenta.cbu|default:''|escape }}
+                    {{ cuenta.alias|default:''|escape }}
+                "
+
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:20px;
+                    padding:16px 18px;
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                "
+            >
+
+                <div
+                    style="
+                        min-width:0;
+                        flex:1;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-weight:700;
+                            margin-bottom:6px;
+                        "
+                    >
+                        {{ cuenta.nombre }}
+                    </div>
+
+                    <div
+                        style="
+                            color:#8b93a7;
+                            font-size:14px;
+                            line-height:1.6;
+                        "
+                    >
+
+                        {{ cuenta.banco.nombre }}
+
+                        ·
+
+                        {{ cuenta.get_tipo_cuenta_display }}
+
+                        ·
+
+                        {{ cuenta.get_moneda_display }}
+
+                        {% if cuenta.numero_cuenta %}
+
+                            <br>
+
+                            Cuenta:
+                            {{ cuenta.numero_cuenta }}
+
+                        {% endif %}
+
+                        {% if cuenta.cbu %}
+
+                            · CBU:
+                            {{ cuenta.cbu }}
+
+                        {% endif %}
+
+                        {% if cuenta.alias %}
+
+                            <br>
+
+                            Alias:
+                            {{ cuenta.alias }}
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        flex-shrink:0;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="action-btn btn-modificar-cuenta-bancaria"
+                        data-cuenta-id="{{ cuenta.id }}"
+                    >
+                        Modificar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-btn btn-eliminar-cuenta-bancaria"
+                        data-cuenta-id="{{ cuenta.id }}"
+                        data-cuenta-nombre="{{ cuenta.nombre|escape }}"
+                        style="
+                            background:#7f1d1d;
+                            border-color:#991b1b;
+                        "
+                    >
+                        Eliminar
+                    </button>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div
+                style="
+                    color:#8b93a7;
+                    padding:20px;
+                    text-align:center;
+                "
+            >
+                No hay cuentas bancarias cargadas.
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div
+        id="sinResultadosCuentaBancariaABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron cuentas bancarias.
+    </div>
+
+</div>
+
+
+<div
+    style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:30px;
+    "
+>
+
+    <button
+        id="btnVolverCuentaBancaria"
+        type="button"
+        class="action-btn"
+    >
+        ← Volver
+    </button>
+
+</div>

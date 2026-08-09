@@ -1623,6 +1623,7 @@ Exportar Empresa
 </a>
 
 <button
+id="btnEliminarEmpresa"
 type="button"
 style="
 height:52px;
@@ -1632,8 +1633,7 @@ background:#dc2626;
 color:white;
 font-weight:600;
 cursor:pointer;
-"
-onclick="confirmarEliminarEmpresa()">
+">
 
 Eliminar Empresa
 
@@ -1656,11 +1656,19 @@ let origenABM = "menu";
 
 let contenidoAnteriorABM = null;
 
+let contextoRetornoABM = null;
+
 let contenidoAnteriorABMProveedores = null;
 
 let proveedoresCargaSimple = [];
 
 let recursosCargaSimple = [];
+
+let contenidoAnteriorABMBancosDesdeCuentaBancaria = null;
+
+let origenABMCuentasBancarias = "menu";
+
+let ultimoBancoCreado = null;
 
 function limpiarPanelOperativo(){
 
@@ -1924,6 +1932,14 @@ function mostrarSubmenu(tipo){
 
                 Bancos
 
+            </button>
+
+            <button
+                type="button"
+                class="module-card"
+                onclick="mostrarABMCuentasBancarias('menu')"
+            >
+                Cuentas Bancarias
             </button>
 
             <button
@@ -2878,6 +2894,148 @@ async function actualizarProveedorDelRegistro(){
 
 }
 
+async function mostrarABMCuentasBancarias(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar las cuentas bancarias."
+            );
+
+            return;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando cuentas bancarias:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar las cuentas bancarias."
+        );
+
+        return;
+
+    }
+
+
+    origenABM =
+        origen;
+
+    origenABMCuentasBancarias =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    if(
+        typeof iniciarABMCuentasBancarias ===
+        "function"
+    ){
+
+        iniciarABMCuentasBancarias();
+
+    }
+
+}
+
 async function mostrarABMRecursosOperativos(
     origen = "menu"
 ){
@@ -3197,20 +3355,94 @@ async function actualizarRecursoOperativoDelRegistro(){
 
 }
 
-async function mostrarABMBancos(origen = "menu"){
-
-    origenABM = origen;
-
-    if(origen === "menu"){
-
-        contenidoAnteriorABM = null;
-
-    }
+async function mostrarABMBancos(
+    origen = "menu"
+){
 
     const contenidoOperativo =
         document.getElementById(
             "contenido-operativo"
         );
+
+    const empresaElemento =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresaElemento ||
+        !empresaElemento.value
+    ){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        empresaElemento.value;
+
+
+    let datos;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/listar-bancos/?empresa=${encodeURIComponent(empresa)}`
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de bancos."
+            );
+
+            return;
+
+        }
+
+
+        datos =
+            await respuesta.json();
+
+    }catch(error){
+
+        console.error(
+            "Error cargando bancos:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar el módulo de bancos."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Guardamos el formulario anterior recién después
+     * de comprobar que Bancos pudo cargarse.
+     */
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
 
     if(
         origen === "registro" &&
@@ -3220,7 +3452,10 @@ async function mostrarABMBancos(origen = "menu"){
         contenidoAnteriorABM =
             document.createDocumentFragment();
 
-        while(contenidoOperativo.firstChild){
+
+        while(
+            contenidoOperativo.firstChild
+        ){
 
             contenidoAnteriorABM.appendChild(
                 contenidoOperativo.firstChild
@@ -3230,70 +3465,280 @@ async function mostrarABMBancos(origen = "menu"){
 
     }
 
-    const empresa =
-        document.getElementById("empresaActiva").value;
 
-    if(!empresa){
+    /*
+     * Segundo nivel:
+     *
+     * Formulario original
+     * → Cuentas Bancarias
+     * → Bancos
+     *
+     * Este fragmento guarda exclusivamente
+     * el ABM de Cuentas Bancarias.
+     */
 
-        alert("No hay una empresa seleccionada.");
+    if(
+        origen === "cuenta_bancaria" &&
+        contenidoAnteriorABMBancosDesdeCuentaBancaria === null
+    ){
 
-        return;
+        contenidoAnteriorABMBancosDesdeCuentaBancaria =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMBancosDesdeCuentaBancaria.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
 
     }
 
-    const respuesta = await fetch(
-        `/listar-bancos/?empresa=${empresa}`
-    );
 
-    if(!respuesta.ok){
+    origenABM =
+        origen;
 
-        alert("No se pudo cargar el módulo de bancos.");
 
-        return;
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
 
     }
 
-    const datos = await respuesta.json();
 
-    document.getElementById(
-        "bloque-alta-empresa"
-    ).style.display = "none";
+    contenidoOperativo.innerHTML =
+        datos.html;
 
-    contenidoOperativo.innerHTML = datos.html;
 
     iniciarABMBancos();
 
 }
 
-function volverDesdeABMBancos(){
+async function volverDesdeABMBancos(){
 
     const contenidoOperativo =
         document.getElementById(
             "contenido-operativo"
         );
 
+
+    /*
+     * =========================================
+     * BANCOS ABIERTO DESDE CUENTAS BANCARIAS
+     * =========================================
+     */
+
     if(
-        origenABM === "registro" &&
-        contenidoAnteriorABM
+        origenABM === "cuenta_bancaria" &&
+        contenidoAnteriorABMBancosDesdeCuentaBancaria &&
+        contenidoOperativo
     ){
 
-        contenidoOperativo.innerHTML = "";
+        contenidoOperativo.innerHTML =
+            "";
+
 
         contenidoOperativo.appendChild(
-            contenidoAnteriorABM
+            contenidoAnteriorABMBancosDesdeCuentaBancaria
         );
 
-        contenidoAnteriorABM = null;
 
-        cargarSelectBancos();
+        contenidoAnteriorABMBancosDesdeCuentaBancaria =
+            null;
+
+
+        origenABM =
+            origenABMCuentasBancarias;
+
+
+        if(
+            typeof actualizarBancosCuentaBancaria ===
+                "function"
+        ){
+
+            await actualizarBancosCuentaBancaria();
+
+        }
+
 
         return;
 
     }
 
-    contenidoAnteriorABM = null;
 
-    mostrarSubmenu("abms");
+    /*
+     * =========================================
+     * BANCOS ABIERTO DESDE REGISTRO
+     * =========================================
+     */
+
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABM &&
+        contenidoOperativo
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+
+        contenidoAnteriorABM =
+            null;
+
+
+        /*
+         * =====================================
+         * DESTINO TRANSFERENCIA / DEPÓSITO
+         * =====================================
+         */
+
+        if(
+            contextoRetornoABM &&
+            contextoRetornoABM.tipo ===
+                "operacion_bancaria" &&
+            contextoRetornoABM.campo ===
+                "destino"
+        ){
+
+            const pagoId =
+                contextoRetornoABM.pagoId;
+
+
+            await cargarBancosOperacionBancaria(
+                pagoId
+            );
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            const bloque =
+                tarjeta?.querySelector(
+                    ".bloque-operaciones-bancarias"
+                );
+
+
+            if(bloque){
+
+                bloque.style.display =
+                    "block";
+
+            }
+
+
+            contextoRetornoABM =
+                null;
+
+
+            origenABM =
+                "registro";
+
+
+            return;
+
+        }
+
+
+        /*
+         * =====================================
+         * CHEQUE DE TERCERO DEL PAGO
+         * =====================================
+         */
+
+        if(
+            contextoRetornoABM &&
+            contextoRetornoABM.tipo ===
+                "cheque_pago" &&
+            contextoRetornoABM.origen ===
+                "tercero"
+        ){
+
+            const pagoId =
+                contextoRetornoABM.pagoId;
+
+
+            await cargarEntidadesChequePago(
+                pagoId,
+                "tercero"
+            );
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            const bloque =
+                tarjeta?.querySelector(
+                    ".bloque-cheques-pago"
+                );
+
+
+            if(bloque){
+
+                bloque.style.display =
+                    "block";
+
+            }
+
+
+            contextoRetornoABM =
+                null;
+
+
+            origenABM =
+                "registro";
+
+
+            return;
+
+        }
+       
+
+    }
+
+
+    /*
+     * =========================================
+     * ABM ABIERTO DESDE MENÚ
+     * =========================================
+     */
+
+    contenidoAnteriorABM =
+        null;
+
+
+    contextoRetornoABM =
+        null;
+
+
+    origenABM =
+        "menu";
+
+
+    mostrarSubmenu(
+        "abms"
+    );
 
 }
 
@@ -3420,6 +3865,17 @@ async function iniciarEventosCargaSimple(){
     const empresaActiva =
         document.getElementById(
             "empresaActiva"
+        );
+
+    const selectOrigenCheque =
+        document.getElementById(
+            "origenCheque"
+        );
+
+
+    const selectTipoCheque =
+        document.getElementById(
+            "tipoCheque"
         );
 
 
@@ -3618,6 +4074,52 @@ async function iniciarEventosCargaSimple(){
 
     }
 
+    /*
+     * Cheques:
+     * Banco / Cuenta Bancaria depende del origen.
+     */
+    if(
+        selectOrigenCheque &&
+        !selectOrigenCheque.dataset.eventoChequeAsignado
+    ){
+
+        selectOrigenCheque.addEventListener(
+
+            "change",
+
+            cambiarOrigenCheque
+
+        );
+
+
+        selectOrigenCheque.dataset.eventoChequeAsignado =
+            "true";
+
+    }
+
+
+    /*
+     * Cheques:
+     * Las fechas dependen de si es común o diferido.
+     */
+    if(
+        selectTipoCheque &&
+        !selectTipoCheque.dataset.eventoChequeAsignado
+    ){
+
+        selectTipoCheque.addEventListener(
+
+            "change",
+
+            cambiarTipoCheque
+
+        );
+
+
+        selectTipoCheque.dataset.eventoChequeAsignado =
+            "true";
+
+    }
 
     const empresa =
         empresaActiva.value;
@@ -4452,8 +4954,8 @@ Neto Gravado
 
 <input
 id="neto"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalRegistro()">
 
@@ -4469,8 +4971,8 @@ No Gravado / Exento
 
 <input
 id="exento"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalRegistro()">
 
@@ -4504,8 +5006,8 @@ gap:8px;
 
 <input
 id="iva21"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 style="flex:1"
 oninput="calcularTotalRegistro()">
@@ -4552,8 +5054,8 @@ gap:8px;
 
 <input
 id="iva27"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 style="flex:1"
 oninput="calcularTotalRegistro()">
@@ -4600,8 +5102,8 @@ gap:8px;
 
 <input
 id="iva105"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 style="flex:1"
 oninput="calcularTotalRegistro()">
@@ -4631,8 +5133,8 @@ Recargos / Intereses
 
 <input
 id="recargosIntereses"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalRegistro()">
 
@@ -4648,8 +5150,8 @@ Ajuste por redondeo
 
 <input
 id="ajuste"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalRegistro()">
 
@@ -4705,8 +5207,8 @@ Ingresos Brutos (IIBB)
 
 <input
 id="percepcionIIBB"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalPercepciones()">
 
@@ -4723,8 +5225,8 @@ IVA (Impuesto al Valor Agregado)
 
 <input
 id="percepcionIVA"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalPercepciones()">
 
@@ -4741,8 +5243,8 @@ Impuesto a las Ganancias
 
 <input
 id="percepcionGanancias"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalPercepciones()">
 
@@ -4759,8 +5261,8 @@ Tasas Municipales
 
 <input
 id="percepcionTasasMunicipales"
-type="number"
-step="0.01"
+type="text"
+inputmode="decimal"
 class="input-box"
 oninput="calcularTotalPercepciones()">
 
@@ -4790,8 +5292,7 @@ gap:10px;
 
 <input
 id="total_registro"
-type="number"
-step="0.01"
+type="text"
 class="input-box"
 style="
 flex:1;
@@ -4825,439 +5326,80 @@ hidden>
 
 </div>
 
-
-
 <!-- ===================================================== -->
-<!-- DATOS DEL PAGO -->
+<!-- FIN DATOS DEL REGISTRO -->
 <!-- ===================================================== -->
 
-<div
-style="
-grid-column:1/-1;
-margin-top:35px;
-border-top:1px solid #334155;
-padding-top:20px;
-">
-
-<button
-type="button"
-class="sidebar-btn"
-style="
-justify-content:space-between;
-padding-left:20px;
-padding-right:20px;
-"
-onclick="togglePago()"
-id="btnPago">
-
-<span class="indicador-pago">
-► Datos del Pago
-</span>
-
-<span id="totalPagoBoton">
-$ 0.00
-</span>
-
-</button>
+</div>
 
 </div>
+
+<!-- ===================================================== -->
+<!-- PAGOS DEL REGISTRO -->
+<!-- ===================================================== -->
 
 <div
-id="bloquePago"
-style="
-display:none;
-grid-column:1/-1;
-">
-
-<div class="form-grid">
-
-<div class="field">
-
-<label class="label">
-
-Fecha de Pago
-
-</label>
-
-<input
-type="date"
-class="input-box">
-
+    id="listaPagosRegistro"
+    style="
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        margin-top:24px;
+    "
+>
 </div>
 
-<div class="field">
-
-<label class="label">
-
-Efectivo
-
-</label>
-
-<input
-id="pagoEfectivo"
-type="number"
-step="0.01"
-class="input-box"
-oninput="calcularSaldoPago()">
-
-</div>
-
-
-
-<div class="field">
-
-<label class="label">
-
-Tarjeta
-
-</label>
-
-<input
-id="pagoTarjeta"
-type="number"
-step="0.01"
-class="input-box"
-oninput="calcularSaldoPago()">
-
-</div>
-
-<div class="field">
-
-<label class="label">
-
-Retenciones
-
-</label>
-
-<input
-id="pagoRetenciones"
-type="number"
-step="0.01"
-class="input-box"
-oninput="calcularSaldoPago()">
-
-</div>
-
-
-<!-- ========================= -->
-<!-- CHEQUES -->
-<!-- ========================= -->
+<!-- ===================================================== -->
+<!-- ACCIONES DEL REGISTRO -->
+<!-- ===================================================== -->
 
 <div
 style="
-grid-column:1/-1;
-margin-top:25px;
-border-top:1px solid #2b3447;
-padding-top:20px;
-">
-
-<div
-style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-">
-
-<div
-style="
-font-size:16px;
-font-weight:600;
-color:#cbd5e1;
-">
-
-Cheques
-
-</div>
-
-<button
-type="button"
-id="btnCheque"
-class="action-btn"
-onclick="toggleCheque()">
-
-+ Agregar cheque
-
-</button>
-
-</div>
-
-<div
-id="bloqueCheque"
-style="display:none;">
-
-<div class="form-grid">
-
-<div class="field">
-
-<label class="label">
-
-Tipo
-
-</label>
-
-<select
-class="input-box">
-
-<option>
-
-Cheque
-
-</option>
-
-<option>
-
-Echeq
-
-</option>
-
-</select>
-
-</div>
-
-<!-- TIPO DE CHEQUE -->
-
-<div class="field">
-
-<label class="label">
-
-Tipo de cheque
-
-</label>
-
-<select
-id="tipoCheque"
-class="input-box"
-onchange="cambiarTipoCheque()">
-
-<option value="diferido">
-
-Cheque Diferido
-
-</option>
-
-<option value="comun">
-
-Cheque Común
-
-</option>
-
-</select>
-
-</div>
-
-<!-- BANCO -->
-
-<div class="field">
-
-<label class="label">
-
-Banco
-
-</label>
-
-<div
-style="
-display:flex;
-gap:10px;
-">
-
-<select
-id="bancoCheque"
-class="input-box"
-style="flex:1;">
-
-<option>
-
-Seleccione...
-
-</option>
-
-</select>
-
-<button
-type="button"
-class="action-btn"
-onclick="mostrarABMBancos('registro')">
-
-+
-
-</button>
-
-</div>
-
-</div>
-
-<div class="field">
-
-<label class="label">
-
-Número
-
-</label>
-
-<input
-id="numeroCheque"
-type="text"
-maxlength="8"
-inputmode="numeric"
-pattern="[0-9]{8}"
-oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"
-class="input-box">
-
-</div>
-
-<div class="field">
-
-<label class="label">
-
-Importe
-
-</label>
-
-<input
-id="importeCheque"
-type="number"
-step="0.01"
-class="input-box">
-
-</div>
-
-<div class="field">
-
-<label class="label">
-
-Fecha emisión
-
-</label>
-
-<input
-id="fechaEmision"
-type="date"
-class="input-box"
-onchange="cambiarTipoCheque()">
-
-</div>
-
-<div
-class="field"
-id="bloqueFechaAcreditacion">
-
-<label class="label">
-
-Fecha acreditación
-
-</label>
-
-<input
-id="fechaAcreditacion"
-type="date"
-class="input-box">
-
-</div>
-
-<div class="field">
-
-<label class="label">
-
-Origen
-
-</label>
-
-<select
-id="origenCheque"
-class="input-box"
-onchange="cambiarOrigenCheque()">
-
-<option value="propio">
-
-Propio
-
-</option>
-
-<option value="tercero">
-
-Tercero
-
-</option>
-
-</select>
-
-<option>
-
-Propio
-
-</option>
-
-<option>
-
-Tercero
-
-</option>
-
-</select>
-
-</div>
-
-<div
-class="field"
-id="bloqueOrigenCheque"
-style="display:none;">
-
-<label class="label">
-
-Quién lo entregó
-
-</label>
-
-<input
-id="quienEntrega"
-class="input-box">
-
-</div>
-
-</div>
-
-<div
-style="
-display:flex;
-justify-content:flex-end;
-margin-top:18px;
-">
-
-<button
-type="button"
-class="guardar"
-onclick="agregarCheque()">
-
-Agregar a la lista
-
-</button>
-
-</div>
-
-<div
-id="listaCheques"
-style="
-margin-top:25px;
-display:flex;
-flex-direction:column;
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
 gap:12px;
-">
+margin-top:22px;
+"
+>
 
-</div>
+    <button
+        id="btnGuardarRegistro"
+        type="button"
+        class="guardar"
+        style="
+        margin-top:0;
+        "
+    >
+        Guardar registro
+    </button>
 
-</div>
 
-</div>
+    <button
+        id="btnAgregarPagoRegistro"
+        type="button"
+        class="action-btn"
+        style="
+        height:52px;
+        "
+    >
+        + Agregar pago
+    </button>
 
-</div>
+
+    <button
+        id="btnPlanPagoRegistro"
+        type="button"
+        class="action-btn"
+        style="
+        height:52px;
+        "
+    >
+        Plan de pago
+    </button>
 
 </div>
 
 `;
-
-cargarSelectBancos();
 
 cargarSelectCentrosOperativos();
 
@@ -5539,84 +5681,225 @@ async function cargarSelectBancos(){
 
 }
 
+function formatearImporte(
+    valor
+){
+
+    const numero =
+        Number(
+            valor || 0
+        );
+
+
+    return numero.toLocaleString(
+        "es-AR",
+        {
+            minimumFractionDigits:
+                2,
+
+            maximumFractionDigits:
+                2
+        }
+    );
+
+}
+
+function leerImporte(
+    valor
+){
+
+    if(
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ){
+
+        return 0;
+
+    }
+
+
+    if(
+        typeof valor === "number"
+    ){
+
+        return valor;
+
+    }
+
+
+    let texto =
+        String(
+            valor
+        )
+        .trim()
+        .replace(
+            /\$/g,
+            ""
+        )
+        .replace(
+            /\s/g,
+            ""
+        );
+
+
+    /*
+     * Formato argentino:
+     *
+     * 1.234.567,89
+     *
+     * Eliminamos puntos de miles y
+     * convertimos la coma decimal a punto.
+     */
+
+    texto =
+        texto
+            .replace(
+                /\./g,
+                ""
+            )
+            .replace(
+                ",",
+                "."
+            );
+
+
+    const numero =
+        Number(
+            texto
+        );
+
+
+    return Number.isFinite(
+        numero
+    )
+        ? numero
+        : 0;
+
+}
+
+
+function formatearCampoImporte(
+    input
+){
+
+    if(!input){
+
+        return;
+
+    }
+
+
+    const valor =
+        leerImporte(
+            input.value
+        );
+
+
+    if(
+        input.value.trim() === ""
+    ){
+
+        return;
+
+    }
+
+
+    input.value =
+        formatearImporte(
+            valor
+        );
+
+}
+
 function calcularTotalRegistro(){
 
     const neto =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "neto"
             )?.value
-        ) || 0;
+        );
+
 
     const exento =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "exento"
             )?.value
-        ) || 0;
+        );
+
 
     const iva21 =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "iva21"
             )?.value
-        ) || 0;
+        );
+
 
     const iva27 =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "iva27"
             )?.value
-        ) || 0;
+        );
+
 
     const iva105 =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "iva105"
             )?.value
-        ) || 0;
+        );
+
 
     const recargosIntereses =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "recargosIntereses"
             )?.value
-        ) || 0;
+        );
+
 
     const percepcionIIBB =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionIIBB"
             )?.value
-        ) || 0;
+        );
+
 
     const percepcionIVA =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionIVA"
             )?.value
-        ) || 0;
+        );
+
 
     const percepcionGanancias =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionGanancias"
             )?.value
-        ) || 0;
+        );
+
 
     const percepcionTasasMunicipales =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionTasasMunicipales"
             )?.value
-        ) || 0;
+        );
+
 
     const ajuste =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "ajuste"
             )?.value
-        ) || 0;
+        );
 
 
     const totalPercepciones =
@@ -5645,25 +5928,61 @@ function calcularTotalRegistro(){
 
     if(inputTotal){
 
+        inputTotal.dataset.valorNumerico =
+            String(
+                total
+            );
+
+
         inputTotal.value =
-            total.toFixed(2);
+            "$ " +
+            formatearImporte(
+                total
+            );
 
     }
 
+
+    actualizarResumenGeneralPagos();
+
 }
 
-function calcularIVA(porcentaje,idDestino){
+function calcularIVA(
+    porcentaje,
+    idDestino
+){
 
     const neto =
-        parseFloat(document.getElementById("neto").value) || 0;
+        leerImporte(
+            document.getElementById(
+                "neto"
+            )?.value
+        );
+
 
     const iva =
-        neto * porcentaje;
+        neto *
+        porcentaje;
 
-    document.getElementById(idDestino).value =
-        iva.toFixed(2);
+
+    const destino =
+        document.getElementById(
+            idDestino
+        );
+
+
+    if(destino){
+
+        destino.value =
+            formatearImporte(
+                iva
+            );
+
+    }
+
 
     calcularTotalRegistro();
+
 }
 
 function togglePercepciones(){
@@ -5745,32 +6064,35 @@ function togglePercepciones(){
 function calcularTotalPercepciones(){
 
     const iibB =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionIIBB"
             )?.value
-        ) || 0;
+        );
+
 
     const iva =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionIVA"
             )?.value
-        ) || 0;
+        );
+
 
     const ganancias =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionGanancias"
             )?.value
-        ) || 0;
+        );
+
 
     const tasasMunicipales =
-        parseFloat(
+        leerImporte(
             document.getElementById(
                 "percepcionTasasMunicipales"
             )?.value
-        ) || 0;
+        );
 
 
     const total =
@@ -5790,13 +6112,3865 @@ function calcularTotalPercepciones(){
 
         totalBoton.textContent =
             "$ " +
-            total.toFixed(2);
+            formatearImporte(
+                total
+            );
 
     }
 
 
     calcularTotalRegistro();
-    
+
+}
+
+async function cargarEntidadesChequePago(
+    pagoId,
+    origen = null
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const selectOrigen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const selectEntidad =
+        tarjeta.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+
+    if(
+        !selectOrigen ||
+        !selectEntidad
+    ){
+
+        return;
+
+    }
+
+
+    const origenActual =
+        origen ||
+        selectOrigen.value;
+
+
+    const valorAnterior =
+        selectEntidad.value;
+
+
+    selectEntidad.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        /*
+         * =====================================
+         * CHEQUE DE TERCERO
+         * =====================================
+         */
+
+        if(
+            origenActual ===
+            "tercero"
+        ){
+
+            const respuesta =
+                await fetch(
+
+                    `/listar-bancos/?empresa=${encodeURIComponent(empresa.value)}&_=${Date.now()}`,
+
+                    {
+                        cache:
+                            "no-store"
+                    }
+
+                );
+
+
+            const resultado =
+                await respuesta.json();
+
+
+            if(
+                !respuesta.ok ||
+                !Array.isArray(
+                    resultado.bancos
+                )
+            ){
+
+                return;
+
+            }
+
+
+            resultado.bancos.forEach(
+                function(banco){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            banco.id
+                        );
+
+
+                    opcion.textContent =
+                        banco.nombre;
+
+
+                    selectEntidad.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+            /*
+             * =================================
+             * BANCO RECIÉN CREADO
+             * =================================
+             */
+
+            if(
+                typeof ultimoBancoCreado !==
+                    "undefined" &&
+                ultimoBancoCreado
+            ){
+
+                const bancoId =
+                    String(
+                        typeof ultimoBancoCreado ===
+                            "object"
+                            ? ultimoBancoCreado.id
+                            : ultimoBancoCreado
+                    );
+
+
+                const opcionNueva =
+                    selectEntidad.querySelector(
+                        `option[value="${bancoId}"]`
+                    );
+
+
+                /*
+                 * IMPORTANTE:
+                 *
+                 * Solo limpiamos ultimoBancoCreado
+                 * si realmente encontramos el banco
+                 * en el listado actualizado.
+                 */
+
+                if(opcionNueva){
+
+                    selectEntidad.value =
+                        bancoId;
+
+
+                    ultimoBancoCreado =
+                        null;
+
+
+                    return;
+
+                }
+
+            }
+
+        }else{
+
+            /*
+             * =====================================
+             * CHEQUE PROPIO
+             * =====================================
+             */
+
+            const respuesta =
+                await fetch(
+
+                    `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}&_=${Date.now()}`,
+
+                    {
+                        cache:
+                            "no-store"
+                    }
+
+                );
+
+
+            const resultado =
+                await respuesta.json();
+
+
+            if(
+                !respuesta.ok ||
+                !resultado.ok ||
+                !Array.isArray(
+                    resultado.cuentas
+                )
+            ){
+
+                return;
+
+            }
+
+
+            resultado.cuentas.forEach(
+                function(cuenta){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            cuenta.id
+                        );
+
+
+                    opcion.textContent =
+                        `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                    selectEntidad.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+            /*
+            * =================================
+            * CUENTA BANCARIA RECIÉN CREADA
+            * =================================
+            */
+
+            if(
+                typeof ultimaCuentaBancariaCreada !==
+                    "undefined" &&
+                ultimaCuentaBancariaCreada
+            ){
+
+                const cuentaId =
+                    String(
+                        typeof ultimaCuentaBancariaCreada ===
+                            "object"
+                            ? ultimaCuentaBancariaCreada.id
+                            : ultimaCuentaBancariaCreada
+                    );
+
+
+                let opcionNueva =
+                    selectEntidad.querySelector(
+                        `option[value="${cuentaId}"]`
+                    );
+
+
+                /*
+                * Si la cuenta todavía no vino en el listado,
+                * la incorporamos manualmente.
+                *
+                * Esto es válido porque acabamos de recibir
+                * del backend la confirmación de que fue creada.
+                */
+
+                if(
+                    !opcionNueva &&
+                    typeof ultimaCuentaBancariaCreada ===
+                        "object"
+                ){
+
+                    opcionNueva =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcionNueva.value =
+                        cuentaId;
+
+
+                    const bancoNombre =
+                        ultimaCuentaBancariaCreada.banco ||
+                        "";
+
+
+                    const cuentaNombre =
+                        ultimaCuentaBancariaCreada.nombre ||
+                        "Cuenta bancaria";
+
+
+                    opcionNueva.textContent =
+                        bancoNombre
+                            ? `${bancoNombre} · ${cuentaNombre}`
+                            : cuentaNombre;
+
+
+                    selectEntidad.appendChild(
+                        opcionNueva
+                    );
+
+                }
+
+
+                /*
+                * Si existe —porque vino del servidor
+                * o porque acabamos de incorporarla—
+                * queda seleccionada.
+                */
+
+                if(opcionNueva){
+
+                    selectEntidad.value =
+                        cuentaId;
+
+
+                    ultimaCuentaBancariaCreada =
+                        null;
+
+
+                    return;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * =====================================
+         * CONSERVAR SELECCIÓN ANTERIOR
+         * =====================================
+         */
+
+        if(
+            valorAnterior &&
+            selectEntidad.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            selectEntidad.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando Banco/Cuenta del cheque del pago:",
+            error
+        );
+
+    }
+
+}
+
+async function cambiarOrigenChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const labelEntidad =
+        tarjeta.querySelector(
+            ".label-entidad-cheque-pago"
+        );
+
+    const botonAgregar =
+        tarjeta.querySelector(
+            ".btn-agregar-entidad-cheque-pago"
+        );
+
+    const bloqueEntrega =
+        tarjeta.querySelector(
+            ".bloque-entrega-cheque-pago"
+        );
+
+    const quienEntrega =
+        tarjeta.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+
+    if(
+        !origen ||
+        !labelEntidad ||
+        !botonAgregar ||
+        !bloqueEntrega
+    ){
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * TERCERO
+     * =====================================
+     */
+
+    if(
+        origen.value ===
+        "tercero"
+    ){
+
+        labelEntidad.textContent =
+            "Banco";
+
+
+        botonAgregar.title =
+            "Agregar banco";
+
+
+        bloqueEntrega.style.display =
+            "block";
+
+
+        await cargarEntidadesChequePago(
+            pagoId,
+            "tercero"
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * PROPIO
+     * =====================================
+     */
+
+    labelEntidad.textContent =
+        "Cuenta bancaria";
+
+
+    botonAgregar.title =
+        "Agregar cuenta bancaria";
+
+
+    bloqueEntrega.style.display =
+        "none";
+
+
+    if(quienEntrega){
+
+        quienEntrega.value =
+            "";
+
+    }
+
+
+    await cargarEntidadesChequePago(
+        pagoId,
+        "propio"
+    );
+
+}
+
+function cambiarTipoChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const bloqueAcreditacion =
+        tarjeta.querySelector(
+            ".bloque-fecha-acreditacion-cheque-pago"
+        );
+
+    const fechaEmision =
+        tarjeta.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const fechaAcreditacion =
+        tarjeta.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+
+    if(
+        !tipo ||
+        !bloqueAcreditacion ||
+        !fechaEmision ||
+        !fechaAcreditacion
+    ){
+
+        return;
+
+    }
+
+
+    const esChequeSimple =
+        (
+            tipo.value === "simple" ||
+            tipo.value === "comun"
+        );
+
+
+    /*
+     * =====================================
+     * CHEQUE SIMPLE
+     * =====================================
+     *
+     * Se oculta Fecha acreditación,
+     * pero SE CONSERVA su espacio en
+     * la grilla.
+     *
+     * Nada de abajo debe subir.
+     */
+
+    if(esChequeSimple){
+
+        bloqueAcreditacion.style.visibility =
+            "hidden";
+
+
+        bloqueAcreditacion.style.pointerEvents =
+            "none";
+
+
+        /*
+         * Internamente usamos Fecha emisión
+         * también como Fecha acreditación.
+         */
+
+        fechaAcreditacion.value =
+            fechaEmision.value;
+
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * CHEQUE DIFERIDO
+     * =====================================
+     */
+
+    bloqueAcreditacion.style.visibility =
+        "visible";
+
+
+    bloqueAcreditacion.style.pointerEvents =
+        "auto";
+
+}
+
+function abrirABMEntidadChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        )?.value;
+
+
+    if(!origen){
+
+        return;
+
+    }
+
+
+    /*
+     * Guardamos exactamente qué Pago
+     * y qué acordeón originó el ABM.
+     */
+
+    contextoRetornoABM = {
+
+        tipo:
+            "cheque_pago",
+
+        pagoId:
+            Number(
+                pagoId
+            ),
+
+        campo:
+            "entidad",
+
+        origen:
+            origen
+
+    };
+
+
+    /*
+     * CHEQUE PROPIO
+     * → Cuenta Bancaria
+     */
+
+    if(
+        origen ===
+        "propio"
+    ){
+
+        mostrarABMCuentasBancarias(
+            "registro"
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * CHEQUE TERCERO
+     * → Banco
+     */
+
+    mostrarABMBancos(
+        "registro"
+    );
+
+}
+
+function agregarPagoRegistro(){
+
+    const lista =
+        document.getElementById(
+            "listaPagosRegistro"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    contadorPagosRegistro +=
+        1;
+
+
+    const pagoId =
+        contadorPagosRegistro;
+
+
+    /*
+     * Creamos desde ahora un Pago real
+     * dentro del estado de Carga Simple.
+     *
+     * Más adelante este mismo objeto tendrá:
+     * transferencias,
+     * tarjeta,
+     * retenciones,
+     * cheques,
+     * etc.
+     */
+
+    const pago = {
+
+        id:
+            pagoId,
+
+        fecha_pago:
+            "",
+
+        efectivo:
+            0,
+
+        transferencias:
+            [],
+
+        tarjeta:
+            null,
+
+        retenciones:
+            [],
+
+        cheques:
+            [],
+
+        total:
+            0
+
+    };
+
+
+    pagosRegistro.push(
+        pago
+    );
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.id =
+        `pagoRegistro_${pagoId}`;
+
+
+    tarjeta.className =
+        "tarjeta-pago-registro";
+
+
+    tarjeta.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    tarjeta.style.cssText = `
+        background:#171c26;
+        border:1px solid #252c3d;
+        border-radius:24px;
+        padding:32px;
+    `;
+
+
+    tarjeta.innerHTML = `
+
+        <div
+            class="cabecera-pago-registro"
+            style="
+                display:flex;
+                align-items:center;
+                gap:12px;
+            "
+        >
+
+            <button
+                type="button"
+                class="sidebar-btn btn-toggle-pago-registro"
+                data-pago-id="${pagoId}"
+                style="
+                    flex:1;
+                    justify-content:space-between;
+                    padding-left:20px;
+                    padding-right:20px;
+                "
+            >
+
+                <span
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                    "
+                >
+
+                    <span
+                        class="indicador-pago-registro"
+                    >
+                        ▼
+                    </span>
+
+                    <span>
+                        Pago ${pagoId}
+                    </span>
+
+                </span>
+
+
+                <strong
+                    class="total-pago-registro"
+                >
+                    $ 0.00
+                </strong>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="btn-eliminar-pago-registro"
+                data-pago-id="${pagoId}"
+                title="Eliminar pago"
+                style="
+                    width:48px;
+                    height:48px;
+                    border:none;
+                    border-radius:14px;
+                    background:#2a1820;
+                    color:#f87171;
+                    cursor:pointer;
+                    font-size:17px;
+                "
+            >
+                🗑
+            </button>
+
+        </div>
+
+
+        <div
+            class="contenido-pago-registro"
+            style="
+                display:block;
+                padding-top:22px;
+            "
+        >
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label class="label">
+                        Fecha de Pago
+                    </label>
+
+                    <input
+                        type="date"
+                        class="input-box fecha-pago-registro"
+                        data-pago-id="${pagoId}"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label class="label">
+                        Efectivo
+                    </label>
+
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        class="input-box efectivo-pago-registro"
+                        data-pago-id="${pagoId}"
+                    >
+
+                </div>
+
+            </div>
+
+            <div
+                style="
+                    margin-top:22px;
+                "
+            >
+
+                <button
+                    type="button"
+                    class="sidebar-btn btn-toggle-operaciones-bancarias"
+                    data-pago-id="${pagoId}"
+                    style="
+                        width:100%;
+                        justify-content:space-between;
+                        padding-left:20px;
+                        padding-right:20px;
+                    "
+                >
+
+                    <span>
+                        ► Transferencias / Depósitos
+                    </span>
+
+                    <strong
+                        class="total-operaciones-bancarias"
+                    >
+                        $ 0.00
+                    </strong>
+
+                </button>
+
+
+                <div
+                    class="bloque-operaciones-bancarias"
+                    data-pago-id="${pagoId}"
+                    style="
+                        display:none;
+                        padding-top:10px;
+                    "
+                >
+
+                    <div
+                        class="contenido-operaciones-bancarias"
+                        style="
+                            margin-left:6px;
+                            margin-right:6px;
+                            padding:28px 10px 22px 10px;
+                            border-left:2px solid #252c3d;
+                            border-right:2px solid #252c3d;
+                        "
+                    >
+
+                    <div class="form-grid">
+
+                        <div class="field">
+
+                            <label class="label">
+                                Tipo
+                            </label>
+
+                            <select
+                                class="input-box tipo-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                                <option value="Transferencia">
+                                    Transferencia
+                                </option>
+
+                                <option value="Deposito">
+                                    Depósito
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Moneda
+                            </label>
+
+                            <select
+                                class="input-box moneda-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                                <option value="ARS">
+                                    Pesos
+                                </option>
+
+                                <option value="USD">
+                                    Dólares
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div
+                            class="field bloque-origen-operacion-bancaria"
+                        >
+
+                            <label class="label">
+                                Origen
+                            </label>
+
+                            <div
+                                style="
+                                    display:flex;
+                                    gap:10px;
+                                    align-items:center;
+                                "
+                            >
+
+                                <select
+                                    class="input-box cuenta-origen-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    style="flex:1;"
+                                >
+
+                                    <option value="">
+                                        Seleccione...
+                                    </option>
+
+                                </select>
+
+
+                                <button
+                                    type="button"
+                                    class="action-btn btn-agregar-cuenta-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    title="Agregar cuenta bancaria"
+                                    style="
+                                        width:50px;
+                                        padding:0;
+                                        flex:none;
+                                    "
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Destino
+                            </label>
+
+                            <div
+                                style="
+                                    display:flex;
+                                    gap:10px;
+                                    align-items:center;
+                                "
+                            >
+
+                                <select
+                                    class="input-box banco-destino-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    style="flex:1;"
+                                >
+
+                                    <option value="">
+                                        Seleccione...
+                                    </option>
+
+                                </select>
+
+
+                                <button
+                                    type="button"
+                                    class="action-btn btn-agregar-banco-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    title="Agregar banco"
+                                    style="
+                                        width:50px;
+                                        padding:0;
+                                        flex:none;
+                                    "
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field field-full">
+
+                            <label class="label">
+                                Referencia destino
+                            </label>
+
+                            <input
+                                type="text"
+                                class="input-box referencia-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                placeholder="Nombre, cuenta, alias o referencia opcional"
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Fecha
+                            </label>
+
+                            <input
+                                type="date"
+                                class="input-box fecha-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Importe
+                            </label>
+
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                class="input-box importe-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                        </div>
+
+
+                        <div class="field field-full">
+
+                            <label class="label">
+                                Comprobante
+                            </label>
+
+                            <label class="file-btn">
+
+                                <span
+                                    class="texto-comprobante-operacion-bancaria"
+                                >
+                                    📎 Adjuntar comprobante
+                                </span>
+
+                                <input
+                                    type="file"
+                                    class="comprobante-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    hidden
+                                >
+
+                            </label>
+
+                        </div>
+
+
+                        <div class="field field-full">
+
+                            <button
+                                type="button"
+                                class="guardar btn-registrar-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    margin-top:0;
+                                "
+                            >
+                                REGISTRAR TRANSFERENCIA
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="lista-operaciones-bancarias"
+                        data-pago-id="${pagoId}"
+                        style="
+                            display:flex;
+                            flex-direction:column;
+                            gap:12px;
+                            margin-top:18px;
+                        "
+                    >
+                    </div>
+
+                    </div>
+                    
+                    <button
+                        type="button"
+                        class="sidebar-btn btn-cerrar-operaciones-bancarias"
+                        data-pago-id="${pagoId}"
+                        style="
+                            margin-top:10px;
+                            width:100%;
+                        "
+                        title="Cerrar Transferencias / Depósitos"
+                    >
+                        ▲
+                    </button>
+
+                </div>
+
+                <div
+                    style="
+                        margin-top:22px;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="sidebar-btn btn-toggle-cheques-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            width:100%;
+                            justify-content:space-between;
+                            padding-left:20px;
+                            padding-right:20px;
+                        "
+                    >
+
+                        <span>
+                            ► Cheques
+                        </span>
+
+                        <strong
+                            class="total-cheques-pago"
+                        >
+                            $ 0,00
+                        </strong>
+
+                    </button>
+
+
+                    <div
+                        class="bloque-cheques-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            display:none;
+                            padding-top:10px;
+                        "
+                    >
+
+                        <div
+                            class="contenido-cheques-pago"
+                            style="
+                                margin-left:6px;
+                                margin-right:6px;
+                                padding:28px 10px 22px 10px;
+                                border-left:2px solid #252c3d;
+                                border-right:2px solid #252c3d;
+                            "
+                        >
+
+                            <div class="form-grid">
+
+                                <!-- =========================
+                                    TIPO DE INSTRUMENTO
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Tipo
+                                    </label>
+
+                                    <select
+                                        class="input-box instrumento-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="Cheque">
+                                            Cheque físico
+                                        </option>
+
+                                        <option value="ECheq">
+                                            e-Cheq
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    TIPO DE CHEQUE
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Tipo de cheque
+                                    </label>
+
+                                    <select
+                                        class="input-box tipo-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="diferido">
+                                            Cheque Diferido
+                                        </option>
+
+                                        <option value="comun">
+                                            Cheque Simple
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    ORIGEN
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Origen
+                                    </label>
+
+                                    <select
+                                        class="input-box origen-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="propio">
+                                            Propio
+                                        </option>
+
+                                        <option value="tercero">
+                                            Tercero
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    BANCO / CUENTA
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label
+                                        class="label label-entidad-cheque-pago"
+                                    >
+                                        Cuenta bancaria
+                                    </label>
+
+                                    <div
+                                        style="
+                                            display:flex;
+                                            gap:10px;
+                                            align-items:center;
+                                        "
+                                    >
+
+                                        <select
+                                            class="input-box entidad-cheque-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="flex:1;"
+                                        >
+
+                                            <option value="">
+                                                Seleccione...
+                                            </option>
+
+                                        </select>
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-agregar-entidad-cheque-pago"
+                                            data-pago-id="${pagoId}"
+                                            title="Agregar cuenta bancaria"
+                                            style="
+                                                width:50px;
+                                                padding:0;
+                                                flex:none;
+                                            "
+                                        >
+                                            +
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    FECHAS
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Fecha emisión
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        class="input-box fecha-emision-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div
+                                    class="field bloque-fecha-acreditacion-cheque-pago"
+                                >
+
+                                    <label class="label">
+                                        Fecha acreditación
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        class="input-box fecha-acreditacion-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    QUIÉN LO ENTREGÓ
+                                ========================== -->
+
+                                <div
+                                    class="field field-full bloque-entrega-cheque-pago"
+                                    style="
+                                        display:none;
+                                    "
+                                >
+
+                                    <label class="label">
+                                        Quién lo entregó
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        class="input-box quien-entrega-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    NÚMERO
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Número
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        maxlength="8"
+                                        inputmode="numeric"
+                                        pattern="[0-9]{8}"
+                                        class="input-box numero-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    IMPORTE
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Importe
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="input-box importe-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    REGISTRAR
+                                ========================== -->
+
+                                <div class="field field-full">
+
+                                    <button
+                                        type="button"
+                                        class="guardar btn-registrar-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                        style="
+                                            margin-top:0;
+                                        "
+                                    >
+                                        REGISTRAR CHEQUE
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="lista-cheques-pago"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    display:flex;
+                                    flex-direction:column;
+                                    gap:12px;
+                                    margin-top:18px;
+                                "
+                            >
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="sidebar-btn btn-cerrar-cheques-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                margin-top:10px;
+                                width:100%;
+                            "
+                            title="Cerrar Cheques"
+                        >
+                            ▲
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+lista.appendChild(
+    tarjeta
+);
+
+
+/*
+ * La operación bancaria nace como
+ * Transferencia.
+ *
+ * Cargamos:
+ * - Cuentas Bancarias propias.
+ * - Bancos destino.
+ */
+
+cargarCuentasOperacionBancaria(
+    pagoId
+);
+
+cargarBancosOperacionBancaria(
+    pagoId
+);
+
+
+actualizarResumenGeneralPagos();
+
+}
+
+function abrirABMCuentaOperacionBancaria(
+    pagoId
+){
+
+    contextoRetornoABM = {
+
+        tipo:
+            "operacion_bancaria",
+
+        pagoId:
+            Number(
+                pagoId
+            ),
+
+        campo:
+            "origen"
+
+    };
+
+
+    mostrarABMCuentasBancarias(
+        "registro"
+    );
+
+}
+
+function abrirABMCuentaOperacionBancaria(
+    pagoId
+){
+
+    contextoRetornoABM = {
+
+        tipo:
+            "operacion_bancaria",
+
+        pagoId:
+            Number(
+                pagoId
+            ),
+
+        campo:
+            "origen"
+
+    };
+
+
+    mostrarABMCuentasBancarias(
+        "registro"
+    );
+
+}
+
+function toggleOperacionesBancarias(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-operaciones-bancarias"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-operaciones-bancarias"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0.00";
+
+
+    if(
+        bloque.style.display ===
+        "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Transferencias / Depósitos
+            </span>
+
+            <strong
+                class="total-operaciones-bancarias"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Transferencias / Depósitos
+        </span>
+
+        <strong
+            class="total-operaciones-bancarias"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+async function toggleChequesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-cheques-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-cheques-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    /*
+     * ABRIR
+     */
+
+    if(
+        bloque.style.display ===
+        "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Cheques
+            </span>
+
+            <strong
+                class="total-cheques-pago"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        await cambiarOrigenChequePago(
+            pagoId
+        );
+
+
+        cambiarTipoChequePago(
+            pagoId
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * CERRAR
+     */
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Cheques
+        </span>
+
+        <strong
+            class="total-cheques-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+async function cargarCuentasOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.cuentas
+            )
+        ){
+
+            return;
+
+        }
+
+
+        resultado.cuentas.forEach(
+            function(cuenta){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        cuenta.id
+                    );
+
+
+                opcion.textContent =
+                    `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando cuentas bancarias de la operación:",
+            error
+        );
+
+    }
+
+}
+
+async function cargarBancosOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/listar-bancos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !Array.isArray(
+                resultado.bancos
+            )
+        ){
+
+            return;
+
+        }
+
+
+        resultado.bancos.forEach(
+            function(banco){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        banco.id
+                    );
+
+
+                opcion.textContent =
+                    banco.nombre;
+
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        /*
+         * Banco recién creado desde este formulario.
+         */
+
+        if(
+            typeof ultimoBancoCreado !==
+                "undefined" &&
+            ultimoBancoCreado
+        ){
+
+            const bancoId =
+                String(
+                    typeof ultimoBancoCreado ===
+                    "object"
+
+                        ? ultimoBancoCreado.id
+
+                        : ultimoBancoCreado
+                );
+
+
+            const opcionNueva =
+                select.querySelector(
+                    `option[value="${bancoId}"]`
+                );
+
+
+            if(opcionNueva){
+
+                select.value =
+                    bancoId;
+
+            }
+
+
+            ultimoBancoCreado =
+                null;
+
+
+            return;
+
+        }
+
+
+        /*
+         * Si no hubo alta nueva,
+         * mantenemos el valor anterior.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando bancos destino de la operación:",
+            error
+        );
+
+    }
+
+}
+
+async function cambiarTipoOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const botonCuenta =
+        tarjeta.querySelector(
+            ".btn-agregar-cuenta-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+
+    if(
+        !tipo ||
+        !cuentaOrigen ||
+        !botonCuenta ||
+        !botonRegistrar
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        tipo.value ===
+        "Deposito"
+    ){
+
+        /*
+         * DEPÓSITO
+         *
+         * El origen conceptual es Caja.
+         * Conservamos físicamente el espacio
+         * de la grilla.
+         */
+
+        cuentaOrigen.innerHTML = `
+
+            <option value="">
+                Caja
+            </option>
+
+        `;
+
+
+        cuentaOrigen.disabled =
+            true;
+
+
+        botonCuenta.style.visibility =
+            "hidden";
+
+        botonCuenta.style.pointerEvents =
+            "none";
+
+
+        botonRegistrar.textContent =
+            "REGISTRAR DEPÓSITO";
+
+
+        return;
+
+    }
+
+
+    /*
+     * TRANSFERENCIA
+     */
+
+    cuentaOrigen.disabled =
+        false;
+
+
+    botonCuenta.style.visibility =
+        "visible";
+
+    botonCuenta.style.pointerEvents =
+        "auto";
+
+
+    botonRegistrar.textContent =
+        "REGISTRAR TRANSFERENCIA";
+
+
+    await cargarCuentasOperacionBancaria(
+        pagoId
+    );
+
+}
+
+function registrarOperacionBancaria(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjetaPago.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjetaPago.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const bancoDestino =
+        tarjetaPago.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjetaPago.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjetaPago.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjetaPago.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjetaPago.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const comprobante =
+        tarjetaPago.querySelector(
+            ".comprobante-operacion-bancaria"
+        );
+
+
+    if(
+        !tipo ||
+        !cuentaOrigen ||
+        !bancoDestino ||
+        !referencia ||
+        !moneda ||
+        !fecha ||
+        !importe
+    ){
+
+        alert(
+            "No se pudo leer el formulario de la operación."
+        );
+
+        return;
+
+    }
+
+
+    const tipoOperacion =
+        tipo.value;
+
+
+    /*
+     * ORIGEN
+     */
+
+    let cuentaOrigenId =
+        null;
+
+    let cuentaOrigenNombre =
+        "Caja";
+
+
+    if(
+        tipoOperacion ===
+        "Transferencia"
+    ){
+
+        if(!cuentaOrigen.value){
+
+            alert(
+                "Seleccione la cuenta bancaria de origen."
+            );
+
+            return;
+
+        }
+
+
+        cuentaOrigenId =
+            String(
+                cuentaOrigen.value
+            );
+
+
+        cuentaOrigenNombre =
+            cuentaOrigen.options[
+                cuentaOrigen.selectedIndex
+            ]?.textContent.trim() || "";
+
+    }
+
+
+    /*
+     * DESTINO
+     */
+
+    if(!bancoDestino.value){
+
+        alert(
+            "Seleccione el banco de destino."
+        );
+
+        return;
+
+    }
+
+
+    const bancoDestinoId =
+        String(
+            bancoDestino.value
+        );
+
+
+    const bancoDestinoNombre =
+        bancoDestino.options[
+            bancoDestino.selectedIndex
+        ]?.textContent.trim() || "";
+
+
+    /*
+     * FECHA
+     */
+
+    if(!fecha.value){
+
+        alert(
+            "Ingrese la fecha de la operación."
+        );
+
+        fecha.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * IMPORTE
+     */
+
+    const importeOperacion =
+        parseFloat(
+            importe.value
+        ) || 0;
+
+
+    if(importeOperacion <= 0){
+
+        alert(
+            "Ingrese un importe válido."
+        );
+
+        importe.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * OPERACIÓN
+     */
+
+    const operacion = {
+
+        id:
+            Date.now(),
+
+        tipo_operacion:
+            tipoOperacion,
+
+        cuenta_origen_id:
+            cuentaOrigenId,
+
+        cuenta_origen_nombre:
+            cuentaOrigenNombre,
+
+        banco_destino_id:
+            bancoDestinoId,
+
+        banco_destino_nombre:
+            bancoDestinoNombre,
+
+        referencia_destino:
+            referencia.value.trim(),
+
+        moneda:
+            moneda.value,
+
+        fecha:
+            fecha.value,
+
+        importe:
+            importeOperacion,
+
+        comprobante:
+            (
+                comprobante &&
+                comprobante.files &&
+                comprobante.files.length
+            )
+                ? comprobante.files[0]
+                : null
+
+    };
+
+
+    pago.transferencias.push(
+        operacion
+    );
+
+
+    renderizarOperacionBancaria(
+        pagoId,
+        operacion
+    );
+
+
+    actualizarTotalOperacionesBancarias(
+        pagoId
+    );
+
+
+    limpiarFormularioOperacionBancaria(
+        pagoId
+    );
+
+}
+
+function renderizarOperacionBancaria(
+    pagoId,
+    operacion
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjetaPago.querySelector(
+            ".lista-operaciones-bancarias"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.className =
+        "tarjeta-operacion-bancaria";
+
+
+    tarjeta.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    tarjeta.style.cssText = `
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        padding:16px 18px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        min-width:0;
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        operacion.tipo_operacion ===
+        "Deposito"
+
+            ? `Depósito → ${operacion.banco_destino_nombre}`
+
+            : `${operacion.cuenta_origen_nombre} → ${operacion.banco_destino_nombre}`;
+
+
+    const detalle =
+        document.createElement(
+            "span"
+        );
+
+
+    detalle.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    const monedaTexto =
+        operacion.moneda === "USD"
+            ? "Dólares"
+            : "Pesos";
+
+
+    detalle.textContent =
+        `${monedaTexto} · ${operacion.fecha}`;
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        detalle
+    );
+
+
+    if(
+        operacion.referencia_destino
+    ){
+
+        const referencia =
+            document.createElement(
+                "span"
+            );
+
+
+        referencia.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        referencia.textContent =
+            `Referencia: ${operacion.referencia_destino}`;
+
+
+        datos.appendChild(
+            referencia
+        );
+
+    }
+
+
+    if(operacion.comprobante){
+
+        const archivo =
+            document.createElement(
+                "span"
+            );
+
+
+        archivo.style.cssText = `
+            color:#60a5fa;
+            font-size:12px;
+        `;
+
+
+        archivo.textContent =
+            `📎 ${operacion.comprobante.name}`;
+
+
+        datos.appendChild(
+            archivo
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        align-items:center;
+        gap:16px;
+        flex:none;
+    `;
+
+
+    const importe =
+        document.createElement(
+            "strong"
+        );
+
+
+importe.textContent =
+    "$ " +
+    formatearImporte(
+        operacion.importe
+    );
+
+
+    const botonEliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonEliminar.type =
+        "button";
+
+
+    botonEliminar.className =
+        "action-btn btn-eliminar-operacion-bancaria";
+
+
+    botonEliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonEliminar.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonEliminar.textContent =
+        "🗑";
+
+
+    acciones.appendChild(
+        importe
+    );
+
+
+    acciones.appendChild(
+        botonEliminar
+    );
+
+
+    tarjeta.appendChild(
+        datos
+    );
+
+
+    tarjeta.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        tarjeta
+    );
+
+}
+
+function actualizarTotalOperacionesBancarias(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        pagoId
+    );
+
+}
+
+function togglePagoRegistro(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const contenido =
+        tarjeta.querySelector(
+            ".contenido-pago-registro"
+        );
+
+    const indicador =
+        tarjeta.querySelector(
+            ".indicador-pago-registro"
+        );
+
+
+    if(
+        !contenido ||
+        !indicador
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        contenido.style.display ===
+        "none"
+    ){
+
+        contenido.style.display =
+            "block";
+
+        indicador.textContent =
+            "▼";
+
+    }else{
+
+        contenido.style.display =
+            "none";
+
+        indicador.textContent =
+            "▶";
+
+    }
+
+}
+
+function eliminarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    /*
+     * Eliminamos el Pago del borrador.
+     *
+     * Esto solamente es válido mientras
+     * el registro todavía no fue guardado.
+     *
+     * Para Pagos históricos habrá luego
+     * una lógica controlada de reversión.
+     */
+
+    pagosRegistro =
+        pagosRegistro.filter(
+            function(pago){
+
+                return pago.id !==
+                    id;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(tarjeta){
+
+        tarjeta.remove();
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+function actualizarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    id;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const inputFecha =
+        tarjeta.querySelector(
+            ".fecha-pago-registro"
+        );
+
+
+    const inputEfectivo =
+        tarjeta.querySelector(
+            ".efectivo-pago-registro"
+        );
+
+
+    pago.fecha_pago =
+        inputFecha
+            ? inputFecha.value
+            : "";
+
+
+    pago.efectivo =
+        leerImporte(
+            inputEfectivo?.value
+        );
+
+
+    const totalOperaciones =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalCheques =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    /*
+     * Más adelante agregaremos:
+     *
+     * tarjeta
+     * retenciones
+     */
+
+    pago.total =
+        pago.efectivo +
+        totalOperaciones +
+        totalCheques;
+
+
+    const totalCabecera =
+        tarjeta.querySelector(
+            ".total-pago-registro"
+        );
+
+
+    if(totalCabecera){
+
+        totalCabecera.textContent =
+            "$ " +
+            formatearImporte(
+                pago.total
+            );
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+function actualizarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    id;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const inputFecha =
+        tarjeta.querySelector(
+            ".fecha-pago-registro"
+        );
+
+
+    const inputEfectivo =
+        tarjeta.querySelector(
+            ".efectivo-pago-registro"
+        );
+
+
+    pago.fecha_pago =
+        inputFecha
+            ? inputFecha.value
+            : "";
+
+
+    pago.efectivo =
+        leerImporte(
+            inputEfectivo?.value
+        );
+
+
+    const totalOperaciones =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalCheques =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    /*
+     * Más adelante agregaremos:
+     *
+     * tarjeta
+     * retenciones
+     */
+
+    pago.total =
+        pago.efectivo +
+        totalOperaciones +
+        totalCheques;
+
+
+    const totalCabecera =
+        tarjeta.querySelector(
+            ".total-pago-registro"
+        );
+
+
+    if(totalCabecera){
+
+        totalCabecera.textContent =
+            "$ " +
+            formatearImporte(
+                pago.total
+            );
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+async function limpiarFormularioChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const instrumento =
+        tarjeta.querySelector(
+            ".instrumento-cheque-pago"
+        );
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const entidad =
+        tarjeta.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+    const numero =
+        tarjeta.querySelector(
+            ".numero-cheque-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-cheque-pago"
+        );
+
+    const entrega =
+        tarjeta.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+    const fechaEmision =
+        tarjeta.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const fechaAcreditacion =
+        tarjeta.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+
+    /*
+     * Volvemos a los valores iniciales.
+     */
+
+    if(instrumento){
+
+        instrumento.selectedIndex =
+            0;
+
+    }
+
+
+    if(tipo){
+
+        tipo.value =
+            "diferido";
+
+    }
+
+
+    if(origen){
+
+        origen.value =
+            "propio";
+
+    }
+
+
+    if(entidad){
+
+        entidad.value =
+            "";
+
+    }
+
+
+    if(numero){
+
+        numero.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(entrega){
+
+        entrega.value =
+            "";
+
+    }
+
+
+    if(fechaEmision){
+
+        fechaEmision.value =
+            "";
+
+    }
+
+
+    if(fechaAcreditacion){
+
+        fechaAcreditacion.value =
+            "";
+
+    }
+
+
+    /*
+     * Restauramos:
+     *
+     * Propio → Cuenta bancaria
+     * Diferido → Acreditación visible
+     */
+
+    await cambiarOrigenChequePago(
+        pagoId
+    );
+
+
+    cambiarTipoChequePago(
+        pagoId
+    );
+
+
+    if(numero){
+
+        numero.focus();
+
+    }
+
+}
+
+function cerrarChequesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-cheques-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-cheques-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Cheques
+        </span>
+
+        <strong
+            class="total-cheques-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+
+    boton.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "center"
+
+    });
+
+}
+
+function eliminarOperacionBancaria(
+    pagoId,
+    operacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            operacionId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    pago.transferencias =
+        pago.transferencias.filter(
+            function(operacion){
+
+                return operacion.id !==
+                    idOperacion;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(tarjetaPago){
+
+        const tarjetaOperacion =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-bancaria[data-operacion-id="${idOperacion}"]`
+            );
+
+
+        if(tarjetaOperacion){
+
+            tarjetaOperacion.remove();
+
+        }
+
+    }
+
+
+    actualizarTotalOperacionesBancarias(
+        idPago
+    );
+
+}
+
+function limpiarFormularioOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjeta.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjeta.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjeta.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-operacion-bancaria"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-operacion-bancaria"
+        );
+
+    const banco =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+
+    if(tipo){
+
+        tipo.value =
+            "Transferencia";
+
+    }
+
+
+    if(moneda){
+
+        moneda.value =
+            "ARS";
+
+    }
+
+
+    if(referencia){
+
+        referencia.value =
+            "";
+
+    }
+
+
+    if(fecha){
+
+        fecha.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(comprobante){
+
+        comprobante.value =
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(banco){
+
+        banco.value =
+            "";
+
+    }
+
+
+    cambiarTipoOperacionBancaria(
+        pagoId
+    );
+
+}
+
+function cerrarOperacionesBancarias(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-operaciones-bancarias"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-operaciones-bancarias"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0.00";
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Transferencias / Depósitos
+        </span>
+
+        <strong
+            class="total-operaciones-bancarias"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+
+    boton.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "center"
+
+    });
+
+}
+
+function actualizarResumenGeneralPagos(){
+
+    const totalPagado =
+        pagosRegistro.reduce(
+            function(acumulado, pago){
+
+                return (
+                    acumulado +
+                    Number(
+                        pago.total || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const inputTotalRegistro =
+        document.getElementById(
+            "total_registro"
+        );
+
+
+    const totalRegistro =
+        Number(
+            inputTotalRegistro
+                ?.dataset
+                .valorNumerico || 0
+        );
+
+
+    const saldoPendiente =
+        totalRegistro -
+        totalPagado;
+
+
+    return {
+
+        total_registro:
+            totalRegistro,
+
+        total_pagado:
+            totalPagado,
+
+        saldo_pendiente:
+            saldoPendiente
+
+    };
+
 }
 
 function togglePago(){
@@ -5811,9 +9985,16 @@ function togglePago(){
             "btnPago"
         );
 
+    const cabecera =
+        document.getElementById(
+            "cabeceraPagoContenedor"
+        );
+
+
     if(
         !bloque ||
-        !boton
+        !boton ||
+        !cabecera
     ){
 
         return;
@@ -5831,8 +10012,19 @@ function togglePago(){
         bloque.style.display === "none"
     ){
 
+        /*
+         * ABIERTO
+         */
+
         bloque.style.display =
             "block";
+
+
+        cabecera.style.borderRadius =
+            "24px 24px 0 0";
+
+        cabecera.style.borderBottom =
+            "none";
 
 
         if(indicador){
@@ -5842,347 +10034,1537 @@ function togglePago(){
 
         }
 
+
+        return;
+
+    }
+
+
+    /*
+     * CERRADO
+     */
+
+    bloque.style.display =
+        "none";
+
+
+    cabecera.style.borderRadius =
+        "24px";
+
+    cabecera.style.borderBottom =
+        "1px solid #2b3447";
+
+
+    if(indicador){
+
+        indicador.textContent =
+            "► Datos del Pago";
+
+    }
+
+}
+
+
+let contadorPagosRegistro = 0;
+
+let pagosRegistro = [];
+
+
+function registrarChequePago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const selectEntidad =
+        tarjetaPago.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+    const inputNumero =
+        tarjetaPago.querySelector(
+            ".numero-cheque-pago"
+        );
+
+    const inputImporte =
+        tarjetaPago.querySelector(
+            ".importe-cheque-pago"
+        );
+
+    const selectOrigen =
+        tarjetaPago.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const selectInstrumento =
+        tarjetaPago.querySelector(
+            ".instrumento-cheque-pago"
+        );
+
+    const selectTipo =
+        tarjetaPago.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const inputFechaEmision =
+        tarjetaPago.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const inputFechaAcreditacion =
+        tarjetaPago.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+    const inputEntrega =
+        tarjetaPago.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+
+    if(
+        !selectEntidad ||
+        !inputNumero ||
+        !inputImporte ||
+        !selectOrigen ||
+        !selectInstrumento ||
+        !selectTipo ||
+        !inputFechaEmision ||
+        !inputFechaAcreditacion
+    ){
+
+        alert(
+            "No se pudo leer el formulario del cheque."
+        );
+
+        return;
+
+    }
+
+
+    const origen =
+        selectOrigen.value;
+
+    const instrumento =
+        selectInstrumento.value;
+
+    const tipo =
+        selectTipo.value;
+
+    const entidadId =
+        selectEntidad.value;
+
+    const entidadNombre =
+        selectEntidad.options[
+            selectEntidad.selectedIndex
+        ]?.textContent.trim() || "";
+
+
+    const numero =
+        inputNumero.value
+            .replace(
+                /\D/g,
+                ""
+            );
+
+
+    const importe =
+        leerImporte(
+            inputImporte.value
+        );
+
+
+    const fechaEmision =
+        inputFechaEmision.value;
+
+
+    let fechaAcreditacion =
+        inputFechaAcreditacion.value;
+
+
+    const entrega =
+        inputEntrega
+            ? inputEntrega.value.trim()
+            : "";
+
+
+    /*
+     * =====================================
+     * BANCO / CUENTA BANCARIA
+     * =====================================
+     */
+
+    if(!entidadId){
+
+        alert(
+            origen === "propio"
+                ? "Seleccione una cuenta bancaria."
+                : "Seleccione un banco."
+        );
+
+        selectEntidad.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * NÚMERO
+     * =====================================
+     */
+
+    if(numero.length !== 8){
+
+        alert(
+            "El número de cheque debe tener 8 dígitos."
+        );
+
+        inputNumero.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * IMPORTE
+     * =====================================
+     */
+
+    if(importe <= 0){
+
+        alert(
+            "Ingrese un importe válido."
+        );
+
+        inputImporte.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * FECHA DE EMISIÓN
+     * =====================================
+     */
+
+    if(!fechaEmision){
+
+        alert(
+            "Ingrese la fecha de emisión."
+        );
+
+        inputFechaEmision.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * CHEQUE DIFERIDO
+     * =====================================
+     */
+
+    if(
+        tipo === "diferido"
+    ){
+
+        if(!fechaAcreditacion){
+
+            alert(
+                "Ingrese la fecha de acreditación."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
+
+        const emision =
+            new Date(
+                fechaEmision +
+                "T00:00:00"
+            );
+
+
+        const acreditacion =
+            new Date(
+                fechaAcreditacion +
+                "T00:00:00"
+            );
+
+
+        /*
+         * La acreditación debe ser
+         * estrictamente posterior.
+         */
+
+        if(
+            acreditacion <=
+            emision
+        ){
+
+            alert(
+                "La fecha de acreditación debe ser posterior a la fecha de emisión."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
+
+        const dias =
+            (
+                acreditacion -
+                emision
+            ) /
+            (
+                1000 *
+                60 *
+                60 *
+                24
+            );
+
+
+        /*
+         * Conservamos la validación
+         * que ya teníamos:
+         * máximo 360 días.
+         */
+
+        if(dias > 360){
+
+            alert(
+                "La acreditación no puede superar los 360 días desde la emisión."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
     }else{
 
-        bloque.style.display =
-            "none";
+        /*
+         * =================================
+         * CHEQUE SIMPLE
+         * =================================
+         *
+         * No validamos acreditación
+         * posterior.
+         *
+         * Internamente ambas fechas son
+         * iguales.
+         */
+
+        fechaAcreditacion =
+            fechaEmision;
 
 
-        if(indicador){
+        inputFechaAcreditacion.value =
+            fechaEmision;
 
-            indicador.textContent =
-                "► Datos del Pago";
+    }
+
+
+    /*
+     * =====================================
+     * CHEQUE DE TERCERO
+     * =====================================
+     */
+
+    if(
+        origen === "tercero" &&
+        !entrega
+    ){
+
+        alert(
+            "Ingrese quién entregó el cheque."
+        );
+
+        if(inputEntrega){
+
+            inputEntrega.focus();
+
+        }
+
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * CREAR CHEQUE EN MEMORIA
+     * =====================================
+     */
+
+    const cheque = {
+
+        id:
+            Date.now(),
+
+        instrumento:
+            instrumento,
+
+        tipo:
+            tipo,
+
+        origen:
+            origen,
+
+        entidad_id:
+            String(
+                entidadId
+            ),
+
+        entidad_nombre:
+            entidadNombre,
+
+        numero:
+            numero,
+
+        fecha_emision:
+            fechaEmision,
+
+        fecha_acreditacion:
+            fechaAcreditacion,
+
+        quien_entrega:
+            entrega,
+
+        importe:
+            importe
+
+    };
+
+
+    pago.cheques.push(
+        cheque
+    );
+
+
+    renderizarChequePago(
+        pagoId,
+        cheque
+    );
+
+
+    actualizarTotalChequesPago(
+        pagoId
+    );
+
+
+    limpiarFormularioChequePago(
+        pagoId
+    );
+
+}
+
+function renderizarChequePago(
+    pagoId,
+    cheque
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjetaPago.querySelector(
+            ".lista-cheques-pago"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.className =
+        "tarjeta-cheque-pago";
+
+
+    tarjeta.dataset.chequeId =
+        String(
+            cheque.id
+        );
+
+
+    tarjeta.style.cssText = `
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        background:#1b2130;
+        border-left:6px solid ${
+            cheque.origen === "propio"
+                ? "#2563eb"
+                : "#16a34a"
+        };
+        border-radius:12px;
+        padding:12px 16px;
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        min-width:0;
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        cheque.origen === "propio"
+            ? `Cuenta: ${cheque.entidad_nombre}`
+            : `Banco: ${cheque.entidad_nombre}`;
+
+
+    const detalle =
+        document.createElement(
+            "span"
+        );
+
+
+    detalle.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    const tipoTexto =
+        cheque.tipo === "diferido"
+            ? "Diferido"
+            : "Simple";
+
+
+    detalle.textContent =
+        `${cheque.instrumento} · ${tipoTexto} · Nº ${cheque.numero}`;
+
+
+    const fechas =
+        document.createElement(
+            "span"
+        );
+
+
+    fechas.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    if(
+        cheque.tipo ===
+        "diferido"
+    ){
+
+        fechas.textContent =
+            `Emisión: ${cheque.fecha_emision} · Acreditación: ${cheque.fecha_acreditacion}`;
+
+    }else{
+
+        fechas.textContent =
+            `Emisión: ${cheque.fecha_emision}`;
+
+    }
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        detalle
+    );
+
+
+    datos.appendChild(
+        fechas
+    );
+
+
+    if(
+        cheque.origen === "tercero" &&
+        cheque.quien_entrega
+    ){
+
+        const entrega =
+            document.createElement(
+                "span"
+            );
+
+
+        entrega.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        entrega.textContent =
+            `Entregado por: ${cheque.quien_entrega}`;
+
+
+        datos.appendChild(
+            entrega
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        align-items:center;
+        gap:16px;
+        flex:none;
+    `;
+
+
+    const importe =
+        document.createElement(
+            "strong"
+        );
+
+
+    importe.textContent =
+        "$ " +
+        formatearImporte(
+            cheque.importe
+        );
+
+
+    const botonEliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonEliminar.type =
+        "button";
+
+
+    botonEliminar.className =
+        "action-btn btn-eliminar-cheque-pago";
+
+
+    botonEliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonEliminar.dataset.chequeId =
+        String(
+            cheque.id
+        );
+
+
+    botonEliminar.textContent =
+        "🗑";
+
+
+    acciones.appendChild(
+        importe
+    );
+
+
+    acciones.appendChild(
+        botonEliminar
+    );
+
+
+    tarjeta.appendChild(
+        datos
+    );
+
+
+    tarjeta.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        tarjeta
+    );
+
+}
+
+function actualizarTotalChequesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        pagoId
+    );
+
+}
+
+document.addEventListener(
+    "input",
+    function(event){
+
+        if(
+            event.target.id !==
+            "numeroCheque"
+        ){
+
+            return;
+
+        }
+
+
+        event.target.value =
+            event.target.value
+                .replace(
+                    /\D/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    8
+                );
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        /*
+         * =========================================
+         * ADJUNTAR FACTURA
+         * =========================================
+         */
+
+        const botonFactura =
+            event.target.closest(
+                "#btnAdjuntarFacturaRegistro"
+            );
+
+
+        if(botonFactura){
+
+            abrirSelectorFacturaRegistro();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR EMPRESA
+         * =========================================
+         */
+
+        const botonEliminarEmpresa =
+            event.target.closest(
+                "#btnEliminarEmpresa"
+            );
+
+
+        if(botonEliminarEmpresa){
+
+            confirmarEliminarEmpresa();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CANCELAR ELIMINACIÓN DE EMPRESA
+         * =========================================
+         */
+
+        const botonCancelarEliminarEmpresa =
+            event.target.closest(
+                "#btnCancelarEliminarEmpresa"
+            );
+
+
+        if(botonCancelarEliminarEmpresa){
+
+            cerrarModalEliminarEmpresa();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * AGREGAR PAGO
+         * =========================================
+         */
+
+        const botonAgregarPago =
+            event.target.closest(
+                "#btnAgregarPagoRegistro"
+            );
+
+
+        if(botonAgregarPago){
+
+            agregarPagoRegistro();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * PLEGAR / DESPLEGAR PAGO
+         * =========================================
+         */
+
+        const botonTogglePago =
+            event.target.closest(
+                ".btn-toggle-pago-registro"
+            );
+
+
+        if(botonTogglePago){
+
+            togglePagoRegistro(
+                botonTogglePago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR PAGO
+         * =========================================
+         */
+
+        const botonEliminarPago =
+            event.target.closest(
+                ".btn-eliminar-pago-registro"
+            );
+
+
+        if(botonEliminarPago){
+
+            eliminarPagoRegistro(
+                botonEliminarPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * TRANSFERENCIAS / DEPÓSITOS
+         * ABRIR / CERRAR ACORDEÓN
+         * =========================================
+         */
+
+        const botonOperacionesBancarias =
+            event.target.closest(
+                ".btn-toggle-operaciones-bancarias"
+            );
+
+
+        if(botonOperacionesBancarias){
+
+            toggleOperacionesBancarias(
+                botonOperacionesBancarias.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CUENTA BANCARIA ORIGEN
+         * TRANSFERENCIA
+         * =========================================
+         */
+
+        const botonCuentaOperacion =
+            event.target.closest(
+                ".btn-agregar-cuenta-operacion-bancaria"
+            );
+
+
+        if(botonCuentaOperacion){
+
+            abrirABMCuentaOperacionBancaria(
+                botonCuentaOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * BANCO DESTINO
+         * TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonBancoOperacion =
+            event.target.closest(
+                ".btn-agregar-banco-operacion-bancaria"
+            );
+
+
+        if(botonBancoOperacion){
+
+            abrirABMBancoOperacionBancaria(
+                botonBancoOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * REGISTRAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonRegistrarOperacion =
+            event.target.closest(
+                ".btn-registrar-operacion-bancaria"
+            );
+
+
+        if(botonRegistrarOperacion){
+
+            registrarOperacionBancaria(
+                botonRegistrarOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonEliminarOperacion =
+            event.target.closest(
+                ".btn-eliminar-operacion-bancaria"
+            );
+
+
+        if(botonEliminarOperacion){
+
+            eliminarOperacionBancaria(
+
+                botonEliminarOperacion.dataset.pagoId,
+
+                botonEliminarOperacion.dataset.operacionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CERRAR TRANSFERENCIAS / DEPÓSITOS
+         * DESDE ABAJO
+         * =========================================
+         */
+
+        const botonCerrarOperaciones =
+            event.target.closest(
+                ".btn-cerrar-operaciones-bancarias"
+            );
+
+
+        if(botonCerrarOperaciones){
+
+            cerrarOperacionesBancarias(
+                botonCerrarOperaciones.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CHEQUES DEL PAGO
+         * ABRIR / CERRAR ACORDEÓN
+         * =========================================
+         */
+
+        const botonChequesPago =
+            event.target.closest(
+                ".btn-toggle-cheques-pago"
+            );
+
+
+        if(botonChequesPago){
+
+            toggleChequesPago(
+                botonChequesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * AGREGAR BANCO / CUENTA
+         * DEL CHEQUE DEL PAGO
+         * =========================================
+         */
+
+        const botonEntidadChequePago =
+            event.target.closest(
+                ".btn-agregar-entidad-cheque-pago"
+            );
+
+
+        if(botonEntidadChequePago){
+
+            abrirABMEntidadChequePago(
+                botonEntidadChequePago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * REGISTRAR CHEQUE
+         * =========================================
+         */
+
+        const botonRegistrarCheque =
+            event.target.closest(
+                ".btn-registrar-cheque-pago"
+            );
+
+
+        if(botonRegistrarCheque){
+
+            registrarChequePago(
+                botonRegistrarCheque.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR CHEQUE
+         * =========================================
+         */
+
+        const botonEliminarChequePago =
+            event.target.closest(
+                ".btn-eliminar-cheque-pago"
+            );
+
+
+        if(botonEliminarChequePago){
+
+            eliminarChequePago(
+
+                botonEliminarChequePago.dataset.pagoId,
+
+                botonEliminarChequePago.dataset.chequeId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CERRAR CHEQUES DESDE ABAJO
+         * =========================================
+         */
+
+        const botonCerrarChequesPago =
+            event.target.closest(
+                ".btn-cerrar-cheques-pago"
+            );
+
+
+        if(botonCerrarChequesPago){
+
+            cerrarChequesPago(
+                botonCerrarChequesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+
+    }
+);
+
+document.addEventListener(
+    "input",
+    function(event){
+
+        const campoPago =
+            event.target.closest(
+                ".fecha-pago-registro, " +
+                ".efectivo-pago-registro"
+            );
+
+
+        if(!campoPago){
+
+            return;
+
+        }
+
+
+        const pagoId =
+            campoPago.dataset.pagoId;
+
+
+        if(!pagoId){
+
+            return;
+
+        }
+
+
+        actualizarPagoRegistro(
+            pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const fechaPago =
+            event.target.closest(
+                ".fecha-pago-registro"
+            );
+
+
+        if(!fechaPago){
+
+            return;
+
+        }
+
+
+        actualizarPagoRegistro(
+            fechaPago.dataset.pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const tipoOperacion =
+            event.target.closest(
+                ".tipo-operacion-bancaria"
+            );
+
+
+        if(!tipoOperacion){
+
+            return;
+
+        }
+
+
+        const pagoId =
+            tipoOperacion.dataset.pagoId;
+
+
+        if(!pagoId){
+
+            return;
+
+        }
+
+
+        cambiarTipoOperacionBancaria(
+            pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        /*
+         * ORIGEN DEL CHEQUE
+         */
+
+        const origenCheque =
+            event.target.closest(
+                ".origen-cheque-pago"
+            );
+
+
+        if(origenCheque){
+
+            cambiarOrigenChequePago(
+                origenCheque.dataset.pagoId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * TIPO DE CHEQUE
+         */
+
+        const tipoCheque =
+            event.target.closest(
+                ".tipo-cheque-pago"
+            );
+
+
+        if(tipoCheque){
+
+            cambiarTipoChequePago(
+                tipoCheque.dataset.pagoId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * FECHA EMISIÓN
+         *
+         * Si es Simple, acreditación siempre
+         * acompaña a emisión.
+         */
+
+        const fechaEmision =
+            event.target.closest(
+                ".fecha-emision-cheque-pago"
+            );
+
+
+        if(fechaEmision){
+
+            const pagoId =
+                fechaEmision.dataset.pagoId;
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            const tipo =
+                tarjeta?.querySelector(
+                    ".tipo-cheque-pago"
+                );
+
+
+            const acreditacion =
+                tarjeta?.querySelector(
+                    ".fecha-acreditacion-cheque-pago"
+                );
+
+
+            if(
+                tipo &&
+                acreditacion &&
+                (
+                    tipo.value === "simple" ||
+                    tipo.value === "comun"
+                )
+            ){
+
+                acreditacion.value =
+                    fechaEmision.value;
+
+            }
 
         }
 
     }
+);
 
-}
+document.addEventListener(
+    "focusout",
+    function(event){
 
-function toggleCheque(){
+        const input =
+            event.target;
 
-    const bloque =
-        document.getElementById("bloqueCheque");
 
-    const boton =
-        document.getElementById("btnCheque");
+        if(!input){
 
-    if(bloque.style.display==="none"){
+            return;
 
-        bloque.style.display="block";
+        }
 
-        boton.innerHTML="− Ocultar cheque";
 
-    }else{
+        /*
+         * IMPORTES DE CARGA SIMPLE
+         */
 
-        bloque.style.display="none";
+        const esImporteCargaSimple =
+            [
+                "neto",
+                "exento",
+                "iva21",
+                "iva27",
+                "iva105",
+                "recargosIntereses",
+                "ajuste",
+                "percepcionIIBB",
+                "percepcionIVA",
+                "percepcionGanancias",
+                "percepcionTasasMunicipales"
+            ].includes(
+                input.id
+            );
 
-        boton.innerHTML="+ Agregar cheque";
+
+        /*
+         * EFECTIVO DEL PAGO
+         */
+
+        const esImportePago =
+            input.classList.contains(
+                "efectivo-pago-registro"
+            );
+
+
+        /*
+         * TRANSFERENCIA / DEPÓSITO
+         */
+
+        const esImporteOperacion =
+            input.classList.contains(
+                "importe-operacion-bancaria"
+            );
+
+
+        /*
+         * CHEQUE
+         */
+
+        const esImporteCheque =
+            input.classList.contains(
+                "importe-cheque-pago"
+            );
+
+
+        if(
+            !esImporteCargaSimple &&
+            !esImportePago &&
+            !esImporteOperacion &&
+            !esImporteCheque
+        ){
+
+            return;
+
+        }
+
+
+        formatearCampoImporte(
+            input
+        );
 
     }
+);
 
-}
-
-function cambiarOrigenCheque(){
-
-    const origen =
-        document.getElementById(
-            "origenCheque"
-        ).value;
-
-    document.getElementById(
-        "bloqueOrigenCheque"
-    ).style.display =
-        origen==="tercero"
-        ? "block"
-        : "none";
-
-}
-
-function cambiarTipoCheque(){
-
-    const tipo =
-        document.getElementById(
-            "tipoCheque"
-        ).value;
-
-    const bloque =
-        document.getElementById(
-            "bloqueFechaAcreditacion"
-        );
-
-    const fechaEmision =
-        document.getElementById(
-            "fechaEmision"
-        );
-
-    const fechaAcreditacion =
-        document.getElementById(
-            "fechaAcreditacion"
-        );
-
-    if(tipo==="comun"){
-
-        bloque.style.display="none";
-
-        fechaAcreditacion.value=
-            fechaEmision.value;
-
-    }else{
-
-        bloque.style.display="block";
-
-    }
-
-}
-
-let listaCheques=[];
-
-function agregarCheque(){
-
-    const banco =
-        document.getElementById("bancoCheque").value;
-
-    let numero =
-        document.getElementById("numeroCheque").value;
-
-    numero = numero.replace(/\D/g,"");
-
-    const fecha =
-        document.getElementById("fechaAcreditacion").value;
-
-    const importe =
-        document.getElementById("importeCheque").value;
-
-    const origen =
-        document.getElementById("origenCheque").value;
-
-    const entrega =
-        document.getElementById("quienEntrega")
-        ? document.getElementById("quienEntrega").value
-        : "";
-    // ==========================
-// VALIDACIONES
-// ==========================
-
-const tipo =
-    document.getElementById(
-        "tipoCheque"
-    ).value;
-
-const fechaEmision =
-    document.getElementById(
-        "fechaEmision"
-    ).value;
-
-const fechaAcreditacion =
-    document.getElementById(
-        "fechaAcreditacion"
-    ).value;
-
-// Banco
-
-if(banco==="Seleccione..." || banco===""){
-
-    alert("Seleccione el banco.");
-
-    return;
-
-}
-
-// Número
-
-if(numero.length!==8){
-
-    alert("El número de cheque debe tener 8 dígitos.");
-
-    return;
-
-}
-
-// Importe
-
-if(
-    importe===""
-    ||
-    Number(importe)<=0
-){
-
-    alert("Ingrese un importe válido.");
-
-    return;
-
-}
-
-// Fecha emisión
-
-if(fechaEmision===""){
-
-    alert("Ingrese la fecha de emisión.");
-
-    return;
-
-}
-
-// ==========================
-// CHEQUE COMÚN
-// ==========================
-
-if(tipo==="comun"){
-
-    const hoy =
-        new Date();
-
-    hoy.setHours(0,0,0,0);
-
-    const emision =
-        new Date(fechaEmision);
-
-    if(emision>hoy){
-
-        alert(
-            "Un cheque común no puede emitirse con fecha futura."
-        );
-
-        return;
-
-    }
-
-}
-
-// ==========================
-// CHEQUE DIFERIDO
-// ==========================
-
-if(tipo==="diferido"){
-
-    if(fechaAcreditacion===""){
-
-        alert(
-            "Ingrese la fecha de acreditación."
-        );
-
-        return;
-
-    }
-
-    const emision =
-        new Date(fechaEmision);
-
-    const acreditacion =
-        new Date(fechaAcreditacion);
-
-    if(acreditacion<=emision){
-
-        alert(
-            "La acreditación debe ser posterior a la emisión."
-        );
-
-        return;
-
-    }
-
-    const dias =
-        (acreditacion-emision)
-        /(1000*60*60*24);
-
-    if(dias>360){
-
-        alert(
-            "La acreditación no puede superar los 360 días."
-        );
-
-        return;
-
-    }
-
-}
-    const color =
-        origen=="propio"
-        ? "#2563eb"
-        : "#16a34a";
-
-    const id=Date.now();
-
-    listaCheques.push(id);
-
-    document.getElementById("listaCheques").innerHTML+=`
-
-<div
-id="cheque_${id}"
-style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-background:#1b2130;
-border-left:6px solid ${color};
-border-radius:12px;
-padding:12px 16px;
-">
-
-<div>
-
-Cheque Banco <strong>${banco}</strong>
-Nº <strong>${numero}</strong>
-
-&nbsp;&nbsp;|&nbsp;&nbsp;
-
-Acreditación
-<strong>${fecha}</strong>
-
-${origen=="tercero"
-? "&nbsp;&nbsp;|&nbsp;&nbsp;De: <strong>"+entrega+"</strong>"
-: ""}
-
-</div>
-
-<div
-style="
-display:flex;
-align-items:center;
-gap:20px;
-">
-
-<strong>
-
-$ ${importe}
-
-</strong>
-
-<button
-type="button"
-class="action-btn"
-onclick="eliminarCheque(${id})">
-
-🗑
-
-</button>
-
-</div>
-
-</div>
-
-`;
-
-    limpiarFormularioCheque();
-
-}
-
-function eliminarCheque(id){
-
-    document
-        .getElementById("cheque_"+id)
-        .remove();
-
-}
-
-function eliminarCheque(id){
-
-    document
-        .getElementById("cheque_"+id)
-        .remove();
-
-}
 
 function confirmarEliminarEmpresa(){
 
@@ -6272,29 +11654,6 @@ function actualizarFacturaSeleccionada(){
         archivo.name;
 
 }
-
-document.addEventListener(
-    "click",
-    function(event){
-
-        const boton =
-            event.target.closest(
-                "#btnAdjuntarFacturaRegistro"
-            );
-
-
-        if(!boton){
-
-            return;
-
-        }
-
-
-        abrirSelectorFacturaRegistro();
-
-    }
-);
-
 
 document.addEventListener(
     "change",
@@ -6407,9 +11766,9 @@ flex-wrap:wrap;
 ">
 
 <button
+id="btnCancelarEliminarEmpresa"
 type="button"
-class="sidebar-btn"
-onclick="cerrarModalEliminarEmpresa()">
+class="sidebar-btn">
 
 Cancelar
 
@@ -6524,6 +11883,8 @@ Sí
 <script src="{% static 'js/gestion_claves.js' %}?v=2"></script>
 
 <script src="{% static 'js/recursos_operativos.js' %}?v=2"></script>
+
+<script src="{% static 'js/cuentas_bancarias.js' %}?v=1"></script>
 
 </body>
 </html>

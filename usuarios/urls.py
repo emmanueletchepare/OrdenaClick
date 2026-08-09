@@ -34,7 +34,12 @@ from .views import (
     ver_gestion_clave,
     modificar_gestion_clave,
     eliminar_gestion_clave,
-    reactivar_gestion_clave
+    reactivar_gestion_clave,
+    listar_cuentas_bancarias,
+    guardar_cuenta_bancaria,
+    modificar_cuenta_bancaria,
+    eliminar_cuenta_bancaria,
+    reactivar_cuenta_bancaria
     
 )
 
@@ -92,6 +97,40 @@ urlpatterns = [
         "eliminar-banco/",
         eliminar_banco,
         name="eliminar_banco"
+    ),
+
+    # =========================================
+    # CUENTAS BANCARIAS
+    # =========================================
+
+    path(
+        "cuentas-bancarias/",
+        listar_cuentas_bancarias,
+        name="listar_cuentas_bancarias"
+    ),
+
+    path(
+        "cuentas-bancarias/guardar/",
+        guardar_cuenta_bancaria,
+        name="guardar_cuenta_bancaria"
+    ),
+
+    path(
+        "cuentas-bancarias/modificar/",
+        modificar_cuenta_bancaria,
+        name="modificar_cuenta_bancaria"
+    ),
+
+    path(
+        "cuentas-bancarias/eliminar/",
+        eliminar_cuenta_bancaria,
+        name="eliminar_cuenta_bancaria"
+    ),
+
+    path(
+        "cuentas-bancarias/reactivar/",
+        reactivar_cuenta_bancaria,
+        name="reactivar_cuenta_bancaria"
     ),
 
     path(
