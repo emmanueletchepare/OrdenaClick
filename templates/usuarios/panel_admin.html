@@ -1654,6 +1654,8 @@ Eliminar Empresa
 
 let origenABM = "menu";
 
+let origenABMTiposGasto = "menu";
+
 let contenidoAnteriorABM = null;
 
 let contextoRetornoABM = null;
@@ -2421,6 +2423,9 @@ async function mostrarABMProveedores(
     origenABM =
         origen;
 
+    origenABMTiposGasto =
+        origen;
+
 
     if(origen === "menu"){
 
@@ -2836,8 +2841,22 @@ async function volverDesdeABMProveedores(){
         }
 
 
+        /*
+        * Volvemos a Tipo de Gasto, pero restauramos
+        * también el origen REAL desde donde ese ABM
+        * había sido abierto.
+        *
+        * Ejemplo:
+        *
+        * Carga Simple
+        * → Tipo de Gasto
+        * → Proveedor
+        * → Tipo de Gasto
+        * → Carga Simple
+        */
+
         origenABM =
-            "tipo_gasto";
+            origenABMTiposGasto;
 
 
         return;
@@ -3291,22 +3310,78 @@ async function actualizarRecursoOperativoDelRegistro(){
 
             if(recursoCreado){
 
-                const centroId =
+                const centrosRecurso =
+                    Array.isArray(
+                        recursoCreado.centros_operativos_ids
+                    )
+                        ? recursoCreado.centros_operativos_ids
+                        : [];
+
+
+                /*
+                * Si el Centro Operativo que ya estaba
+                * seleccionado pertenece al recurso nuevo,
+                * lo conservamos.
+                *
+                * Esto es especialmente importante cuando
+                * entramos al ABM desde Carga Simple.
+                */
+
+                const centroActual =
                     String(
-                        recursoCreado.centro_operativo_id
+                        selectCentro.value ||
+                        ""
                     );
 
 
-                const opcionCentro =
-                    selectCentro.querySelector(
-                        `option[value="${centroId}"]`
-                    );
+                const perteneceAlCentroActual =
+                    centrosRecurso
+                        .map(
+                            function(centroId){
+
+                                return String(
+                                    centroId
+                                );
+
+                            }
+                        )
+                        .includes(
+                            centroActual
+                        );
 
 
-                if(opcionCentro){
+                if(!perteneceAlCentroActual){
 
-                    selectCentro.value =
-                        centroId;
+                    /*
+                    * Si el recurso no pertenece al Centro
+                    * que estaba seleccionado, usamos el
+                    * primero de sus Centros Operativos.
+                    */
+
+                    const primerCentroId =
+                        centrosRecurso.length > 0
+                            ? String(
+                                centrosRecurso[0]
+                            )
+                            : "";
+
+
+                    if(primerCentroId){
+
+                        const opcionCentro =
+                            selectCentro.querySelector(
+                                `option[value="${primerCentroId}"]`
+                            );
+
+
+                        if(opcionCentro){
+
+                            selectCentro.value =
+                                primerCentroId;
+
+                        }
+
+                    }
 
                 }
 
@@ -4538,7 +4613,8 @@ function actualizarRecursosPorCentroOperativo(){
         selectRecurso.value;
 
 
-    selectRecurso.innerHTML = "";
+    selectRecurso.innerHTML =
+        "";
 
 
     if(!selectCentro.value){
@@ -4549,7 +4625,8 @@ function actualizarRecursosPorCentroOperativo(){
             );
 
 
-        opcion.value = "";
+        opcion.value =
+            "";
 
         opcion.textContent =
             "Seleccione primero un Centro Operativo...";
@@ -4595,7 +4672,8 @@ function actualizarRecursosPorCentroOperativo(){
         );
 
 
-    opcionInicial.value = "";
+    opcionInicial.value =
+        "";
 
     opcionInicial.textContent =
         "Seleccione...";
@@ -4606,17 +4684,39 @@ function actualizarRecursosPorCentroOperativo(){
     );
 
 
+    const centroSeleccionado =
+        String(
+            selectCentro.value
+        );
+
+
     recursosCargaSimple
 
         .filter(
 
             function(recurso){
 
-                return String(
-                    recurso.centro_operativo_id
-                ) === String(
-                    selectCentro.value
-                );
+                const centrosRecurso =
+                    Array.isArray(
+                        recurso.centros_operativos_ids
+                    )
+                        ? recurso.centros_operativos_ids
+                        : [];
+
+
+                return centrosRecurso
+                    .map(
+                        function(centroId){
+
+                            return String(
+                                centroId
+                            );
+
+                        }
+                    )
+                    .includes(
+                        centroSeleccionado
+                    );
 
             }
 
@@ -4640,9 +4740,7 @@ function actualizarRecursosPorCentroOperativo(){
 
                 opcion.textContent =
                     recurso.tipo_recurso_label
-
                         ? `${recurso.nombre} · ${recurso.tipo_recurso_label}`
-
                         : recurso.nombre;
 
 
@@ -4654,6 +4752,12 @@ function actualizarRecursosPorCentroOperativo(){
 
         );
 
+
+    /*
+     * Si el recurso que estaba seleccionado
+     * sigue perteneciendo al Centro Operativo
+     * elegido, conservamos la selección.
+     */
 
     if(
         valorAnterior &&
@@ -7299,7 +7403,15 @@ function agregarPagoRegistro(){
                         </div>
 
 
-                        <div class="field field-full">
+                        <div
+                            class="field field-full"
+                            style="
+                                display:flex;
+                                flex-direction:row;
+                                gap:12px;
+                                align-items:center;
+                            "
+                        >
 
                             <button
                                 type="button"
@@ -7307,9 +7419,24 @@ function agregarPagoRegistro(){
                                 data-pago-id="${pagoId}"
                                 style="
                                     margin-top:0;
+                                    flex:1;
                                 "
                             >
                                 REGISTRAR TRANSFERENCIA
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="action-btn btn-cancelar-edicion-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    display:none;
+                                    margin:0;
+                                    flex:0 0 180px;
+                                "
+                            >
+                                CANCELAR CAMBIOS
                             </button>
 
                         </div>
@@ -8332,6 +8459,12 @@ async function cambiarTipoOperacionBancaria(
             ".btn-registrar-operacion-bancaria"
         );
 
+    const estaEditando =
+        operacionesBancariasEditando[
+            String(
+                pagoId
+            )
+        ] !== undefined;
 
     if(
         !tipo ||
@@ -8379,7 +8512,9 @@ async function cambiarTipoOperacionBancaria(
 
 
         botonRegistrar.textContent =
-            "REGISTRAR DEPÓSITO";
+            estaEditando
+                ? "REGISTRAR CAMBIOS"
+                : "REGISTRAR DEPÓSITO";
 
 
         return;
@@ -8403,7 +8538,9 @@ async function cambiarTipoOperacionBancaria(
 
 
     botonRegistrar.textContent =
-        "REGISTRAR TRANSFERENCIA";
+        estaEditando
+            ? "REGISTRAR CAMBIOS"
+            : "REGISTRAR TRANSFERENCIA";
 
 
     await cargarCuentasOperacionBancaria(
@@ -8603,9 +8740,9 @@ function registrarOperacionBancaria(
      */
 
     const importeOperacion =
-        parseFloat(
+        leerImporte(
             importe.value
-        ) || 0;
+        );
 
 
     if(importeOperacion <= 0){
@@ -8622,13 +8759,32 @@ function registrarOperacionBancaria(
 
 
     /*
-     * OPERACIÓN
-     */
+    * =========================================
+    * OPERACIÓN
+    * =========================================
+    */
+
+    const operacionIdEditando =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    const estaEditando =
+        operacionIdEditando !==
+        undefined;
+
 
     const operacion = {
 
         id:
-            Date.now(),
+            estaEditando
+                ? Number(
+                    operacionIdEditando
+                )
+                : Date.now(),
 
         tipo_operacion:
             tipoOperacion,
@@ -8664,15 +8820,112 @@ function registrarOperacionBancaria(
                 comprobante.files.length
             )
                 ? comprobante.files[0]
-                : null
+                : (
+                    estaEditando
+                        ? (
+                            pago.transferencias.find(
+                                function(item){
+
+                                    return Number(
+                                        item.id
+                                    ) === Number(
+                                        operacionIdEditando
+                                    );
+
+                                }
+                            )?.comprobante || null
+                        )
+                        : null
+                )
 
     };
 
 
-    pago.transferencias.push(
-        operacion
-    );
+    /*
+    * =========================================
+    * ACTUALIZAR O AGREGAR
+    * =========================================
+    */
 
+    if(estaEditando){
+
+        const indice =
+            pago.transferencias.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        operacionIdEditando
+                    );
+
+                }
+            );
+
+
+        if(indice === -1){
+
+            alert(
+                "La operación que se estaba modificando ya no existe.\n\n" +
+                "El formulario volverá al modo de registro."
+            );
+
+
+            delete operacionesBancariasEditando[
+                String(
+                    idPago
+                )
+            ];
+
+
+            limpiarFormularioOperacionBancaria(
+                idPago
+            );
+
+
+            return;
+
+        }
+
+
+        pago.transferencias[
+            indice
+        ] = operacion;
+
+
+        const tarjetaAnterior =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-bancaria[data-operacion-id="${operacionIdEditando}"]`
+            );
+
+
+        if(tarjetaAnterior){
+
+            tarjetaAnterior.remove();
+
+        }
+
+
+        delete operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+    }else{
+
+        pago.transferencias.push(
+            operacion
+        );
+
+    }
+
+
+    /*
+    * =========================================
+    * RENDERIZAR
+    * =========================================
+    */
 
     renderizarOperacionBancaria(
         pagoId,
@@ -8688,8 +8941,7 @@ function registrarOperacionBancaria(
     limpiarFormularioOperacionBancaria(
         pagoId
     );
-
-}
+    }
 
 function renderizarOperacionBancaria(
     pagoId,
@@ -8889,6 +9141,43 @@ importe.textContent =
         operacion.importe
     );
 
+    /*
+    * =========================================
+    * MODIFICAR
+    * =========================================
+    */
+
+    const botonModificar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonModificar.type =
+        "button";
+
+
+    botonModificar.className =
+        "action-btn btn-modificar-operacion-bancaria";
+
+
+    botonModificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonModificar.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonModificar.textContent =
+        "📝";
+
+    botonModificar.title =
+        "Modificar operación";
 
     const botonEliminar =
         document.createElement(
@@ -8924,6 +9213,9 @@ importe.textContent =
         importe
     );
 
+    acciones.appendChild(
+        botonModificar
+    );
 
     acciones.appendChild(
         botonEliminar
@@ -8943,6 +9235,495 @@ importe.textContent =
     lista.appendChild(
         tarjeta
     );
+
+}
+
+function modificarOperacionBancaria(
+    pagoId,
+    operacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            operacionId
+        );
+
+    /*
+    * =========================================
+    * EVITAR DOS EDICIONES SIMULTÁNEAS
+    * =========================================
+    */
+
+    const operacionYaEditando =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        operacionYaEditando !== undefined &&
+        Number(
+            operacionYaEditando
+        ) !== idOperacion
+    ){
+
+        alert(
+            "Ya hay una operación en edición.\n\n" +
+            "Registre los cambios antes de modificar otra."
+        );
+
+        return;
+
+    }
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.transferencias.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) ===
+                idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * MARCAR EDICIÓN
+     * =========================================
+     */
+
+    operacionesBancariasEditando[
+        String(
+            idPago
+        )
+    ] = idOperacion;
+
+
+    /*
+     * =========================================
+     * ELEMENTOS DEL FORMULARIO
+     * =========================================
+     */
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjeta.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const bancoDestino =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjeta.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjeta.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+    const botonCancelarCambios =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
+
+
+    /*
+     * =========================================
+     * TIPO DE OPERACIÓN
+     * =========================================
+     */
+
+    if(tipo){
+
+        tipo.value =
+            operacion.tipo_operacion;
+
+    }
+
+
+    /*
+     * Primero actualizamos el formulario
+     * según sea Transferencia o Depósito.
+     *
+     * Esto carga correctamente las cuentas
+     * bancarias en caso de Transferencia.
+     */
+
+    cambiarTipoOperacionBancaria(
+        idPago
+    ).then(
+        function(){
+
+            /*
+             * =========================================
+             * CUENTA ORIGEN
+             * =========================================
+             */
+
+            if(
+                cuentaOrigen &&
+                operacion.tipo_operacion ===
+                "Transferencia"
+            ){
+
+                cuentaOrigen.value =
+                    operacion.cuenta_origen_id ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * BANCO DESTINO
+             * =========================================
+             */
+
+            if(bancoDestino){
+
+                bancoDestino.value =
+                    operacion.banco_destino_id ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * MONEDA
+             * =========================================
+             */
+
+            if(moneda){
+
+                moneda.value =
+                    operacion.moneda ||
+                    "ARS";
+
+            }
+
+
+            /*
+             * =========================================
+             * REFERENCIA
+             * =========================================
+             */
+
+            if(referencia){
+
+                referencia.value =
+                    operacion.referencia_destino ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * FECHA
+             * =========================================
+             */
+
+            if(fecha){
+
+                fecha.value =
+                    operacion.fecha ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * IMPORTE
+             * =========================================
+             *
+             * La operación internamente guarda un número.
+             * Al volver al formulario lo mostramos con
+             * formato argentino:
+             *
+             * 1.500,00
+             */
+
+            if(importe){
+
+                importe.value =
+                    formatearImporte(
+                        operacion.importe
+                    );
+
+            }
+
+
+            /*
+             * =========================================
+             * COMPROBANTE
+             * =========================================
+             */
+
+            if(
+                textoComprobante &&
+                operacion.comprobante
+            ){
+
+                textoComprobante.textContent =
+                    `📎 ${operacion.comprobante.name}`;
+
+            }else if(textoComprobante){
+
+                textoComprobante.textContent =
+                    "📎 Adjuntar comprobante";
+
+            }
+
+
+            /*
+             * =========================================
+             * INDICAR QUE ESTAMOS MODIFICANDO
+             * =========================================
+             */
+
+            if(botonRegistrar){
+
+                botonRegistrar.textContent =
+                    "REGISTRAR CAMBIOS";
+
+            }
+
+            if(botonCancelarCambios){
+
+                botonCancelarCambios.style.display =
+                    "flex";
+
+                botonCancelarCambios.style.alignItems =
+                    "center";
+
+                botonCancelarCambios.style.justifyContent =
+                    "center";
+
+                botonCancelarCambios.style.background =
+                    "#dc2626";
+
+                botonCancelarCambios.style.borderColor =
+                    "#dc2626";
+
+                botonCancelarCambios.style.color =
+                    "#ffffff";
+
+            }
+
+            /*
+             * =========================================
+             * LLEVAR AL USUARIO AL FORMULARIO
+             * =========================================
+             *
+             * Al pulsar modificar desde una tarjeta
+             * subimos automáticamente al comienzo
+             * del acordeón.
+             */
+
+            const bloqueFormulario =
+                tarjeta.querySelector(
+                    ".bloque-operaciones-bancarias"
+                );
+
+
+            if(bloqueFormulario){
+
+                bloqueFormulario.scrollIntoView({
+
+                    behavior:
+                        "smooth",
+
+                    block:
+                        "start"
+
+                });
+
+            }
+
+        }
+    );
+
+}
+
+/*
+ * =========================================
+ * CANCELAR EDICIÓN DE OPERACIÓN BANCARIA
+ * =========================================
+ */
+
+function cancelarEdicionOperacionBancaria(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    /*
+     * =========================================
+     * SALIR DEL MODO EDICIÓN
+     * =========================================
+     */
+
+    delete operacionesBancariasEditando[
+        String(
+            idPago
+        )
+    ];
+
+
+    /*
+     * =========================================
+     * LIMPIAR FORMULARIO
+     * =========================================
+     *
+     * Esta función ya limpia los campos y
+     * devuelve el formulario a su estado normal.
+     */
+
+    limpiarFormularioOperacionBancaria(
+        idPago
+    );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * OCULTAR CANCELAR CAMBIOS
+     * =========================================
+     */
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+
+    /*
+     * =========================================
+     * RESTABLECER BOTÓN PRINCIPAL
+     * =========================================
+     */
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+
+    if(
+        tipo &&
+        botonRegistrar
+    ){
+
+        botonRegistrar.textContent =
+            tipo.value === "Deposito"
+                ? "REGISTRAR DEPÓSITO"
+                : "REGISTRAR TRANSFERENCIA";
+
+    }
 
 }
 
@@ -9038,6 +9819,17 @@ function togglePagoRegistro(
 
     }
 
+    /*
+    * =========================================
+    * SALIR DEL MODO EDICIÓN
+    * =========================================
+    */
+
+    delete operacionesBancariasEditando[
+        String(
+            pagoId
+        )
+    ];
 
     const contenido =
         tarjeta.querySelector(
@@ -9653,6 +10445,33 @@ function eliminarOperacionBancaria(
             operacionId
         );
 
+    /*
+    * =========================================
+    * BLOQUEAR ELIMINACIÓN DURANTE EDICIÓN
+    * =========================================
+    */
+
+    const operacionEditandoId =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        operacionEditandoId !== undefined
+    ){
+
+        alert(
+            "Hay una operación en edición.\n\n" +
+            "Registre los cambios o cancele la edición " +
+            "antes de eliminar una operación."
+        );
+
+        return;
+
+    }
 
     const pago =
         pagosRegistro.find(
@@ -9728,6 +10547,16 @@ function limpiarFormularioOperacionBancaria(
 
     }
 
+    /*
+    * =========================================
+    * BOTÓN CANCELAR CAMBIOS
+    * =========================================
+    */
+
+    const botonCancelarCambios =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
 
     const tipo =
         tarjeta.querySelector(
@@ -9833,6 +10662,18 @@ function limpiarFormularioOperacionBancaria(
 
     }
 
+    /*
+    * =========================================
+    * OCULTAR CANCELAR CAMBIOS
+    * =========================================
+    */
+
+    if(botonCancelarCambios){
+
+        botonCancelarCambios.style.display =
+            "none";
+
+    }
 
     cambiarTipoOperacionBancaria(
         pagoId
@@ -10069,6 +10910,17 @@ let contadorPagosRegistro = 0;
 
 let pagosRegistro = [];
 
+/*
+ * =========================================
+ * OPERACIONES BANCARIAS EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> operacionId
+ */
+
+let operacionesBancariasEditando = {};
 
 function registrarChequePago(
     pagoId
@@ -11102,7 +11954,55 @@ document.addEventListener(
             return;
 
         }
+        
+        /*
+        * =========================================
+        * CANCELAR CAMBIOS
+        * TRANSFERENCIA / DEPÓSITO
+        * =========================================
+        */
 
+        const botonCancelarOperacion =
+            event.target.closest(
+                ".btn-cancelar-edicion-operacion-bancaria"
+            );
+
+
+        if(botonCancelarOperacion){
+
+            cancelarEdicionOperacionBancaria(
+                botonCancelarOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+        /*
+        * =========================================
+        * MODIFICAR TRANSFERENCIA / DEPÓSITO
+        * =========================================
+        */
+
+        const botonModificarOperacion =
+            event.target.closest(
+                ".btn-modificar-operacion-bancaria"
+            );
+
+
+        if(botonModificarOperacion){
+
+            modificarOperacionBancaria(
+
+                botonModificarOperacion.dataset.pagoId,
+
+                botonModificarOperacion.dataset.operacionId
+
+            );
+
+            return;
+
+        }
 
         /*
          * =========================================
@@ -11880,9 +12780,9 @@ Sí
 
 <script src="{% static 'js/tipos_gasto.js' %}?v=3"></script>
 
-<script src="{% static 'js/gestion_claves.js' %}?v=2"></script>
+<script src="{% static 'js/gestion_claves.js' %}?v=3"></script>
 
-<script src="{% static 'js/recursos_operativos.js' %}?v=2"></script>
+<script src="{% static 'js/recursos_operativos.js' %}?v=3"></script>
 
 <script src="{% static 'js/cuentas_bancarias.js' %}?v=1"></script>
 

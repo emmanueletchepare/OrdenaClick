@@ -284,6 +284,21 @@
             Claves registradas
         </div>
 
+        <div
+            style="
+                margin-bottom:16px;
+            "
+        >
+
+            <input
+                type="text"
+                id="buscarGestionClave"
+                class="input-box"
+                placeholder="Buscar por nombre, sitio, usuario o correo..."
+                autocomplete="off"
+            >
+
+        </div>
 
         <div
             id="listaGestionClaves"
@@ -297,15 +312,22 @@
             {% for clave in claves %}
 
                 <div
+                    class="tarjeta-gestion-clave"
+                    data-busqueda="
+                        {{ clave.nombre }}
+                        {{ clave.sitio|default:'' }}
+                        {{ clave.usuario|default:'' }}
+                        {{ clave.correo|default:'' }}
+                    "
                     style="
-                    background:#1b2130;
-                    border:1px solid #2b3447;
-                    border-radius:14px;
-                    padding:16px 18px;
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:20px;
+                        background:#1b2130;
+                        border:1px solid #2b3447;
+                        border-radius:14px;
+                        padding:16px 18px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:20px;
                     "
                 >
 
@@ -413,6 +435,16 @@
                 </div>
 
             {% endfor %}
+
+            <div
+                id="sinResultadosGestionClave"
+                class="empty-state"
+                style="
+                    display:none;
+                "
+            >
+                No se encontraron claves.
+            </div>
 
         </div>
 

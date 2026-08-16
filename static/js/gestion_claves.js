@@ -11,6 +11,11 @@ let gestionClaveModoVer = false;
 
 function iniciarABMGestionClaves(){
 
+    const buscador =
+        document.getElementById(
+            "buscarGestionClave"
+        );
+    
     const btnGuardar =
         document.getElementById(
             "btnGuardarGestionClave"
@@ -151,6 +156,93 @@ function iniciarABMGestionClaves(){
 
             }
         );
+
+        if(buscador){
+
+            buscador.addEventListener(
+                "input",
+                filtrarGestionClaves
+            );
+
+}
+
+}
+
+function filtrarGestionClaves(){
+
+    const buscador =
+        document.getElementById(
+            "buscarGestionClave"
+        );
+
+    const mensajeSinResultados =
+        document.getElementById(
+            "sinResultadosGestionClave"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".tarjeta-gestion-clave"
+        );
+
+
+    let visibles =
+        0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensajeSinResultados){
+
+        mensajeSinResultados.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
 
 }
 

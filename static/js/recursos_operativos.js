@@ -4,6 +4,15 @@ let recursoOperativoEditandoId = null;
 
 let recursoOperativoReactivandoId = null;
 
+/*
+ * =========================================
+ * CENTROS OPERATIVOS RELACIONADOS
+ * =========================================
+ */
+
+let centrosRelacionadosRecursoOperativo = new Set();
+
+
 
 /* =========================================
    INICIALIZACIÓN
@@ -30,6 +39,42 @@ function iniciarABMRecursosOperativos(){
         document.getElementById(
             "buscarRecursoOperativoABM"
         );
+
+
+    /*
+     * =========================================
+     * CENTROS OPERATIVOS
+     * =========================================
+     */
+
+    const btnAgregarCentro =
+        document.getElementById(
+            "btnAgregarCentroRecursoOperativo"
+        );
+
+    const btnCancelarModalCentro =
+        document.getElementById(
+            "btnCancelarModalCentrosRecursoOperativo"
+        );
+
+    const btnGuardarModalCentro =
+        document.getElementById(
+            "btnGuardarModalCentrosRecursoOperativo"
+        );
+
+    const buscadorCentro =
+        document.getElementById(
+            "buscarCentroRecursoOperativo"
+        );
+
+
+    /*
+     * Cada vez que cargamos el ABM desde cero
+     * empezamos sin centros seleccionados.
+     */
+
+    centrosRelacionadosRecursoOperativo =
+        new Set();
 
 
     if(btnGuardar){
@@ -72,6 +117,58 @@ function iniciarABMRecursosOperativos(){
     }
 
 
+    /*
+     * =========================================
+     * MODAL CENTROS OPERATIVOS
+     * =========================================
+     */
+
+    if(btnAgregarCentro){
+
+        btnAgregarCentro.addEventListener(
+            "click",
+            abrirModalCentrosRecursoOperativo
+        );
+
+    }
+
+
+    if(btnCancelarModalCentro){
+
+        btnCancelarModalCentro.addEventListener(
+            "click",
+            cerrarModalCentrosRecursoOperativo
+        );
+
+    }
+
+
+    if(btnGuardarModalCentro){
+
+        btnGuardarModalCentro.addEventListener(
+            "click",
+            guardarSeleccionCentrosRecursoOperativo
+        );
+
+    }
+
+
+    if(buscadorCentro){
+
+        buscadorCentro.addEventListener(
+            "input",
+            filtrarCentrosModalRecursoOperativo
+        );
+
+    }
+
+
+    /*
+     * =========================================
+     * MODIFICAR
+     * =========================================
+     */
+
     document
         .querySelectorAll(
             ".btn-modificar-recurso-operativo"
@@ -88,6 +185,7 @@ function iniciarABMRecursosOperativos(){
                                 ".tarjeta-recurso-operativo-abm"
                             );
 
+
                         if(!tarjeta){
 
                             return;
@@ -103,7 +201,7 @@ function iniciarABMRecursosOperativos(){
 
                             tarjeta.dataset.recursoTipo,
 
-                            tarjeta.dataset.recursoCentro,
+                            tarjeta.dataset.recursoCentros,
 
                             tarjeta.dataset.recursoDescripcion
 
@@ -115,6 +213,12 @@ function iniciarABMRecursosOperativos(){
             }
         );
 
+
+    /*
+     * =========================================
+     * ELIMINAR
+     * =========================================
+     */
 
     document
         .querySelectorAll(
@@ -152,6 +256,9 @@ function iniciarABMRecursosOperativos(){
             }
         );
 
+
+    renderizarCentrosRelacionadosRecursoOperativo();
+
 }
 
 
@@ -173,6 +280,448 @@ function valorRecursoOperativo(id){
 
 }
 
+/*
+ * =========================================
+ * CENTROS OPERATIVOS
+ * =========================================
+ */
+
+function centrosSeleccionadosRecursoOperativo(){
+
+    return Array.from(
+        centrosRelacionadosRecursoOperativo
+    );
+
+}
+
+
+function centrosMarcadosModalRecursoOperativo(){
+
+    return Array
+        .from(
+            document.querySelectorAll(
+                ".centro-modal-recurso-operativo:checked"
+            )
+        )
+        .map(
+            function(check){
+
+                return String(
+                    check.value
+                );
+
+            }
+        );
+
+}
+
+
+function abrirModalCentrosRecursoOperativo(){
+
+    const modal =
+        document.getElementById(
+            "modalCentrosRecursoOperativo"
+        );
+
+    const buscador =
+        document.getElementById(
+            "buscarCentroRecursoOperativo"
+        );
+
+
+    if(!modal){
+
+        return;
+
+    }
+
+
+    /*
+     * Restauramos en los checks
+     * la selección que tiene actualmente
+     * el formulario.
+     */
+
+    document
+        .querySelectorAll(
+            ".centro-modal-recurso-operativo"
+        )
+        .forEach(
+            function(check){
+
+                check.checked =
+                    centrosRelacionadosRecursoOperativo
+                        .has(
+                            String(
+                                check.value
+                            )
+                        );
+
+            }
+        );
+
+
+    if(buscador){
+
+        buscador.value = "";
+
+    }
+
+
+    filtrarCentrosModalRecursoOperativo();
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+function cerrarModalCentrosRecursoOperativo(){
+
+    const modal =
+        document.getElementById(
+            "modalCentrosRecursoOperativo"
+        );
+
+
+    if(modal){
+
+        modal.style.display =
+            "none";
+
+    }
+
+}
+
+
+function guardarSeleccionCentrosRecursoOperativo(){
+
+    const seleccion =
+        centrosMarcadosModalRecursoOperativo();
+
+
+    centrosRelacionadosRecursoOperativo =
+        new Set(
+            seleccion
+        );
+
+
+    renderizarCentrosRelacionadosRecursoOperativo();
+
+    cerrarModalCentrosRecursoOperativo();
+
+}
+
+
+function quitarCentroRelacionadoRecursoOperativo(
+    centroId
+){
+
+    centrosRelacionadosRecursoOperativo.delete(
+        String(
+            centroId
+        )
+    );
+
+
+    const check =
+        document.querySelector(
+            '.centro-modal-recurso-operativo[value="' +
+            String(
+                centroId
+            ) +
+            '"]'
+        );
+
+
+    if(check){
+
+        check.checked =
+            false;
+
+    }
+
+
+    renderizarCentrosRelacionadosRecursoOperativo();
+
+}
+
+
+function renderizarCentrosRelacionadosRecursoOperativo(){
+
+    const contenedor =
+        document.getElementById(
+            "centrosRecursoOperativo"
+        );
+
+
+    if(!contenedor){
+
+        return;
+
+    }
+
+
+    contenedor.innerHTML =
+        "";
+
+
+    if(
+        centrosRelacionadosRecursoOperativo.size ===
+        0
+    ){
+
+        const mensaje =
+            document.createElement(
+                "div"
+            );
+
+
+        mensaje.id =
+            "mensajeSinCentrosRecursoOperativo";
+
+
+        mensaje.style.color =
+            "#8b93a7";
+
+        mensaje.style.padding =
+            "12px";
+
+        mensaje.style.textAlign =
+            "center";
+
+
+        mensaje.textContent =
+            "No hay Centros Operativos relacionados.";
+
+
+        contenedor.appendChild(
+            mensaje
+        );
+
+
+        return;
+
+    }
+
+
+    centrosRelacionadosRecursoOperativo
+        .forEach(
+            function(centroId){
+
+                const tarjetaModal =
+                    document.querySelector(
+                        '.tarjeta-centro-modal-recurso-operativo' +
+                        '[data-centro-id="' +
+                        centroId +
+                        '"]'
+                    );
+
+
+                if(!tarjetaModal){
+
+                    return;
+
+                }
+
+
+                const nombre =
+                    tarjetaModal.dataset
+                        .centroNombre ||
+                    "Centro Operativo";
+
+
+                const fila =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                fila.dataset.centroId =
+                    centroId;
+
+
+                fila.style.display =
+                    "flex";
+
+                fila.style.alignItems =
+                    "center";
+
+                fila.style.justifyContent =
+                    "space-between";
+
+                fila.style.gap =
+                    "12px";
+
+                fila.style.padding =
+                    "10px 12px";
+
+                fila.style.background =
+                    "#151a26";
+
+                fila.style.border =
+                    "1px solid #2b3447";
+
+                fila.style.borderRadius =
+                    "10px";
+
+
+                const texto =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                texto.textContent =
+                    nombre;
+
+
+                const botonEliminar =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                botonEliminar.type =
+                    "button";
+
+                botonEliminar.className =
+                    "action-btn";
+
+                botonEliminar.title =
+                    "Quitar Centro Operativo relacionado";
+
+                botonEliminar.textContent =
+                    "🗑";
+
+
+                botonEliminar.style.width =
+                    "38px";
+
+                botonEliminar.style.minWidth =
+                    "38px";
+
+                botonEliminar.style.padding =
+                    "6px";
+
+                botonEliminar.style.margin =
+                    "0";
+
+                botonEliminar.style.background =
+                    "#7f1d1d";
+
+                botonEliminar.style.borderColor =
+                    "#991b1b";
+
+
+                botonEliminar.addEventListener(
+                    "click",
+                    function(){
+
+                        quitarCentroRelacionadoRecursoOperativo(
+                            centroId
+                        );
+
+                    }
+                );
+
+
+                fila.appendChild(
+                    texto
+                );
+
+                fila.appendChild(
+                    botonEliminar
+                );
+
+                contenedor.appendChild(
+                    fila
+                );
+
+            }
+        );
+
+}
+
+
+function filtrarCentrosModalRecursoOperativo(){
+
+    const buscador =
+        document.getElementById(
+            "buscarCentroRecursoOperativo"
+        );
+
+    const mensaje =
+        document.getElementById(
+            "sinResultadosCentrosRecursoOperativo"
+        );
+
+
+    const texto =
+        buscador
+            ? buscador.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const tarjetas =
+        document.querySelectorAll(
+            ".tarjeta-centro-modal-recurso-operativo"
+        );
+
+
+    let visibles =
+        0;
+
+
+    tarjetas.forEach(
+        function(tarjeta){
+
+            const contenido =
+                (
+                    tarjeta.dataset.busqueda ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            const coincide =
+                contenido.includes(
+                    texto
+                );
+
+
+            tarjeta.style.display =
+                coincide
+                    ? "flex"
+                    : "none";
+
+
+            if(coincide){
+
+                visibles++;
+
+            }
+
+        }
+    );
+
+
+    if(mensaje){
+
+        mensaje.style.display =
+            (
+                tarjetas.length > 0 &&
+                visibles === 0
+            )
+                ? "block"
+                : "none";
+
+    }
+
+}
 
 /* =========================================
    BUSCADOR
@@ -277,15 +826,14 @@ async function guardarRecursoOperativo(){
             "tipoRecursoOperativo"
         );
 
-    const centroOperativo =
-        valorRecursoOperativo(
-            "centroRecursoOperativo"
-        );
-
     const descripcion =
         valorRecursoOperativo(
             "descripcionRecursoOperativo"
         );
+
+
+    const centros =
+        centrosSeleccionadosRecursoOperativo();
 
 
     if(!empresa){
@@ -305,16 +853,19 @@ async function guardarRecursoOperativo(){
             "Ingrese el nombre del recurso operativo."
         );
 
+
         const input =
             document.getElementById(
                 "nombreRecursoOperativo"
             );
+
 
         if(input){
 
             input.focus();
 
         }
+
 
         return;
 
@@ -327,38 +878,43 @@ async function guardarRecursoOperativo(){
             "Seleccione el tipo de recurso."
         );
 
+
         const select =
             document.getElementById(
                 "tipoRecursoOperativo"
             );
+
 
         if(select){
 
             select.focus();
 
         }
+
 
         return;
 
     }
 
 
-    if(!centroOperativo){
+    /*
+     * =========================================
+     * REGLA OBLIGATORIA
+     * =========================================
+     *
+     * Todo Recurso Operativo debe pertenecer
+     * al menos a un Centro Operativo.
+     */
+
+    if(
+        centros.length ===
+        0
+    ){
 
         alert(
-            "Seleccione el centro operativo."
+            "Seleccione al menos un Centro Operativo."
         );
 
-        const select =
-            document.getElementById(
-                "centroRecursoOperativo"
-            );
-
-        if(select){
-
-            select.focus();
-
-        }
 
         return;
 
@@ -385,13 +941,28 @@ async function guardarRecursoOperativo(){
     );
 
     formulario.append(
-        "centro_operativo",
-        centroOperativo
-    );
-
-    formulario.append(
         "descripcion",
         descripcion
+    );
+
+
+    /*
+     * Enviamos una entrada por cada Centro.
+     *
+     * Django la recibe mediante:
+     *
+     * request.POST.getlist("centros_operativos")
+     */
+
+    centros.forEach(
+        function(centroId){
+
+            formulario.append(
+                "centros_operativos",
+                centroId
+            );
+
+        }
     );
 
 
@@ -411,6 +982,7 @@ async function guardarRecursoOperativo(){
         url =
             "/recursos-operativos/modificar/";
 
+
         formulario.append(
             "recurso",
             recursoOperativoEditandoId
@@ -420,6 +992,7 @@ async function guardarRecursoOperativo(){
 
         url =
             "/recursos-operativos/reactivar/";
+
 
         formulario.append(
             "recurso",
@@ -435,7 +1008,8 @@ async function guardarRecursoOperativo(){
             await fetch(
                 url,
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
@@ -446,7 +1020,8 @@ async function guardarRecursoOperativo(){
 
                     },
 
-                    body: formulario
+                    body:
+                        formulario
                 }
             );
 
@@ -535,6 +1110,9 @@ async function guardarRecursoOperativo(){
 
         recursoOperativoReactivandoId =
             null;
+
+        centrosRelacionadosRecursoOperativo =
+            new Set();
 
 
         await mostrarABMRecursosOperativos(
@@ -637,12 +1215,13 @@ function modificarRecursoOperativo(
     recursoId,
     nombre,
     tipoRecurso,
-    centroOperativo,
+    centrosOperativos,
     descripcion
 ){
 
     recursoOperativoReactivandoId =
         null;
+
 
     recursoOperativoEditandoId =
         String(
@@ -658,11 +1237,6 @@ function modificarRecursoOperativo(
     const selectTipo =
         document.getElementById(
             "tipoRecursoOperativo"
-        );
-
-    const selectCentro =
-        document.getElementById(
-            "centroRecursoOperativo"
         );
 
     const inputDescripcion =
@@ -687,20 +1261,68 @@ function modificarRecursoOperativo(
     }
 
 
-    if(selectCentro){
-
-        selectCentro.value =
-            centroOperativo || "";
-
-    }
-
-
     if(inputDescripcion){
 
         inputDescripcion.value =
             descripcion || "";
 
     }
+
+
+    /*
+     * data-recurso-centros viene como:
+     *
+     * "1,3,5"
+     */
+
+    const centros =
+        (
+            centrosOperativos ||
+            ""
+        )
+        .split(",")
+        .map(
+            function(valor){
+
+                return valor.trim();
+
+            }
+        )
+        .filter(
+            function(valor){
+
+                return valor !== "";
+
+            }
+        );
+
+
+    centrosRelacionadosRecursoOperativo =
+        new Set(
+            centros
+        );
+
+
+    document
+        .querySelectorAll(
+            ".centro-modal-recurso-operativo"
+        )
+        .forEach(
+            function(check){
+
+                check.checked =
+                    centrosRelacionadosRecursoOperativo
+                        .has(
+                            String(
+                                check.value
+                            )
+                        );
+
+            }
+        );
+
+
+    renderizarCentrosRelacionadosRecursoOperativo();
 
 
     const btnGuardar =
@@ -777,10 +1399,6 @@ function limpiarFormularioRecursoOperativo(){
             "tipoRecursoOperativo"
         );
 
-    const selectCentro =
-        document.getElementById(
-            "centroRecursoOperativo"
-        );
 
     const inputDescripcion =
         document.getElementById(
@@ -801,12 +1419,31 @@ function limpiarFormularioRecursoOperativo(){
 
     }
 
+/*
+ * =========================================
+ * LIMPIAR CENTROS OPERATIVOS RELACIONADOS
+ * =========================================
+ */
 
-    if(selectCentro){
+centrosRelacionadosRecursoOperativo =
+    new Set();
 
-        selectCentro.value = "";
 
-    }
+document
+    .querySelectorAll(
+        ".centro-modal-recurso-operativo"
+    )
+    .forEach(
+        function(check){
+
+            check.checked =
+                false;
+
+        }
+    );
+
+
+renderizarCentrosRelacionadosRecursoOperativo();
 
 
     if(inputDescripcion){

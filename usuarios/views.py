@@ -36,6 +36,7 @@ from .models import (
     CuentaBancaria,
     GestionClave,
     RecursoOperativo,
+    RecursoOperativoCentro,
     Proveedor
 )
 
@@ -1793,6 +1794,76 @@ def eliminar_centro_operativo(request):
 # RECURSOS OPERATIVOS
 # =========================================
 
+def obtener_centros_recurso_request(
+    request,
+    empresa_id
+):
+
+    centros_ids = request.POST.getlist(
+        "centros_operativos"
+    )
+
+
+    # Evitamos IDs repetidos conservando el orden.
+    centros_ids = list(
+        dict.fromkeys(
+            centro_id
+            for centro_id in centros_ids
+            if centro_id
+        )
+    )
+
+
+    if not centros_ids:
+
+        return (
+            None,
+            "Seleccione al menos un Centro Operativo."
+        )
+
+
+    centros = list(
+        CentroOperativo.objects
+        .filter(
+            id__in=centros_ids,
+            empresa_id=empresa_id,
+            activo=True
+        )
+    )
+
+
+    if len(centros) != len(centros_ids):
+
+        return (
+            None,
+            (
+                "Uno o más Centros Operativos "
+                "no existen o están inactivos."
+            )
+        )
+
+
+    centros_por_id = {
+        str(centro.id): centro
+        for centro in centros
+    }
+
+
+    centros_ordenados = [
+
+        centros_por_id[
+            str(centro_id)
+        ]
+
+        for centro_id in centros_ids
+
+    ]
+
+
+    return (
+        centros_ordenados,
+        None
+    )
 
 def listar_recursos_operativos(request):
 
@@ -1800,11 +1871,13 @@ def listar_recursos_operativos(request):
         "empresa"
     )
 
+
     try:
 
         empresa = Empresa.objects.get(
             id=empresa_id
         )
+
 
     except Empresa.DoesNotExist:
 
@@ -1813,20 +1886,22 @@ def listar_recursos_operativos(request):
             "mensaje": "La empresa no existe."
         }, status=404)
 
+
     recursos = (
         RecursoOperativo.objects
         .filter(
             empresa=empresa,
             activo=True
         )
-        .select_related(
-            "centro_operativo"
+        .prefetch_related(
+            "relaciones_centros__centro_operativo"
         )
         .order_by(
             "tipo_recurso",
             "nombre"
         )
     )
+
 
     centros = (
         CentroOperativo.objects
@@ -1839,6 +1914,7 @@ def listar_recursos_operativos(request):
         )
     )
 
+
     html = render_to_string(
         "usuarios/recursos_operativos.html",
         {
@@ -1849,26 +1925,78 @@ def listar_recursos_operativos(request):
         request=request
     )
 
+
+    recursos_json = []
+
+
+    for recurso in recursos:
+
+        relaciones = list(
+            recurso.relaciones_centros.all()
+        )
+
+
+        centros_recurso = [
+
+            relacion.centro_operativo
+
+            for relacion in relaciones
+
+        ]
+
+
+        recursos_json.append({
+
+            "id":
+                recurso.id,
+
+            "nombre":
+                recurso.nombre,
+
+            "tipo_recurso":
+                recurso.tipo_recurso,
+
+            "tipo_recurso_label":
+                recurso.get_tipo_recurso_display(),
+
+
+
+            # =====================================
+            # NUEVO SISTEMA MULTICENTRO
+            # =====================================
+
+            "centros_operativos_ids": [
+
+                str(centro.id)
+
+                for centro in centros_recurso
+
+            ],
+
+            "centros_operativos": [
+
+                {
+                    "id":
+                        centro.id,
+
+                    "nombre":
+                        centro.nombre
+                }
+
+                for centro in centros_recurso
+
+            ],
+
+            "descripcion":
+                recurso.descripcion
+
+        })
+
+
     return JsonResponse({
         "ok": True,
         "html": html,
-        "recursos": [
-            {
-                "id": recurso.id,
-                "nombre": recurso.nombre,
-                "tipo_recurso":
-                    recurso.tipo_recurso,
-                "tipo_recurso_label":
-                    recurso.get_tipo_recurso_display(),
-                "centro_operativo_id":
-                    recurso.centro_operativo_id,
-                "centro_operativo":
-                    recurso.centro_operativo.nombre,
-                "descripcion":
-                    recurso.descripcion
-            }
-            for recurso in recursos
-        ]
+        "recursos": recursos_json
     })
 
 
@@ -1881,13 +2009,11 @@ def guardar_recurso_operativo(request):
             "mensaje": "Método no permitido."
         }, status=405)
 
+
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    centro_id = request.POST.get(
-        "centro_operativo"
-    )
 
     nombre = (
         request.POST.get(
@@ -1895,17 +2021,20 @@ def guardar_recurso_operativo(request):
         ) or ""
     ).strip().upper()
 
+
     tipo_recurso = (
         request.POST.get(
             "tipo_recurso"
         ) or ""
     ).strip()
 
+
     descripcion = (
         request.POST.get(
             "descripcion"
         ) or ""
     ).strip()
+
 
     if not nombre:
 
@@ -1915,6 +2044,7 @@ def guardar_recurso_operativo(request):
                 "Ingrese el nombre del recurso operativo."
         })
 
+
     tipos_validos = {
         "Persona",
         "Vehiculo",
@@ -1922,6 +2052,7 @@ def guardar_recurso_operativo(request):
         "Equipo",
         "Otro"
     }
+
 
     if tipo_recurso not in tipos_validos:
 
@@ -1931,21 +2062,22 @@ def guardar_recurso_operativo(request):
                 "Seleccione un tipo de recurso válido."
         })
 
-    try:
 
-        centro = CentroOperativo.objects.get(
-            id=centro_id,
-            empresa_id=empresa_id,
-            activo=True
+    centros, error_centros = (
+        obtener_centros_recurso_request(
+            request,
+            empresa_id
         )
+    )
 
-    except CentroOperativo.DoesNotExist:
+
+    if error_centros:
 
         return JsonResponse({
             "ok": False,
-            "mensaje":
-                "El centro operativo no existe o está inactivo."
-        }, status=404)
+            "mensaje": error_centros
+        })
+
 
     existente = (
         RecursoOperativo.objects
@@ -1955,6 +2087,7 @@ def guardar_recurso_operativo(request):
         )
         .first()
     )
+
 
     if existente:
 
@@ -1968,6 +2101,7 @@ def guardar_recurso_operativo(request):
                 )
             })
 
+
         return JsonResponse({
             "ok": False,
             "requiere_reactivacion": True,
@@ -1976,24 +2110,59 @@ def guardar_recurso_operativo(request):
                 "inactivo con ese nombre."
             ),
             "recurso": {
-                "id": existente.id,
-                "nombre": existente.nombre
+                "id":
+                    existente.id,
+
+                "nombre":
+                    existente.nombre
             }
         })
 
-    recurso = RecursoOperativo.objects.create(
-        empresa_id=empresa_id,
-        centro_operativo=centro,
-        nombre=nombre,
-        tipo_recurso=tipo_recurso,
-        descripcion=descripcion
-    )
+
+    with transaction.atomic():
+
+        recurso = RecursoOperativo.objects.create(
+
+            empresa_id=
+                empresa_id,
+
+            nombre=
+                nombre,
+
+            tipo_recurso=
+                tipo_recurso,
+
+            descripcion=
+                descripcion
+
+        )
+
+
+        RecursoOperativoCentro.objects.bulk_create([
+
+            RecursoOperativoCentro(
+                recurso_operativo=recurso,
+                centro_operativo=centro
+            )
+
+            for centro in centros
+
+        ])
+
 
     return JsonResponse({
         "ok": True,
         "recurso": {
-            "id": recurso.id,
-            "nombre": recurso.nombre
+            "id":
+                recurso.id,
+
+            "nombre":
+                recurso.nombre,
+
+            "centros_operativos_ids": [
+                str(centro.id)
+                for centro in centros
+            ]
         }
     })
 
@@ -2007,17 +2176,16 @@ def modificar_recurso_operativo(request):
             "mensaje": "Método no permitido."
         }, status=405)
 
+
     recurso_id = request.POST.get(
         "recurso"
     )
+
 
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    centro_id = request.POST.get(
-        "centro_operativo"
-    )
 
     nombre = (
         request.POST.get(
@@ -2025,17 +2193,20 @@ def modificar_recurso_operativo(request):
         ) or ""
     ).strip().upper()
 
+
     tipo_recurso = (
         request.POST.get(
             "tipo_recurso"
         ) or ""
     ).strip()
 
+
     descripcion = (
         request.POST.get(
             "descripcion"
         ) or ""
     ).strip()
+
 
     if not nombre:
 
@@ -2045,6 +2216,7 @@ def modificar_recurso_operativo(request):
                 "Ingrese el nombre del recurso operativo."
         })
 
+
     tipos_validos = {
         "Persona",
         "Vehiculo",
@@ -2052,6 +2224,7 @@ def modificar_recurso_operativo(request):
         "Equipo",
         "Otro"
     }
+
 
     if tipo_recurso not in tipos_validos:
 
@@ -2061,6 +2234,7 @@ def modificar_recurso_operativo(request):
                 "Seleccione un tipo de recurso válido."
         })
 
+
     try:
 
         recurso = RecursoOperativo.objects.get(
@@ -2068,6 +2242,7 @@ def modificar_recurso_operativo(request):
             empresa_id=empresa_id,
             activo=True
         )
+
 
     except RecursoOperativo.DoesNotExist:
 
@@ -2077,21 +2252,22 @@ def modificar_recurso_operativo(request):
                 "El recurso operativo no existe."
         }, status=404)
 
-    try:
 
-        centro = CentroOperativo.objects.get(
-            id=centro_id,
-            empresa_id=empresa_id,
-            activo=True
+    centros, error_centros = (
+        obtener_centros_recurso_request(
+            request,
+            empresa_id
         )
+    )
 
-    except CentroOperativo.DoesNotExist:
+
+    if error_centros:
 
         return JsonResponse({
             "ok": False,
-            "mensaje":
-                "El centro operativo no existe o está inactivo."
-        }, status=404)
+            "mensaje": error_centros
+        })
+
 
     duplicado = (
         RecursoOperativo.objects
@@ -2106,6 +2282,7 @@ def modificar_recurso_operativo(request):
         .exists()
     )
 
+
     if duplicado:
 
         return JsonResponse({
@@ -2116,22 +2293,45 @@ def modificar_recurso_operativo(request):
             )
         })
 
-    recurso.nombre = nombre
-    recurso.tipo_recurso = tipo_recurso
-    recurso.centro_operativo = centro
-    recurso.descripcion = descripcion
 
-    recurso.save(
-        update_fields=[
-            "nombre",
-            "tipo_recurso",
-            "centro_operativo",
-            "descripcion"
-        ]
-    )
+    with transaction.atomic():
+
+        recurso.nombre = nombre
+
+        recurso.tipo_recurso = tipo_recurso
+
+        recurso.descripcion = descripcion
+
+        recurso.save(
+            update_fields=[
+                "nombre",
+                "tipo_recurso",
+                "descripcion"
+            ]
+        )
+
+
+        recurso.relaciones_centros.all().delete()
+
+
+        RecursoOperativoCentro.objects.bulk_create([
+
+            RecursoOperativoCentro(
+                recurso_operativo=recurso,
+                centro_operativo=centro
+            )
+
+            for centro in centros
+
+        ])
+
 
     return JsonResponse({
-        "ok": True
+        "ok": True,
+        "centros_operativos_ids": [
+            str(centro.id)
+            for centro in centros
+        ]
     })
 
 
@@ -2213,21 +2413,31 @@ def reactivar_recurso_operativo(request):
             "mensaje": "Método no permitido."
         }, status=405)
 
+
     recurso_id = request.POST.get(
         "recurso"
     )
+
 
     empresa_id = request.POST.get(
         "empresa"
     )
 
+
     try:
 
-        recurso = RecursoOperativo.objects.get(
-            id=recurso_id,
-            empresa_id=empresa_id,
-            activo=False
+        recurso = (
+            RecursoOperativo.objects
+            .prefetch_related(
+                "relaciones_centros__centro_operativo"
+            )
+            .get(
+                id=recurso_id,
+                empresa_id=empresa_id,
+                activo=False
+            )
         )
+
 
     except RecursoOperativo.DoesNotExist:
 
@@ -2239,15 +2449,29 @@ def reactivar_recurso_operativo(request):
             )
         }, status=404)
 
-    if not recurso.centro_operativo.activo:
+
+    relaciones_activas = [
+
+        relacion
+
+        for relacion
+        in recurso.relaciones_centros.all()
+
+        if relacion.centro_operativo.activo
+
+    ]
+
+
+    if not relaciones_activas:
 
         return JsonResponse({
             "ok": False,
             "mensaje": (
-                "No se puede reactivar el recurso "
-                "porque su centro operativo está inactivo."
+                "No se puede reactivar el recurso porque "
+                "no tiene ningún Centro Operativo activo relacionado."
             )
         })
+
 
     duplicado = (
         RecursoOperativo.objects
@@ -2262,6 +2486,7 @@ def reactivar_recurso_operativo(request):
         .exists()
     )
 
+
     if duplicado:
 
         return JsonResponse({
@@ -2272,19 +2497,38 @@ def reactivar_recurso_operativo(request):
             )
         })
 
-    recurso.activo = True
 
-    recurso.save(
-        update_fields=[
-            "activo"
-        ]
-    )
+        recurso.activo = True
+
+
+        recurso.save(
+            update_fields=[
+                "activo"
+            ]
+        )
+
 
     return JsonResponse({
         "ok": True,
         "recurso": {
-            "id": recurso.id,
-            "nombre": recurso.nombre
+
+            "id":
+                recurso.id,
+
+            "nombre":
+                recurso.nombre,
+
+            "centros_operativos_ids": [
+
+                str(
+                    relacion.centro_operativo_id
+                )
+
+                for relacion
+                in recurso.relaciones_centros.all()
+
+            ]
+
         }
     })
 

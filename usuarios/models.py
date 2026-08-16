@@ -1434,12 +1434,6 @@ class RecursoOperativo(models.Model):
         related_name='recursos_operativos'
     )
 
-    centro_operativo = models.ForeignKey(
-        CentroOperativo,
-        on_delete=models.PROTECT,
-        related_name='recursos_operativos'
-    )
-
     nombre = models.CharField(
         max_length=120
     )
@@ -1467,6 +1461,47 @@ class RecursoOperativo(models.Model):
     def __str__(self):
 
         return self.nombre
+
+class RecursoOperativoCentro(models.Model):
+
+    recurso_operativo = models.ForeignKey(
+        RecursoOperativo,
+        on_delete=models.CASCADE,
+        related_name="relaciones_centros"
+    )
+
+    centro_operativo = models.ForeignKey(
+        CentroOperativo,
+        on_delete=models.PROTECT,
+        related_name="relaciones_recursos"
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+
+    class Meta:
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    "recurso_operativo",
+                    "centro_operativo"
+                ],
+                name="recurso_operativo_centro_unico"
+            )
+
+        ]
+
+
+    def __str__(self):
+
+        return (
+            f"{self.recurso_operativo} - "
+            f"{self.centro_operativo}"
+        )
 
 # =========================================
 # BANCOS

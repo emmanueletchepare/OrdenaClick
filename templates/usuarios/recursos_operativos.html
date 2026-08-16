@@ -23,7 +23,7 @@
     <div
         style="
             display:grid;
-            grid-template-columns:2fr 1fr 2fr;
+            grid-template-columns:2fr 1fr;
             gap:12px;
             margin-bottom:20px;
         "
@@ -92,33 +92,85 @@
         </div>
 
 
-        <div>
+        <div
+            style="
+                grid-column:1 / -1;
+            "
+        >
 
-            <label
-                class="label"
-                for="centroRecursoOperativo"
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:12px;
+                    margin-bottom:10px;
+                "
             >
-                Centro Operativo
-            </label>
 
-            <select
-                id="centroRecursoOperativo"
-                class="input-box"
+                <label
+                    class="label"
+                    style="
+                        margin-bottom:0;
+                    "
+                >
+                    Centros Operativos relacionados
+                </label>
+
+
+                <button
+                    id="btnAgregarCentroRecursoOperativo"
+                    type="button"
+                    class="action-btn"
+                    style="
+                        width:auto;
+                        min-width:190px;
+                        margin:0;
+                    "
+                >
+                    [+] Centro Operativo
+                </button>
+
+            </div>
+
+
+            <div
+                id="centrosRecursoOperativo"
+                style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:10px;
+                    padding:14px;
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                "
             >
 
-                <option value="">
-                    Seleccione...
-                </option>
+                <div
+                    id="mensajeSinCentrosRecursoOperativo"
+                    style="
+                        color:#8b93a7;
+                        padding:12px;
+                        text-align:center;
+                    "
+                >
+                    No hay Centros Operativos relacionados.
+                </div>
 
-                {% for centro in centros %}
+            </div>
 
-                    <option value="{{ centro.id }}">
-                        {{ centro.nombre }}
-                    </option>
 
-                {% endfor %}
-
-            </select>
+            <div
+                style="
+                    color:#8b93a7;
+                    font-size:13px;
+                    margin-top:8px;
+                "
+            >
+                El recurso debe pertenecer al menos a un Centro Operativo.
+                Puede relacionarse con varios.
+            </div>
 
         </div>
 
@@ -237,14 +289,16 @@
 
                 data-recurso-tipo="{{ recurso.tipo_recurso|escape }}"
 
-                data-recurso-centro="{{ recurso.centro_operativo_id }}"
+                data-recurso-centros="{% for relacion in recurso.relaciones_centros.all %}{{ relacion.centro_operativo_id }}{% if not forloop.last %},{% endif %}{% endfor %}"
 
                 data-recurso-descripcion="{{ recurso.descripcion|escape }}"
 
                 data-busqueda="
                     {{ recurso.nombre|default:''|escape }}
                     {{ recurso.get_tipo_recurso_display|default:''|escape }}
-                    {{ recurso.centro_operativo.nombre|default:''|escape }}
+                    {% for relacion in recurso.relaciones_centros.all %}
+                        {{ relacion.centro_operativo.nombre|default:''|escape }}
+                    {% endfor %}
                     {{ recurso.descripcion|default:''|escape }}
                 "
 
@@ -286,9 +340,27 @@
 
                         {{ recurso.get_tipo_recurso_display }}
 
-                        ·
+                        <br>
 
-                        {{ recurso.centro_operativo.nombre }}
+                        <span
+                            style="
+                                color:#8b93a7;
+                            "
+                        >
+                            Centros Operativos:
+                        </span>
+
+                        {% for relacion in recurso.relaciones_centros.all %}
+
+                            <span>
+                                {{ relacion.centro_operativo.nombre }}
+                            </span>
+
+                            {% if not forloop.last %}
+                                ·
+                            {% endif %}
+
+                        {% endfor %}
 
                         {% if recurso.descripcion %}
 
@@ -383,5 +455,189 @@
     >
         ← Volver
     </button>
+
+</div>
+
+<!-- =========================================
+     MODAL CENTROS OPERATIVOS
+========================================= -->
+
+<div
+    id="modalCentrosRecursoOperativo"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.65);
+        align-items:center;
+        justify-content:center;
+        z-index:9999;
+        padding:20px;
+    "
+>
+
+    <div
+        style="
+            width:min(680px, 95vw);
+            max-height:80vh;
+            overflow:auto;
+            background:#171e2b;
+            border:1px solid #2b3447;
+            border-radius:18px;
+            padding:24px;
+        "
+    >
+
+        <div
+            style="
+                font-size:21px;
+                font-weight:700;
+                margin-bottom:18px;
+            "
+        >
+            Seleccionar Centros Operativos
+        </div>
+
+
+        <input
+            id="buscarCentroRecursoOperativo"
+            type="text"
+            class="input-box"
+            placeholder="Buscar Centro Operativo..."
+            autocomplete="off"
+            style="
+                margin-bottom:16px;
+            "
+        >
+
+
+        <div
+            id="listaCentrosModalRecursoOperativo"
+            style="
+                display:flex;
+                flex-direction:column;
+                gap:8px;
+            "
+        >
+
+            {% for centro in centros %}
+
+                <label
+                    class="tarjeta-centro-modal-recurso-operativo"
+                    data-centro-id="{{ centro.id }}"
+                    data-centro-nombre="{{ centro.nombre|escape }}"
+                    data-busqueda="
+                        {{ centro.nombre|default:''|escape }}
+                        {{ centro.tipo|default:''|escape }}
+                        {{ centro.direccion|default:''|escape }}
+                    "
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:12px;
+                        padding:12px 14px;
+                        background:#151a26;
+                        border:1px solid #2b3447;
+                        border-radius:10px;
+                        cursor:pointer;
+                    "
+                >
+
+                    <input
+                        type="checkbox"
+                        class="centro-modal-recurso-operativo"
+                        value="{{ centro.id }}"
+                    >
+
+
+                    <div>
+
+                        <div>
+                            {{ centro.nombre }}
+                        </div>
+
+
+                        <div
+                            style="
+                                color:#8b93a7;
+                                font-size:13px;
+                                margin-top:3px;
+                            "
+                        >
+                            {{ centro.tipo }}
+
+                            {% if centro.direccion %}
+                                · {{ centro.direccion }}
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                </label>
+
+            {% empty %}
+
+                <div
+                    id="mensajeSinCentrosModalRecursoOperativo"
+                    style="
+                        color:#8b93a7;
+                        text-align:center;
+                        padding:20px;
+                    "
+                >
+                    No hay Centros Operativos disponibles.
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div
+            id="sinResultadosCentrosRecursoOperativo"
+            style="
+                display:none;
+                color:#8b93a7;
+                text-align:center;
+                padding:20px;
+            "
+        >
+            No se encontraron Centros Operativos.
+        </div>
+
+
+        <div
+            style="
+                display:flex;
+                justify-content:flex-end;
+                gap:12px;
+                margin-top:22px;
+            "
+        >
+
+            <button
+                id="btnCancelarModalCentrosRecursoOperativo"
+                type="button"
+                class="action-btn"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                id="btnGuardarModalCentrosRecursoOperativo"
+                type="button"
+                class="guardar"
+                style="
+                    margin-top:0;
+                    width:160px;
+                "
+            >
+                Aceptar
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
