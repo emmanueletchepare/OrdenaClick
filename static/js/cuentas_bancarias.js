@@ -1383,6 +1383,7 @@ async function volverDesdeABMCuentasBancarias(){
 
             }
 
+
             contextoRetornoABM =
                 null;
 
@@ -1465,8 +1466,141 @@ async function volverDesdeABMCuentasBancarias(){
 
         }
 
+    }
 
-        
+
+    /*
+     * =========================================
+     * CUENTAS BANCARIAS ABIERTA DESDE TARJETAS
+     * =========================================
+     *
+     * Flujo:
+     *
+     * Pago
+     *   ↓
+     * Tarjetas
+     *   ↓
+     * [+] Cuenta Bancaria
+     *   ↓
+     * Cuentas Bancarias
+     *   ↓
+     * Volver
+     *   ↓
+     * MISMO formulario de Tarjetas
+     *
+     * El DOM original de Tarjetas fue guardado
+     * antes de abrir Cuentas Bancarias.
+     * Por eso Nombre, Tipo y cualquier otro
+     * estado del formulario se conserva.
+     */
+
+    if(
+        origenABM === "tarjeta" &&
+        typeof contenidoAnteriorABMCuentasBancariasDesdeTarjeta !==
+            "undefined" &&
+        contenidoAnteriorABMCuentasBancariasDesdeTarjeta &&
+        contenidoOperativo
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        /*
+         * Restauramos LOS MISMOS nodos del
+         * formulario de Tarjetas.
+         */
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABMCuentasBancariasDesdeTarjeta
+        );
+
+
+        contenidoAnteriorABMCuentasBancariasDesdeTarjeta =
+            null;
+
+
+        /*
+         * Recuperamos el origen que tenía
+         * Tarjetas antes de entrar a Cuentas.
+         *
+         * Si Tarjetas había sido abierta desde
+         * un Pago, seguirá teniendo origen
+         * "registro".
+         */
+        origenABM =
+            typeof origenABMTarjetas !==
+                "undefined"
+                ? origenABMTarjetas
+                : "menu";
+
+
+        /*
+         * Recargamos solamente el select de
+         * Cuenta Bancaria del formulario
+         * restaurado.
+         *
+         * actualizarCuentasTarjeta() ya sabe
+         * detectar ultimaCuentaBancariaCreada
+         * y seleccionarla automáticamente.
+         */
+        if(
+            typeof actualizarCuentasTarjeta ===
+                "function"
+        ){
+
+            await actualizarCuentasTarjeta();
+
+        }
+
+
+        /*
+         * La cuenta nueva ya fue utilizada.
+         * Recién ahora limpiamos la referencia.
+         */
+        ultimaCuentaBancariaCreada =
+            null;
+
+
+        /*
+         * Dejamos visualmente al usuario en
+         * el formulario de Tarjetas, no arriba
+         * del ABM.
+         */
+        requestAnimationFrame(
+            function(){
+
+                requestAnimationFrame(
+                    function(){
+
+                        const selectCuenta =
+                            document.getElementById(
+                                "cuentaBancariaTarjeta"
+                            );
+
+
+                        if(selectCuenta){
+
+                            selectCuenta.scrollIntoView({
+
+                                behavior:
+                                    "smooth",
+
+                                block:
+                                    "center"
+
+                            });
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        return;
+
     }
 
 

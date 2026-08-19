@@ -1,0 +1,365 @@
+<div class="card">
+
+    <div
+        style="
+            font-size:28px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Tarjetas
+    </div>
+
+    <div
+        style="
+            color:#8b93a7;
+            margin-bottom:30px;
+        "
+    >
+        Administración de tarjetas de crédito y débito de la empresa.
+    </div>
+
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:2fr 1.2fr 2fr;
+            gap:12px;
+            margin-bottom:20px;
+        "
+    >
+
+        <div>
+
+            <label
+                class="label"
+                for="nombreTarjeta"
+            >
+                Nombre
+            </label>
+
+            <input
+                id="nombreTarjeta"
+                type="text"
+                class="input-box"
+                maxlength="120"
+                placeholder="Ej.: VISA GALICIA"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="tipoTarjeta"
+            >
+                Tipo
+            </label>
+
+            <select
+                id="tipoTarjeta"
+                class="input-box"
+            >
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                {% for valor, etiqueta in tipos_tarjeta %}
+
+                    <option value="{{ valor }}">
+                        {{ etiqueta }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="cuentaBancariaTarjeta"
+            >
+                Cuenta bancaria
+            </label>
+
+            <div
+                style="
+                    display:flex;
+                    gap:10px;
+                    align-items:center;
+                "
+            >
+
+                <select
+                    id="cuentaBancariaTarjeta"
+                    class="input-box"
+                    style="flex:1;"
+                >
+
+                    <option value="">
+                        Seleccione...
+                    </option>
+
+                    {% for cuenta in cuentas %}
+
+                        <option value="{{ cuenta.id }}">
+                            {{ cuenta.nombre }} · {{ cuenta.banco.nombre }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <button
+                    id="btnAgregarCuentaTarjeta"
+                    type="button"
+                    class="action-btn"
+                    title="Agregar cuenta bancaria"
+                >
+                    +
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+            display:flex;
+            gap:12px;
+            justify-content:flex-end;
+            margin:20px 0 30px;
+        "
+    >
+
+        <button
+            id="btnGuardarTarjeta"
+            type="button"
+            class="guardar"
+            style="
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Guardar
+        </button>
+
+        <button
+            id="btnCancelarTarjeta"
+            type="button"
+            class="action-btn"
+            style="
+                display:none;
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Cancelar
+        </button>
+
+    </div>
+
+
+    <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarTarjetaABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar tarjeta
+        </label>
+
+        <input
+            id="buscarTarjetaABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por nombre, tipo, cuenta o banco"
+            autocomplete="off"
+        >
+
+    </div>
+
+
+    <div
+        id="grillaTarjetas"
+        style="
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        "
+    >
+
+        {% for tarjeta in tarjetas %}
+
+            <div
+                class="tarjeta-tarjeta-abm"
+
+                data-tarjeta-id="{{ tarjeta.id }}"
+
+                data-tarjeta-nombre="{{ tarjeta.nombre|escape }}"
+
+                data-tarjeta-tipo="{{ tarjeta.tipo_tarjeta|escape }}"
+
+                data-tarjeta-cuenta="{{ tarjeta.cuenta_bancaria_id }}"
+
+                data-busqueda="
+                    {{ tarjeta.nombre|default:''|escape }}
+                    {{ tarjeta.get_tipo_tarjeta_display|default:''|escape }}
+                    {{ tarjeta.cuenta_bancaria.nombre|default:''|escape }}
+                    {{ tarjeta.cuenta_bancaria.banco.nombre|default:''|escape }}
+                "
+
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:20px;
+                    padding:16px 18px;
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                "
+            >
+
+                <div
+                    style="
+                        min-width:0;
+                        flex:1;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-weight:700;
+                            margin-bottom:6px;
+                        "
+                    >
+                        {{ tarjeta.nombre }}
+                    </div>
+
+                    <div
+                        style="
+                            color:#8b93a7;
+                            font-size:14px;
+                            line-height:1.6;
+                        "
+                    >
+
+                        {{ tarjeta.get_tipo_tarjeta_display }}
+
+                        ·
+
+                        {{ tarjeta.cuenta_bancaria.nombre }}
+
+                        ·
+
+                        {{ tarjeta.cuenta_bancaria.banco.nombre }}
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        flex-shrink:0;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="action-btn btn-modificar-tarjeta"
+                        data-tarjeta-id="{{ tarjeta.id }}"
+                    >
+                        Modificar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="action-btn btn-eliminar-tarjeta"
+                        data-tarjeta-id="{{ tarjeta.id }}"
+                        data-tarjeta-nombre="{{ tarjeta.nombre|escape }}"
+                        style="
+                            background:#7f1d1d;
+                            border-color:#991b1b;
+                        "
+                    >
+                        Eliminar
+                    </button>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div
+                style="
+                    color:#8b93a7;
+                    padding:20px;
+                    text-align:center;
+                "
+            >
+                No hay tarjetas cargadas.
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div
+        id="sinResultadosTarjetaABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron tarjetas.
+    </div>
+
+</div>
+
+
+<div
+    style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:30px;
+    "
+>
+
+    <button
+        id="btnVolverTarjetas"
+        type="button"
+        class="action-btn"
+    >
+        ← Volver
+    </button>
+
+</div>

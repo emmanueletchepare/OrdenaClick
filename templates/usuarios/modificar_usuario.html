@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Modificar datos | Ordenaclick</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            background:#0f1115;
+            font-family:Inter, Arial, sans-serif;
+            color:#e8ecf1;
+            min-height:100vh;
+            display:flex;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar{
+            width:260px;
+            background:#151922;
+            border-right:1px solid #242938;
+            padding:40px 24px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .logo{
+            font-size:24px;
+            font-weight:700;
+            letter-spacing:1px;
+            margin-bottom:40px;
+            color:#ffffff;
+        }
+
+        .logo .blue{
+            color:#3b82f6;
+        }
+
+        .sidebar-info{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .info-card{
+            background:#1b2130;
+            border:1px solid #2a3142;
+            border-radius:14px;
+            padding:14px;
+        }
+
+        .info-label{
+            font-size:12px;
+            color:#8b93a7;
+            margin-bottom:6px;
+        }
+
+        .info-value{
+            font-size:14px;
+            color:#f1f5f9;
+        }
+
+        .back-btn{
+            margin-top:30px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            height:46px;
+            border-radius:12px;
+            background:#1d2432;
+            border:1px solid #2b3447;
+            color:#dbe3ef;
+            text-decoration:none;
+            transition:.2s;
+            font-size:14px;
+        }
+
+        .back-btn:hover{
+            background:#263146;
+            border-color:#3b82f6;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main{
+            flex:1;
+            padding:50px;
+            overflow:auto;
+        }
+
+        .topbar{
+            margin-bottom:35px;
+        }
+
+        .title{
+            font-size:32px;
+            font-weight:700;
+            margin-bottom:8px;
+            color:#ffffff;
+        }
+
+        .title .blue{
+            color:#3b82f6;
+        }
+
+        .subtitle{
+            color:#8b93a7;
+            font-size:15px;
+        }
+
+        /* =========================
+           FORM
+        ========================= */
+
+        .form-card{
+            background:#171c26;
+            border:1px solid #252c3d;
+            border-radius:22px;
+            padding:35px;
+            max-width:850px;
+        }
+
+        .section-title{
+            font-size:18px;
+            font-weight:600;
+            color:#ffffff;
+            margin-bottom:25px;
+        }
+
+        .form-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+        }
+
+        .field{
+            display:flex;
+            flex-direction:column;
+        }
+
+        .field-full{
+            grid-column:1 / -1;
+        }
+
+        .label{
+            font-size:13px;
+            color:#98a2b3;
+            margin-bottom:8px;
+        }
+
+        .input{
+            height:50px;
+            background:#0f131b;
+            border:1px solid #2b3447;
+            border-radius:12px;
+            padding:0 16px;
+            color:#f1f5f9;
+            font-size:14px;
+            transition:.2s;
+        }
+
+        .input:focus{
+            outline:none;
+            border-color:#3b82f6;
+            box-shadow:0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        .input::placeholder{
+            color:#6b7280;
+        }
+
+        .actions{
+            margin-top:30px;
+            display:flex;
+            gap:14px;
+        }
+
+        .btn-primary{
+            flex:1;
+            height:50px;
+            border:none;
+            border-radius:12px;
+            background:#3b82f6;
+            color:white;
+            font-size:15px;
+            font-weight:600;
+            cursor:pointer;
+            transition:.2s;
+        }
+
+        .btn-primary:hover{
+            background:#2563eb;
+        }
+
+        .btn-secondary{
+            width:180px;
+            height:50px;
+            border-radius:12px;
+            border:1px solid #2f3a4d;
+            background:#1a2230;
+            color:#dbe3ef;
+            text-decoration:none;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition:.2s;
+            font-size:14px;
+        }
+
+        .btn-secondary:hover{
+            border-color:#3b82f6;
+            background:#243047;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media(max-width:900px){
+
+            body{
+                flex-direction:column;
+            }
+
+            .sidebar{
+                width:100%;
+                border-right:none;
+                border-bottom:1px solid #242938;
+            }
+
+            .main{
+                padding:30px 20px;
+            }
+
+            .form-grid{
+                grid-template-columns:1fr;
+            }
+
+            .actions{
+                flex-direction:column;
+            }
+
+            .btn-secondary{
+                width:100%;
+            }
+
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                Ordena<span class="blue">click</span>
+            </div>
+
+            <div class="sidebar-info">
+
+                <div class="info-card">
+                    <div class="info-label">
+                        Usuario
+                    </div>
+
+                    <div class="info-value">
+                        {{ user.username }}
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-label">
+                        Email actual
+                    </div>
+
+                    <div class="info-value">
+                        {{ user.email }}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <a href="{% url 'home' %}" class="back-btn">
+            ← Volver al inicio
+        </a>
+
+    </aside>
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main">
+
+        <div class="topbar">
+
+            <div class="title">
+                Modificar <span class="blue">mis datos</span>
+            </div>
+
+            <div class="subtitle">
+                Actualizá tu información personal y de acceso.
+            </div>
+
+        </div>
+
+        <div class="form-card">
+
+            <div class="section-title">
+                Información personal
+            </div>
+
+            {% if error %}<div style="margin-bottom:18px;color:#fca5a5;">{{ error }}</div>{% endif %}
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label class="label">
+                            Nombre
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nombre"
+                            class="input"
+                            value="{{ perfil.nombre }}"
+                            placeholder="Nombre"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label class="label">
+                            Apellido
+                        </label>
+
+                        <input
+                            type="text"
+                            name="apellido"
+                            class="input"
+                            value="{{ perfil.apellido }}"
+                            placeholder="Apellido"
+                            required
+                        >
+                    </div>
+
+                    <div class="field field-full">
+                        <label class="label">
+                            Correo electrónico
+                        </label>
+
+                        <input
+                            type="email"
+                            name="email"
+                            class="input"
+                            value="{{ user.email }}"
+                            placeholder="Correo electrónico"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label class="label">
+                            Teléfono personal
+                        </label>
+
+                        <input
+                            type="text"
+                            name="telefono_personal"
+                            class="input"
+                            value="{{ perfil.telefono_personal }}"
+                            placeholder="Teléfono personal"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label class="label">
+                            Teléfono laboral
+                        </label>
+
+                        <input
+                            type="text"
+                            name="telefono_laboral"
+                            class="input"
+                            value="{{ perfil.telefono_laboral }}"
+                            placeholder="Teléfono laboral"
+                        >
+                    </div>
+
+                    <div class="field field-full">
+                        <label class="label">
+                            Dirección laboral
+                        </label>
+
+                        <input
+                            type="text"
+                            name="direccion_laboral"
+                            class="input"
+                            value="{{ perfil.direccion_laboral }}"
+                            placeholder="Dirección laboral"
+                        >
+                    </div>
+
+                    <div class="field field-full">
+                        <label class="label">
+                            Nueva contraseña
+                        </label>
+
+                        <input
+                            type="password"
+                            name="password"
+                            class="input"
+                            placeholder="Dejar vacío para mantener la actual"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="actions">
+
+                    <button type="submit" class="btn-primary">
+                        Guardar cambios
+                    </button>
+
+                    <a href="{% url 'home' %}" class="btn-secondary">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

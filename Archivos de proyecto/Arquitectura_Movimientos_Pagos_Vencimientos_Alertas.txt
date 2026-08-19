@@ -98,54 +98,70 @@ principales del producto desde el punto de vista del dueño de la empresa.
 
 
 =========================================================
-3. ARQUITECTURA GENERAL
+3. PAGO
 =========================================================
 
-La estructura conceptual prevista es:
+Para la estructura funcional, interfaz, medios de pago disponibles
+y comportamiento general del bloque Pagos:
 
-MOVIMIENTO
-│
-├── Datos del gasto
-│
-├── Factura / archivo adjunto
-│
-├── PAGOS
-│   │
-│   ├── Efectivo
-│   ├── Transferencias *
-│   ├── Tarjeta
-│   ├── Cheques / e-Cheqs *
-│   └── Retenciones *
-│
-├── PLAN DE PAGO (opcional)
-│   │
-│   └── CUOTAS *
-│
-└── VENCIMIENTOS *
-        │
-        └── ALERTAS *
+VER:
+Arquitectura Panel_admin.txt
 
 
-* indica que pueden existir múltiples registros.
+ACLARACIONES DE ARQUITECTURA DE PAGOS
 
+1. Un Pago representa un acto de cancelación total o parcial
+   de un Movimiento.
 
-Además:
+2. Un Movimiento puede recibir uno o múltiples Pagos.
 
-CHEQUE / E-CHEQ PROPIO
-        │
-        └── genera VENCIMIENTO
+3. Un mismo Pago puede estar compuesto simultáneamente por
+   diferentes medios de pago según lo definido en
+   Arquitectura Panel_admin.txt.
 
+4. La suma de los importes APLICADOS de todos los componentes
+   determina el importe total aplicado por ese Pago.
 
-CUOTA
-        │
-        └── genera VENCIMIENTO
+5. El saldo del Movimiento se calcula sobre los importes
+   efectivamente aplicados:
 
+   Saldo nuevo =
+   Saldo anterior - Pago aplicado.
 
-En el futuro:
+6. Los costos financieros asociados a un medio de pago
+   no deben confundirse con el importe aplicado al Movimiento.
 
-CHEQUE / E-CHEQ EN CARTERA
-        │
-        └── genera VENCIMIENTO
+   Ejemplos:
+
+   - Intereses de financiación de Tarjeta de Crédito.
+   - Intereses por mora.
+   - Otros intereses o costos financieros que se incorporen.
+
+   Estos importes incrementan el costo económico para la Empresa,
+   pero NO incrementan el importe cancelado del Movimiento.
+
+7. Registrar un Movimiento y registrar un Pago son eventos
+   independientes.
+
+   Un Movimiento puede existir:
+
+   - Sin pagos.
+   - Con pago parcial.
+   - Con pago total.
+   - Con múltiples pagos.
+   - Con diferentes medios dentro de un mismo Pago.
+
+8. Los Pagos deben conservar histórico y relación con el
+   Movimiento al que fueron aplicados.
+
+9. La información específica de cada medio de pago se desarrolla
+   en las secciones siguientes de este documento únicamente cuando
+   exista una regla económica, histórica, de vencimientos o de
+   arquitectura que sea necesario preservar.
+
+   La definición de interfaz y funcionamiento visual corresponde a:
+
+   Arquitectura Panel_admin.txt
 
 
 =========================================================
@@ -299,58 +315,178 @@ definidas para el sistema.
 
 
 =========================================================
-6. PAGO
+6. TARJETAS DE CRÉDITO / DÉBITO
 =========================================================
 
-Un Pago representa un acto de cancelación total o parcial de una obligación.
+Las Tarjetas constituyen componentes independientes del Pago.
 
-NO debe existir un único campo genérico "medio de pago".
+No se modelará inicialmente el plástico individual, titular,
+fecha de vencimiento ni asignación a una persona/recurso operativo.
 
-Un mismo Pago puede estar compuesto simultáneamente por:
+El objetivo de esta etapa es identificar el medio financiero utilizado
+para luego poder controlar movimientos y conciliarlos contra los
+resúmenes o cuentas correspondientes.
 
-- Efectivo.
-- Una o varias Transferencias.
+
+ABM DE TARJETAS
+
+Debe existir un ABM de Tarjetas perteneciente a la Empresa.
+
+Cada Tarjeta debe contener como mínimo:
+
+- Nombre.
+  Ejemplos:
+  VISA GALICIA
+  MASTERCARD NACIÓN
+  CABAL CREDICOOP
+
+- Tipo:
+  - Crédito.
+  - Débito.
+
+- Cuenta bancaria propia asociada.
+
+- Estado:
+  - Activa.
+  - Inactiva.
+
+
+La Cuenta Bancaria asociada debe provenir del mismo ABM de
+Cuentas Bancarias propias utilizado por otros medios de pago.
+
+No se registrarán inicialmente:
+
+- Titular.
+- Número completo del plástico.
+- Últimos cuatro dígitos.
+- Fecha de vencimiento del plástico.
+- Recurso Operativo asignado.
+
+Estas relaciones podrán incorporarse posteriormente si el nivel
+de control requerido lo justifica.
+
+
+REGISTRO DENTRO DE UN PAGO
+
+Un Pago puede contener una o varias operaciones realizadas con Tarjeta.
+
+Cada operación debe registrar como mínimo:
+
 - Tarjeta.
-- Uno o varios Cheques / e-Cheqs.
-- Una o varias Retenciones.
+- Fecha.
+- Importe aplicado al Movimiento.
 
+Cuando la Tarjeta sea de Crédito deberá permitir además:
+
+- Cantidad de cuotas.
+- Intereses de financiación, cuando existan.
+
+
+IMPORTE APLICADO E INTERESES
+
+El importe aplicado mediante Tarjeta cancela total o parcialmente
+el saldo del Movimiento.
+
+Los intereses de financiación NO aumentan el importe aplicado
+al Movimiento.
 
 Ejemplo:
 
-Movimiento pendiente:       $1.000.000
+Movimiento / gasto:           $ 100.000
+Pago aplicado con tarjeta:    $ 100.000
+Intereses financiación:        $ 18.000
+Costo financiero adicional:    $ 18.000
 
-Pago:
+Saldo pendiente Movimiento:         $ 0
 
-Efectivo                     $100.000
-Transferencia Galicia        $250.000
-Transferencia Nación         $150.000
-Cheque                       $200.000
-Retención Ganancias          $ 50.000
--------------------------------------
-TOTAL PAGO                    $750.000
+Los intereses representan un costo financiero adicional para
+la Empresa y deberán conservarse diferenciados del importe aplicado.
 
+Conceptualmente:
 
-Saldo restante:
-
-$1.000.000 - $750.000 = $250.000
-
-
-El Movimiento pasa a:
-
-PARCIAL
+Importe aplicado al Movimiento
++
+Intereses de financiación
+=
+Costo total de la operación financiera.
 
 
-Cuando:
+TARJETA DE DÉBITO
 
-Saldo pendiente = 0
+La Tarjeta de Débito se relaciona igualmente con una Cuenta Bancaria propia.
 
-el Movimiento pasa a:
+No requiere cuotas ni intereses de financiación como parte normal
+del registro.
 
-PAGADO
+El importe registrado se considera importe aplicado al Movimiento.
 
 
-El Pago debe conservarse históricamente aunque el Movimiento quede
-completamente cancelado.
+TARJETA DE CRÉDITO
+
+La Tarjeta de Crédito se relaciona con una Cuenta Bancaria propia.
+
+Debe permitir registrar:
+
+- Importe aplicado.
+- Cantidad de cuotas.
+- Intereses de financiación.
+
+La cantidad de cuotas es un dato propio de la operación realizada
+con Tarjeta y no debe confundirse con las Cuotas de un Plan de Pago
+del Movimiento.
+
+
+CONTROL Y REPORTES
+
+La relación entre Tarjeta y Cuenta Bancaria permitirá posteriormente:
+
+- Consultar movimientos registrados por Tarjeta.
+- Obtener un detalle por período.
+- Comparar movimientos cargados contra un resumen de Tarjeta.
+- Controlar que los gastos incluidos en un resumen hayan sido registrados.
+- Obtener totales de financiación e intereses asociados.
+
+El Recurso Operativo que originó el gasto no debe confundirse con
+la persona que eventualmente utilizó una Tarjeta para cancelarlo.
+
+Ejemplo:
+
+Un empleado puede originar un gasto en cuenta corriente y posteriormente
+otra persona puede cancelarlo mediante una Tarjeta corporativa.
+
+Por ese motivo, en esta etapa no existe una relación obligatoria
+entre Tarjeta y Recurso Operativo.
+
+
+INTERESES Y COSTOS FINANCIEROS
+
+Los intereses derivados del uso de Tarjetas deben tratarse como
+costos financieros adicionales.
+
+Este criterio deberá ser compatible en el futuro con otros costos
+financieros, por ejemplo:
+
+- Intereses de financiación.
+- Intereses por mora.
+- Intereses punitorios cuando corresponda.
+
+Estos importes deben poder identificarse separadamente para no alterar
+incorrectamente el saldo cancelado del Movimiento.
+
+
+HISTÓRICO
+
+Las operaciones realizadas con Tarjetas forman parte de la historia
+del Pago y no deben perderse por modificaciones posteriores del ABM.
+
+El registro debe conservar la información necesaria para reconstruir
+qué Tarjeta fue utilizada y bajo qué condiciones se realizó la operación.
+
+
+EXPORTACIÓN / IMPORTACIÓN
+
+El ABM de Tarjetas y las operaciones de Tarjeta vinculadas a Pagos
+deben incluirse en Exportar/Importar Empresa.
 
 
 =========================================================

@@ -3,6 +3,14 @@ from django.shortcuts import (
     redirect
 )
 
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout
+)
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+
 from django.http import HttpResponse
 
 from django.conf import settings
@@ -34,10 +42,12 @@ from .models import (
     CentroOperativo,
     Banco,
     CuentaBancaria,
+    Tarjeta,
     GestionClave,
     RecursoOperativo,
     RecursoOperativoCentro,
-    Proveedor
+    Proveedor,
+    PerfilUsuario
 )
 
 from .seguridad_claves import (
@@ -45,6 +55,265 @@ from .seguridad_claves import (
     descifrar_clave
 )
 
+# =========================================
+# AUTENTICACIÓN / PERFILES DE ENTRADA
+# =========================================
+
+def login_view(request):
+    """Autentica al usuario y lo dirige a la selección de perfil."""
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    error = None
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
+
+        if user is None:
+            error = "Usuario o contraseña incorrectos."
+        else:
+            perfil, _ = PerfilUsuario.objects.get_or_create(
+                user=user,
+                defaults={
+                    "nombre": user.first_name or user.username,
+                    "apellido": user.last_name or "",
+                    "estado_acceso": "activo"
+                }
+            )
+
+            if perfil.estado_acceso == "bloqueado":
+                error = "Tu acceso a OrdenaClick se encuentra bloqueado."
+            elif perfil.estado_acceso == "pendiente":
+                error = "Tu cuenta está pendiente de habilitación."
+            else:
+                login(request, user)
+                return redirect("home")
+
+    return render(
+        request,
+        "usuarios/login.html",
+        {"error": error}
+    )
+
+
+def registro_view(request):
+    """Crea la cuenta de usuario y su perfil inicial de OrdenaClick."""
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    error = None
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        email = (request.POST.get("email") or "").strip().lower()
+        password = request.POST.get("password") or ""
+        password2 = request.POST.get("password2") or ""
+        nombre = (request.POST.get("nombre") or "").strip()
+        apellido = (request.POST.get("apellido") or "").strip()
+
+        if not username or not email or not password or not nombre or not apellido:
+            error = "Completá todos los campos obligatorios."
+        elif password != password2:
+            error = "Las contraseñas no coinciden."
+        elif User.objects.filter(username__iexact=username).exists():
+            error = "Ese nombre de usuario ya está registrado."
+        elif User.objects.filter(email__iexact=email).exists():
+            error = "Ese correo electrónico ya está registrado."
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                error = "Ingresá un correo electrónico válido."
+
+        if error is None:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=nombre,
+                last_name=apellido
+            )
+
+            PerfilUsuario.objects.create(
+                user=user,
+                nombre=nombre,
+                apellido=apellido,
+                telefono_personal=(request.POST.get("telefono_personal") or "").strip(),
+                telefono_laboral=(request.POST.get("telefono_laboral") or "").strip(),
+                direccion_laboral=(request.POST.get("direccion_laboral") or "").strip(),
+                estado_acceso="demo"
+            )
+
+            return redirect("login")
+
+    return render(
+        request,
+        "usuarios/register.html",
+        {"error": error}
+    )
+
+
+@login_required
+def logout_view(request):
+    """Cierra la sesión actual y vuelve al login."""
+    logout(request)
+    return redirect("login")
+
+
+@login_required
+def home(request):
+    """Muestra los cuatro perfiles desde los que puede operar el usuario."""
+    return render(
+        request,
+        "usuarios/home.html"
+    )
+
+
+@login_required
+def seleccionar_perfil(request, perfil):
+    """Dirige al panel correspondiente al perfil elegido."""
+    destinos = {
+        "administrador": "panel_admin",
+        "colaborador": "panel_colaborador",
+        "contable": "panel_contable",
+        "legal": "panel_legal",
+    }
+
+    destino = destinos.get(perfil)
+
+    if destino is None:
+        return redirect("home")
+
+    return redirect(destino)
+
+
+@login_required
+def modificar_usuario(request):
+    """Permite al usuario actualizar sus datos personales y contraseña."""
+    perfil, _ = PerfilUsuario.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "nombre": request.user.first_name or request.user.username,
+            "apellido": request.user.last_name or "",
+            "estado_acceso": "activo"
+        }
+    )
+
+    error = None
+
+    if request.method == "POST":
+        nombre = (request.POST.get("nombre") or "").strip()
+        apellido = (request.POST.get("apellido") or "").strip()
+        email = (request.POST.get("email") or "").strip().lower()
+        password = request.POST.get("password") or ""
+
+        if not nombre or not apellido or not email:
+            error = "Nombre, apellido y correo electrónico son obligatorios."
+        elif User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists():
+            error = "Ese correo electrónico ya está registrado."
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                error = "Ingresá un correo electrónico válido."
+
+        if error is None:
+            request.user.first_name = nombre
+            request.user.last_name = apellido
+            request.user.email = email
+
+            if password:
+                request.user.set_password(password)
+
+            request.user.save()
+
+            perfil.nombre = nombre
+            perfil.apellido = apellido
+            perfil.telefono_personal = (request.POST.get("telefono_personal") or "").strip()
+            perfil.telefono_laboral = (request.POST.get("telefono_laboral") or "").strip()
+            perfil.direccion_laboral = (request.POST.get("direccion_laboral") or "").strip()
+            perfil.save()
+
+            if password:
+                user = authenticate(
+                    request,
+                    username=request.user.username,
+                    password=password
+                )
+                if user is not None:
+                    login(request, user)
+
+            return redirect("home")
+
+    return render(
+        request,
+        "usuarios/modificar_usuario.html",
+        {
+            "perfil": perfil,
+            "error": error
+        }
+    )
+
+
+@login_required
+def baja_usuario(request):
+    """Desactiva la cuenta sin eliminar físicamente su historial."""
+    if request.method != "POST":
+        return redirect("home")
+
+    perfil, _ = PerfilUsuario.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "nombre": request.user.first_name or request.user.username,
+            "apellido": request.user.last_name or ""
+        }
+    )
+
+    perfil.estado_acceso = "bloqueado"
+    perfil.save(update_fields=["estado_acceso", "actualizado"])
+
+    request.user.is_active = False
+    request.user.save(update_fields=["is_active"])
+
+    logout(request)
+    return redirect("login")
+
+
+@login_required
+def panel_colaborador(request):
+    """Muestra la entrada al perfil Colaborador."""
+    return render(
+        request,
+        "usuarios/panel_colaborador.html"
+    )
+
+
+@login_required
+def panel_contable(request):
+    """Muestra la entrada al perfil Contable."""
+    return render(
+        request,
+        "usuarios/panel_contable.html"
+    )
+
+
+@login_required
+def panel_legal(request):
+    """Muestra la entrada al perfil Legal."""
+    return render(
+        request,
+        "usuarios/panel_legal.html"
+    )
+
+
+@login_required
 def panel_admin(request):
 
     # =====================================
@@ -81,7 +350,7 @@ def panel_admin(request):
                 r'^\d{2}-\d{8}-\d{1}$',
                 cuit
             ):
-                return redirect('/')
+                return redirect('panel_admin')
 
             empresa_reemplazar = request.session.get(
                 "empresa_reemplazar"
@@ -241,7 +510,7 @@ def panel_admin(request):
                 )
 
             return redirect(
-                f'/?empresa={nueva_empresa.id}'
+                f'/panel-admin/?empresa={nueva_empresa.id}'
             )
 
 
@@ -350,7 +619,7 @@ def panel_admin(request):
             empresa_actual.save()
 
             return redirect(
-               f'/?empresa={empresa_actual.id}'
+               f'/panel-admin/?empresa={empresa_actual.id}'
             )   
     
 
@@ -627,7 +896,7 @@ def eliminar_empresa(
 
 
     return redirect(
-        '/'
+        'panel_admin'
     )
 
     empresa = Empresa.objects.get(
@@ -654,19 +923,19 @@ def eliminar_empresa(
 
     empresa.delete()
 
-    return redirect('/')
+    return redirect('panel_admin')
 
 def importar_empresa(request):
 
     if request.method != "POST":
-        return redirect("/")
+        return redirect('panel_admin')
 
     archivo_zip = request.FILES.get(
         "archivo_zip"
     )
 
     if not archivo_zip:
-        return redirect("/")
+        return redirect('panel_admin')
 
     nombre_zip = f"{uuid.uuid4()}.zip"
 
@@ -727,7 +996,7 @@ def importar_empresa(request):
 
         request.session["empresa_existente"] = empresa_existente.id
 
-        return redirect("/")
+        return redirect('panel_admin')
 
     # -------------------------------------------------
     # No existe o aceptó reemplazar
@@ -755,7 +1024,7 @@ def importar_empresa(request):
         None
     )
 
-    return redirect("/")
+    return redirect('panel_admin')
 
 def confirmar_reemplazo(request):
 
@@ -763,7 +1032,7 @@ def confirmar_reemplazo(request):
         "confirmar_reemplazo"
     ] = True
 
-    return redirect("/")    
+    return redirect('panel_admin')    
 
 # =====================================
 # GUARDAR BANCO
@@ -1548,6 +1817,612 @@ def reactivar_cuenta_bancaria(request):
             "activo",
         ]
     )
+
+    return JsonResponse({
+        "ok": True
+    })
+
+# =========================================
+# TARJETAS
+# =========================================
+
+def listar_tarjetas(request):
+
+    empresa_id = request.GET.get(
+        "empresa"
+    )
+
+
+    try:
+
+        empresa = Empresa.objects.get(
+            id=empresa_id
+        )
+
+    except Empresa.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La empresa no existe."
+            },
+            status=404
+        )
+
+
+    tarjetas = (
+        Tarjeta.objects
+        .filter(
+            empresa=empresa,
+            activo=True
+        )
+        .select_related(
+            "cuenta_bancaria",
+            "cuenta_bancaria__banco"
+        )
+        .order_by(
+            "nombre"
+        )
+    )
+
+
+    cuentas = (
+        CuentaBancaria.objects
+        .filter(
+            empresa=empresa,
+            activo=True
+        )
+        .select_related(
+            "banco"
+        )
+        .order_by(
+            "banco__nombre",
+            "nombre"
+        )
+    )
+
+
+    html = render_to_string(
+        "usuarios/tarjetas.html",
+        {
+            "empresa":
+                empresa,
+
+            "tarjetas":
+                tarjetas,
+
+            "cuentas":
+                cuentas,
+
+            "tipos_tarjeta":
+                Tarjeta.TIPOS_TARJETA,
+        },
+        request=request
+    )
+
+
+    return JsonResponse({
+        "ok": True,
+
+        "html":
+            html,
+
+        "tarjetas": [
+
+            {
+                "id":
+                    tarjeta.id,
+
+                "nombre":
+                    tarjeta.nombre,
+
+                "tipo_tarjeta":
+                    tarjeta.tipo_tarjeta,
+
+                "tipo_tarjeta_label":
+                    tarjeta.get_tipo_tarjeta_display(),
+
+                "cuenta_bancaria_id":
+                    tarjeta.cuenta_bancaria_id,
+
+                "cuenta_bancaria":
+                    tarjeta.cuenta_bancaria.nombre,
+
+                "banco":
+                    tarjeta.cuenta_bancaria.banco.nombre,
+            }
+
+            for tarjeta in tarjetas
+        ]
+    })
+
+
+def guardar_tarjeta(request):
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_tarjeta = (
+        request.POST.get("tipo_tarjeta") or ""
+    ).strip()
+
+    cuenta_id = request.POST.get(
+        "cuenta_bancaria"
+    )
+
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Ingrese un nombre para la tarjeta."
+        })
+
+
+    tipos_validos = {
+        valor
+        for valor, etiqueta
+        in Tarjeta.TIPOS_TARJETA
+    }
+
+
+    if tipo_tarjeta not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un tipo de tarjeta válido."
+        })
+
+
+    try:
+
+        empresa = Empresa.objects.get(
+            id=empresa_id
+        )
+
+    except Empresa.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La empresa no existe."
+            },
+            status=404
+        )
+
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa=empresa,
+            activo=True
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione una cuenta bancaria válida."
+        })
+
+
+    existente = (
+        Tarjeta.objects
+        .filter(
+            empresa=empresa,
+            nombre__iexact=nombre
+        )
+        .first()
+    )
+
+
+    if existente:
+
+        if existente.activo:
+
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "Ya existe una tarjeta activa "
+                    "con ese nombre."
+                )
+            })
+
+
+        return JsonResponse({
+            "ok": False,
+
+            "requiere_reactivacion": True,
+
+            "mensaje": (
+                "La tarjeta ya existe pero está inactiva. "
+                "Puede reactivarla."
+            ),
+
+            "tarjeta": {
+                "id":
+                    existente.id,
+
+                "nombre":
+                    existente.nombre,
+
+                "tipo_tarjeta":
+                    existente.tipo_tarjeta,
+
+                "cuenta_bancaria_id":
+                    existente.cuenta_bancaria_id,
+            }
+        })
+
+
+    tarjeta = Tarjeta.objects.create(
+
+        empresa=
+            empresa,
+
+        nombre=
+            nombre,
+
+        tipo_tarjeta=
+            tipo_tarjeta,
+
+        cuenta_bancaria=
+            cuenta
+
+    )
+
+
+    return JsonResponse({
+        "ok": True,
+
+        "tarjeta": {
+            "id":
+                tarjeta.id,
+
+            "nombre":
+                tarjeta.nombre,
+        }
+    })
+
+
+def modificar_tarjeta(request):
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    tarjeta_id = request.POST.get(
+        "tarjeta"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_tarjeta = (
+        request.POST.get("tipo_tarjeta") or ""
+    ).strip()
+
+    cuenta_id = request.POST.get(
+        "cuenta_bancaria"
+    )
+
+
+    if not nombre:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Ingrese un nombre para la tarjeta."
+        })
+
+
+    tipos_validos = {
+        valor
+        for valor, etiqueta
+        in Tarjeta.TIPOS_TARJETA
+    }
+
+
+    if tipo_tarjeta not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un tipo de tarjeta válido."
+        })
+
+
+    try:
+
+        tarjeta = Tarjeta.objects.get(
+            id=tarjeta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except Tarjeta.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La tarjeta no existe."
+            },
+            status=404
+        )
+
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione una cuenta bancaria válida."
+        })
+
+
+    duplicada = (
+        Tarjeta.objects
+        .filter(
+            empresa_id=empresa_id,
+            nombre__iexact=nombre,
+            activo=True
+        )
+        .exclude(
+            id=tarjeta.id
+        )
+        .exists()
+    )
+
+
+    if duplicada:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otra tarjeta activa "
+                "con ese nombre."
+            )
+        })
+
+
+    tarjeta.nombre = nombre
+
+    tarjeta.tipo_tarjeta = tipo_tarjeta
+
+    tarjeta.cuenta_bancaria = cuenta
+
+
+    tarjeta.save(
+        update_fields=[
+            "nombre",
+            "tipo_tarjeta",
+            "cuenta_bancaria",
+        ]
+    )
+
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def eliminar_tarjeta(request):
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    tarjeta_id = request.POST.get(
+        "tarjeta"
+    )
+
+
+    try:
+
+        tarjeta = Tarjeta.objects.get(
+            id=tarjeta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except Tarjeta.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La tarjeta no existe."
+            },
+            status=404
+        )
+
+
+    tarjeta.activo = False
+
+
+    tarjeta.save(
+        update_fields=[
+            "activo"
+        ]
+    )
+
+
+    return JsonResponse({
+        "ok": True
+    })
+
+
+def reactivar_tarjeta(request):
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido."
+            },
+            status=405
+        )
+
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    tarjeta_id = request.POST.get(
+        "tarjeta"
+    )
+
+    nombre = (
+        request.POST.get("nombre") or ""
+    ).strip().upper()
+
+    tipo_tarjeta = (
+        request.POST.get("tipo_tarjeta") or ""
+    ).strip()
+
+    cuenta_id = request.POST.get(
+        "cuenta_bancaria"
+    )
+
+
+    try:
+
+        tarjeta = Tarjeta.objects.get(
+            id=tarjeta_id,
+            empresa_id=empresa_id,
+            activo=False
+        )
+
+    except Tarjeta.DoesNotExist:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "La tarjeta inactiva no existe."
+            },
+            status=404
+        )
+
+
+    tipos_validos = {
+        valor
+        for valor, etiqueta
+        in Tarjeta.TIPOS_TARJETA
+    }
+
+
+    if tipo_tarjeta not in tipos_validos:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione un tipo de tarjeta válido."
+        })
+
+
+    try:
+
+        cuenta = CuentaBancaria.objects.get(
+            id=cuenta_id,
+            empresa_id=empresa_id,
+            activo=True
+        )
+
+    except CuentaBancaria.DoesNotExist:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Seleccione una cuenta bancaria válida."
+        })
+
+
+    duplicada = (
+        Tarjeta.objects
+        .filter(
+            empresa_id=empresa_id,
+            nombre__iexact=nombre,
+            activo=True
+        )
+        .exclude(
+            id=tarjeta.id
+        )
+        .exists()
+    )
+
+
+    if duplicada:
+
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otra tarjeta activa "
+                "con ese nombre."
+            )
+        })
+
+
+    tarjeta.nombre = nombre
+
+    tarjeta.tipo_tarjeta = tipo_tarjeta
+
+    tarjeta.cuenta_bancaria = cuenta
+
+    tarjeta.activo = True
+
+
+    tarjeta.save(
+        update_fields=[
+            "nombre",
+            "tipo_tarjeta",
+            "cuenta_bancaria",
+            "activo",
+        ]
+    )
+
 
     return JsonResponse({
         "ok": True

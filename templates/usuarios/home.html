@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordenaclick</title>
+
+    <!-- GOOGLE FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            height:100vh;
+            background:#0f1115;
+            font-family:'Inter', sans-serif;
+            color:#e5e7eb;
+            display:flex;
+            flex-direction:column;
+        }
+
+        /* HEADER */
+
+        .header{
+            height:70px;
+            border-bottom:1px solid #1f2937;
+            background:#111318;
+
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+
+            padding:0 30px;
+        }
+
+        .logo{
+            font-size:22px;
+            font-weight:600;
+            letter-spacing:0.5px;
+        }
+
+        .logo .ordena{
+            color:#f3f4f6;
+        }
+
+        .logo .click{
+            color:#3b82f6;
+        }
+
+        .user{
+            font-size:14px;
+            color:#9ca3af;
+        }
+
+        /* CONTENIDO */
+
+        .container{
+            flex:1;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            padding:30px;
+        }
+
+        .panel{
+            width:100%;
+            max-width:520px;
+
+            background:#171a21;
+            border:1px solid #262a33;
+
+            border-radius:20px;
+
+            padding:40px;
+        }
+
+        .title{
+            font-size:28px;
+            font-weight:600;
+            margin-bottom:10px;
+            line-height:1.2;
+        }
+
+        .title .orden{
+            color:#f3f4f6;
+        }
+
+        .title .click{
+            color:#3b82f6;
+        }
+
+        .subtitle{
+            font-size:14px;
+            color:#9ca3af;
+            margin-bottom:35px;
+        }
+
+        /* ROLES */
+
+        .roles{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:15px;
+        }
+
+        .btn{
+            height:52px;
+
+            background:#111318;
+            border:1px solid #2b2f3a;
+
+            border-radius:12px;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            text-decoration:none;
+
+            color:#e5e7eb;
+            font-size:14px;
+            font-weight:500;
+
+            transition:0.2s;
+        }
+
+        .btn:hover{
+            border-color:#3b82f6;
+            background:#161b22;
+            color:#ffffff;
+        }
+
+        /* FOOTER */
+
+        .footer{
+            margin-top:35px;
+            padding-top:25px;
+            border-top:1px solid #22262f;
+        }
+
+        .footer-links{
+            display:flex;
+            flex-direction:column;
+            gap:14px;
+        }
+
+        .footer a{
+            text-decoration:none;
+            color:#9ca3af;
+            font-size:14px;
+            transition:0.2s;
+        }
+
+        .footer a:hover{
+            color:#f3f4f6;
+        }
+
+        /* BAJA */
+
+        .danger-btn{
+            background:none;
+            border:none;
+
+            padding:0;
+
+            text-align:left;
+
+            color:#9ca3af;
+            font-size:14px;
+
+            cursor:pointer;
+            transition:0.2s;
+        }
+
+        .danger-btn:hover{
+            color:#ef4444;
+        }
+
+        /* LOGOUT */
+
+        .logout{
+            margin-top:10px;
+            opacity:0.7;
+        }
+
+        .logout:hover{
+            opacity:1;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width:600px){
+
+            .panel{
+                padding:30px 25px;
+            }
+
+            .roles{
+                grid-template-columns:1fr;
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div class="logo">
+            <span class="ordena">Ordena</span><span class="click">click</span>
+        </div>
+
+        <div class="user">
+            {{ user.username }}
+        </div>
+
+    </div>
+
+    <!-- CONTENIDO -->
+
+    <div class="container">
+
+        <div class="panel">
+
+            <div class="title">
+                <span class="orden">Bienvenido a Ordena</span><span class="click">click</span>
+            </div>
+
+            <div class="subtitle">
+                Seleccioná el rol con el que querés operar dentro del sistema.
+            </div>
+
+            <!-- ROLES -->
+
+            <div class="roles">
+
+                <a href="{% url 'seleccionar_perfil' 'administrador' %}" class="btn">
+                    Administrador
+                </a>
+
+                <a href="{% url 'seleccionar_perfil' 'colaborador' %}" class="btn">
+                    Colaborador
+                </a>
+
+                <a href="{% url 'seleccionar_perfil' 'contable' %}" class="btn">
+                    Contable
+                </a>
+
+                <a href="{% url 'seleccionar_perfil' 'legal' %}" class="btn">
+                    Legal
+                </a>
+
+            </div>
+
+            <!-- FOOTER -->
+
+            <div class="footer">
+
+                <div class="footer-links">
+
+                    <a href="{% url 'modificar_usuario' %}">
+                        Modificar mis datos
+                    </a>
+
+                    <!-- BAJA -->
+
+                    <form
+                        action="{% url 'baja_usuario' %}"
+                        method="POST"
+                    >
+
+                        {% csrf_token %}
+
+                        <button type="submit" class="danger-btn">
+                            Dar de baja mi cuenta
+                        </button>
+
+                    </form>
+
+                    <!-- LOGOUT -->
+
+                    <a href="{% url 'logout' %}" class="logout">
+                        Cerrar sesión
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

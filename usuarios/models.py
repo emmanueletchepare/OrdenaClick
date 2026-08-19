@@ -732,26 +732,51 @@ class DebitoAutomaticoPago(models.Model):
         )
 
 # =========================================
-# TARJETA DE PAGO
+# TARJETAS DE PAGO
 # =========================================
 
 class TarjetaPago(models.Model):
 
-    pago = models.OneToOneField(
+    pago = models.ForeignKey(
         Pago,
         on_delete=models.PROTECT,
-        related_name='tarjeta'
+        related_name='tarjetas'
     )
 
+
+    tarjeta = models.ForeignKey(
+        'Tarjeta',
+        on_delete=models.PROTECT,
+        related_name='operaciones_pago',
+    )
+
+
+    fecha = models.DateField()
+
+
     importe = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2
     )
+
+
+    cuotas = models.PositiveIntegerField(
+        default=1
+    )
+
+
+    intereses_financiacion = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
 
     referencia = models.CharField(
         max_length=150,
         blank=True
     )
+
 
     comprobante = models.FileField(
         upload_to='pagos/tarjetas/',
@@ -759,18 +784,94 @@ class TarjetaPago(models.Model):
         null=True
     )
 
+
     observaciones = models.TextField(
         blank=True
     )
+
 
     creado = models.DateTimeField(
         auto_now_add=True
     )
 
+
+    def clean(self):
+
+        from django.core.exceptions import ValidationError
+
+
+        if(
+            self.importe is not None and
+            self.importe <= 0
+        ):
+
+            raise ValidationError({
+
+                'importe':
+                    'El importe aplicado debe ser mayor a cero.'
+
+            })
+
+
+        if(
+            self.intereses_financiacion is not None and
+            self.intereses_financiacion < 0
+        ):
+
+            raise ValidationError({
+
+                'intereses_financiacion':
+                    'Los intereses no pueden ser negativos.'
+
+            })
+
+
+        if(
+            self.tarjeta_id and
+            self.pago_id and
+            self.tarjeta.empresa_id !=
+            self.pago.empresa_id
+        ):
+
+            raise ValidationError({
+
+                'tarjeta':
+                    'La tarjeta debe pertenecer a la misma empresa que el pago.'
+
+            })
+
+
+        if(
+            self.tarjeta_id and
+            self.tarjeta.tipo_tarjeta ==
+            'Debito'
+        ):
+
+            if self.cuotas != 1:
+
+                raise ValidationError({
+
+                    'cuotas':
+                        'Una operación con tarjeta de débito debe registrarse en una sola cuota.'
+
+                })
+
+
+            if self.intereses_financiacion != 0:
+
+                raise ValidationError({
+
+                    'intereses_financiacion':
+                        'Una operación con tarjeta de débito no debe registrar intereses de financiación.'
+
+                })
+
+
     def __str__(self):
 
         return (
-            f"Tarjeta - Pago {self.pago_id} - "
+            f"{self.tarjeta.nombre} - "
+            f"Pago {self.pago_id} - "
             f"{self.importe}"
         )
 
@@ -1615,6 +1716,104 @@ class CuentaBancaria(models.Model):
         )
 
 # =========================================
+# TARJETAS
+# =========================================
+
+class Tarjeta(models.Model):
+
+    TIPOS_TARJETA = [
+
+        (
+            'Credito',
+            'Crédito'
+        ),
+
+        (
+            'Debito',
+            'Débito'
+        ),
+
+    ]
+
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='tarjetas'
+    )
+
+
+    nombre = models.CharField(
+        max_length=120
+    )
+
+
+    tipo_tarjeta = models.CharField(
+        max_length=20,
+        choices=TIPOS_TARJETA
+    )
+
+
+    cuenta_bancaria = models.ForeignKey(
+        CuentaBancaria,
+        on_delete=models.PROTECT,
+        related_name='tarjetas'
+    )
+
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+
+    class Meta:
+
+        ordering = [
+            'nombre'
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    'empresa',
+                    'nombre'
+                ],
+                name='tarjeta_empresa_nombre_unico'
+            ),
+
+        ]
+
+
+    def clean(self):
+
+        from django.core.exceptions import ValidationError
+
+
+        if(
+            self.cuenta_bancaria_id and
+            self.empresa_id and
+            self.cuenta_bancaria.empresa_id !=
+            self.empresa_id
+        ):
+
+            raise ValidationError({
+
+                'cuenta_bancaria':
+                    'La cuenta bancaria debe pertenecer a la misma empresa que la tarjeta.'
+
+            })
+
+
+    def __str__(self):
+
+        return (
+            f"{self.nombre} - "
+            f"{self.get_tipo_tarjeta_display()}"
+        )
+
+# =========================================
 # PROVEEDORES
 # =========================================
 class Proveedor(models.Model):
@@ -1789,3 +1988,72 @@ class GestionClave(models.Model):
     def __str__(self):
 
         return self.nombre
+
+# =========================================
+# USUARIOS / ACCESO A ORDENACLICK
+# =========================================
+
+class PerfilUsuario(models.Model):
+    """
+    Guarda los datos personales y el estado de acceso comercial de un usuario.
+
+    El usuario de Django conserva la autenticación. Este modelo agrega los
+    datos propios de OrdenaClick y permite que, más adelante, el dueño de la
+    plataforma habilite, bloquee o limite el acceso sin mezclar esa decisión
+    con los permisos que el usuario tenga dentro de cada empresa.
+    """
+
+    ESTADOS_ACCESO = [
+        ("pendiente", "Pendiente"),
+        ("demo", "Demo"),
+        ("activo", "Activo"),
+        ("bloqueado", "Bloqueado"),
+    ]
+
+    user = models.OneToOneField(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="perfil_ordenaclick"
+    )
+
+    nombre = models.CharField(
+        max_length=100
+    )
+
+    apellido = models.CharField(
+        max_length=100
+    )
+
+    telefono_personal = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    telefono_laboral = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    direccion_laboral = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    estado_acceso = models.CharField(
+        max_length=20,
+        choices=ESTADOS_ACCESO,
+        default="demo"
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    actualizado = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        """Devuelve el nombre visible del usuario."""
+        nombre_completo = f"{self.nombre} {self.apellido}".strip()
+        return nombre_completo or self.user.username

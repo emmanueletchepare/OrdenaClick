@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ordenaclick | Legal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0f1115;--panel:#171c26;--border:#252c3d;--text:#f1f5f9;--muted:#8b93a7;--primary:#3b82f6;}
+body{min-height:100vh;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;padding:30px;}
+.panel{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:38px;}
+.logo{font-size:27px;font-weight:700;margin-bottom:35px;}
+.logo span{color:var(--primary);}
+h1{font-size:28px;margin-bottom:10px;}
+p{color:var(--muted);line-height:1.6;margin-bottom:28px;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;}
+a{text-decoration:none;padding:12px 18px;border-radius:10px;border:1px solid #2b3447;color:var(--text);background:#151922;}
+a:hover{border-color:var(--primary);}
+.primary{background:var(--primary);border-color:var(--primary);color:white;}
+</style>
+</head>
+<body>
+<div class="panel">
+<div class="logo">Ordena<span>click</span></div>
+<h1>Perfil Legal</h1>
+<p>Este perfil queda activo desde ahora. Más adelante concentrará las empresas que te hayan aceptado para asistencia legal y las herramientas legales habilitadas para cada una.</p>
+<div class="actions">
+<a href="{% url 'home' %}">Volver a perfiles</a>
+<a href="{% url 'logout' %}">Cerrar sesión</a>
+</div>
+</div>
+</body>
+</html>

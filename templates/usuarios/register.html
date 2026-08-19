@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ordenaclick | Registro</title>
+
+<style>
+
+:root{
+    --bg:#0f1115;
+    --panel:#171a21;
+    --panel-light:#1d212b;
+    --border:#2b3240;
+    --text:#f3f4f6;
+    --muted:#9ca3af;
+    --primary:#3b82f6;
+    --primary-hover:#2563eb;
+    --danger:#ef4444;
+    --radius:16px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    min-height:100vh;
+    background:var(--bg);
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+}
+
+.container{
+    width:100%;
+    max-width:1100px;
+    display:grid;
+    grid-template-columns:420px 1fr;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:28px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+}
+
+.left{
+    background:linear-gradient(180deg,#111827 0%, #0f172a 100%);
+    padding:60px 45px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    border-right:1px solid rgba(255,255,255,.05);
+}
+
+.logo{
+    font-size:38px;
+    font-weight:700;
+    letter-spacing:-1px;
+    margin-bottom:18px;
+    color:#ffffff;
+}
+
+.logo span{
+    color:var(--primary);
+}
+
+.subtitle{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.7;
+}
+
+.right{
+    padding:50px;
+}
+
+.top{
+    margin-bottom:35px;
+}
+
+.top h1{
+    font-size:30px;
+    margin-bottom:10px;
+    letter-spacing:-0.5px;
+    color:#ffffff;
+}
+
+.top h1 span{
+    color:var(--primary);
+}
+
+.top p{
+    color:var(--muted);
+    font-size:14px;
+}
+
+.error{
+    background:rgba(239,68,68,.12);
+    border:1px solid rgba(239,68,68,.25);
+    color:#fca5a5;
+    padding:14px;
+    border-radius:12px;
+    margin-bottom:20px;
+    font-size:14px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.full{
+    grid-column:1 / -1;
+}
+
+.input-group{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.input-group label{
+    font-size:13px;
+    color:var(--muted);
+}
+
+.input{
+    height:48px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel-light);
+    padding:0 14px;
+    color:var(--text);
+    font-size:14px;
+    transition:.2s;
+}
+
+.input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(59,130,246,.15);
+}
+
+.input::placeholder{
+    color:#6b7280;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus{
+    -webkit-text-fill-color:var(--text);
+    -webkit-box-shadow:0 0 0px 1000px var(--panel-light) inset;
+    transition:background-color 9999s ease-in-out 0s;
+}
+
+.actions{
+    margin-top:30px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.btn{
+    height:50px;
+    border:none;
+    border-radius:14px;
+    background:var(--primary);
+    color:white;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn:hover{
+    background:var(--primary-hover);
+    transform:translateY(-1px);
+}
+
+.footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+}
+
+.footer a{
+    color:var(--primary);
+    text-decoration:none;
+    font-weight:600;
+}
+
+.footer a:hover{
+    text-decoration:underline;
+}
+
+@media(max-width:900px){
+
+    .container{
+        grid-template-columns:1fr;
+    }
+
+    .left{
+        padding:40px 30px;
+    }
+
+    .right{
+        padding:35px 25px;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="left">
+
+        <div class="logo">
+            Ordena<span>click</span>
+        </div>
+
+        <div class="subtitle">
+            Creá tu cuenta para comenzar a gestionar empresas,
+            documentación societaria, tareas administrativas y
+            procesos internos desde una plataforma simple,
+            clara y profesional.
+        </div>
+
+    </div>
+
+    <div class="right">
+
+        <div class="top">
+            <h1>
+                Crear <span>cuenta</span>
+            </h1>
+
+            <p>
+                Completá tus datos para registrarte en el sistema.
+            </p>
+        </div>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            {% if error %}
+                <div class="error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <div class="form-grid">
+
+                <div class="input-group">
+                    <label>Usuario</label>
+                    <input type="text"
+                           name="username"
+                           class="input"
+                           placeholder="Ingresá un usuario"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Correo electrónico</label>
+                    <input type="email"
+                           name="email"
+                           class="input"
+                           placeholder="correo@empresa.com"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password"
+                           name="password"
+                           class="input"
+                           placeholder="Ingresá una contraseña"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Repetir contraseña</label>
+                    <input type="password"
+                           name="password2"
+                           class="input"
+                           placeholder="Repetí la contraseña"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Nombre</label>
+                    <input type="text"
+                           name="nombre"
+                           class="input"
+                           placeholder="Nombre"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Apellido</label>
+                    <input type="text"
+                           name="apellido"
+                           class="input"
+                           placeholder="Apellido"
+                           required>
+                </div>
+
+                <div class="input-group">
+                    <label>Teléfono personal</label>
+                    <input type="text"
+                           name="telefono_personal"
+                           class="input"
+                           placeholder="Teléfono personal">
+                </div>
+
+                <div class="input-group">
+                    <label>Teléfono laboral</label>
+                    <input type="text"
+                           name="telefono_laboral"
+                           class="input"
+                           placeholder="Teléfono laboral">
+                </div>
+
+                <div class="input-group full">
+                    <label>Dirección laboral</label>
+                    <input type="text"
+                           name="direccion_laboral"
+                           class="input"
+                           placeholder="Dirección laboral">
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <button type="submit" class="btn">
+                    Crear cuenta
+                </button>
+
+                <div class="footer">
+                    ¿Ya tenés cuenta?
+                    <a href="{% url 'login' %}">Iniciar sesión</a>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

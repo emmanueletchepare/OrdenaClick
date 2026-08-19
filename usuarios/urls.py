@@ -1,6 +1,16 @@
 from django.urls import path
 
 from .views import (
+    login_view,
+    registro_view,
+    logout_view,
+    home,
+    seleccionar_perfil,
+    modificar_usuario,
+    baja_usuario,
+    panel_colaborador,
+    panel_contable,
+    panel_legal,
     listar_bancos,
     listar_centros_operativos,
     panel_admin,
@@ -39,16 +49,85 @@ from .views import (
     guardar_cuenta_bancaria,
     modificar_cuenta_bancaria,
     eliminar_cuenta_bancaria,
-    reactivar_cuenta_bancaria
+    reactivar_cuenta_bancaria,
+    listar_tarjetas,
+    guardar_tarjeta,
+    modificar_tarjeta,
+    eliminar_tarjeta,
+    reactivar_tarjeta
     
 )
 
 urlpatterns = [
 
+    # =========================================
+    # ACCESO / PERFILES
+    # =========================================
+
     path(
         '',
+        login_view,
+        name='login'
+    ),
+
+    path(
+        'registro/',
+        registro_view,
+        name='registro'
+    ),
+
+    path(
+        'logout/',
+        logout_view,
+        name='logout'
+    ),
+
+    path(
+        'home/',
+        home,
+        name='home'
+    ),
+
+    path(
+        'perfil/<str:perfil>/',
+        seleccionar_perfil,
+        name='seleccionar_perfil'
+    ),
+
+    path(
+        'usuario/modificar/',
+        modificar_usuario,
+        name='modificar_usuario'
+    ),
+
+    path(
+        'usuario/baja/',
+        baja_usuario,
+        name='baja_usuario'
+    ),
+
+    path(
+        'panel-admin/',
         panel_admin,
         name='panel_admin'
+    ),
+
+    path(
+        'panel-colaborador/',
+        panel_colaborador,
+        name='panel_colaborador'
+    ),
+
+    path(
+        'panel-contable/',
+        panel_contable,
+        name='panel_contable'
+    ),
+
+    path(
+        'panel-legal/',
+        panel_legal,
+        name='panel_legal'
     ),
 
     path(
@@ -155,6 +234,40 @@ urlpatterns = [
         "eliminar-centro-operativo/",
         eliminar_centro_operativo,
         name="eliminar_centro_operativo"
+    ),
+
+    # =========================================
+    # TARJETAS
+    # =========================================
+
+    path(
+        "tarjetas/",
+        listar_tarjetas,
+        name="listar_tarjetas"
+    ),
+
+    path(
+        "tarjetas/guardar/",
+        guardar_tarjeta,
+        name="guardar_tarjeta"
+    ),
+
+    path(
+        "tarjetas/modificar/",
+        modificar_tarjeta,
+        name="modificar_tarjeta"
+    ),
+
+    path(
+        "tarjetas/eliminar/",
+        eliminar_tarjeta,
+        name="eliminar_tarjeta"
+    ),
+
+    path(
+        "tarjetas/reactivar/",
+        reactivar_tarjeta,
+        name="reactivar_tarjeta"
     ),
 
     # =========================================
