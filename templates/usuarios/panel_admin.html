@@ -1680,6 +1680,18 @@ let contenidoAnteriorABMTarjetas = null;
 
 let contenidoAnteriorABMCuentasBancariasDesdeTarjeta = null;
 
+
+/*
+ * =========================================
+ * RETENCIONES
+ * =========================================
+ */
+
+let origenABMRetenciones = "menu";
+
+let contenidoAnteriorABMRetenciones = null;
+
+
 let ultimoBancoCreado = null;
 
 function limpiarPanelOperativo(){
@@ -1900,51 +1912,80 @@ function mostrarContenido(titulo){
 function mostrarSubmenu(tipo){
 
     const bloqueAlta =
-    document.getElementById(
-        "bloque-alta-empresa"
-    );
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
 
     if(bloqueAlta){
 
-        bloqueAlta.style.display = "none";
+        bloqueAlta.style.display =
+            "none";
 
     }
 
-    let html = "";
+
+    let html =
+        "";
+
+
+    /*
+     * =========================================
+     * REGISTROS
+     * =========================================
+     */
 
     if(tipo === "registros"){
 
         html = `
-            <button class="module-card"
-            onclick="mostrarCargaSimple()">
+
+            <button
+                class="module-card"
+                onclick="mostrarCargaSimple()"
+            >
                 Carga Simple
             </button>
 
-            <button class="module-card">
+            <button
+                class="module-card"
+            >
                 Carga Planificada
             </button>
 
-            <button class="module-card">
+            <button
+                class="module-card"
+            >
                 Registrar Pago
             </button>
 
-            <button class="module-card">
+            <button
+                class="module-card"
+            >
                 Modificar / Eliminar
             </button>
+
         `;
+
     }
+
+
+    /*
+     * =========================================
+     * ABMs
+     * =========================================
+     */
 
     if(tipo === "abms"){
 
         html = `
 
             <button
-            class="module-card"
-            onclick="mostrarABMBancos('menu')">
-
+                class="module-card"
+                onclick="mostrarABMBancos('menu')"
+            >
                 Bancos
-
             </button>
+
 
             <button
                 type="button"
@@ -1954,6 +1995,7 @@ function mostrarSubmenu(tipo){
                 Cuentas Bancarias
             </button>
 
+
             <button
                 type="button"
                 class="module-card"
@@ -1962,21 +2004,31 @@ function mostrarSubmenu(tipo){
                 Tarjetas
             </button>
 
-            <button
-            class="module-card"
-            onclick="mostrarABMCentrosOperativos('menu')">
 
+            <button
+                id="btnAbrirABMRetenciones"
+                type="button"
+                class="module-card"
+            >
+                Retenciones
+            </button>
+
+
+            <button
+                class="module-card"
+                onclick="mostrarABMCentrosOperativos('menu')"
+            >
                 Centros Operativos
-
             </button>
+
 
             <button
-            class="module-card"
-            onclick="mostrarABMProveedores('menu')">
-
+                class="module-card"
+                onclick="mostrarABMProveedores('menu')"
+            >
                 Proveedores
-
             </button>
+
 
             <button
                 type="button"
@@ -1986,6 +2038,7 @@ function mostrarSubmenu(tipo){
                 Tipos de gasto
             </button>
 
+
             <button
                 type="button"
                 class="module-card"
@@ -1993,57 +2046,126 @@ function mostrarSubmenu(tipo){
             >
                 Recurso operativo
             </button>
+
         `;
 
     }
+
+
+    /*
+     * =========================================
+     * HERRAMIENTAS
+     * =========================================
+     */
 
     if(tipo === "herramientas"){
 
         html = `
 
             <button
-            class="module-card"
-            onclick="mostrarABMGestionClaves()">
-
+                class="module-card"
+                onclick="mostrarABMGestionClaves()"
+            >
                 Gestión de claves
-
             </button>
 
         `;
 
     }
+
+
+    /*
+     * =========================================
+     * CONFIGURACIÓN
+     * =========================================
+     */
 
     if(tipo === "configuracion"){
 
         html = `
-            <button
-               class="module-card"
-               onclick="mostrarModificarEmpresa()">
-
-               Modificar Empresa
-
-            </button>
 
             <button
-               class="module-card">
-
-               Designar Colaboradores
-
+                class="module-card"
+                onclick="mostrarModificarEmpresa()"
+            >
+                Modificar Empresa
             </button>
+
+
+            <button
+                class="module-card"
+            >
+                Designar Colaboradores
+            </button>
+
         `;
+
     }
 
-    document.getElementById(
-        "submenu-dinamico"
-    ).innerHTML = html;
 
-    document.getElementById(
-        "contenido-operativo"
-    ).innerHTML = `
-        <div class="empty-state">
-            Seleccione una opción
-        </div>
-    `;
+    const submenu =
+        document.getElementById(
+            "submenu-dinamico"
+        );
+
+
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    if(submenu){
+
+        submenu.innerHTML =
+            html;
+
+    }
+
+
+    if(contenido){
+
+        contenido.innerHTML = `
+
+            <div class="empty-state">
+                Seleccione una opción
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * EVENTOS DEL SUBMENÚ
+     * =========================================
+     *
+     * Retenciones se incorpora sin agregar
+     * JavaScript inline nuevo.
+     */
+
+    const btnRetenciones =
+        document.getElementById(
+            "btnAbrirABMRetenciones"
+        );
+
+
+    if(btnRetenciones){
+
+        btnRetenciones.addEventListener(
+            "click",
+            function(){
+
+                mostrarABMRetenciones(
+                    "menu"
+                );
+
+            }
+        );
+
+    }
+
 }
 
 function mostrarModificarEmpresa(){
@@ -3073,6 +3195,216 @@ async function mostrarABMTarjetas(
 
         console.error(
             "No se encontró iniciarABMTarjetas()."
+        );
+
+    }
+
+}
+
+async function mostrarABMRetenciones(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    /*
+     * =========================================
+     * CARGAR ABM
+     * =========================================
+     */
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/retenciones/?empresa=${encodeURIComponent(
+                    empresa.value
+                )}`
+
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar las retenciones."
+            );
+
+            return;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando retenciones:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar las retenciones."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * GUARDAR ORIGEN
+     * =========================================
+     */
+
+    origenABM =
+        origen;
+
+    origenABMRetenciones =
+        origen;
+
+
+    /*
+     * =========================================
+     * APERTURA DESDE MENÚ
+     * =========================================
+     */
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABMRetenciones =
+            null;
+
+    }
+
+
+    /*
+     * =========================================
+     * APERTURA DESDE PAGO
+     * =========================================
+     *
+     * Todavía no usamos esta rama.
+     *
+     * Queda preparada para:
+     *
+     * Carga Simple
+     * → Pago determinado
+     * → Retenciones
+     * → [+]
+     * → ABM Retenciones
+     *
+     * Guardamos LOS MISMOS nodos para no perder
+     * importe, comprobante, otros pagos, etc.
+     */
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABMRetenciones ===
+            null
+    ){
+
+        contenidoAnteriorABMRetenciones =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMRetenciones
+                .appendChild(
+                    contenidoOperativo.firstChild
+                );
+
+        }
+
+    }
+
+
+    /*
+     * =========================================
+     * OCULTAR ALTA DE EMPRESA
+     * =========================================
+     */
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    /*
+     * =========================================
+     * MOSTRAR ABM
+     * =========================================
+     */
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    /*
+     * =========================================
+     * INICIALIZAR JS EXTERNO
+     * =========================================
+     */
+
+    if(
+        typeof iniciarABMRetenciones ===
+            "function"
+    ){
+
+        iniciarABMRetenciones();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMRetenciones()."
         );
 
     }
@@ -8326,6 +8658,259 @@ function agregarPagoRegistro(){
 
                     </div>
 
+                    <!-- ========================================= -->
+                    <!-- RETENCIONES -->
+                    <!-- ========================================= -->
+
+                    <div
+                        style="
+                            margin-top:22px;
+                        "
+                    >
+
+                        <button
+                            type="button"
+                            class="sidebar-btn btn-toggle-retenciones-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                width:100%;
+                                justify-content:space-between;
+                                padding-left:20px;
+                                padding-right:20px;
+                            "
+                        >
+
+                            <span>
+                                ► Retenciones
+                            </span>
+
+                            <strong
+                                class="total-retenciones-pago"
+                            >
+                                $ 0,00
+                            </strong>
+
+                        </button>
+
+
+                        <div
+                            class="bloque-retenciones-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                display:none;
+                                padding-top:10px;
+                            "
+                        >
+
+                            <div
+                                class="contenido-retenciones-pago"
+                                style="
+                                    margin-left:6px;
+                                    margin-right:6px;
+                                    padding:28px 10px 22px 10px;
+                                    border-left:2px solid #252c3d;
+                                    border-right:2px solid #252c3d;
+                                "
+                            >
+
+                                <div class="form-grid">
+
+
+                                    <!-- =========================
+                                        RETENCIÓN
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Retención
+                                        </label>
+
+
+                                        <div
+                                            style="
+                                                display:flex;
+                                                gap:10px;
+                                                align-items:center;
+                                            "
+                                        >
+
+                                            <select
+                                                class="input-box retencion-seleccion-pago"
+                                                data-pago-id="${pagoId}"
+                                                style="
+                                                    flex:1;
+                                                "
+                                            >
+
+                                                <option value="">
+                                                    Seleccione...
+                                                </option>
+
+                                            </select>
+
+
+                                            <button
+                                                type="button"
+                                                class="action-btn btn-agregar-retencion-pago"
+                                                data-pago-id="${pagoId}"
+                                                title="Agregar retención"
+                                                style="
+                                                    flex:0 0 52px;
+                                                    margin:0;
+                                                "
+                                            >
+                                                +
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        IMPORTE
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Importe
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            inputmode="decimal"
+                                            class="input-box importe-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            placeholder="$"
+                                        >
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        COMPROBANTE
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Comprobante
+                                        </label>
+
+
+                                        <input
+                                            type="file"
+                                            class="comprobante-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                display:none;
+                                            "
+                                        >
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-adjuntar-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                width:100%;
+                                                margin:0;
+                                            "
+                                        >
+
+                                            <span
+                                                class="texto-comprobante-retencion-pago"
+                                            >
+                                                📎 Adjuntar comprobante
+                                            </span>
+
+                                        </button>
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        REGISTRAR / CANCELAR
+                                    ========================== -->
+
+                                    <div
+                                        class="field field-full"
+                                        style="
+                                            display:flex;
+                                            flex-direction:row;
+                                            gap:12px;
+                                            align-items:center;
+                                        "
+                                    >
+
+                                        <button
+                                            type="button"
+                                            class="guardar btn-registrar-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                margin-top:0;
+                                                flex:1;
+                                            "
+                                        >
+                                            REGISTRAR RETENCIÓN
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-cancelar-edicion-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                display:none;
+                                                margin:0;
+                                                flex:0 0 180px;
+                                                background:#dc2626;
+                                                border-color:#dc2626;
+                                                color:#ffffff;
+                                            "
+                                        >
+                                            CANCELAR CAMBIOS
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    class="lista-retenciones-pago"
+                                    data-pago-id="${pagoId}"
+                                    style="
+                                        display:flex;
+                                        flex-direction:column;
+                                        gap:12px;
+                                        margin-top:18px;
+                                    "
+                                >
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="sidebar-btn btn-cerrar-retenciones-pago"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    margin-top:10px;
+                                    width:100%;
+                                "
+                                title="Cerrar Retenciones"
+                            >
+                                ▲
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -8359,6 +8944,11 @@ cargarBancosOperacionBancaria(
 
 
 cargarTarjetasPago(
+    pagoId
+);
+
+
+cargarRetencionesPago(
     pagoId
 );
 
@@ -10461,6 +11051,1516 @@ function cerrarTarjetaPago(
 
 }
 
+async function cargarRetencionesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/retenciones/?empresa=${encodeURIComponent(
+                    empresa.value
+                )}`
+
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.retenciones
+            )
+        ){
+
+            console.error(
+                "No se pudieron cargar las retenciones del Pago.",
+                resultado
+            );
+
+            return;
+
+        }
+
+
+        select.innerHTML = `
+
+            <option value="">
+                Seleccione...
+            </option>
+
+        `;
+
+
+        resultado.retenciones.forEach(
+            function(retencion){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        retencion.id
+                    );
+
+
+                opcion.textContent =
+                    retencion.tipo;
+
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        /*
+         * Conservamos selección anterior.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+
+        /*
+         * Si volvemos del [+], seleccionamos
+         * automáticamente la retención creada.
+         */
+
+        if(
+            typeof ultimaRetencionCreada !==
+                "undefined" &&
+            ultimaRetencionCreada
+        ){
+
+            const retencionId =
+                String(
+                    typeof ultimaRetencionCreada ===
+                        "object"
+                        ? ultimaRetencionCreada.id
+                        : ultimaRetencionCreada
+                );
+
+
+            const opcionNueva =
+                select.querySelector(
+                    `option[value="${retencionId}"]`
+                );
+
+
+            if(opcionNueva){
+
+                select.value =
+                    retencionId;
+
+            }
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando retenciones del Pago:",
+            error
+        );
+
+    }
+
+}
+
+async function toggleRetencionesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    if(
+        bloque.style.display ===
+            "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Retenciones
+            </span>
+
+            <strong
+                class="total-retenciones-pago"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        await cargarRetencionesPago(
+            pagoId
+        );
+
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Retenciones
+        </span>
+
+        <strong
+            class="total-retenciones-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+function cerrarRetencionesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Retenciones
+        </span>
+
+        <strong
+            class="total-retenciones-pago"
+        >
+            ${
+                total
+                    ? total.textContent
+                    : "$ 0,00"
+            }
+        </strong>
+
+    `;
+
+}
+
+function abrirABMRetencionPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        alert(
+            "No se pudo identificar el Pago desde el que se abrió Retenciones."
+        );
+
+        return;
+
+    }
+
+
+    contextoRetornoABM = {
+
+        tipo:
+            "retencion_pago",
+
+        pagoId:
+            idPago
+
+    };
+
+
+    mostrarABMRetenciones(
+        "registro"
+    );
+
+}
+
+async function actualizarRetencionDelRegistro(){
+
+    if(
+        !contextoRetornoABM ||
+        contextoRetornoABM.tipo !==
+            "retencion_pago"
+    ){
+
+        return;
+
+    }
+
+
+    const pagoId =
+        Number(
+            contextoRetornoABM.pagoId
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        contextoRetornoABM =
+            null;
+
+        return;
+
+    }
+
+
+    await cargarRetencionesPago(
+        pagoId
+    );
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(bloque){
+
+        bloque.style.display =
+            "block";
+
+    }
+
+
+    if(boton){
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Retenciones
+            </span>
+
+            <strong
+                class="total-retenciones-pago"
+            >
+                ${
+                    total
+                        ? total.textContent
+                        : "$ 0,00"
+                }
+            </strong>
+
+        `;
+
+    }
+
+
+    contextoRetornoABM =
+        null;
+
+
+    if(
+        typeof ultimaRetencionCreada !==
+            "undefined"
+    ){
+
+        ultimaRetencionCreada =
+            null;
+
+    }
+
+
+    requestAnimationFrame(
+        function(){
+
+            requestAnimationFrame(
+                function(){
+
+                    const acordeon =
+                        tarjeta.querySelector(
+                            ".bloque-retenciones-pago"
+                        );
+
+
+                    if(acordeon){
+
+                        acordeon.scrollIntoView({
+
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "start"
+
+                        });
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+function registrarRetencionPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-retencion-pago"
+        );
+
+
+    if(
+        !select ||
+        !select.value
+    ){
+
+        alert(
+            "Seleccione una retención."
+        );
+
+        return;
+
+    }
+
+
+    const importeAplicado =
+        leerImporte(
+            importe?.value
+        );
+
+
+    if(importeAplicado <= 0){
+
+        alert(
+            "Ingrese un importe de retención mayor a cero."
+        );
+
+
+        if(importe){
+
+            importe.focus();
+
+        }
+
+
+        return;
+
+    }
+
+
+    const retencionEditandoId =
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    const estaEditando =
+        retencionEditandoId !==
+        undefined;
+
+
+    let comprobanteOperacion =
+        null;
+
+
+    if(
+        comprobante &&
+        comprobante.files &&
+        comprobante.files.length
+    ){
+
+        comprobanteOperacion =
+            comprobante.files[0];
+
+    }else if(estaEditando){
+
+        comprobanteOperacion =
+            pago.retenciones.find(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        retencionEditandoId
+                    );
+
+                }
+            )?.comprobante ||
+            null;
+
+    }
+
+
+    const opcion =
+        select.selectedOptions?.[0];
+
+
+    const operacion = {
+
+        id:
+            estaEditando
+                ? Number(
+                    retencionEditandoId
+                )
+                : Date.now(),
+
+        retencion_id:
+            String(
+                select.value
+            ),
+
+        retencion_tipo:
+            opcion?.textContent?.trim() ||
+            "",
+
+        importe:
+            importeAplicado,
+
+        comprobante:
+            comprobanteOperacion
+
+    };
+
+
+    if(estaEditando){
+
+        const indice =
+            pago.retenciones.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        retencionEditandoId
+                    );
+
+                }
+            );
+
+
+        if(indice === -1){
+
+            alert(
+                "La retención que se estaba modificando ya no existe."
+            );
+
+
+            delete retencionesPagoEditando[
+                String(
+                    idPago
+                )
+            ];
+
+
+            limpiarFormularioRetencionPago(
+                idPago
+            );
+
+
+            return;
+
+        }
+
+
+        pago.retenciones[
+            indice
+        ] = operacion;
+
+
+        const anterior =
+            tarjeta.querySelector(
+                `.tarjeta-retencion-pago[data-retencion-operacion-id="${retencionEditandoId}"]`
+            );
+
+
+        if(anterior){
+
+            anterior.remove();
+
+        }
+
+
+        delete retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    }else{
+
+        pago.retenciones.push(
+            operacion
+        );
+
+    }
+
+
+    renderizarRetencionPago(
+        idPago,
+        operacion
+    );
+
+
+    actualizarTotalRetencionesPago(
+        idPago
+    );
+
+
+    limpiarFormularioRetencionPago(
+        idPago
+    );
+
+}
+
+function renderizarRetencionPago(
+    pagoId,
+    operacion
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjeta.querySelector(
+            ".lista-retenciones-pago"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const fila =
+        document.createElement(
+            "div"
+        );
+
+
+    fila.className =
+        "tarjeta-retencion-pago";
+
+
+    fila.dataset.retencionOperacionId =
+        String(
+            operacion.id
+        );
+
+
+    fila.style.cssText = `
+
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:15px;
+        padding:14px 16px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+        min-width:0;
+
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        operacion.retencion_tipo;
+
+
+    const importe =
+        document.createElement(
+            "span"
+        );
+
+
+    importe.textContent =
+        "$ " +
+        formatearImporte(
+            operacion.importe
+        );
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        importe
+    );
+
+
+    if(
+        operacion.comprobante &&
+        operacion.comprobante.name
+    ){
+
+        const archivo =
+            document.createElement(
+                "span"
+            );
+
+
+        archivo.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        archivo.textContent =
+            `📎 ${operacion.comprobante.name}`;
+
+
+        datos.appendChild(
+            archivo
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        gap:8px;
+        flex:none;
+    `;
+
+
+    const modificar =
+        document.createElement(
+            "button"
+        );
+
+
+    modificar.type =
+        "button";
+
+    modificar.className =
+        "action-btn btn-modificar-retencion-pago";
+
+    modificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+    modificar.dataset.retencionId =
+        String(
+            operacion.id
+        );
+
+    modificar.textContent =
+        "📝";
+
+
+    const eliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    eliminar.type =
+        "button";
+
+    eliminar.className =
+        "action-btn btn-eliminar-retencion-pago";
+
+    eliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+    eliminar.dataset.retencionId =
+        String(
+            operacion.id
+        );
+
+    eliminar.textContent =
+        "🗑";
+
+    eliminar.style.cssText = `
+        background:#7f1d1d;
+        border-color:#991b1b;
+    `;
+
+
+    acciones.appendChild(
+        modificar
+    );
+
+    acciones.appendChild(
+        eliminar
+    );
+
+
+    fila.appendChild(
+        datos
+    );
+
+    fila.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        fila
+    );
+
+}
+
+function modificarRetencionPago(
+    pagoId,
+    retencionOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            retencionOperacionId
+        );
+
+
+    const yaEditando =
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        yaEditando !== undefined &&
+        Number(
+            yaEditando
+        ) !== idOperacion
+    ){
+
+        alert(
+            "Ya hay una retención en edición.\n\n" +
+            "Registre o cancele los cambios antes de modificar otra."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.retenciones.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    retencionesPagoEditando[
+        String(
+            idPago
+        )
+    ] = idOperacion;
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-retencion-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-retencion-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-retencion-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            String(
+                operacion.retencion_id
+            );
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            formatearImporte(
+                operacion.importe
+            );
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            operacion.comprobante?.name
+                ? `📎 ${operacion.comprobante.name}`
+                : "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR CAMBIOS";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "inline-block";
+
+    }
+
+}
+
+function cancelarEdicionRetencionPago(
+    pagoId
+){
+
+    delete retencionesPagoEditando[
+        String(
+            pagoId
+        )
+    ];
+
+
+    limpiarFormularioRetencionPago(
+        pagoId
+    );
+
+}
+
+function eliminarRetencionPago(
+    pagoId,
+    retencionOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            retencionOperacionId
+        );
+
+
+    if(
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ] !== undefined
+    ){
+
+        alert(
+            "Hay una retención en edición.\n\n" +
+            "Registre o cancele los cambios antes de eliminar."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.retenciones.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    if(
+        !window.confirm(
+            `¿Eliminar la retención "${operacion.retencion_tipo}" de este Pago?`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    pago.retenciones =
+        pago.retenciones.filter(
+            function(item){
+
+                return Number(
+                    item.id
+                ) !== idOperacion;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    tarjeta
+        ?.querySelector(
+            `.tarjeta-retencion-pago[data-retencion-operacion-id="${idOperacion}"]`
+        )
+        ?.remove();
+
+
+    actualizarTotalRetencionesPago(
+        idPago
+    );
+
+}
+
+function limpiarFormularioRetencionPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-retencion-pago"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-retencion-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-retencion-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-retencion-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(comprobante){
+
+        comprobante.value =
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR RETENCIÓN";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+}
+
+function actualizarTotalRetencionesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.retenciones.reduce(
+            function(acumulado, retencion){
+
+                return (
+                    acumulado +
+                    Number(
+                        retencion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        idPago
+    );
+
+}
+
+
+
 async function toggleChequesPago(
     pagoId
 ){
@@ -12494,150 +14594,14 @@ function actualizarPagoRegistro(
         );
 
 
-    /*
-     * Los intereses de financiación de Tarjeta
-     * se conservan dentro de cada operación de pago.tarjetas,
-     * pero NO aumentan el importe aplicado
-     * al Movimiento.
-     *
-     * Más adelante agregaremos:
-     *
-     * retenciones
-     */
-
-    pago.total =
-        pago.efectivo +
-        totalOperaciones +
-        totalTarjeta +
-        totalCheques;
-
-
-    const totalCabecera =
-        tarjeta.querySelector(
-            ".total-pago-registro"
-        );
-
-
-    if(totalCabecera){
-
-        totalCabecera.textContent =
-            "$ " +
-            formatearImporte(
-                pago.total
-            );
-
-    }
-
-
-    actualizarResumenGeneralPagos();
-
-}
-
-function actualizarPagoRegistro(
-    pagoId
-){
-
-    const id =
-        Number(
-            pagoId
-        );
-
-
-    const pago =
-        pagosRegistro.find(
-            function(item){
-
-                return item.id ===
-                    id;
-
-            }
-        );
-
-
-    if(!pago){
-
-        return;
-
-    }
-
-
-    const tarjeta =
-        document.getElementById(
-            `pagoRegistro_${id}`
-        );
-
-
-    if(!tarjeta){
-
-        return;
-
-    }
-
-
-    const inputFecha =
-        tarjeta.querySelector(
-            ".fecha-pago-registro"
-        );
-
-
-    const inputEfectivo =
-        tarjeta.querySelector(
-            ".efectivo-pago-registro"
-        );
-
-
-    pago.fecha_pago =
-        inputFecha
-            ? inputFecha.value
-            : "";
-
-
-    pago.efectivo =
-        leerImporte(
-            inputEfectivo?.value
-        );
-
-
-    const totalOperaciones =
-        pago.transferencias.reduce(
-            function(acumulado, operacion){
+    const totalRetenciones =
+        pago.retenciones.reduce(
+            function(acumulado, retencion){
 
                 return (
                     acumulado +
                     Number(
-                        operacion.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalTarjeta =
-        pago.tarjetas.reduce(
-            function(acumulado, operacion){
-
-                return (
-                    acumulado +
-                    Number(
-                        operacion.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalCheques =
-        pago.cheques.reduce(
-            function(acumulado, cheque){
-
-                return (
-                    acumulado +
-                    Number(
-                        cheque.importe || 0
+                        retencion.importe || 0
                     )
                 );
 
@@ -12648,20 +14612,19 @@ function actualizarPagoRegistro(
 
     /*
      * Los intereses de financiación de Tarjeta
-     * se conservan dentro de cada operación de pago.tarjetas,
-     * pero NO aumentan el importe aplicado
-     * al Movimiento.
+     * se conservan dentro de la operación,
+     * pero NO aumentan el importe aplicado.
      *
-     * Más adelante agregaremos:
-     *
-     * retenciones
+     * Las Retenciones sí cancelan parte de la deuda
+     * y por lo tanto forman parte del total aplicado.
      */
 
     pago.total =
         pago.efectivo +
         totalOperaciones +
         totalTarjeta +
-        totalCheques;
+        totalCheques +
+        totalRetenciones;
 
 
     const totalCabecera =
@@ -13489,6 +15452,18 @@ let operacionesBancariasEditando = {};
  */
 
 let tarjetasPagoEditando = {};
+
+/*
+ * =========================================
+ * RETENCIONES EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> retencionOperacionId
+ */
+
+let retencionesPagoEditando = {};
 
 /*
  * =========================================
@@ -15388,7 +17363,239 @@ document.addEventListener(
 
         }
 
+                /*
+         * =========================================
+         * RETENCIONES
+         * ABRIR / CERRAR
+         * =========================================
+         */
 
+        const botonRetencionesPago =
+            event.target.closest(
+                ".btn-toggle-retenciones-pago"
+            );
+
+
+        if(botonRetencionesPago){
+
+            toggleRetencionesPago(
+                botonRetencionesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * [+] RETENCIÓN
+         */
+
+        const botonAgregarRetencion =
+            event.target.closest(
+                ".btn-agregar-retencion-pago"
+            );
+
+
+        if(botonAgregarRetencion){
+
+            abrirABMRetencionPago(
+                botonAgregarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * ADJUNTAR COMPROBANTE
+         */
+
+        const botonAdjuntarRetencion =
+            event.target.closest(
+                ".btn-adjuntar-retencion-pago"
+            );
+
+
+        if(botonAdjuntarRetencion){
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${botonAdjuntarRetencion.dataset.pagoId}`
+                );
+
+
+            tarjeta
+                ?.querySelector(
+                    ".comprobante-retencion-pago"
+                )
+                ?.click();
+
+
+            return;
+
+        }
+
+
+        /*
+         * REGISTRAR
+         */
+
+        const botonRegistrarRetencion =
+            event.target.closest(
+                ".btn-registrar-retencion-pago"
+            );
+
+
+        if(botonRegistrarRetencion){
+
+            registrarRetencionPago(
+                botonRegistrarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * CANCELAR CAMBIOS
+         */
+
+        const botonCancelarRetencion =
+            event.target.closest(
+                ".btn-cancelar-edicion-retencion-pago"
+            );
+
+
+        if(botonCancelarRetencion){
+
+            cancelarEdicionRetencionPago(
+                botonCancelarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * MODIFICAR
+         */
+
+        const botonModificarRetencion =
+            event.target.closest(
+                ".btn-modificar-retencion-pago"
+            );
+
+
+        if(botonModificarRetencion){
+
+            modificarRetencionPago(
+
+                botonModificarRetencion.dataset.pagoId,
+
+                botonModificarRetencion.dataset.retencionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * ELIMINAR
+         */
+
+        const botonEliminarRetencion =
+            event.target.closest(
+                ".btn-eliminar-retencion-pago"
+            );
+
+
+        if(botonEliminarRetencion){
+
+            eliminarRetencionPago(
+
+                botonEliminarRetencion.dataset.pagoId,
+
+                botonEliminarRetencion.dataset.retencionId
+
+            );
+
+            return;
+
+        }
+
+        /*
+         * CERRAR DESDE ABAJO
+         */
+
+        const botonCerrarRetenciones =
+            event.target.closest(
+                ".btn-cerrar-retenciones-pago"
+            );
+
+
+        if(botonCerrarRetenciones){
+
+            cerrarRetencionesPago(
+                botonCerrarRetenciones.dataset.pagoId
+            );
+
+            return;
+
+        }
+        
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const comprobante =
+            event.target.closest(
+                ".comprobante-retencion-pago"
+            );
+
+
+        if(!comprobante){
+
+            return;
+
+        }
+
+
+        const tarjeta =
+            document.getElementById(
+                `pagoRegistro_${comprobante.dataset.pagoId}`
+            );
+
+
+        const texto =
+            tarjeta?.querySelector(
+                ".texto-comprobante-retencion-pago"
+            );
+
+
+        if(!texto){
+
+            return;
+
+        }
+
+
+        texto.textContent =
+            comprobante.files &&
+            comprobante.files.length
+
+                ? `📎 ${comprobante.files[0].name}`
+
+                : "📎 Adjuntar comprobante";
 
     }
 );
@@ -16187,6 +18394,8 @@ Sí
 <script src="{% static 'js/cuentas_bancarias.js' %}?v=1"></script>
 
 <script src="{% static 'js/tarjetas.js' %}?v=1"></script>
+
+<script src="{% static 'js/retenciones.js' %}?v=1"></script>
 
 </body>
 </html>

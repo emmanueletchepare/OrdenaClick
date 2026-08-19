@@ -1,0 +1,359 @@
+<div class="card">
+
+    <div
+        style="
+            font-size:28px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Retenciones
+    </div>
+
+
+    <div
+        style="
+            color:#8b93a7;
+            margin-bottom:30px;
+        "
+    >
+        Administración de tipos de retención de la empresa.
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- CAMPOS -->
+    <!-- ========================================= -->
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:1.4fr 1.6fr;
+            gap:12px;
+            margin-bottom:20px;
+        "
+    >
+
+        <div>
+
+            <label
+                class="label"
+                for="tipoRetencion"
+            >
+                Tipo
+            </label>
+
+            <input
+                id="tipoRetencion"
+                type="text"
+                class="input-box"
+                maxlength="120"
+                autocomplete="off"
+                placeholder="Ej.: Ingresos Brutos (IIBB)"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label
+                class="label"
+                for="cuentaContableRetencion"
+            >
+                Cuenta contable
+            </label>
+
+            <input
+                id="cuentaContableRetencion"
+                type="text"
+                class="input-box"
+                value="Plan contable aún no configurado"
+                disabled
+                style="
+                    opacity:.65;
+                    cursor:not-allowed;
+                "
+            >
+
+        </div>
+
+    </div>
+
+
+    <div
+        style="
+            margin-bottom:20px;
+        "
+    >
+
+        <label
+            class="label"
+            for="descripcionRetencion"
+        >
+            Descripción
+        </label>
+
+        <textarea
+            id="descripcionRetencion"
+            class="input-box"
+            rows="3"
+            maxlength="500"
+            placeholder="Descripción opcional de la retención"
+            style="
+                resize:vertical;
+                min-height:90px;
+            "
+        ></textarea>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- ACCIONES -->
+    <!-- ========================================= -->
+
+    <div
+        style="
+            display:flex;
+            gap:12px;
+            justify-content:flex-end;
+            margin:20px 0 30px;
+        "
+    >
+
+        <button
+            id="btnGuardarRetencion"
+            type="button"
+            class="guardar"
+            style="
+                width:180px;
+                margin-top:0;
+            "
+        >
+            Guardar
+        </button>
+
+
+        <button
+            id="btnCancelarRetencion"
+            type="button"
+            class="action-btn"
+            style="
+                display:none;
+                width:180px;
+                margin-top:0;
+                background:#dc2626;
+                border-color:#dc2626;
+                color:#ffffff;
+            "
+        >
+            Cancelar
+        </button>
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- BUSCADOR -->
+    <!-- ========================================= -->
+
+    <div
+        style="
+            border-top:1px solid #2b3447;
+            margin-top:28px;
+            padding-top:24px;
+            margin-bottom:16px;
+        "
+    >
+
+        <label
+            class="label"
+            for="buscarRetencionABM"
+            style="
+                display:block;
+                margin-bottom:8px;
+            "
+        >
+            Buscar retención
+        </label>
+
+        <input
+            id="buscarRetencionABM"
+            type="text"
+            class="input-box"
+            placeholder="Buscar por tipo o descripción"
+            autocomplete="off"
+        >
+
+    </div>
+
+
+    <!-- ========================================= -->
+    <!-- LISTADO -->
+    <!-- ========================================= -->
+
+    <div
+        id="listaRetencionesABM"
+        style="
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        "
+    >
+
+        {% for retencion in retenciones %}
+
+            <div
+                class="tarjeta-retencion-abm"
+
+                data-retencion-id="{{ retencion.id }}"
+
+                data-retencion-tipo="{{ retencion.tipo|escape }}"
+
+                data-retencion-descripcion="{{ retencion.descripcion|default:''|escape }}"
+
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:20px;
+                    padding:16px 18px;
+                    background:#1b2130;
+                    border:1px solid #2b3447;
+                    border-radius:14px;
+                "
+            >
+
+                <div
+                    style="
+                        min-width:0;
+                        flex:1;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-weight:700;
+                            margin-bottom:6px;
+                        "
+                    >
+                        {{ retencion.tipo }}
+                    </div>
+
+
+                    <div
+                        style="
+                            color:#8b93a7;
+                            font-size:14px;
+                            line-height:1.6;
+                        "
+                    >
+
+                        {% if retencion.descripcion %}
+
+                            {{ retencion.descripcion }}
+
+                        {% else %}
+
+                            Sin descripción
+
+                        {% endif %}
+
+                        <br>
+
+                        Cuenta contable:
+                        pendiente de configuración
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:8px;
+                        flex-shrink:0;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="action-btn btn-modificar-retencion"
+                        data-retencion-id="{{ retencion.id }}"
+                    >
+                        Modificar
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="action-btn btn-eliminar-retencion"
+                        data-retencion-id="{{ retencion.id }}"
+                        data-retencion-tipo="{{ retencion.tipo|escape }}"
+                        style="
+                            background:#7f1d1d;
+                            border-color:#991b1b;
+                        "
+                    >
+                        Eliminar
+                    </button>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div
+                style="
+                    color:#8b93a7;
+                    padding:20px;
+                    text-align:center;
+                "
+            >
+                No hay retenciones cargadas.
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div
+        id="sinResultadosRetencionABM"
+        style="
+            display:none;
+            color:#8b93a7;
+            padding:20px;
+            text-align:center;
+        "
+    >
+        No se encontraron retenciones.
+    </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- VOLVER -->
+<!-- ========================================= -->
+
+<div
+    style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:30px;
+    "
+>
+
+    <button
+        id="btnVolverRetenciones"
+        type="button"
+        class="action-btn"
+    >
+        ← Volver
+    </button>
+
+</div>

@@ -54,7 +54,12 @@ from .views import (
     guardar_tarjeta,
     modificar_tarjeta,
     eliminar_tarjeta,
-    reactivar_tarjeta
+    reactivar_tarjeta,
+    listar_retenciones,
+    guardar_retencion,
+    modificar_retencion,
+    eliminar_retencion,
+    reactivar_retencion
     
 )
 
@@ -268,6 +273,40 @@ urlpatterns = [
         "tarjetas/reactivar/",
         reactivar_tarjeta,
         name="reactivar_tarjeta"
+    ),
+
+        # =========================================
+    # RETENCIONES
+    # =========================================
+
+    path(
+        "retenciones/",
+        listar_retenciones,
+        name="listar_retenciones"
+    ),
+
+    path(
+        "retenciones/guardar/",
+        guardar_retencion,
+        name="guardar_retencion"
+    ),
+
+    path(
+        "retenciones/modificar/",
+        modificar_retencion,
+        name="modificar_retencion"
+    ),
+
+    path(
+        "retenciones/eliminar/",
+        eliminar_retencion,
+        name="eliminar_retencion"
+    ),
+
+    path(
+        "retenciones/reactivar/",
+        reactivar_retencion,
+        name="reactivar_retencion"
     ),
 
     # =========================================

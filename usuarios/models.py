@@ -1814,6 +1814,68 @@ class Tarjeta(models.Model):
         )
 
 # =========================================
+# RETENCIONES
+# =========================================
+
+class Retencion(models.Model):
+    """
+    Define un tipo de retención configurable para una empresa.
+
+    Las retenciones funcionan como tabla maestra y utilizan
+    baja lógica para conservar correctamente la información
+    histórica de los pagos.
+    """
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='retenciones'
+    )
+
+
+    tipo = models.CharField(
+        max_length=120
+    )
+
+
+    descripcion = models.TextField(
+        blank=True
+    )
+
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+
+    class Meta:
+
+        ordering = [
+            'tipo'
+        ]
+
+
+        constraints = [
+
+            models.UniqueConstraint(
+                fields=[
+                    'empresa',
+                    'tipo'
+                ],
+                name='retencion_empresa_tipo_unico'
+            ),
+
+        ]
+
+
+    def __str__(self):
+        """
+        Devuelve la representación textual de la retención.
+        """
+
+        return self.tipo
+
+# =========================================
 # PROVEEDORES
 # =========================================
 class Proveedor(models.Model):
