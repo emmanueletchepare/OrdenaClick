@@ -39,9 +39,11 @@ body{
 
     color:var(--text);
 
-    min-height:100vh;
+    height:100vh;
 
     display:flex;
+
+    overflow:hidden;
 }
 
 /* =========================
@@ -51,6 +53,8 @@ body{
 .sidebar{
 
     width:290px;
+
+    height:100vh;
 
     background:var(--sidebar);
 
@@ -63,6 +67,12 @@ body{
     justify-content:space-between;
 
     padding:28px 22px;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    flex-shrink:0;
 }
 
 .logo{
@@ -217,7 +227,15 @@ body{
 
     flex:1;
 
+    height:100vh;
+
     padding:40px;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    min-width:0;
 }
 
 .topbar{
@@ -243,6 +261,58 @@ body{
     color:var(--muted);
 
     font-size:15px;
+}
+
+/* =========================
+   SCROLLBAR ORDENACLICK
+========================= */
+
+.sidebar,
+.main{
+
+    scrollbar-width:thin;
+
+    scrollbar-color:
+        #334155
+        transparent;
+}
+
+
+.sidebar::-webkit-scrollbar,
+.main::-webkit-scrollbar{
+
+    width:8px;
+}
+
+
+.sidebar::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track{
+
+    background:transparent;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb{
+
+    background:#334155;
+
+    border-radius:999px;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover{
+
+    background:#3b82f6;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
 }
 
 /* =========================
@@ -679,23 +749,47 @@ body{
 @media(max-width:1000px){
 
     body{
+
+        height:auto;
+
+        min-height:100vh;
+
         flex-direction:column;
+
+        overflow-y:auto;
+
+        overflow-x:hidden;
     }
+
 
     .sidebar{
 
         width:100%;
 
+        height:auto;
+
+        overflow:visible;
+
         border-right:none;
 
         border-bottom:1px solid #242938;
+
+        flex-shrink:1;
     }
 
+
     .main{
+
+        height:auto;
+
+        overflow:visible;
+
         padding:24px;
     }
 
+
     .form-grid{
+
         grid-template-columns:1fr;
     }
 
@@ -1720,6 +1814,137 @@ function limpiarPanelOperativo(){
 
 }
 
+function posicionarMainEnElemento(
+    elemento,
+    margenSuperior = 15
+){
+
+    if(!elemento){
+
+        return;
+
+    }
+
+
+    const main =
+        document.querySelector(
+            ".main"
+        );
+
+
+    if(!main){
+
+        return;
+
+    }
+
+
+    function posicionar(){
+
+        const rectMain =
+            main.getBoundingClientRect();
+
+
+        const rectElemento =
+            elemento.getBoundingClientRect();
+
+
+        const destino =
+            main.scrollTop +
+            rectElemento.top -
+            rectMain.top -
+            margenSuperior;
+
+
+        main.scrollTop =
+            Math.max(
+                0,
+                destino
+            );
+
+    }
+
+
+    /*
+     * Primer posicionamiento:
+     * después de restaurar el DOM.
+     */
+
+    requestAnimationFrame(
+        function(){
+
+            requestAnimationFrame(
+                function(){
+
+                    posicionar();
+
+
+                    /*
+                     * Segundo posicionamiento:
+                     *
+                     * Algunas reconstrucciones del formulario
+                     * todavía modifican alturas después de los
+                     * requestAnimationFrame.
+                     *
+                     * Este es el que deja la posición definitiva.
+                     */
+
+                    setTimeout(
+                        function(){
+
+                            posicionar();
+
+                        },
+                        80
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+function posicionarCargaSimpleEnCampo(
+    campoId
+){
+
+    const campo =
+        document.getElementById(
+            campoId
+        );
+
+
+    if(!campo){
+
+        return;
+
+    }
+
+
+    /*
+     * Apuntamos al field completo para que
+     * queden visibles:
+     *
+     * - la etiqueta;
+     * - el select;
+     * - el [+].
+     */
+
+    const field =
+        campo.closest(
+            ".field"
+        );
+
+
+    posicionarMainEnElemento(
+        field || campo,
+        15
+    );
+
+}
+
 function mostrarAltaEmpresa(){
 
     limpiarPanelOperativo();
@@ -2422,7 +2647,7 @@ async function actualizarCentroOperativoDelRegistro(){
 
     if(
         typeof cargarSelectCentrosOperativos !==
-        "function"
+            "function"
     ){
 
         return;
@@ -2439,21 +2664,49 @@ async function actualizarCentroOperativoDelRegistro(){
         );
 
 
+    if(!select){
+
+        ultimoCentroOperativoCreado =
+            null;
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * SELECCIONAR CENTRO RECIÉN CREADO
+     * =========================================
+     */
+
     if(
-        select &&
         ultimoCentroOperativoCreado
     ){
 
+        const centroId =
+            typeof ultimoCentroOperativoCreado ===
+                "object"
+
+                ? String(
+                    ultimoCentroOperativoCreado.id
+                )
+
+                : String(
+                    ultimoCentroOperativoCreado
+                );
+
+
         const opcion =
             select.querySelector(
-                `option[value="${ultimoCentroOperativoCreado}"]`
+                `option[value="${centroId}"]`
             );
 
 
         if(opcion){
 
             select.value =
-                ultimoCentroOperativoCreado;
+                centroId;
 
         }
 
@@ -2464,14 +2717,31 @@ async function actualizarCentroOperativoDelRegistro(){
         null;
 
 
+    /*
+     * El Recurso Operativo depende del Centro.
+     * Actualizamos sus opciones después de
+     * restaurar el Centro seleccionado.
+     */
+
     if(
         typeof actualizarRecursosPorCentroOperativo ===
-        "function"
+            "function"
     ){
 
         actualizarRecursosPorCentroOperativo();
 
     }
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "centroOperativoRegistro"
+    );
 
 }
 
@@ -2816,14 +3086,25 @@ function actualizarTipoGastoDelRegistro(){
 
     if(!select){
 
-        ultimoTipoGastoCreado = null;
+        ultimoTipoGastoCreado =
+            null;
 
         return;
 
     }
 
 
+    /*
+     * Aunque no se haya creado un elemento,
+     * si volvemos desde el ABM debemos quedar
+     * exactamente en Tipo de Gasto.
+     */
+
     if(!ultimoTipoGastoCreado){
+
+        posicionarCargaSimpleEnCampo(
+            "tipoGastoRegistro"
+        );
 
         return;
 
@@ -2831,7 +3112,8 @@ function actualizarTipoGastoDelRegistro(){
 
 
     const tipoGastoId =
-        typeof ultimoTipoGastoCreado === "object"
+        typeof ultimoTipoGastoCreado ===
+            "object"
 
             ? String(
                 ultimoTipoGastoCreado.id
@@ -2843,7 +3125,8 @@ function actualizarTipoGastoDelRegistro(){
 
 
     const tipoGastoNombre =
-        typeof ultimoTipoGastoCreado === "object"
+        typeof ultimoTipoGastoCreado ===
+            "object"
 
             ? ultimoTipoGastoCreado.nombre
 
@@ -2852,9 +3135,7 @@ function actualizarTipoGastoDelRegistro(){
 
     let opcion =
         select.querySelector(
-
             `option[value="${tipoGastoId}"]`
-
         );
 
 
@@ -2888,6 +3169,17 @@ function actualizarTipoGastoDelRegistro(){
 
     ultimoTipoGastoCreado =
         null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "tipoGastoRegistro"
+    );
 
 }
 
@@ -3025,13 +3317,24 @@ async function actualizarProveedorDelRegistro(){
 
     await cargarSelectProveedores();
 
+
     const select =
         document.getElementById(
             "proveedorRegistro"
         );
 
+
+    if(!select){
+
+        ultimoProveedorCreado =
+            null;
+
+        return;
+
+    }
+
+
     if(
-        select &&
         ultimoProveedorCreado
     ){
 
@@ -3039,6 +3342,7 @@ async function actualizarProveedorDelRegistro(){
             select.querySelector(
                 `option[value="${ultimoProveedorCreado}"]`
             );
+
 
         if(opcion){
 
@@ -3049,7 +3353,20 @@ async function actualizarProveedorDelRegistro(){
 
     }
 
-    ultimoProveedorCreado = null;
+
+    ultimoProveedorCreado =
+        null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "proveedorRegistro"
+    );
 
 }
 
@@ -3748,10 +4065,12 @@ async function actualizarRecursoOperativoDelRegistro(){
             "empresaActiva"
         );
 
+
     const selectCentro =
         document.getElementById(
             "centroOperativoRegistro"
         );
+
 
     const selectRecurso =
         document.getElementById(
@@ -3793,6 +4112,10 @@ async function actualizarRecursoOperativoDelRegistro(){
                 resultado.recursos
             )
         ){
+
+            posicionarCargaSimpleEnCampo(
+                "recursoOperativoRegistro"
+            );
 
             return;
 
@@ -3840,18 +4163,16 @@ async function actualizarRecursoOperativoDelRegistro(){
                     Array.isArray(
                         recursoCreado.centros_operativos_ids
                     )
+
                         ? recursoCreado.centros_operativos_ids
+
                         : [];
 
 
                 /*
-                * Si el Centro Operativo que ya estaba
-                * seleccionado pertenece al recurso nuevo,
-                * lo conservamos.
-                *
-                * Esto es especialmente importante cuando
-                * entramos al ABM desde Carga Simple.
-                */
+                 * Si el Centro Operativo actual pertenece
+                 * al recurso nuevo, lo conservamos.
+                 */
 
                 const centroActual =
                     String(
@@ -3862,6 +4183,7 @@ async function actualizarRecursoOperativoDelRegistro(){
 
                 const perteneceAlCentroActual =
                     centrosRecurso
+
                         .map(
                             function(centroId){
 
@@ -3871,24 +4193,26 @@ async function actualizarRecursoOperativoDelRegistro(){
 
                             }
                         )
+
                         .includes(
                             centroActual
                         );
 
 
-                if(!perteneceAlCentroActual){
+                /*
+                 * Si no pertenece al Centro actual,
+                 * usamos el primero asociado al recurso.
+                 */
 
-                    /*
-                    * Si el recurso no pertenece al Centro
-                    * que estaba seleccionado, usamos el
-                    * primero de sus Centros Operativos.
-                    */
+                if(!perteneceAlCentroActual){
 
                     const primerCentroId =
                         centrosRecurso.length > 0
+
                             ? String(
                                 centrosRecurso[0]
                             )
+
                             : "";
 
 
@@ -3911,6 +4235,11 @@ async function actualizarRecursoOperativoDelRegistro(){
 
                 }
 
+
+                /*
+                 * Reconstruimos Recursos según
+                 * el Centro Operativo seleccionado.
+                 */
 
                 actualizarRecursosPorCentroOperativo();
 
@@ -3953,6 +4282,17 @@ async function actualizarRecursoOperativoDelRegistro(){
 
     ultimoRecursoOperativoCreado =
         null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "recursoOperativoRegistro"
+    );
 
 }
 
@@ -4180,7 +4520,7 @@ async function volverDesdeABMBancos(){
 
     /*
      * =========================================
-     * BANCOS ABIERTO DESDE REGISTRO
+     * BANCOS ABIERTOS DESDE REGISTRO
      * =========================================
      */
 
@@ -4218,12 +4558,9 @@ async function volverDesdeABMBancos(){
         ){
 
             const pagoId =
-                contextoRetornoABM.pagoId;
-
-
-            await cargarBancosOperacionBancaria(
-                pagoId
-            );
+                Number(
+                    contextoRetornoABM.pagoId
+                );
 
 
             const tarjeta =
@@ -4232,9 +4569,44 @@ async function volverDesdeABMBancos(){
                 );
 
 
+            if(!tarjeta){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            /*
+             * Recargar Bancos de ESTA transferencia.
+             */
+
+            await cargarBancosOperacionBancaria(
+                pagoId
+            );
+
+
+            /*
+             * Abrir Transferencias / Depósitos.
+             */
+
             const bloque =
-                tarjeta?.querySelector(
+                tarjeta.querySelector(
                     ".bloque-operaciones-bancarias"
+                );
+
+
+            const boton =
+                tarjeta.querySelector(
+                    ".btn-toggle-operaciones-bancarias"
+                );
+
+
+            const total =
+                tarjeta.querySelector(
+                    ".total-operaciones-bancarias"
                 );
 
 
@@ -4246,12 +4618,59 @@ async function volverDesdeABMBancos(){
             }
 
 
+            if(boton){
+
+                boton.innerHTML = `
+
+                    <span>
+                        ▼ Transferencias / Depósitos
+                    </span>
+
+                    <strong
+                        class="total-operaciones-bancarias"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
+
+                `;
+
+            }
+
+
+            /*
+             * Banco recién creado.
+             *
+             * cargarBancosOperacionBancaria()
+             * ya maneja ultimoBancoCreado y selecciona
+             * automáticamente el Banco nuevo.
+             */
+
+
             contextoRetornoABM =
                 null;
 
 
             origenABM =
                 "registro";
+
+
+            /*
+             * =====================================
+             * POSICIÓN EXACTA
+             * =====================================
+             *
+             * El encabezado Transferencias queda
+             * arriba, igual que con Cuenta Bancaria.
+             */
+
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
 
 
             return;
@@ -4274,13 +4693,9 @@ async function volverDesdeABMBancos(){
         ){
 
             const pagoId =
-                contextoRetornoABM.pagoId;
-
-
-            await cargarEntidadesChequePago(
-                pagoId,
-                "tercero"
-            );
+                Number(
+                    contextoRetornoABM.pagoId
+                );
 
 
             const tarjeta =
@@ -4289,9 +4704,37 @@ async function volverDesdeABMBancos(){
                 );
 
 
+            if(!tarjeta){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            await cargarEntidadesChequePago(
+                pagoId,
+                "tercero"
+            );
+
+
             const bloque =
-                tarjeta?.querySelector(
+                tarjeta.querySelector(
                     ".bloque-cheques-pago"
+                );
+
+
+            const boton =
+                tarjeta.querySelector(
+                    ".btn-toggle-cheques-pago"
+                );
+
+
+            const total =
+                tarjeta.querySelector(
+                    ".total-cheques-pago"
                 );
 
 
@@ -4299,6 +4742,47 @@ async function volverDesdeABMBancos(){
 
                 bloque.style.display =
                     "block";
+
+            }
+
+
+            if(boton){
+
+                boton.innerHTML = `
+
+                    <span>
+                        ▼ Cheques
+                    </span>
+
+                    <strong
+                        class="total-cheques-pago"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
+
+                `;
+
+            }
+
+
+            /*
+             * Mantener origen Tercero.
+             */
+
+            const selectOrigen =
+                tarjeta.querySelector(
+                    ".origen-cheque-pago"
+                );
+
+
+            if(selectOrigen){
+
+                selectOrigen.value =
+                    "tercero";
 
             }
 
@@ -4311,10 +4795,15 @@ async function volverDesdeABMBancos(){
                 "registro";
 
 
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
+
+
             return;
 
         }
-       
 
     }
 
@@ -8983,9 +9472,46 @@ function abrirABMCuentaOperacionBancaria(
 
 }
 
-function abrirABMCuentaOperacionBancaria(
+function abrirABMBancoOperacionBancaria(
     pagoId
 ){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        alert(
+            "No se pudo identificar el Pago desde el que se abrió Bancos."
+        );
+
+        return;
+
+    }
+
 
     contextoRetornoABM = {
 
@@ -8993,17 +9519,15 @@ function abrirABMCuentaOperacionBancaria(
             "operacion_bancaria",
 
         pagoId:
-            Number(
-                pagoId
-            ),
+            idPago,
 
         campo:
-            "origen"
+            "destino"
 
     };
 
 
-    mostrarABMCuentasBancarias(
+    mostrarABMBancos(
         "registro"
     );
 
@@ -9358,9 +9882,16 @@ async function actualizarTarjetaDelRegistro(){
 
 
     /*
-     * Recuperamos EXCLUSIVAMENTE el Pago
-     * desde el que se abrió el ABM.
+     * =========================================
+     * RECARGAR TARJETAS DEL PAGO
+     * =========================================
      */
+
+    await cargarTarjetasPago(
+        pagoId
+    );
+
+
     const tarjetaPago =
         document.getElementById(
             `pagoRegistro_${pagoId}`
@@ -9377,28 +9908,17 @@ async function actualizarTarjetaDelRegistro(){
     }
 
 
-    /*
-     * Actualizamos solamente el selector
-     * de Tarjetas de ESTE Pago.
-     */
-    await cargarTarjetasPago(
-        pagoId
-    );
-
-
-    /*
-     * Buscamos el acordeón Tarjetas
-     * exclusivamente dentro de ESTE Pago.
-     */
     const bloque =
         tarjetaPago.querySelector(
             ".bloque-tarjeta-pago"
         );
 
+
     const boton =
         tarjetaPago.querySelector(
             ".btn-toggle-tarjeta-pago"
         );
+
 
     const total =
         tarjetaPago.querySelector(
@@ -9407,8 +9927,11 @@ async function actualizarTarjetaDelRegistro(){
 
 
     /*
-     * Dejamos abierto Tarjetas.
+     * =========================================
+     * ABRIR ACORDEÓN TARJETAS
+     * =========================================
      */
+
     if(bloque){
 
         bloque.style.display =
@@ -9441,9 +9964,11 @@ async function actualizarTarjetaDelRegistro(){
 
 
     /*
-     * Limpiamos los estados de retorno
-     * recién después de recuperar el Pago.
+     * =========================================
+     * LIMPIAR CONTEXTO
+     * =========================================
      */
+
     contextoRetornoABM =
         null;
 
@@ -9461,66 +9986,19 @@ async function actualizarTarjetaDelRegistro(){
 
     /*
      * =========================================
-     * VOLVER AL ACORDEÓN TARJETAS DE ESTE PAGO
+     * POSICIÓN EXACTA
      * =========================================
      *
-     * Puede haber varios Pagos abiertos.
-     * Por eso NO buscamos Tarjetas globalmente.
+     * Dejamos el encabezado Tarjetas arriba
+     * del área operativa, igual que:
      *
-     * tarjetaPago representa exclusivamente:
-     *
-     * pagoRegistro_${pagoId}
-     *
-     * y desde ahí buscamos su bloque Tarjetas.
+     * - Transferencias / Depósitos
+     * - Cheques
      */
-    requestAnimationFrame(
-        function(){
 
-            requestAnimationFrame(
-                function(){
-
-                    const acordeonTarjetas =
-                        tarjetaPago.querySelector(
-                            ".bloque-tarjeta-pago"
-                        );
-
-
-                    if(acordeonTarjetas){
-
-                        acordeonTarjetas.scrollIntoView({
-
-                            behavior:
-                                "smooth",
-
-                            block:
-                                "start"
-
-                        });
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * Fallback solamente si por
-                     * algún motivo no encontramos
-                     * el bloque Tarjetas.
-                     */
-                    tarjetaPago.scrollIntoView({
-
-                        behavior:
-                            "smooth",
-
-                        block:
-                            "start"
-
-                    });
-
-                }
-            );
-
-        }
+    posicionarMainEnElemento(
+        boton,
+        15
     );
 
 }
@@ -11497,6 +11975,12 @@ async function actualizarRetencionDelRegistro(){
     }
 
 
+    /*
+     * =========================================
+     * RECARGAR RETENCIONES DEL PAGO
+     * =========================================
+     */
+
     await cargarRetencionesPago(
         pagoId
     );
@@ -11507,16 +11991,24 @@ async function actualizarRetencionDelRegistro(){
             ".bloque-retenciones-pago"
         );
 
+
     const boton =
         tarjeta.querySelector(
             ".btn-toggle-retenciones-pago"
         );
+
 
     const total =
         tarjeta.querySelector(
             ".total-retenciones-pago"
         );
 
+
+    /*
+     * =========================================
+     * ABRIR ACORDEÓN RETENCIONES
+     * =========================================
+     */
 
     if(bloque){
 
@@ -11549,6 +12041,12 @@ async function actualizarRetencionDelRegistro(){
     }
 
 
+    /*
+     * =========================================
+     * LIMPIAR CONTEXTO
+     * =========================================
+     */
+
     contextoRetornoABM =
         null;
 
@@ -11564,36 +12062,22 @@ async function actualizarRetencionDelRegistro(){
     }
 
 
-    requestAnimationFrame(
-        function(){
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     *
+     * Dejamos el encabezado Retenciones arriba
+     * del área operativa, igual que:
+     *
+     * - Transferencias / Depósitos
+     * - Cheques
+     * - Tarjetas
+     */
 
-            requestAnimationFrame(
-                function(){
-
-                    const acordeon =
-                        tarjeta.querySelector(
-                            ".bloque-retenciones-pago"
-                        );
-
-
-                    if(acordeon){
-
-                        acordeon.scrollIntoView({
-
-                            behavior:
-                                "smooth",
-
-                            block:
-                                "start"
-
-                        });
-
-                    }
-
-                }
-            );
-
-        }
+    posicionarMainEnElemento(
+        boton,
+        15
     );
 
 }
@@ -12482,84 +12966,6 @@ function limpiarFormularioRetencionPago(
     }
 
 }
-
-function actualizarTotalRetencionesPago(
-    pagoId
-){
-
-    const idPago =
-        Number(
-            pagoId
-        );
-
-
-    const pago =
-        pagosRegistro.find(
-            function(item){
-
-                return item.id ===
-                    idPago;
-
-            }
-        );
-
-
-    const tarjeta =
-        document.getElementById(
-            `pagoRegistro_${idPago}`
-        );
-
-
-    if(
-        !pago ||
-        !tarjeta
-    ){
-
-        return;
-
-    }
-
-
-    const total =
-        pago.retenciones.reduce(
-            function(acumulado, retencion){
-
-                return (
-                    acumulado +
-                    Number(
-                        retencion.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalAcordeon =
-        tarjeta.querySelector(
-            ".total-retenciones-pago"
-        );
-
-
-    if(totalAcordeon){
-
-        totalAcordeon.textContent =
-            "$ " +
-            formatearImporte(
-                total
-            );
-
-    }
-
-
-    actualizarPagoRegistro(
-        idPago
-    );
-
-}
-
-
 
 async function toggleChequesPago(
     pagoId
@@ -14594,14 +15000,150 @@ function actualizarPagoRegistro(
         );
 
 
-    const totalRetenciones =
-        pago.retenciones.reduce(
-            function(acumulado, retencion){
+    /*
+     * Los intereses de financiación de Tarjeta
+     * se conservan dentro de cada operación de pago.tarjetas,
+     * pero NO aumentan el importe aplicado
+     * al Movimiento.
+     *
+     * Más adelante agregaremos:
+     *
+     * retenciones
+     */
+
+    pago.total =
+        pago.efectivo +
+        totalOperaciones +
+        totalTarjeta +
+        totalCheques;
+
+
+    const totalCabecera =
+        tarjeta.querySelector(
+            ".total-pago-registro"
+        );
+
+
+    if(totalCabecera){
+
+        totalCabecera.textContent =
+            "$ " +
+            formatearImporte(
+                pago.total
+            );
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+function actualizarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    id;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const inputFecha =
+        tarjeta.querySelector(
+            ".fecha-pago-registro"
+        );
+
+
+    const inputEfectivo =
+        tarjeta.querySelector(
+            ".efectivo-pago-registro"
+        );
+
+
+    pago.fecha_pago =
+        inputFecha
+            ? inputFecha.value
+            : "";
+
+
+    pago.efectivo =
+        leerImporte(
+            inputEfectivo?.value
+        );
+
+
+    const totalOperaciones =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
 
                 return (
                     acumulado +
                     Number(
-                        retencion.importe || 0
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalTarjeta =
+        pago.tarjetas.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalCheques =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
                     )
                 );
 
@@ -14612,19 +15154,20 @@ function actualizarPagoRegistro(
 
     /*
      * Los intereses de financiación de Tarjeta
-     * se conservan dentro de la operación,
-     * pero NO aumentan el importe aplicado.
+     * se conservan dentro de cada operación de pago.tarjetas,
+     * pero NO aumentan el importe aplicado
+     * al Movimiento.
      *
-     * Las Retenciones sí cancelan parte de la deuda
-     * y por lo tanto forman parte del total aplicado.
+     * Más adelante agregaremos:
+     *
+     * retenciones
      */
 
     pago.total =
         pago.efectivo +
         totalOperaciones +
         totalTarjeta +
-        totalCheques +
-        totalRetenciones;
+        totalCheques;
 
 
     const totalCabecera =
@@ -17092,13 +17635,14 @@ document.addEventListener(
             return;
 
         }
-        
+
+
         /*
-        * =========================================
-        * CANCELAR CAMBIOS
-        * TRANSFERENCIA / DEPÓSITO
-        * =========================================
-        */
+         * =========================================
+         * CANCELAR CAMBIOS
+         * TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
 
         const botonCancelarOperacion =
             event.target.closest(
@@ -17116,11 +17660,12 @@ document.addEventListener(
 
         }
 
+
         /*
-        * =========================================
-        * MODIFICAR TRANSFERENCIA / DEPÓSITO
-        * =========================================
-        */
+         * =========================================
+         * MODIFICAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
 
         const botonModificarOperacion =
             event.target.closest(
@@ -17141,6 +17686,7 @@ document.addEventListener(
             return;
 
         }
+
 
         /*
          * =========================================
@@ -17242,10 +17788,10 @@ document.addEventListener(
 
 
         /*
-        * =========================================
-        * REGISTRAR CHEQUE
-        * =========================================
-        */
+         * =========================================
+         * REGISTRAR CHEQUE
+         * =========================================
+         */
 
         const botonRegistrarCheque =
             event.target.closest(
@@ -17265,10 +17811,10 @@ document.addEventListener(
 
 
         /*
-        * =========================================
-        * CANCELAR CAMBIOS DEL CHEQUE
-        * =========================================
-        */
+         * =========================================
+         * CANCELAR CAMBIOS DEL CHEQUE
+         * =========================================
+         */
 
         const botonCancelarCheque =
             event.target.closest(
@@ -17288,10 +17834,10 @@ document.addEventListener(
 
 
         /*
-        * =========================================
-        * MODIFICAR CHEQUE
-        * =========================================
-        */
+         * =========================================
+         * MODIFICAR CHEQUE
+         * =========================================
+         */
 
         const botonModificarCheque =
             event.target.closest(
@@ -17315,10 +17861,10 @@ document.addEventListener(
 
 
         /*
-        * =========================================
-        * ELIMINAR CHEQUE
-        * =========================================
-        */
+         * =========================================
+         * ELIMINAR CHEQUE
+         * =========================================
+         */
 
         const botonEliminarChequePago =
             event.target.closest(
@@ -17363,7 +17909,8 @@ document.addEventListener(
 
         }
 
-                /*
+
+        /*
          * =========================================
          * RETENCIONES
          * ABRIR / CERRAR
@@ -17388,7 +17935,9 @@ document.addEventListener(
 
 
         /*
+         * =========================================
          * [+] RETENCIÓN
+         * =========================================
          */
 
         const botonAgregarRetencion =
@@ -17409,7 +17958,9 @@ document.addEventListener(
 
 
         /*
-         * ADJUNTAR COMPROBANTE
+         * =========================================
+         * ADJUNTAR COMPROBANTE RETENCIÓN
+         * =========================================
          */
 
         const botonAdjuntarRetencion =
@@ -17439,7 +17990,9 @@ document.addEventListener(
 
 
         /*
-         * REGISTRAR
+         * =========================================
+         * REGISTRAR RETENCIÓN
+         * =========================================
          */
 
         const botonRegistrarRetencion =
@@ -17460,7 +18013,9 @@ document.addEventListener(
 
 
         /*
-         * CANCELAR CAMBIOS
+         * =========================================
+         * CANCELAR CAMBIOS RETENCIÓN
+         * =========================================
          */
 
         const botonCancelarRetencion =
@@ -17481,7 +18036,9 @@ document.addEventListener(
 
 
         /*
-         * MODIFICAR
+         * =========================================
+         * MODIFICAR RETENCIÓN
+         * =========================================
          */
 
         const botonModificarRetencion =
@@ -17506,7 +18063,9 @@ document.addEventListener(
 
 
         /*
-         * ELIMINAR
+         * =========================================
+         * ELIMINAR RETENCIÓN
+         * =========================================
          */
 
         const botonEliminarRetencion =
@@ -17529,8 +18088,11 @@ document.addEventListener(
 
         }
 
+
         /*
-         * CERRAR DESDE ABAJO
+         * =========================================
+         * CERRAR RETENCIONES DESDE ABAJO
+         * =========================================
          */
 
         const botonCerrarRetenciones =
@@ -17548,7 +18110,6 @@ document.addEventListener(
             return;
 
         }
-        
 
     }
 );
@@ -18391,7 +18952,7 @@ Sí
 
 <script src="{% static 'js/recursos_operativos.js' %}?v=3"></script>
 
-<script src="{% static 'js/cuentas_bancarias.js' %}?v=1"></script>
+<script src="{% static 'js/cuentas_bancarias.js' %}?v=2"></script>
 
 <script src="{% static 'js/tarjetas.js' %}?v=1"></script>
 

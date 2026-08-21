@@ -1292,7 +1292,7 @@ async function volverDesdeABMCuentasBancarias(){
 
         /*
          * =====================================
-         * ORIGEN DE TRANSFERENCIA
+         * TRANSFERENCIA / DEPÓSITO
          * =====================================
          */
 
@@ -1307,8 +1307,31 @@ async function volverDesdeABMCuentasBancarias(){
         ){
 
             const pagoId =
-                contextoRetornoABM.pagoId;
+                Number(
+                    contextoRetornoABM.pagoId
+                );
 
+
+            const tarjetaPago =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            if(!tarjetaPago){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            /*
+             * Recargar cuentas exclusivamente
+             * de ESTA transferencia.
+             */
 
             if(
                 typeof cargarCuentasOperacionBancaria ===
@@ -1322,60 +1345,65 @@ async function volverDesdeABMCuentasBancarias(){
             }
 
 
+            /*
+             * Seleccionar cuenta recién creada.
+             */
+
+            const selectCuenta =
+                tarjetaPago.querySelector(
+                    ".cuenta-origen-operacion-bancaria"
+                );
+
+
             if(
+                selectCuenta &&
                 ultimaCuentaBancariaCreada
             ){
 
-                const tarjeta =
-                    document.getElementById(
-                        `pagoRegistro_${pagoId}`
+                const cuentaId =
+                    String(
+                        ultimaCuentaBancariaCreada.id
                     );
 
 
-                const selectCuenta =
-                    tarjeta?.querySelector(
-                        ".cuenta-origen-operacion-bancaria"
+                const opcion =
+                    selectCuenta.querySelector(
+                        `option[value="${cuentaId}"]`
                     );
 
 
-                if(selectCuenta){
+                if(opcion){
 
-                    const cuentaId =
-                        String(
-                            ultimaCuentaBancariaCreada.id
-                        );
-
-
-                    const opcion =
-                        selectCuenta.querySelector(
-                            `option[value="${cuentaId}"]`
-                        );
-
-
-                    if(opcion){
-
-                        selectCuenta.value =
-                            cuentaId;
-
-                    }
+                    selectCuenta.value =
+                        cuentaId;
 
                 }
 
             }
 
 
-            const tarjeta =
-                document.getElementById(
-                    `pagoRegistro_${pagoId}`
-                );
-
+            /*
+             * Recuperar acordeón Transferencias.
+             */
 
             const bloque =
-                tarjeta?.querySelector(
+                tarjetaPago.querySelector(
                     ".bloque-operaciones-bancarias"
                 );
 
 
+            const boton =
+                tarjetaPago.querySelector(
+                    ".btn-toggle-operaciones-bancarias"
+                );
+
+
+            const total =
+                tarjetaPago.querySelector(
+                    ".total-operaciones-bancarias"
+                );
+
+
             if(bloque){
 
                 bloque.style.display =
@@ -1384,68 +1412,25 @@ async function volverDesdeABMCuentasBancarias(){
             }
 
 
-            contextoRetornoABM =
-                null;
+            if(boton){
 
+                boton.innerHTML = `
 
-            origenABM =
-                "registro";
+                    <span>
+                        ▼ Transferencias / Depósitos
+                    </span>
 
+                    <strong
+                        class="total-operaciones-bancarias"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
 
-            return;
-
-        }
-
-
-        /*
-         * =====================================
-         * CHEQUE PROPIO DEL PAGO
-         * =====================================
-         */
-
-        if(
-            typeof contextoRetornoABM !==
-                "undefined" &&
-            contextoRetornoABM &&
-            contextoRetornoABM.tipo ===
-                "cheque_pago" &&
-            contextoRetornoABM.origen ===
-                "propio"
-        ){
-
-            const pagoId =
-                contextoRetornoABM.pagoId;
-
-
-            if(
-                typeof cargarEntidadesChequePago ===
-                    "function"
-            ){
-
-                await cargarEntidadesChequePago(
-                    pagoId,
-                    "propio"
-                );
-
-            }
-
-
-            const tarjeta =
-                document.getElementById(
-                    `pagoRegistro_${pagoId}`
-                );
-
-
-            const bloque =
-                tarjeta?.querySelector(
-                    ".bloque-cheques-pago"
-                );
-
-
-            if(bloque){
-
-                bloque.style.display =
-                    "block";
+                `;
 
             }
 
@@ -1462,6 +1447,217 @@ async function volverDesdeABMCuentasBancarias(){
                 "registro";
 
 
+            /*
+             * =====================================
+             * RETORNO VISUAL EXACTO
+             * =====================================
+             *
+             * El encabezado del acordeón que
+             * llamó al ABM queda arriba.
+             */
+
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * =====================================
+         * CHEQUE PROPIO
+         * =====================================
+         */
+
+        if(
+            typeof contextoRetornoABM !==
+                "undefined" &&
+            contextoRetornoABM &&
+            contextoRetornoABM.tipo ===
+                "cheque_pago" &&
+            contextoRetornoABM.origen ===
+                "propio"
+        ){
+
+            const pagoId =
+                Number(
+                    contextoRetornoABM.pagoId
+                );
+
+
+            const tarjetaPago =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            if(!tarjetaPago){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            /*
+             * Recargamos las cuentas del
+             * Cheque propio.
+             */
+
+            if(
+                typeof cargarEntidadesChequePago ===
+                    "function"
+            ){
+
+                await cargarEntidadesChequePago(
+                    pagoId,
+                    "propio"
+                );
+
+            }
+
+
+            const bloque =
+                tarjetaPago.querySelector(
+                    ".bloque-cheques-pago"
+                );
+
+
+            const boton =
+                tarjetaPago.querySelector(
+                    ".btn-toggle-cheques-pago"
+                );
+
+
+            const total =
+                tarjetaPago.querySelector(
+                    ".total-cheques-pago"
+                );
+
+
+            /*
+             * Abrir Cheques.
+             */
+
+            if(bloque){
+
+                bloque.style.display =
+                    "block";
+
+            }
+
+
+            if(boton){
+
+                boton.innerHTML = `
+
+                    <span>
+                        ▼ Cheques
+                    </span>
+
+                    <strong
+                        class="total-cheques-pago"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
+
+                `;
+
+            }
+
+
+            /*
+             * Mantener Origen = Propio.
+             */
+
+            const selectOrigen =
+                tarjetaPago.querySelector(
+                    ".origen-cheque-pago"
+                );
+
+
+            if(selectOrigen){
+
+                selectOrigen.value =
+                    "propio";
+
+            }
+
+
+            /*
+             * Seleccionar cuenta nueva.
+             */
+
+            const selectEntidad =
+                tarjetaPago.querySelector(
+                    ".entidad-cheque-pago"
+                );
+
+
+            if(
+                selectEntidad &&
+                ultimaCuentaBancariaCreada
+            ){
+
+                const cuentaId =
+                    String(
+                        ultimaCuentaBancariaCreada.id
+                    );
+
+
+                const opcion =
+                    selectEntidad.querySelector(
+                        `option[value="${cuentaId}"]`
+                    );
+
+
+                if(opcion){
+
+                    selectEntidad.value =
+                        cuentaId;
+
+                }
+
+            }
+
+
+            ultimaCuentaBancariaCreada =
+                null;
+
+
+            contextoRetornoABM =
+                null;
+
+
+            origenABM =
+                "registro";
+
+
+            /*
+             * =====================================
+             * RETORNO VISUAL EXACTO
+             * =====================================
+             *
+             * Volvemos al encabezado Cheques,
+             * no al encabezado Pago.
+             */
+
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
+
+
             return;
 
         }
@@ -1473,25 +1669,6 @@ async function volverDesdeABMCuentasBancarias(){
      * =========================================
      * CUENTAS BANCARIAS ABIERTA DESDE TARJETAS
      * =========================================
-     *
-     * Flujo:
-     *
-     * Pago
-     *   ↓
-     * Tarjetas
-     *   ↓
-     * [+] Cuenta Bancaria
-     *   ↓
-     * Cuentas Bancarias
-     *   ↓
-     * Volver
-     *   ↓
-     * MISMO formulario de Tarjetas
-     *
-     * El DOM original de Tarjetas fue guardado
-     * antes de abrir Cuentas Bancarias.
-     * Por eso Nombre, Tipo y cualquier otro
-     * estado del formulario se conserva.
      */
 
     if(
@@ -1506,10 +1683,6 @@ async function volverDesdeABMCuentasBancarias(){
             "";
 
 
-        /*
-         * Restauramos LOS MISMOS nodos del
-         * formulario de Tarjetas.
-         */
         contenidoOperativo.appendChild(
             contenidoAnteriorABMCuentasBancariasDesdeTarjeta
         );
@@ -1519,14 +1692,6 @@ async function volverDesdeABMCuentasBancarias(){
             null;
 
 
-        /*
-         * Recuperamos el origen que tenía
-         * Tarjetas antes de entrar a Cuentas.
-         *
-         * Si Tarjetas había sido abierta desde
-         * un Pago, seguirá teniendo origen
-         * "registro".
-         */
         origenABM =
             typeof origenABMTarjetas !==
                 "undefined"
@@ -1534,15 +1699,6 @@ async function volverDesdeABMCuentasBancarias(){
                 : "menu";
 
 
-        /*
-         * Recargamos solamente el select de
-         * Cuenta Bancaria del formulario
-         * restaurado.
-         *
-         * actualizarCuentasTarjeta() ya sabe
-         * detectar ultimaCuentaBancariaCreada
-         * y seleccionarla automáticamente.
-         */
         if(
             typeof actualizarCuentasTarjeta ===
                 "function"
@@ -1553,49 +1709,19 @@ async function volverDesdeABMCuentasBancarias(){
         }
 
 
-        /*
-         * La cuenta nueva ya fue utilizada.
-         * Recién ahora limpiamos la referencia.
-         */
+        const selectCuenta =
+            document.getElementById(
+                "cuentaBancariaTarjeta"
+            );
+
+
         ultimaCuentaBancariaCreada =
             null;
 
 
-        /*
-         * Dejamos visualmente al usuario en
-         * el formulario de Tarjetas, no arriba
-         * del ABM.
-         */
-        requestAnimationFrame(
-            function(){
-
-                requestAnimationFrame(
-                    function(){
-
-                        const selectCuenta =
-                            document.getElementById(
-                                "cuentaBancariaTarjeta"
-                            );
-
-
-                        if(selectCuenta){
-
-                            selectCuenta.scrollIntoView({
-
-                                behavior:
-                                    "smooth",
-
-                                block:
-                                    "center"
-
-                            });
-
-                        }
-
-                    }
-                );
-
-            }
+        posicionarMainEnElemento(
+            selectCuenta,
+            30
         );
 
 

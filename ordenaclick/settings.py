@@ -141,3 +141,11 @@ GESTION_CLAVES_KEY = os.environ.get(
     "ORDENACLICK_CLAVES_KEY",
     ""
 )
+
+# =========================================
+# SESIONES
+# =========================================
+
+# La sesión vence al cerrar completamente el navegador.
+# Al volver a abrir OrdenaClick se deberá iniciar sesión nuevamente.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
