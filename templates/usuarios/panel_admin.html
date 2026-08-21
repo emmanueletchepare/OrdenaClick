@@ -8236,14 +8236,11 @@ function agregarPagoRegistro(){
                             <select
                                 class="input-box moneda-operacion-bancaria"
                                 data-pago-id="${pagoId}"
+                                disabled
                             >
 
                                 <option value="ARS">
                                     Pesos
-                                </option>
-
-                                <option value="USD">
-                                    Dólares
                                 </option>
 
                             </select>
@@ -12082,6 +12079,91 @@ async function actualizarRetencionDelRegistro(){
 
 }
 
+function actualizarTotalRetencionesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const totalRetenciones =
+        pago.retenciones.reduce(
+            function(acumulado, retencion){
+
+                return (
+                    acumulado +
+                    Number(
+                        retencion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(total){
+
+        total.textContent =
+            "$ " +
+            formatearImporte(
+                totalRetenciones
+            );
+
+    }
+
+
+    /*
+     * Las Retenciones forman parte
+     * del importe aplicado al Pago.
+     *
+     * Por eso, cada vez que cambia
+     * el total de Retenciones,
+     * recalculamos también el Pago.
+     */
+
+    actualizarPagoRegistro(
+        idPago
+    );
+
+}
+
 function registrarRetencionPago(
     pagoId
 ){
@@ -13093,6 +13175,7 @@ async function cargarCuentasOperacionBancaria(
             `pagoRegistro_${pagoId}`
         );
 
+
     const empresa =
         document.getElementById(
             "empresaActiva"
@@ -13161,32 +13244,63 @@ async function cargarCuentasOperacionBancaria(
         }
 
 
-        resultado.cuentas.forEach(
-            function(cuenta){
+        /*
+         * =========================================
+         * BETA ORDENACLICK
+         * SOLO CUENTAS EN PESOS
+         * =========================================
+         *
+         * La versión Beta trabaja exclusivamente
+         * con movimientos y pagos en ARS.
+         *
+         * Las cuentas en otras monedas continúan
+         * existiendo en el ABM, pero no pueden
+         * utilizarse como medio de pago.
+         */
 
-                const opcion =
-                    document.createElement(
-                        "option"
+        resultado.cuentas
+
+            .filter(
+                function(cuenta){
+
+                    return (
+                        cuenta.moneda === "ARS"
                     );
 
+                }
+            )
 
-                opcion.value =
-                    String(
-                        cuenta.id
+            .forEach(
+                function(cuenta){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            cuenta.id
+                        );
+
+
+                    opcion.textContent =
+                        `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                    select.appendChild(
+                        opcion
                     );
 
+                }
+            );
 
-                opcion.textContent =
-                    `${cuenta.banco} · ${cuenta.nombre}`;
 
-
-                select.appendChild(
-                    opcion
-                );
-
-            }
-        );
-
+        /*
+         * Conservamos la selección anterior
+         * solamente si sigue siendo válida.
+         */
 
         if(
             valorAnterior &&
@@ -13199,6 +13313,7 @@ async function cargarCuentasOperacionBancaria(
                 valorAnterior;
 
         }
+
 
     }catch(error){
 
@@ -13613,6 +13728,20 @@ function registrarOperacionBancaria(
     const tipoOperacion =
         tipo.value;
 
+    if(
+        moneda.value !== "ARS"
+    ){
+
+        alert(
+            "La versión Beta de OrdenaClick admite pagos únicamente en Pesos."
+        );
+
+        moneda.value =
+            "ARS";
+
+        return;
+
+    }
 
     /*
      * ORIGEN
@@ -14998,159 +15127,21 @@ function actualizarPagoRegistro(
             },
             0
         );
+    
+    const totalRetenciones =
+    pago.retenciones.reduce(
+        function(acumulado, retencion){
 
-
-    /*
-     * Los intereses de financiación de Tarjeta
-     * se conservan dentro de cada operación de pago.tarjetas,
-     * pero NO aumentan el importe aplicado
-     * al Movimiento.
-     *
-     * Más adelante agregaremos:
-     *
-     * retenciones
-     */
-
-    pago.total =
-        pago.efectivo +
-        totalOperaciones +
-        totalTarjeta +
-        totalCheques;
-
-
-    const totalCabecera =
-        tarjeta.querySelector(
-            ".total-pago-registro"
-        );
-
-
-    if(totalCabecera){
-
-        totalCabecera.textContent =
-            "$ " +
-            formatearImporte(
-                pago.total
+            return (
+                acumulado +
+                Number(
+                    retencion.importe || 0
+                )
             );
 
-    }
-
-
-    actualizarResumenGeneralPagos();
-
-}
-
-function actualizarPagoRegistro(
-    pagoId
-){
-
-    const id =
-        Number(
-            pagoId
-        );
-
-
-    const pago =
-        pagosRegistro.find(
-            function(item){
-
-                return item.id ===
-                    id;
-
-            }
-        );
-
-
-    if(!pago){
-
-        return;
-
-    }
-
-
-    const tarjeta =
-        document.getElementById(
-            `pagoRegistro_${id}`
-        );
-
-
-    if(!tarjeta){
-
-        return;
-
-    }
-
-
-    const inputFecha =
-        tarjeta.querySelector(
-            ".fecha-pago-registro"
-        );
-
-
-    const inputEfectivo =
-        tarjeta.querySelector(
-            ".efectivo-pago-registro"
-        );
-
-
-    pago.fecha_pago =
-        inputFecha
-            ? inputFecha.value
-            : "";
-
-
-    pago.efectivo =
-        leerImporte(
-            inputEfectivo?.value
-        );
-
-
-    const totalOperaciones =
-        pago.transferencias.reduce(
-            function(acumulado, operacion){
-
-                return (
-                    acumulado +
-                    Number(
-                        operacion.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalTarjeta =
-        pago.tarjetas.reduce(
-            function(acumulado, operacion){
-
-                return (
-                    acumulado +
-                    Number(
-                        operacion.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalCheques =
-        pago.cheques.reduce(
-            function(acumulado, cheque){
-
-                return (
-                    acumulado +
-                    Number(
-                        cheque.importe || 0
-                    )
-                );
-
-            },
-            0
-        );
-
+        },
+        0
+    );
 
     /*
      * Los intereses de financiación de Tarjeta
@@ -15167,7 +15158,8 @@ function actualizarPagoRegistro(
         pago.efectivo +
         totalOperaciones +
         totalTarjeta +
-        totalCheques;
+        totalCheques +
+        totalRetenciones;
 
 
     const totalCabecera =
