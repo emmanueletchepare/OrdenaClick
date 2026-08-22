@@ -42,6 +42,8 @@ from .models import (
     TipoGasto,
     TipoGastoProveedor,
     Movimiento,
+    Pago,
+    AplicacionPago,
     CentroOperativo,
     Banco,
     CuentaBancaria,
@@ -51,6 +53,8 @@ from .models import (
     RecursoOperativo,
     RecursoOperativoCentro,
     Proveedor,
+    Pago,
+    AplicacionPago,
     PerfilUsuario
 )
 
@@ -5508,9 +5512,19 @@ def guardar_movimiento(request):
     """
     Guarda un Movimiento creado desde Carga Simple.
 
-    Esta primera versión registra únicamente el Movimiento.
-    Los Pagos, Vencimientos y Alertas se incorporarán
-    posteriormente como capas separadas.
+    Esta etapa permite:
+
+    - guardar Movimientos sin Pago;
+    - guardar uno o varios Pagos en efectivo;
+    - crear la AplicacionPago correspondiente;
+    - actualizar el estado del Movimiento según
+      el importe efectivamente aplicado.
+
+    La operación se realiza dentro de una transacción
+    atómica para evitar registros parciales.
+
+    Transferencias, Tarjetas, Cheques y Retenciones
+    se incorporarán posteriormente.
     """
 
     if request.method != "POST":
@@ -5523,22 +5537,57 @@ def guardar_movimiento(request):
         )
 
     try:
-        empresa_id = request.POST.get("empresa")
-        tipo_gasto_id = request.POST.get("tipo_gasto")
-        proveedor_id = request.POST.get("proveedor")
-        centro_operativo_id = request.POST.get("centro_operativo")
-        recurso_operativo_id = request.POST.get("recurso_operativo")
 
-        fecha_registro = request.POST.get("fecha_registro")
-        fecha_vencimiento = request.POST.get("fecha_vencimiento")
+        # =========================================
+        # DATOS GENERALES
+        # =========================================
+
+        empresa_id = request.POST.get(
+            "empresa"
+        )
+
+        tipo_gasto_id = request.POST.get(
+            "tipo_gasto"
+        )
+
+        proveedor_id = request.POST.get(
+            "proveedor"
+        )
+
+        centro_operativo_id = request.POST.get(
+            "centro_operativo"
+        )
+
+        recurso_operativo_id = request.POST.get(
+            "recurso_operativo"
+        )
+
+        fecha_registro = request.POST.get(
+            "fecha_registro"
+        )
+
+        fecha_vencimiento = request.POST.get(
+            "fecha_vencimiento"
+        )
 
         tipo_comprobante = (
-            request.POST.get("tipo_comprobante") or ""
+            request.POST.get(
+                "tipo_comprobante"
+            )
+            or ""
         ).strip()
 
         numero_comprobante = (
-            request.POST.get("numero_comprobante") or ""
+            request.POST.get(
+                "numero_comprobante"
+            )
+            or ""
         ).strip()
+
+
+        # =========================================
+        # VALIDACIONES GENERALES
+        # =========================================
 
         if not empresa_id:
             return JsonResponse(
@@ -5576,6 +5625,11 @@ def guardar_movimiento(request):
                 status=400,
             )
 
+
+        # =========================================
+        # EMPRESA
+        # =========================================
+
         empresa = Empresa.objects.filter(
             id=empresa_id
         ).first()
@@ -5584,10 +5638,17 @@ def guardar_movimiento(request):
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": "La empresa seleccionada no existe.",
+                    "mensaje": (
+                        "La empresa seleccionada no existe."
+                    ),
                 },
                 status=404,
             )
+
+
+        # =========================================
+        # EJERCICIO ABIERTO
+        # =========================================
 
         ejercicio = empresa.ejercicios.filter(
             estado="Abierto"
@@ -5597,10 +5658,17 @@ def guardar_movimiento(request):
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": "La empresa no tiene un ejercicio abierto.",
+                    "mensaje": (
+                        "La empresa no tiene un ejercicio abierto."
+                    ),
                 },
                 status=400,
             )
+
+
+        # =========================================
+        # TIPO DE GASTO
+        # =========================================
 
         tipo_gasto = TipoGasto.objects.filter(
             id=tipo_gasto_id,
@@ -5612,10 +5680,17 @@ def guardar_movimiento(request):
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": "El tipo de gasto no es válido.",
+                    "mensaje": (
+                        "El tipo de gasto no es válido."
+                    ),
                 },
                 status=400,
             )
+
+
+        # =========================================
+        # PROVEEDOR
+        # =========================================
 
         proveedor = Proveedor.objects.filter(
             id=proveedor_id,
@@ -5627,146 +5702,587 @@ def guardar_movimiento(request):
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": "El proveedor no es válido.",
+                    "mensaje": (
+                        "El proveedor no es válido."
+                    ),
                 },
                 status=400,
             )
 
+
+        # =========================================
+        # CENTRO OPERATIVO
+        # =========================================
+
         centro_operativo = None
 
         if centro_operativo_id:
-            centro_operativo = CentroOperativo.objects.filter(
-                id=centro_operativo_id,
-                empresa=empresa,
-                activo=True,
-            ).first()
+
+            centro_operativo = (
+                CentroOperativo.objects.filter(
+                    id=centro_operativo_id,
+                    empresa=empresa,
+                    activo=True,
+                ).first()
+            )
 
             if not centro_operativo:
                 return JsonResponse(
                     {
                         "ok": False,
-                        "mensaje": "El Centro Operativo no es válido.",
+                        "mensaje": (
+                            "El Centro Operativo "
+                            "no es válido."
+                        ),
                     },
                     status=400,
                 )
 
+
+        # =========================================
+        # RECURSO OPERATIVO
+        # =========================================
+
         recurso_operativo = None
 
         if recurso_operativo_id:
-            recurso_operativo = RecursoOperativo.objects.filter(
-                id=recurso_operativo_id,
-                empresa=empresa,
-                activo=True,
-            ).first()
+
+            recurso_operativo = (
+                RecursoOperativo.objects.filter(
+                    id=recurso_operativo_id,
+                    empresa=empresa,
+                    activo=True,
+                ).first()
+            )
 
             if not recurso_operativo:
                 return JsonResponse(
                     {
                         "ok": False,
-                        "mensaje": "El Recurso Operativo no es válido.",
+                        "mensaje": (
+                            "El Recurso Operativo "
+                            "no es válido."
+                        ),
                     },
                     status=400,
                 )
 
-        from decimal import Decimal, InvalidOperation
+
+        # =========================================
+        # IMPORTES DEL MOVIMIENTO
+        # =========================================
+
+        from decimal import (
+            Decimal,
+            InvalidOperation
+        )
+
 
         def decimal_post(nombre):
             """
-            Convierte un importe recibido desde JavaScript
-            a Decimal seguro para persistencia.
+            Convierte un importe recibido mediante POST
+            en un Decimal seguro para persistencia.
             """
 
-            valor = request.POST.get(nombre) or "0"
+            valor = (
+                request.POST.get(nombre)
+                or "0"
+            )
 
             try:
-                return Decimal(str(valor))
+                return Decimal(
+                    str(valor)
+                )
+
             except InvalidOperation:
                 return Decimal("0")
 
-        neto_gravado = decimal_post("neto_gravado")
-        no_gravado_exento = decimal_post("no_gravado_exento")
-        iva_21 = decimal_post("iva_21")
-        iva_27 = decimal_post("iva_27")
-        iva_105 = decimal_post("iva_105")
-        recargos_intereses = decimal_post("recargos_intereses")
-        ajuste_redondeo = decimal_post("ajuste_redondeo")
-        percepcion_iibb = decimal_post("percepcion_iibb")
-        percepcion_iva = decimal_post("percepcion_iva")
-        percepcion_ganancias = decimal_post("percepcion_ganancias")
-        percepcion_tasas_municipales = decimal_post(
-            "percepcion_tasas_municipales"
+
+        neto_gravado = decimal_post(
+            "neto_gravado"
         )
-        total = decimal_post("total")
+
+        no_gravado_exento = decimal_post(
+            "no_gravado_exento"
+        )
+
+        iva_21 = decimal_post(
+            "iva_21"
+        )
+
+        iva_27 = decimal_post(
+            "iva_27"
+        )
+
+        iva_105 = decimal_post(
+            "iva_105"
+        )
+
+        recargos_intereses = decimal_post(
+            "recargos_intereses"
+        )
+
+        ajuste_redondeo = decimal_post(
+            "ajuste_redondeo"
+        )
+
+        percepcion_iibb = decimal_post(
+            "percepcion_iibb"
+        )
+
+        percepcion_iva = decimal_post(
+            "percepcion_iva"
+        )
+
+        percepcion_ganancias = decimal_post(
+            "percepcion_ganancias"
+        )
+
+        percepcion_tasas_municipales = (
+            decimal_post(
+                "percepcion_tasas_municipales"
+            )
+        )
+
+        total = decimal_post(
+            "total"
+        )
+
 
         if total <= 0:
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": "El total del registro debe ser mayor a cero.",
+                    "mensaje": (
+                        "El total del registro "
+                        "debe ser mayor a cero."
+                    ),
                 },
                 status=400,
             )
 
-        archivo = request.FILES.get("archivo")
 
-        movimiento = Movimiento.objects.create(
-            empresa=empresa,
-            ejercicio=ejercicio,
-            tipo_gasto=tipo_gasto,
-            proveedor=proveedor,
-            centro_operativo=centro_operativo,
-            recurso_operativo=recurso_operativo,
+        # =========================================
+        # PAGOS EN EFECTIVO
+        # =========================================
 
-            descripcion="",
-
-            fecha_registro=fecha_registro,
-
-            fecha_vencimiento=(
-                fecha_vencimiento
-                or None
-            ),
-
-            tipo_comprobante=tipo_comprobante,
-            numero_comprobante=numero_comprobante,
-
-            moneda="ARS",
-
-            neto_gravado=neto_gravado,
-            no_gravado_exento=no_gravado_exento,
-
-            iva_21=iva_21,
-            iva_27=iva_27,
-            iva_105=iva_105,
-
-            recargos_intereses=recargos_intereses,
-            ajuste_redondeo=ajuste_redondeo,
-
-            percepcion_iibb=percepcion_iibb,
-            percepcion_iva=percepcion_iva,
-            percepcion_ganancias=percepcion_ganancias,
-            percepcion_tasas_municipales=(
-                percepcion_tasas_municipales
-            ),
-
-            total=total,
-
-            # Compatibilidad temporal con código existente.
-            importe=total,
-
-            estado="Pendiente",
-
-            archivo=archivo,
+        pagos_efectivo_raw = (
+            request.POST.get(
+                "pagos_efectivo"
+            )
+            or "[]"
         )
+
+        try:
+
+            pagos_efectivo = json.loads(
+                pagos_efectivo_raw
+            )
+
+        except json.JSONDecodeError:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Los datos de los Pagos "
+                        "no son válidos."
+                    ),
+                },
+                status=400,
+            )
+
+
+        if not isinstance(
+            pagos_efectivo,
+            list
+        ):
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El formato de los Pagos "
+                        "no es válido."
+                    ),
+                },
+                status=400,
+            )
+
+
+        # =========================================
+        # VALIDAR PAGOS ANTES DE GUARDAR
+        # =========================================
+
+        pagos_validados = []
+
+        total_aplicado = Decimal("0.00")
+
+
+        for pago_datos in pagos_efectivo:
+
+            if not isinstance(
+                pago_datos,
+                dict
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Existe un Pago "
+                            "con formato inválido."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            fecha_pago = (
+                pago_datos.get(
+                    "fecha"
+                )
+                or ""
+            ).strip()
+
+
+            if not fecha_pago:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Todos los Pagos deben "
+                            "tener una fecha."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            try:
+
+                fecha_pago_validada = (
+                    datetime.strptime(
+                        fecha_pago,
+                        "%Y-%m-%d"
+                    ).date()
+                )
+
+            except ValueError:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Existe un Pago con "
+                            "una fecha inválida."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            try:
+
+                importe_efectivo = Decimal(
+                    str(
+                        pago_datos.get(
+                            "importe_efectivo",
+                            0
+                        )
+                    )
+                )
+
+            except (
+                InvalidOperation,
+                TypeError,
+                ValueError
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Existe un Pago con "
+                            "un importe inválido."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if importe_efectivo <= 0:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El importe de cada Pago "
+                            "debe ser mayor a cero."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            total_aplicado += (
+                importe_efectivo
+            )
+
+
+            pagos_validados.append(
+                {
+                    "fecha":
+                        fecha_pago_validada,
+
+                    "importe_efectivo":
+                        importe_efectivo,
+                }
+            )
+
+
+        # =========================================
+        # CONTROL DE SOBREAPLICACIÓN
+        # =========================================
+
+        if total_aplicado > total:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El total de los Pagos "
+                        "no puede superar el total "
+                        "del registro."
+                    ),
+                },
+                status=400,
+            )
+
+
+        # =========================================
+        # ESTADO DEL MOVIMIENTO
+        # =========================================
+
+        if total_aplicado == Decimal(
+            "0.00"
+        ):
+
+            estado_movimiento = (
+                "Pendiente"
+            )
+
+
+        elif total_aplicado < total:
+
+            estado_movimiento = (
+                "Parcial"
+            )
+
+
+        else:
+
+            estado_movimiento = (
+                "Pagado"
+            )
+
+
+        # =========================================
+        # ARCHIVO DEL MOVIMIENTO
+        # =========================================
+
+        archivo = request.FILES.get(
+            "archivo"
+        )
+
+
+        # =========================================
+        # TRANSACCIÓN ATÓMICA
+        # =========================================
+        #
+        # Movimiento, Pagos y Aplicaciones deben
+        # guardarse como una única operación.
+        #
+        # Si algo falla en cualquier punto,
+        # Django revierte todo automáticamente.
+        # =========================================
+
+        with transaction.atomic():
+
+            # =====================================
+            # MOVIMIENTO
+            # =====================================
+
+            movimiento = (
+                Movimiento.objects.create(
+
+                    empresa=
+                        empresa,
+
+                    ejercicio=
+                        ejercicio,
+
+                    tipo_gasto=
+                        tipo_gasto,
+
+                    proveedor=
+                        proveedor,
+
+                    centro_operativo=
+                        centro_operativo,
+
+                    recurso_operativo=
+                        recurso_operativo,
+
+                    descripcion="",
+
+                    fecha_registro=
+                        fecha_registro,
+
+                    fecha_vencimiento=(
+                        fecha_vencimiento
+                        or None
+                    ),
+
+                    tipo_comprobante=
+                        tipo_comprobante,
+
+                    numero_comprobante=
+                        numero_comprobante,
+
+                    moneda=
+                        "ARS",
+
+                    neto_gravado=
+                        neto_gravado,
+
+                    no_gravado_exento=
+                        no_gravado_exento,
+
+                    iva_21=
+                        iva_21,
+
+                    iva_27=
+                        iva_27,
+
+                    iva_105=
+                        iva_105,
+
+                    recargos_intereses=
+                        recargos_intereses,
+
+                    ajuste_redondeo=
+                        ajuste_redondeo,
+
+                    percepcion_iibb=
+                        percepcion_iibb,
+
+                    percepcion_iva=
+                        percepcion_iva,
+
+                    percepcion_ganancias=
+                        percepcion_ganancias,
+
+                    percepcion_tasas_municipales=(
+                        percepcion_tasas_municipales
+                    ),
+
+                    total=
+                        total,
+
+                    # Compatibilidad temporal
+                    # con código existente.
+                    importe=
+                        total,
+
+                    estado=
+                        estado_movimiento,
+
+                    archivo=
+                        archivo,
+                )
+            )
+
+
+            # =====================================
+            # PAGOS + APLICACIONES
+            # =====================================
+
+            pagos_creados = []
+
+
+            for pago_datos in pagos_validados:
+
+                pago = Pago.objects.create(
+
+                    empresa=
+                        empresa,
+
+                    fecha=
+                        pago_datos[
+                            "fecha"
+                        ],
+
+                    importe_efectivo=
+                        pago_datos[
+                            "importe_efectivo"
+                        ],
+                )
+
+
+                AplicacionPago.objects.create(
+
+                    pago=
+                        pago,
+
+                    movimiento=
+                        movimiento,
+
+                    importe=
+                        pago_datos[
+                            "importe_efectivo"
+                        ],
+                )
+
+
+                pagos_creados.append(
+                    pago.id
+                )
+
+
+        # =========================================
+        # RESPUESTA
+        # =========================================
 
         return JsonResponse(
             {
                 "ok": True,
-                "mensaje": "Registro guardado correctamente.",
-                "movimiento_id": movimiento.id,
+
+                "mensaje": (
+                    "Registro guardado "
+                    "correctamente."
+                ),
+
+                "movimiento_id":
+                    movimiento.id,
+
+                "pagos_ids":
+                    pagos_creados,
+
+                "total_aplicado":
+                    str(
+                        total_aplicado
+                    ),
+
+                "estado":
+                    estado_movimiento,
             }
         )
 
+
     except Exception as error:
+
         print(
             "Error guardando Movimiento:",
             error,
@@ -5775,7 +6291,10 @@ def guardar_movimiento(request):
         return JsonResponse(
             {
                 "ok": False,
-                "mensaje": "Ocurrió un error al guardar el registro.",
+                "mensaje": (
+                    "Ocurrió un error al "
+                    "guardar el registro."
+                ),
             },
             status=500,
         )
