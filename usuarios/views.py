@@ -11,7 +11,10 @@ from django.contrib.auth import (
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from django.http import HttpResponse
+from django.http import (
+    HttpResponse,
+    JsonResponse
+)
 
 from django.conf import settings
 
@@ -5499,3 +5502,280 @@ def reactivar_tipo_gasto(request):
             "nombre": tipo_gasto.nombre
         }
     })
+
+@login_required
+def guardar_movimiento(request):
+    """
+    Guarda un Movimiento creado desde Carga Simple.
+
+    Esta primera versión registra únicamente el Movimiento.
+    Los Pagos, Vencimientos y Alertas se incorporarán
+    posteriormente como capas separadas.
+    """
+
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido.",
+            },
+            status=405,
+        )
+
+    try:
+        empresa_id = request.POST.get("empresa")
+        tipo_gasto_id = request.POST.get("tipo_gasto")
+        proveedor_id = request.POST.get("proveedor")
+        centro_operativo_id = request.POST.get("centro_operativo")
+        recurso_operativo_id = request.POST.get("recurso_operativo")
+
+        fecha_registro = request.POST.get("fecha_registro")
+        fecha_vencimiento = request.POST.get("fecha_vencimiento")
+
+        tipo_comprobante = (
+            request.POST.get("tipo_comprobante") or ""
+        ).strip()
+
+        numero_comprobante = (
+            request.POST.get("numero_comprobante") or ""
+        ).strip()
+
+        if not empresa_id:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "Seleccione una empresa.",
+                },
+                status=400,
+            )
+
+        if not tipo_gasto_id:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "Seleccione un tipo de gasto.",
+                },
+                status=400,
+            )
+
+        if not proveedor_id:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "Seleccione un proveedor.",
+                },
+                status=400,
+            )
+
+        if not fecha_registro:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "Ingrese la fecha del registro.",
+                },
+                status=400,
+            )
+
+        empresa = Empresa.objects.filter(
+            id=empresa_id
+        ).first()
+
+        if not empresa:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "La empresa seleccionada no existe.",
+                },
+                status=404,
+            )
+
+        ejercicio = empresa.ejercicios.filter(
+            estado="Abierto"
+        ).first()
+
+        if not ejercicio:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "La empresa no tiene un ejercicio abierto.",
+                },
+                status=400,
+            )
+
+        tipo_gasto = TipoGasto.objects.filter(
+            id=tipo_gasto_id,
+            empresa=empresa,
+            activo=True,
+        ).first()
+
+        if not tipo_gasto:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "El tipo de gasto no es válido.",
+                },
+                status=400,
+            )
+
+        proveedor = Proveedor.objects.filter(
+            id=proveedor_id,
+            empresa=empresa,
+            activo=True,
+        ).first()
+
+        if not proveedor:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "El proveedor no es válido.",
+                },
+                status=400,
+            )
+
+        centro_operativo = None
+
+        if centro_operativo_id:
+            centro_operativo = CentroOperativo.objects.filter(
+                id=centro_operativo_id,
+                empresa=empresa,
+                activo=True,
+            ).first()
+
+            if not centro_operativo:
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": "El Centro Operativo no es válido.",
+                    },
+                    status=400,
+                )
+
+        recurso_operativo = None
+
+        if recurso_operativo_id:
+            recurso_operativo = RecursoOperativo.objects.filter(
+                id=recurso_operativo_id,
+                empresa=empresa,
+                activo=True,
+            ).first()
+
+            if not recurso_operativo:
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": "El Recurso Operativo no es válido.",
+                    },
+                    status=400,
+                )
+
+        from decimal import Decimal, InvalidOperation
+
+        def decimal_post(nombre):
+            """
+            Convierte un importe recibido desde JavaScript
+            a Decimal seguro para persistencia.
+            """
+
+            valor = request.POST.get(nombre) or "0"
+
+            try:
+                return Decimal(str(valor))
+            except InvalidOperation:
+                return Decimal("0")
+
+        neto_gravado = decimal_post("neto_gravado")
+        no_gravado_exento = decimal_post("no_gravado_exento")
+        iva_21 = decimal_post("iva_21")
+        iva_27 = decimal_post("iva_27")
+        iva_105 = decimal_post("iva_105")
+        recargos_intereses = decimal_post("recargos_intereses")
+        ajuste_redondeo = decimal_post("ajuste_redondeo")
+        percepcion_iibb = decimal_post("percepcion_iibb")
+        percepcion_iva = decimal_post("percepcion_iva")
+        percepcion_ganancias = decimal_post("percepcion_ganancias")
+        percepcion_tasas_municipales = decimal_post(
+            "percepcion_tasas_municipales"
+        )
+        total = decimal_post("total")
+
+        if total <= 0:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "El total del registro debe ser mayor a cero.",
+                },
+                status=400,
+            )
+
+        archivo = request.FILES.get("archivo")
+
+        movimiento = Movimiento.objects.create(
+            empresa=empresa,
+            ejercicio=ejercicio,
+            tipo_gasto=tipo_gasto,
+            proveedor=proveedor,
+            centro_operativo=centro_operativo,
+            recurso_operativo=recurso_operativo,
+
+            descripcion="",
+
+            fecha_registro=fecha_registro,
+
+            fecha_vencimiento=(
+                fecha_vencimiento
+                or None
+            ),
+
+            tipo_comprobante=tipo_comprobante,
+            numero_comprobante=numero_comprobante,
+
+            moneda="ARS",
+
+            neto_gravado=neto_gravado,
+            no_gravado_exento=no_gravado_exento,
+
+            iva_21=iva_21,
+            iva_27=iva_27,
+            iva_105=iva_105,
+
+            recargos_intereses=recargos_intereses,
+            ajuste_redondeo=ajuste_redondeo,
+
+            percepcion_iibb=percepcion_iibb,
+            percepcion_iva=percepcion_iva,
+            percepcion_ganancias=percepcion_ganancias,
+            percepcion_tasas_municipales=(
+                percepcion_tasas_municipales
+            ),
+
+            total=total,
+
+            # Compatibilidad temporal con código existente.
+            importe=total,
+
+            estado="Pendiente",
+
+            archivo=archivo,
+        )
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "mensaje": "Registro guardado correctamente.",
+                "movimiento_id": movimiento.id,
+            }
+        )
+
+    except Exception as error:
+        print(
+            "Error guardando Movimiento:",
+            error,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Ocurrió un error al guardar el registro.",
+            },
+            status=500,
+        )

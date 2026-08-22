@@ -59,6 +59,7 @@ from .views import (
     guardar_retencion,
     modificar_retencion,
     eliminar_retencion,
+    guardar_movimiento,
     reactivar_retencion
     
 )
@@ -449,6 +450,16 @@ urlpatterns = [
         "gestion-claves/reactivar/",
         reactivar_gestion_clave,
         name="reactivar_gestion_clave"
+    ),
+
+    # =========================================
+    # MOVIMIENTOS
+    # =========================================
+
+    path(
+        "movimientos/guardar/",
+        guardar_movimiento,
+        name="guardar_movimiento"
     ),
 
 ]

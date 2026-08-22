@@ -294,35 +294,68 @@ class TipoGastoProveedor(models.Model):
 # =========================================
 
 class Movimiento(models.Model):
+    """
+    Representa el hecho económico y documental registrado por la empresa.
+
+    Conserva la información histórica del gasto y sus componentes fiscales.
+    Los pagos, vencimientos y alertas se administran mediante modelos
+    relacionados y no deben alterar arbitrariamente el valor documental
+    original del movimiento.
+    """
 
     ESTADOS = [
 
         ('Pendiente', 'Pendiente'),
+        ('Parcial', 'Parcial'),
         ('Pagado', 'Pagado'),
         ('Vencido', 'Vencido'),
+        ('Cancelado', 'Cancelado'),
 
     ]
 
+    MONEDAS = [
+
+        ('ARS', 'Pesos'),
+        ('USD', 'Dólares'),
+
+    ]
+
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name='movimientos',
+        null=True,
+        blank=True
+    )
+
+
     ejercicio = models.ForeignKey(
+        Ejercicio,
+        on_delete=models.PROTECT,
+        related_name='movimientos',
+        null=True,
+        blank=True
+    )
 
-    Ejercicio,
-
-    on_delete=models.CASCADE,
-
-    related_name='movimientos',
-
-    null=True,
-
-    blank=True
-)
 
     tipo_gasto = models.ForeignKey(
         TipoGasto,
         on_delete=models.PROTECT,
-        related_name="movimientos",
+        related_name='movimientos',
         null=True,
         blank=True
     )
+
+
+    proveedor = models.ForeignKey(
+        'Proveedor',
+        on_delete=models.PROTECT,
+        related_name='movimientos',
+        null=True,
+        blank=True
+    )
+
 
     centro_operativo = models.ForeignKey(
         'CentroOperativo',
@@ -332,6 +365,7 @@ class Movimiento(models.Model):
         blank=True
     )
 
+
     recurso_operativo = models.ForeignKey(
         'RecursoOperativo',
         on_delete=models.PROTECT,
@@ -340,21 +374,134 @@ class Movimiento(models.Model):
         blank=True
     )
 
+
     descripcion = models.CharField(
-        max_length=255
+        max_length=255,
+        blank=True
     )
 
-    importe = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
 
     fecha_registro = models.DateField()
+
 
     fecha_vencimiento = models.DateField(
         blank=True,
         null=True
     )
+
+
+    tipo_comprobante = models.CharField(
+        max_length=20,
+        blank=True
+    )
+
+
+    numero_comprobante = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+
+    moneda = models.CharField(
+        max_length=10,
+        choices=MONEDAS,
+        default='ARS'
+    )
+
+
+    neto_gravado = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    no_gravado_exento = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    iva_21 = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    iva_27 = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    iva_105 = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    recargos_intereses = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    ajuste_redondeo = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    percepcion_iibb = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    percepcion_iva = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    percepcion_ganancias = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    percepcion_tasas_municipales = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+    total = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
+    )
+
+
+        # Campo legado.
+    # Se conserva temporalmente durante la transición.
+    # Más adelante evaluaremos eliminarlo cuando todo
+    # el código utilice `total`.
+    importe = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
 
     estado = models.CharField(
         max_length=20,
@@ -362,10 +509,12 @@ class Movimiento(models.Model):
         default='Pendiente'
     )
 
+
     observaciones = models.TextField(
         blank=True,
         null=True
     )
+
 
     archivo = models.FileField(
         upload_to='movimientos/',
@@ -373,16 +522,37 @@ class Movimiento(models.Model):
         null=True
     )
 
+
     creado = models.DateTimeField(
         auto_now_add=True
     )
 
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+
     def __str__(self):
+        """
+        Devuelve una representación legible del Movimiento.
+        """
 
-        if self.ejercicio:
-            return f"{self.ejercicio.empresa} - {self.descripcion}"
+        if self.proveedor:
 
-        return self.descripcion
+            return (
+                f"{self.empresa or self.ejercicio} - "
+                f"{self.proveedor} - "
+                f"{self.total}"
+            )
+
+
+        if self.descripcion:
+
+            return self.descripcion
+
+
+        return f"Movimiento {self.pk}"
 
 # =========================================
 # PAGOS
