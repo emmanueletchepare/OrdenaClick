@@ -18,27 +18,29 @@ async function guardarRegistroSimple(){
 
     /*
      * =========================================
-     * VALIDACIÓN INICIAL
+     * PREPARAR PAGOS
      * =========================================
      *
-     * En esta primera etapa solamente guardamos
-     * Movimientos SIN Pago.
+     * Esta etapa permite persistir:
+     *
+     * - Efectivo.
+     * - Transferencias.
+     * - Depósitos.
+     * - Tarjetas.
+     *
+     * Todavía no se persisten:
+     *
+     * - Cheques.
+     * - Retenciones.
+     *
+     * Los comprobantes de los medios de pago
+     * se envían como archivos independientes dentro
+     * del mismo FormData.
      */
 
-    /*
-    * =========================================
-    * PREPARAR PAGOS
-    * =========================================
-    *
-    * Primera etapa de persistencia:
-    *
-    * - admite registros sin Pago;
-    * - admite Pagos únicamente en efectivo;
-    * - todavía no persiste transferencias,
-    *   tarjetas, cheques ni retenciones.
-    */
+    const pagosPreparados = [];
 
-    const pagosEfectivo = [];
+    const archivosPagos = [];
 
 
     if(
@@ -46,30 +48,40 @@ async function guardarRegistroSimple(){
     ){
 
         for(
-            const pago of pagosRegistro
+            let indicePago = 0;
+            indicePago < pagosRegistro.length;
+            indicePago++
         ){
 
+            const pago =
+                pagosRegistro[
+                    indicePago
+                ];
+
+
             /*
-            * Antes de guardar tomamos los valores
-            * actuales de los controles visibles.
-            */
+             * Tomamos los valores actuales de
+             * Fecha y Efectivo antes de guardar.
+             */
 
             actualizarPagoRegistro(
                 pago.id
             );
 
 
-            const tieneOtrosMedios =
-                pago.transferencias.length > 0 ||
-                pago.tarjetas.length > 0 ||
+            /*
+             * =====================================
+             * MEDIOS TODAVÍA NO IMPLEMENTADOS
+             * =====================================
+             */
+
+            if(
                 pago.cheques.length > 0 ||
-                pago.retenciones.length > 0;
-
-
-            if(tieneOtrosMedios){
+                pago.retenciones.length > 0
+            ){
 
                 alert(
-                    "En esta etapa de prueba solamente se pueden guardar Pagos en efectivo."
+                    "En esta etapa todavía no se pueden guardar Cheques ni Retenciones."
                 );
 
                 return;
@@ -77,22 +89,11 @@ async function guardarRegistroSimple(){
             }
 
 
-            const efectivo =
-                Number(
-                    pago.efectivo || 0
-                );
-
-
-            if(efectivo <= 0){
-
-                alert(
-                    "El importe en efectivo del Pago debe ser mayor a cero."
-                );
-
-                return;
-
-            }
-
+            /*
+             * =====================================
+             * FECHA DEL PAGO
+             * =====================================
+             */
 
             if(!pago.fecha_pago){
 
@@ -105,13 +106,513 @@ async function guardarRegistroSimple(){
             }
 
 
-            pagosEfectivo.push(
+            /*
+             * =====================================
+             * EFECTIVO
+             * =====================================
+             */
+
+            const efectivo =
+                Number(
+                    pago.efectivo || 0
+                );
+
+
+            if(efectivo < 0){
+
+                alert(
+                    "El importe en efectivo no puede ser negativo."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * =====================================
+             * OPERACIONES BANCARIAS
+             * =====================================
+             */
+
+            const operacionesBancarias = [];
+
+            let totalOperaciones =
+                0;
+
+
+            for(
+                let indiceOperacion = 0;
+                indiceOperacion < pago.transferencias.length;
+                indiceOperacion++
+            ){
+
+                const operacion =
+                    pago.transferencias[
+                        indiceOperacion
+                    ];
+
+
+                if(
+                    operacion.tipo_operacion !==
+                        "Transferencia" &&
+                    operacion.tipo_operacion !==
+                        "Deposito"
+                ){
+
+                    alert(
+                        "Existe una operación bancaria con un tipo no válido."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Beta:
+                 * todos los Pagos deben ser ARS.
+                 */
+
+                if(
+                    operacion.moneda !==
+                    "ARS"
+                ){
+
+                    alert(
+                        "La versión Beta de OrdenaClick admite pagos únicamente en Pesos."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    operacion.tipo_operacion ===
+                        "Transferencia" &&
+                    !operacion.cuenta_origen_id
+                ){
+
+                    alert(
+                        "Una transferencia debe tener una cuenta bancaria de origen."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !operacion.banco_destino_id
+                ){
+
+                    alert(
+                        "La operación bancaria debe tener un banco de destino."
+                    );
+
+                    return;
+
+                }
+
+
+                if(!operacion.fecha){
+
+                    alert(
+                        "La operación bancaria debe tener una fecha."
+                    );
+
+                    return;
+
+                }
+
+
+                const importeOperacion =
+                    Number(
+                        operacion.importe || 0
+                    );
+
+
+                if(
+                    importeOperacion <= 0
+                ){
+
+                    alert(
+                        "El importe de la operación bancaria debe ser mayor a cero."
+                    );
+
+                    return;
+
+                }
+
+
+                totalOperaciones +=
+                    importeOperacion;
+
+
+                /*
+                 * =================================
+                 * COMPROBANTE
+                 * =================================
+                 */
+
+                let comprobanteClave =
+                    "";
+
+
+                if(
+                    operacion.comprobante instanceof File
+                ){
+
+                    comprobanteClave =
+                        `pago_${indicePago}_operacion_${indiceOperacion}_comprobante`;
+
+
+                    archivosPagos.push(
+                        {
+                            clave:
+                                comprobanteClave,
+
+                            archivo:
+                                operacion.comprobante
+                        }
+                    );
+
+                }
+
+
+                operacionesBancarias.push(
+                    {
+                        tipo_operacion:
+                            operacion.tipo_operacion,
+
+                        cuenta_origen_id:
+                            operacion.tipo_operacion ===
+                                "Transferencia"
+                                ? operacion.cuenta_origen_id
+                                : null,
+
+                        banco_destino_id:
+                            operacion.banco_destino_id,
+
+                        referencia_destino:
+                            operacion.referencia_destino || "",
+
+                        moneda:
+                            operacion.moneda,
+
+                        fecha:
+                            operacion.fecha,
+
+                        importe:
+                            importeOperacion,
+
+                        comprobante_clave:
+                            comprobanteClave
+                    }
+                );
+
+            }
+
+
+            /*
+             * =====================================
+             * TARJETAS
+             * =====================================
+             */
+
+            const tarjetasPreparadas = [];
+
+            let totalTarjetas =
+                0;
+
+
+            for(
+                let indiceTarjeta = 0;
+                indiceTarjeta < pago.tarjetas.length;
+                indiceTarjeta++
+            ){
+
+                const operacionTarjeta =
+                    pago.tarjetas[
+                        indiceTarjeta
+                    ];
+
+
+                if(
+                    !operacionTarjeta.tarjeta_id
+                ){
+
+                    alert(
+                        "Existe una operación con tarjeta sin una tarjeta seleccionada."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !operacionTarjeta.fecha
+                ){
+
+                    alert(
+                        "La operación con tarjeta debe tener una fecha."
+                    );
+
+                    return;
+
+                }
+
+
+                const importeTarjeta =
+                    Number(
+                        operacionTarjeta.importe || 0
+                    );
+
+
+                if(
+                    importeTarjeta <= 0
+                ){
+
+                    alert(
+                        "El importe aplicado de la operación con tarjeta debe ser mayor a cero."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * El importe aplicado sí forma parte
+                 * del Pago.
+                 *
+                 * Los intereses de financiación se
+                 * conservan como dato independiente
+                 * y NO vuelven a sumarse al aplicado.
+                 */
+
+                totalTarjetas +=
+                    importeTarjeta;
+
+
+                const tipoTarjeta =
+                    String(
+                        operacionTarjeta.tipo_tarjeta || ""
+                    );
+
+
+                const esCredito =
+                    tipoTarjeta.toLowerCase() ===
+                    "credito";
+
+
+                const esDebito =
+                    tipoTarjeta.toLowerCase() ===
+                    "debito";
+
+
+                const cuotas =
+                    Number(
+                        operacionTarjeta.cuotas || 1
+                    );
+
+
+                if(
+                    !Number.isInteger(cuotas) ||
+                    cuotas < 1
+                ){
+
+                    alert(
+                        "La cantidad de cuotas de la operación con tarjeta no es válida."
+                    );
+
+                    return;
+
+                }
+
+
+                const interesesFinanciacion =
+                    Number(
+                        operacionTarjeta.intereses_financiacion || 0
+                    );
+
+
+                if(
+                    interesesFinanciacion < 0
+                ){
+
+                    alert(
+                        "Los intereses de financiación no pueden ser negativos."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Débito:
+                 *
+                 * - una sola cuota;
+                 * - sin intereses de financiación.
+                 */
+
+                if(
+                    esDebito &&
+                    cuotas !== 1
+                ){
+
+                    alert(
+                        "Una operación con tarjeta de débito debe registrarse en una sola cuota."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    esDebito &&
+                    interesesFinanciacion !== 0
+                ){
+
+                    alert(
+                        "Una operación con tarjeta de débito no puede tener intereses de financiación."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Si no es Crédito ni Débito,
+                 * dejamos que el backend valide
+                 * contra la Tarjeta real.
+                 */
+
+                if(
+                    !esCredito &&
+                    !esDebito
+                ){
+
+                    alert(
+                        "Existe una operación con un tipo de tarjeta no válido."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * =================================
+                 * COMPROBANTE DE TARJETA
+                 * =================================
+                 */
+
+                let comprobanteTarjetaClave =
+                    "";
+
+
+                if(
+                    operacionTarjeta.comprobante instanceof File
+                ){
+
+                    comprobanteTarjetaClave =
+                        `pago_${indicePago}_tarjeta_${indiceTarjeta}_comprobante`;
+
+
+                    archivosPagos.push(
+                        {
+                            clave:
+                                comprobanteTarjetaClave,
+
+                            archivo:
+                                operacionTarjeta.comprobante
+                        }
+                    );
+
+                }
+
+
+                tarjetasPreparadas.push(
+                    {
+                        tarjeta_id:
+                            operacionTarjeta.tarjeta_id,
+
+                        tipo_tarjeta:
+                            tipoTarjeta,
+
+                        fecha:
+                            operacionTarjeta.fecha,
+
+                        importe:
+                            importeTarjeta,
+
+                        cuotas:
+                            cuotas,
+
+                        intereses_financiacion:
+                            interesesFinanciacion,
+
+                        referencia:
+                            operacionTarjeta.referencia || "",
+
+                        comprobante_clave:
+                            comprobanteTarjetaClave
+                    }
+                );
+
+            }
+
+
+            /*
+             * =====================================
+             * TOTAL DEL PAGO
+             * =====================================
+             */
+
+            const totalPago =
+                efectivo +
+                totalOperaciones +
+                totalTarjetas;
+
+
+            if(
+                totalPago <= 0
+            ){
+
+                alert(
+                    "El Pago debe tener un importe mayor a cero."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * =====================================
+             * PAGO PREPARADO
+             * =====================================
+             */
+
+            pagosPreparados.push(
                 {
                     fecha:
                         pago.fecha_pago,
 
                     importe_efectivo:
-                        efectivo
+                        efectivo,
+
+                    operaciones_bancarias:
+                        operacionesBancarias,
+
+                    tarjetas:
+                        tarjetasPreparadas
                 }
             );
 
@@ -119,6 +620,12 @@ async function guardarRegistroSimple(){
 
     }
 
+
+    /*
+     * =========================================
+     * DATOS DEL MOVIMIENTO
+     * =========================================
+     */
 
     const empresa =
         document.getElementById(
@@ -254,7 +761,7 @@ async function guardarRegistroSimple(){
 
     /*
      * =========================================
-     * VALIDACIONES
+     * VALIDACIONES DEL MOVIMIENTO
      * =========================================
      */
 
@@ -321,7 +828,9 @@ async function guardarRegistroSimple(){
         );
 
 
-    if(total <= 0){
+    if(
+        total <= 0
+    ){
 
         alert(
             "El total del registro debe ser mayor a cero."
@@ -513,20 +1022,44 @@ async function guardarRegistroSimple(){
         )
     );
 
+
     /*
-    * Pagos en efectivo.
-    *
-    * Se envían como JSON dentro del mismo FormData.
-    * Los comprobantes de otros medios se incorporarán
-    * cuando implementemos esos medios.
-    */
+     * =========================================
+     * PAGOS
+     * =========================================
+     */
 
     datos.append(
-        "pagos_efectivo",
+        "pagos",
         JSON.stringify(
-            pagosEfectivo
+            pagosPreparados
         )
     );
+
+
+    /*
+     * =========================================
+     * ARCHIVOS DE MEDIOS DE PAGO
+     * =========================================
+     */
+
+    for(
+        const archivoPago of archivosPagos
+    ){
+
+        datos.append(
+            archivoPago.clave,
+            archivoPago.archivo
+        );
+
+    }
+
+
+    /*
+     * =========================================
+     * FACTURA / COMPROBANTE DEL MOVIMIENTO
+     * =========================================
+     */
 
     if(
         archivoFactura &&
@@ -611,6 +1144,54 @@ async function guardarRegistroSimple(){
             "Movimiento creado:",
             resultado.movimiento_id
         );
+
+
+        /*
+         * =========================================
+         * LIMPIAR CARGA SIMPLE
+         * =========================================
+         *
+         * El guardado ya fue confirmado por el backend.
+         *
+         * Recién en este punto descartamos el borrador
+         * de Pagos y retiramos el formulario para evitar
+         * registrar accidentalmente el mismo movimiento
+         * más de una vez.
+         */
+
+        pagosRegistro = [];
+
+
+        /*
+         * =========================================
+         * VOLVER AL MENÚ DE REGISTROS
+         * =========================================
+         */
+
+        mostrarSubmenu(
+            "registros"
+        );
+
+
+        /*
+         * =========================================
+         * POSICIONAR ARRIBA
+         * =========================================
+         */
+
+        const submenuRegistros =
+            document.getElementById(
+                "submenu-dinamico"
+            );
+
+
+        if(submenuRegistros){
+
+            posicionarMainEnElemento(
+                submenuRegistros
+            );
+
+        }
 
 
     }catch(error){

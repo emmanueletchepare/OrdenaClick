@@ -44,17 +44,17 @@ from .models import (
     Movimiento,
     Pago,
     AplicacionPago,
+    OperacionBancariaPago,
     CentroOperativo,
     Banco,
     CuentaBancaria,
     Tarjeta,
     Retencion,
+    TarjetaPago,
     GestionClave,
     RecursoOperativo,
     RecursoOperativoCentro,
     Proveedor,
-    Pago,
-    AplicacionPago,
     PerfilUsuario
 )
 
@@ -5512,22 +5512,24 @@ def guardar_movimiento(request):
     """
     Guarda un Movimiento creado desde Carga Simple.
 
-    Esta etapa permite:
+    Permite registrar:
 
-    - guardar Movimientos sin Pago;
-    - guardar uno o varios Pagos en efectivo;
-    - crear la AplicacionPago correspondiente;
-    - actualizar el estado del Movimiento según
-      el importe efectivamente aplicado.
+    - Movimiento sin Pago.
+    - Uno o varios Pagos.
+    - Efectivo.
+    - Transferencias.
+    - Depósitos.
+    - Tarjetas.
+    - Aplicaciones de Pago.
 
-    La operación se realiza dentro de una transacción
-    atómica para evitar registros parciales.
+    Movimiento, Pagos, Aplicaciones, Operaciones Bancarias
+    y Tarjetas se guardan dentro de una única transacción atómica.
 
-    Transferencias, Tarjetas, Cheques y Retenciones
-    se incorporarán posteriormente.
+    Cheques y Retenciones se incorporarán posteriormente.
     """
 
     if request.method != "POST":
+
         return JsonResponse(
             {
                 "ok": False,
@@ -5535,6 +5537,7 @@ def guardar_movimiento(request):
             },
             status=405,
         )
+
 
     try:
 
@@ -5590,6 +5593,7 @@ def guardar_movimiento(request):
         # =========================================
 
         if not empresa_id:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5598,7 +5602,9 @@ def guardar_movimiento(request):
                 status=400,
             )
 
+
         if not tipo_gasto_id:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5607,7 +5613,9 @@ def guardar_movimiento(request):
                 status=400,
             )
 
+
         if not proveedor_id:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5616,7 +5624,9 @@ def guardar_movimiento(request):
                 status=400,
             )
 
+
         if not fecha_registro:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5634,7 +5644,9 @@ def guardar_movimiento(request):
             id=empresa_id
         ).first()
 
+
         if not empresa:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5654,7 +5666,9 @@ def guardar_movimiento(request):
             estado="Abierto"
         ).first()
 
+
         if not ejercicio:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5676,7 +5690,9 @@ def guardar_movimiento(request):
             activo=True,
         ).first()
 
+
         if not tipo_gasto:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5698,7 +5714,9 @@ def guardar_movimiento(request):
             activo=True,
         ).first()
 
+
         if not proveedor:
+
             return JsonResponse(
                 {
                     "ok": False,
@@ -5716,6 +5734,7 @@ def guardar_movimiento(request):
 
         centro_operativo = None
 
+
         if centro_operativo_id:
 
             centro_operativo = (
@@ -5726,13 +5745,14 @@ def guardar_movimiento(request):
                 ).first()
             )
 
+
             if not centro_operativo:
+
                 return JsonResponse(
                     {
                         "ok": False,
                         "mensaje": (
-                            "El Centro Operativo "
-                            "no es válido."
+                            "El Centro Operativo no es válido."
                         ),
                     },
                     status=400,
@@ -5745,6 +5765,7 @@ def guardar_movimiento(request):
 
         recurso_operativo = None
 
+
         if recurso_operativo_id:
 
             recurso_operativo = (
@@ -5755,13 +5776,14 @@ def guardar_movimiento(request):
                 ).first()
             )
 
+
             if not recurso_operativo:
+
                 return JsonResponse(
                     {
                         "ok": False,
                         "mensaje": (
-                            "El Recurso Operativo "
-                            "no es válido."
+                            "El Recurso Operativo no es válido."
                         ),
                     },
                     status=400,
@@ -5769,7 +5791,7 @@ def guardar_movimiento(request):
 
 
         # =========================================
-        # IMPORTES DEL MOVIMIENTO
+        # DECIMALES
         # =========================================
 
         from decimal import (
@@ -5789,14 +5811,22 @@ def guardar_movimiento(request):
                 or "0"
             )
 
+
             try:
+
                 return Decimal(
                     str(valor)
                 )
 
+
             except InvalidOperation:
+
                 return Decimal("0")
 
+
+        # =========================================
+        # IMPORTES DEL MOVIMIENTO
+        # =========================================
 
         neto_gravado = decimal_post(
             "neto_gravado"
@@ -5850,12 +5880,12 @@ def guardar_movimiento(request):
 
 
         if total <= 0:
+
             return JsonResponse(
                 {
                     "ok": False,
                     "mensaje": (
-                        "El total del registro "
-                        "debe ser mayor a cero."
+                        "El total del registro debe ser mayor a cero."
                     ),
                 },
                 status=400,
@@ -5863,21 +5893,23 @@ def guardar_movimiento(request):
 
 
         # =========================================
-        # PAGOS EN EFECTIVO
+        # PAGOS
         # =========================================
 
-        pagos_efectivo_raw = (
+        pagos_raw = (
             request.POST.get(
-                "pagos_efectivo"
+                "pagos"
             )
             or "[]"
         )
 
+
         try:
 
-            pagos_efectivo = json.loads(
-                pagos_efectivo_raw
+            pagos = json.loads(
+                pagos_raw
             )
+
 
         except json.JSONDecodeError:
 
@@ -5885,8 +5917,7 @@ def guardar_movimiento(request):
                 {
                     "ok": False,
                     "mensaje": (
-                        "Los datos de los Pagos "
-                        "no son válidos."
+                        "Los datos de los Pagos no son válidos."
                     ),
                 },
                 status=400,
@@ -5894,7 +5925,7 @@ def guardar_movimiento(request):
 
 
         if not isinstance(
-            pagos_efectivo,
+            pagos,
             list
         ):
 
@@ -5902,8 +5933,7 @@ def guardar_movimiento(request):
                 {
                     "ok": False,
                     "mensaje": (
-                        "El formato de los Pagos "
-                        "no es válido."
+                        "El formato de los Pagos no es válido."
                     ),
                 },
                 status=400,
@@ -5911,15 +5941,17 @@ def guardar_movimiento(request):
 
 
         # =========================================
-        # VALIDAR PAGOS ANTES DE GUARDAR
+        # VALIDAR PAGOS
         # =========================================
 
         pagos_validados = []
 
-        total_aplicado = Decimal("0.00")
+        total_aplicado = Decimal(
+            "0.00"
+        )
 
 
-        for pago_datos in pagos_efectivo:
+        for pago_datos in pagos:
 
             if not isinstance(
                 pago_datos,
@@ -5930,13 +5962,16 @@ def guardar_movimiento(request):
                     {
                         "ok": False,
                         "mensaje": (
-                            "Existe un Pago "
-                            "con formato inválido."
+                            "Existe un Pago con formato inválido."
                         ),
                     },
                     status=400,
                 )
 
+
+            # =====================================
+            # FECHA DEL PAGO
+            # =====================================
 
             fecha_pago = (
                 pago_datos.get(
@@ -5952,8 +5987,7 @@ def guardar_movimiento(request):
                     {
                         "ok": False,
                         "mensaje": (
-                            "Todos los Pagos deben "
-                            "tener una fecha."
+                            "Todos los Pagos deben tener una fecha."
                         ),
                     },
                     status=400,
@@ -5969,19 +6003,23 @@ def guardar_movimiento(request):
                     ).date()
                 )
 
+
             except ValueError:
 
                 return JsonResponse(
                     {
                         "ok": False,
                         "mensaje": (
-                            "Existe un Pago con "
-                            "una fecha inválida."
+                            "Existe un Pago con una fecha inválida."
                         ),
                     },
                     status=400,
                 )
 
+
+            # =====================================
+            # EFECTIVO
+            # =====================================
 
             try:
 
@@ -5994,6 +6032,7 @@ def guardar_movimiento(request):
                     )
                 )
 
+
             except (
                 InvalidOperation,
                 TypeError,
@@ -6004,21 +6043,854 @@ def guardar_movimiento(request):
                     {
                         "ok": False,
                         "mensaje": (
-                            "Existe un Pago con "
-                            "un importe inválido."
+                            "Existe un Pago con un importe "
+                            "en efectivo inválido."
                         ),
                     },
                     status=400,
                 )
 
 
-            if importe_efectivo <= 0:
+            if importe_efectivo < 0:
 
                 return JsonResponse(
                     {
                         "ok": False,
                         "mensaje": (
-                            "El importe de cada Pago "
+                            "El efectivo no puede ser negativo."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            # =====================================
+            # OPERACIONES BANCARIAS
+            # =====================================
+
+            operaciones_raw = (
+                pago_datos.get(
+                    "operaciones_bancarias"
+                )
+                or []
+            )
+
+
+            if not isinstance(
+                operaciones_raw,
+                list
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Las operaciones bancarias "
+                            "del Pago no son válidas."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            operaciones_validadas = []
+
+            total_operaciones = Decimal(
+                "0.00"
+            )
+
+
+            for operacion_datos in operaciones_raw:
+
+                if not isinstance(
+                    operacion_datos,
+                    dict
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación bancaria "
+                                "con formato inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                tipo_operacion = (
+                    operacion_datos.get(
+                        "tipo_operacion"
+                    )
+                    or ""
+                ).strip()
+
+
+                if tipo_operacion not in [
+                    "Transferencia",
+                    "Deposito",
+                ]:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de operación bancaria "
+                                "no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # MONEDA
+                # =================================
+
+                moneda = (
+                    operacion_datos.get(
+                        "moneda"
+                    )
+                    or ""
+                ).strip()
+
+
+                if moneda != "ARS":
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La versión Beta de OrdenaClick "
+                                "admite pagos únicamente en Pesos."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # FECHA
+                # =================================
+
+                fecha_operacion = (
+                    operacion_datos.get(
+                        "fecha"
+                    )
+                    or ""
+                ).strip()
+
+
+                if not fecha_operacion:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La operación bancaria "
+                                "debe tener una fecha."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                try:
+
+                    fecha_operacion_validada = (
+                        datetime.strptime(
+                            fecha_operacion,
+                            "%Y-%m-%d"
+                        ).date()
+                    )
+
+
+                except ValueError:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación bancaria "
+                                "con una fecha inválida."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # IMPORTE
+                # =================================
+
+                try:
+
+                    importe_operacion = Decimal(
+                        str(
+                            operacion_datos.get(
+                                "importe",
+                                0
+                            )
+                        )
+                    )
+
+
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación bancaria "
+                                "con un importe inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if importe_operacion <= 0:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El importe de una operación bancaria "
+                                "debe ser mayor a cero."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # BANCO DESTINO
+                # =================================
+
+                banco_destino_id = (
+                    operacion_datos.get(
+                        "banco_destino_id"
+                    )
+                )
+
+
+                banco_destino = (
+                    Banco.objects.filter(
+                        id=banco_destino_id,
+                        empresa=empresa,
+                        activo=True,
+                    ).first()
+                )
+
+
+                if not banco_destino:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El banco de destino "
+                                "no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # CUENTA ORIGEN
+                # =================================
+
+                cuenta_origen = None
+
+                cuenta_origen_id = (
+                    operacion_datos.get(
+                        "cuenta_origen_id"
+                    )
+                )
+
+
+                if (
+                    tipo_operacion ==
+                    "Transferencia"
+                ):
+
+                    if not cuenta_origen_id:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "Una transferencia debe tener "
+                                    "una cuenta bancaria de origen."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                    cuenta_origen = (
+                        CuentaBancaria.objects.filter(
+                            id=cuenta_origen_id,
+                            empresa=empresa,
+                            activo=True,
+                            moneda="ARS",
+                        ).first()
+                    )
+
+
+                    if not cuenta_origen:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "La cuenta bancaria de origen "
+                                    "no es válida para este Pago."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                if (
+                    tipo_operacion ==
+                    "Deposito" and
+                    cuenta_origen_id
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Un depósito no debe tener "
+                                "cuenta bancaria de origen."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # REFERENCIA
+                # =================================
+
+                referencia_destino = (
+                    operacion_datos.get(
+                        "referencia_destino"
+                    )
+                    or ""
+                ).strip()
+
+
+                # =================================
+                # COMPROBANTE
+                # =================================
+
+                comprobante_clave = (
+                    operacion_datos.get(
+                        "comprobante_clave"
+                    )
+                    or ""
+                ).strip()
+
+
+                comprobante = None
+
+
+                if comprobante_clave:
+
+                    comprobante = (
+                        request.FILES.get(
+                            comprobante_clave
+                        )
+                    )
+
+
+                operaciones_validadas.append(
+                    {
+                        "tipo_operacion":
+                            tipo_operacion,
+
+                        "cuenta_origen":
+                            cuenta_origen,
+
+                        "banco_destino":
+                            banco_destino,
+
+                        "referencia_destino":
+                            referencia_destino,
+
+                        "moneda":
+                            "ARS",
+
+                        "importe":
+                            importe_operacion,
+
+                        "fecha":
+                            fecha_operacion_validada,
+
+                        "comprobante":
+                            comprobante,
+                    }
+                )
+
+
+                total_operaciones += (
+                    importe_operacion
+                )
+
+
+            # =====================================
+            # TARJETAS
+            # =====================================
+
+            tarjetas_raw = (
+                pago_datos.get(
+                    "tarjetas"
+                )
+                or []
+            )
+
+
+            if not isinstance(
+                tarjetas_raw,
+                list
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Las operaciones con tarjeta "
+                            "del Pago no son válidas."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            tarjetas_validadas = []
+
+            total_tarjetas = Decimal(
+                "0.00"
+            )
+
+
+            for tarjeta_datos in tarjetas_raw:
+
+                if not isinstance(
+                    tarjeta_datos,
+                    dict
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación con tarjeta "
+                                "con formato inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # TARJETA
+                # =================================
+
+                tarjeta_id = (
+                    tarjeta_datos.get(
+                        "tarjeta_id"
+                    )
+                )
+
+
+                tarjeta = Tarjeta.objects.filter(
+                    id=tarjeta_id,
+                    empresa=empresa,
+                    activo=True,
+                ).first()
+
+
+                if not tarjeta:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La tarjeta seleccionada "
+                                "no es válida para este Pago."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # TIPO DE TARJETA
+                # =================================
+
+                tipo_tarjeta = (
+                    tarjeta_datos.get(
+                        "tipo_tarjeta"
+                    )
+                    or ""
+                ).strip()
+
+
+                if tipo_tarjeta not in [
+                    "Credito",
+                    "Debito",
+                ]:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de tarjeta "
+                                "no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if (
+                    tipo_tarjeta !=
+                    tarjeta.tipo_tarjeta
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de tarjeta recibido "
+                                "no coincide con la tarjeta seleccionada."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # FECHA
+                # =================================
+
+                fecha_tarjeta = (
+                    tarjeta_datos.get(
+                        "fecha"
+                    )
+                    or ""
+                ).strip()
+
+
+                if not fecha_tarjeta:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La operación con tarjeta "
+                                "debe tener una fecha."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                try:
+
+                    fecha_tarjeta_validada = (
+                        datetime.strptime(
+                            fecha_tarjeta,
+                            "%Y-%m-%d"
+                        ).date()
+                    )
+
+
+                except ValueError:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación con tarjeta "
+                                "con una fecha inválida."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # IMPORTE
+                # =================================
+
+                try:
+
+                    importe_tarjeta = Decimal(
+                        str(
+                            tarjeta_datos.get(
+                                "importe",
+                                0
+                            )
+                        )
+                    )
+
+
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una operación con tarjeta "
+                                "con un importe inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if importe_tarjeta <= 0:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El importe aplicado de una operación "
+                                "con tarjeta debe ser mayor a cero."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # CUOTAS
+                # =================================
+
+                try:
+
+                    cuotas = int(
+                        tarjeta_datos.get(
+                            "cuotas",
+                            1
+                        )
+                    )
+
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La cantidad de cuotas "
+                                "no es válida."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if cuotas < 1:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La cantidad de cuotas "
+                                "debe ser mayor a cero."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                # =================================
+                # INTERESES DE FINANCIACIÓN
+                # =================================
+
+                try:
+
+                    intereses_financiacion = Decimal(
+                        str(
+                            tarjeta_datos.get(
+                                "intereses_financiacion",
+                                0
+                            )
+                        )
+                    )
+
+
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Los intereses de financiación "
+                                "de la tarjeta no son válidos."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if intereses_financiacion < 0:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Los intereses de financiación "
+                                "no pueden ser negativos."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if (
+                    tarjeta.tipo_tarjeta ==
+                    "Debito"
+                ):
+
+                    if cuotas != 1:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "Una operación con tarjeta de débito "
+                                    "debe registrarse en una sola cuota."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                    if (
+                        intereses_financiacion !=
+                        Decimal("0.00")
+                    ):
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "Una operación con tarjeta de débito "
+                                    "no puede tener intereses de financiación."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                # =================================
+                # REFERENCIA
+                # =================================
+
+                referencia = (
+                    tarjeta_datos.get(
+                        "referencia"
+                    )
+                    or ""
+                ).strip()
+
+
+                # =================================
+                # COMPROBANTE
+                # =================================
+
+                comprobante_clave = (
+                    tarjeta_datos.get(
+                        "comprobante_clave"
+                    )
+                    or ""
+                ).strip()
+
+
+                comprobante = None
+
+
+                if comprobante_clave:
+
+                    comprobante = (
+                        request.FILES.get(
+                            comprobante_clave
+                        )
+                    )
+
+
+                tarjetas_validadas.append(
+                    {
+                        "tarjeta":
+                            tarjeta,
+
+                        "fecha":
+                            fecha_tarjeta_validada,
+
+                        "importe":
+                            importe_tarjeta,
+
+                        "cuotas":
+                            cuotas,
+
+                        "intereses_financiacion":
+                            intereses_financiacion,
+
+                        "referencia":
+                            referencia,
+
+                        "comprobante":
+                            comprobante,
+                    }
+                )
+
+
+                total_tarjetas += (
+                    importe_tarjeta
+                )
+
+
+            # =====================================
+            # TOTAL DEL PAGO
+            # =====================================
+
+            importe_pago = (
+                importe_efectivo +
+                total_operaciones +
+                total_tarjetas
+            )
+
+
+            if importe_pago <= 0:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El importe total de cada Pago "
                             "debe ser mayor a cero."
                         ),
                     },
@@ -6027,7 +6899,7 @@ def guardar_movimiento(request):
 
 
             total_aplicado += (
-                importe_efectivo
+                importe_pago
             )
 
 
@@ -6038,6 +6910,15 @@ def guardar_movimiento(request):
 
                     "importe_efectivo":
                         importe_efectivo,
+
+                    "importe_pago":
+                        importe_pago,
+
+                    "operaciones_bancarias":
+                        operaciones_validadas,
+
+                    "tarjetas":
+                        tarjetas_validadas,
                 }
             )
 
@@ -6053,8 +6934,7 @@ def guardar_movimiento(request):
                     "ok": False,
                     "mensaje": (
                         "El total de los Pagos "
-                        "no puede superar el total "
-                        "del registro."
+                        "no puede superar el total del registro."
                     ),
                 },
                 status=400,
@@ -6100,13 +6980,6 @@ def guardar_movimiento(request):
         # =========================================
         # TRANSACCIÓN ATÓMICA
         # =========================================
-        #
-        # Movimiento, Pagos y Aplicaciones deben
-        # guardarse como una única operación.
-        #
-        # Si algo falla en cualquier punto,
-        # Django revierte todo automáticamente.
-        # =========================================
 
         with transaction.atomic():
 
@@ -6114,102 +6987,103 @@ def guardar_movimiento(request):
             # MOVIMIENTO
             # =====================================
 
-            movimiento = (
-                Movimiento.objects.create(
+            movimiento = Movimiento.objects.create(
 
-                    empresa=
-                        empresa,
+                empresa=
+                    empresa,
 
-                    ejercicio=
-                        ejercicio,
+                ejercicio=
+                    ejercicio,
 
-                    tipo_gasto=
-                        tipo_gasto,
+                tipo_gasto=
+                    tipo_gasto,
 
-                    proveedor=
-                        proveedor,
+                proveedor=
+                    proveedor,
 
-                    centro_operativo=
-                        centro_operativo,
+                centro_operativo=
+                    centro_operativo,
 
-                    recurso_operativo=
-                        recurso_operativo,
+                recurso_operativo=
+                    recurso_operativo,
 
-                    descripcion="",
+                descripcion="",
 
-                    fecha_registro=
-                        fecha_registro,
+                fecha_registro=
+                    fecha_registro,
 
-                    fecha_vencimiento=(
-                        fecha_vencimiento
-                        or None
-                    ),
+                fecha_vencimiento=(
+                    fecha_vencimiento
+                    or None
+                ),
 
-                    tipo_comprobante=
-                        tipo_comprobante,
+                tipo_comprobante=
+                    tipo_comprobante,
 
-                    numero_comprobante=
-                        numero_comprobante,
+                numero_comprobante=
+                    numero_comprobante,
 
-                    moneda=
-                        "ARS",
+                moneda=
+                    "ARS",
 
-                    neto_gravado=
-                        neto_gravado,
+                neto_gravado=
+                    neto_gravado,
 
-                    no_gravado_exento=
-                        no_gravado_exento,
+                no_gravado_exento=
+                    no_gravado_exento,
 
-                    iva_21=
-                        iva_21,
+                iva_21=
+                    iva_21,
 
-                    iva_27=
-                        iva_27,
+                iva_27=
+                    iva_27,
 
-                    iva_105=
-                        iva_105,
+                iva_105=
+                    iva_105,
 
-                    recargos_intereses=
-                        recargos_intereses,
+                recargos_intereses=
+                    recargos_intereses,
 
-                    ajuste_redondeo=
-                        ajuste_redondeo,
+                ajuste_redondeo=
+                    ajuste_redondeo,
 
-                    percepcion_iibb=
-                        percepcion_iibb,
+                percepcion_iibb=
+                    percepcion_iibb,
 
-                    percepcion_iva=
-                        percepcion_iva,
+                percepcion_iva=
+                    percepcion_iva,
 
-                    percepcion_ganancias=
-                        percepcion_ganancias,
+                percepcion_ganancias=
+                    percepcion_ganancias,
 
-                    percepcion_tasas_municipales=(
-                        percepcion_tasas_municipales
-                    ),
+                percepcion_tasas_municipales=(
+                    percepcion_tasas_municipales
+                ),
 
-                    total=
-                        total,
+                total=
+                    total,
 
-                    # Compatibilidad temporal
-                    # con código existente.
-                    importe=
-                        total,
+                # Compatibilidad temporal.
+                importe=
+                    total,
 
-                    estado=
-                        estado_movimiento,
+                estado=
+                    estado_movimiento,
 
-                    archivo=
-                        archivo,
-                )
+                archivo=
+                    archivo,
             )
 
 
             # =====================================
-            # PAGOS + APLICACIONES
+            # PAGOS
             # =====================================
 
             pagos_creados = []
+
+            operaciones_creadas = []
+
+            tarjetas_creadas = []
 
 
             for pago_datos in pagos_validados:
@@ -6231,6 +7105,131 @@ def guardar_movimiento(request):
                 )
 
 
+                # =================================
+                # OPERACIONES BANCARIAS
+                # =================================
+
+                for operacion_datos in (
+                    pago_datos[
+                        "operaciones_bancarias"
+                    ]
+                ):
+
+                    operacion = (
+                        OperacionBancariaPago.objects.create(
+
+                            pago=
+                                pago,
+
+                            tipo_operacion=
+                                operacion_datos[
+                                    "tipo_operacion"
+                                ],
+
+                            cuenta_origen=
+                                operacion_datos[
+                                    "cuenta_origen"
+                                ],
+
+                            banco_destino=
+                                operacion_datos[
+                                    "banco_destino"
+                                ],
+
+                            referencia_destino=
+                                operacion_datos[
+                                    "referencia_destino"
+                                ],
+
+                            moneda=
+                                "ARS",
+
+                            importe=
+                                operacion_datos[
+                                    "importe"
+                                ],
+
+                            fecha=
+                                operacion_datos[
+                                    "fecha"
+                                ],
+
+                            comprobante=
+                                operacion_datos[
+                                    "comprobante"
+                                ],
+                        )
+                    )
+
+
+                    operaciones_creadas.append(
+                        operacion.id
+                    )
+
+
+                # =================================
+                # TARJETAS
+                # =================================
+
+                for tarjeta_datos in (
+                    pago_datos[
+                        "tarjetas"
+                    ]
+                ):
+
+                    tarjeta_pago = (
+                        TarjetaPago.objects.create(
+
+                            pago=
+                                pago,
+
+                            tarjeta=
+                                tarjeta_datos[
+                                    "tarjeta"
+                                ],
+
+                            fecha=
+                                tarjeta_datos[
+                                    "fecha"
+                                ],
+
+                            importe=
+                                tarjeta_datos[
+                                    "importe"
+                                ],
+
+                            cuotas=
+                                tarjeta_datos[
+                                    "cuotas"
+                                ],
+
+                            intereses_financiacion=
+                                tarjeta_datos[
+                                    "intereses_financiacion"
+                                ],
+
+                            referencia=
+                                tarjeta_datos[
+                                    "referencia"
+                                ],
+
+                            comprobante=
+                                tarjeta_datos[
+                                    "comprobante"
+                                ],
+                        )
+                    )
+
+
+                    tarjetas_creadas.append(
+                        tarjeta_pago.id
+                    )
+
+
+                # =================================
+                # APLICACIÓN DEL PAGO
+                # =================================
+
                 AplicacionPago.objects.create(
 
                     pago=
@@ -6241,7 +7240,7 @@ def guardar_movimiento(request):
 
                     importe=
                         pago_datos[
-                            "importe_efectivo"
+                            "importe_pago"
                         ],
                 )
 
@@ -6260,8 +7259,7 @@ def guardar_movimiento(request):
                 "ok": True,
 
                 "mensaje": (
-                    "Registro guardado "
-                    "correctamente."
+                    "Registro guardado correctamente."
                 ),
 
                 "movimiento_id":
@@ -6269,6 +7267,12 @@ def guardar_movimiento(request):
 
                 "pagos_ids":
                     pagos_creados,
+
+                "operaciones_bancarias_ids":
+                    operaciones_creadas,
+
+                "tarjetas_ids":
+                    tarjetas_creadas,
 
                 "total_aplicado":
                     str(
@@ -6288,12 +7292,12 @@ def guardar_movimiento(request):
             error,
         )
 
+
         return JsonResponse(
             {
                 "ok": False,
                 "mensaje": (
-                    "Ocurrió un error al "
-                    "guardar el registro."
+                    "Ocurrió un error al guardar el registro."
                 ),
             },
             status=500,
