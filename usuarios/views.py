@@ -45,12 +45,14 @@ from .models import (
     Pago,
     AplicacionPago,
     OperacionBancariaPago,
+    TarjetaPago,
+    Cheque,
     CentroOperativo,
     Banco,
     CuentaBancaria,
     Tarjeta,
     Retencion,
-    TarjetaPago,
+    RetencionPago,
     GestionClave,
     RecursoOperativo,
     RecursoOperativoCentro,
@@ -5520,12 +5522,13 @@ def guardar_movimiento(request):
     - Transferencias.
     - Depósitos.
     - Tarjetas.
+    - Cheques / e-Cheqs.
+    - Retenciones.
     - Aplicaciones de Pago.
 
-    Movimiento, Pagos, Aplicaciones, Operaciones Bancarias
-    y Tarjetas se guardan dentro de una única transacción atómica.
-
-    Cheques y Retenciones se incorporarán posteriormente.
+    Movimiento, Pagos, Aplicaciones, Operaciones Bancarias,
+    Tarjetas, Cheques y Retenciones se guardan dentro
+    de una única transacción atómica.
     """
 
     if request.method != "POST":
@@ -6874,13 +6877,586 @@ def guardar_movimiento(request):
 
 
             # =====================================
+            # CHEQUES / E-CHEQS
+            # =====================================
+
+            cheques_raw = (
+                pago_datos.get(
+                    "cheques"
+                )
+                or []
+            )
+
+
+            if not isinstance(
+                cheques_raw,
+                list
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Los cheques del Pago "
+                            "no son válidos."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            cheques_validados = []
+
+            total_cheques = Decimal(
+                "0.00"
+            )
+
+
+            for cheque_datos in cheques_raw:
+
+                if not isinstance(
+                    cheque_datos,
+                    dict
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe un cheque "
+                                "con formato inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                tipo_instrumento = (
+                    cheque_datos.get(
+                        "tipo_instrumento"
+                    )
+                    or ""
+                ).strip()
+
+                origen = (
+                    cheque_datos.get(
+                        "origen"
+                    )
+                    or ""
+                ).strip()
+
+                tipo_cheque = (
+                    cheque_datos.get(
+                        "tipo_cheque"
+                    )
+                    or ""
+                ).strip()
+
+
+                if tipo_instrumento not in [
+                    "Cheque",
+                    "ECheq",
+                ]:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de instrumento "
+                                "del cheque no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if origen not in [
+                    "Propio",
+                    "Tercero",
+                ]:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El origen del cheque "
+                                "no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if tipo_cheque not in [
+                    "Comun",
+                    "Diferido",
+                ]:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de cheque "
+                                "no es válido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                entidad_id = (
+                    cheque_datos.get(
+                        "entidad_id"
+                    )
+                )
+
+                banco = None
+                cuenta_bancaria = None
+
+
+                if origen == "Propio":
+
+                    cuenta_bancaria = (
+                        CuentaBancaria.objects.filter(
+                            id=entidad_id,
+                            empresa=empresa,
+                            activo=True,
+                            moneda="ARS",
+                        ).first()
+                    )
+
+                    if not cuenta_bancaria:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "El cheque propio debe usar "
+                                    "una cuenta bancaria ARS activa "
+                                    "de la empresa."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                else:
+
+                    banco = Banco.objects.filter(
+                        id=entidad_id,
+                        empresa=empresa,
+                        activo=True,
+                    ).first()
+
+                    if not banco:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "El cheque de tercero debe tener "
+                                    "un banco válido de la empresa."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                numero = (
+                    cheque_datos.get(
+                        "numero"
+                    )
+                    or ""
+                ).strip()
+
+                if not numero:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Ingrese el número del cheque."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                try:
+
+                    importe_cheque = Decimal(
+                        str(
+                            cheque_datos.get(
+                                "importe",
+                                0
+                            )
+                        )
+                    )
+
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe un cheque "
+                                "con un importe inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if importe_cheque <= 0:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El importe del cheque "
+                                "debe ser mayor a cero."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                fecha_emision = (
+                    cheque_datos.get(
+                        "fecha_emision"
+                    )
+                    or ""
+                ).strip()
+
+                if not fecha_emision:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Ingrese la fecha de emisión "
+                                "del cheque."
+                            ),
+                        },
+                        status=400,
+                    )
+
+                try:
+
+                    fecha_emision_validada = (
+                        datetime.strptime(
+                            fecha_emision,
+                            "%Y-%m-%d"
+                        ).date()
+                    )
+
+                except ValueError:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La fecha de emisión "
+                                "del cheque no es válida."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                fecha_acreditacion = (
+                    cheque_datos.get(
+                        "fecha_acreditacion"
+                    )
+                    or ""
+                ).strip()
+
+                fecha_acreditacion_validada = None
+
+                if fecha_acreditacion:
+
+                    try:
+
+                        fecha_acreditacion_validada = (
+                            datetime.strptime(
+                                fecha_acreditacion,
+                                "%Y-%m-%d"
+                            ).date()
+                        )
+
+                    except ValueError:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": (
+                                    "La fecha de acreditación "
+                                    "del cheque no es válida."
+                                ),
+                            },
+                            status=400,
+                        )
+
+
+                quien_entrega = (
+                    cheque_datos.get(
+                        "quien_entrega"
+                    )
+                    or ""
+                ).strip()
+
+
+                cheques_validados.append(
+                    {
+                        "tipo_instrumento":
+                            tipo_instrumento,
+
+                        "origen":
+                            origen,
+
+                        "tipo_cheque":
+                            tipo_cheque,
+
+                        "banco":
+                            banco,
+
+                        "cuenta_bancaria":
+                            cuenta_bancaria,
+
+                        "numero":
+                            numero,
+
+                        "importe":
+                            importe_cheque,
+
+                        "fecha_emision":
+                            fecha_emision_validada,
+
+                        "fecha_acreditacion":
+                            fecha_acreditacion_validada,
+
+                        "quien_entrega":
+                            quien_entrega,
+                    }
+                )
+
+                total_cheques += (
+                    importe_cheque
+                )
+
+
+            # =====================================
+            # RETENCIONES
+            # =====================================
+
+            retenciones_raw = (
+                pago_datos.get(
+                    "retenciones"
+                )
+                or []
+            )
+
+
+            if not isinstance(
+                retenciones_raw,
+                list
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Las retenciones del Pago "
+                            "no son válidas."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            retenciones_validadas = []
+
+            total_retenciones = Decimal(
+                "0.00"
+            )
+
+
+            for retencion_datos in retenciones_raw:
+
+                if not isinstance(
+                    retencion_datos,
+                    dict
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una retención "
+                                "con formato inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                retencion_id = (
+                    retencion_datos.get(
+                        "retencion_id"
+                    )
+                )
+
+
+                retencion = Retencion.objects.filter(
+                    id=retencion_id,
+                    empresa=empresa,
+                    activo=True,
+                ).first()
+
+
+                if not retencion:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La retención seleccionada "
+                                "no es válida para este Pago."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                retencion_tipo = (
+                    retencion_datos.get(
+                        "retencion_tipo"
+                    )
+                    or ""
+                ).strip()
+
+
+                if not retencion_tipo:
+
+                    retencion_tipo = (
+                        retencion.tipo
+                    )
+
+
+                if (
+                    retencion_tipo.upper() !=
+                    retencion.tipo.upper()
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El tipo de retención recibido "
+                                "no coincide con la retención seleccionada."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                try:
+
+                    importe_retencion = Decimal(
+                        str(
+                            retencion_datos.get(
+                                "importe",
+                                0
+                            )
+                        )
+                    )
+
+
+                except (
+                    InvalidOperation,
+                    TypeError,
+                    ValueError
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Existe una retención "
+                                "con un importe inválido."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if importe_retencion <= 0:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El importe de una retención "
+                                "debe ser mayor a cero."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                comprobante_clave = (
+                    retencion_datos.get(
+                        "comprobante_clave"
+                    )
+                    or ""
+                ).strip()
+
+
+                comprobante = None
+
+
+                if comprobante_clave:
+
+                    comprobante = (
+                        request.FILES.get(
+                            comprobante_clave
+                        )
+                    )
+
+
+                retenciones_validadas.append(
+                    {
+                        "tipo":
+                            retencion.tipo,
+
+                        "importe":
+                            importe_retencion,
+
+                        "comprobante":
+                            comprobante,
+                    }
+                )
+
+
+                total_retenciones += (
+                    importe_retencion
+                )
+
+
+            # =====================================
             # TOTAL DEL PAGO
             # =====================================
 
             importe_pago = (
                 importe_efectivo +
                 total_operaciones +
-                total_tarjetas
+                total_tarjetas +
+                total_cheques +
+                total_retenciones
             )
 
 
@@ -6919,6 +7495,12 @@ def guardar_movimiento(request):
 
                     "tarjetas":
                         tarjetas_validadas,
+
+                    "cheques":
+                        cheques_validados,
+
+                    "retenciones":
+                        retenciones_validadas,
                 }
             )
 
@@ -7085,6 +7667,10 @@ def guardar_movimiento(request):
 
             tarjetas_creadas = []
 
+            cheques_creados = []
+
+            retenciones_creadas = []
+
 
             for pago_datos in pagos_validados:
 
@@ -7227,6 +7813,122 @@ def guardar_movimiento(request):
 
 
                 # =================================
+                # CHEQUES / E-CHEQS
+                # =================================
+
+                for cheque_datos in (
+                    pago_datos[
+                        "cheques"
+                    ]
+                ):
+
+                    cheque = Cheque.objects.create(
+
+                        empresa=
+                            empresa,
+
+                        pago=
+                            pago,
+
+                        tipo_instrumento=
+                            cheque_datos[
+                                "tipo_instrumento"
+                            ],
+
+                        origen=
+                            cheque_datos[
+                                "origen"
+                            ],
+
+                        tipo_cheque=
+                            cheque_datos[
+                                "tipo_cheque"
+                            ],
+
+                        banco=
+                            cheque_datos[
+                                "banco"
+                            ],
+
+                        cuenta_bancaria=
+                            cheque_datos[
+                                "cuenta_bancaria"
+                            ],
+
+                        numero=
+                            cheque_datos[
+                                "numero"
+                            ],
+
+                        importe=
+                            cheque_datos[
+                                "importe"
+                            ],
+
+                        fecha_emision=
+                            cheque_datos[
+                                "fecha_emision"
+                            ],
+
+                        fecha_acreditacion=
+                            cheque_datos[
+                                "fecha_acreditacion"
+                            ],
+
+                        quien_entrega=
+                            cheque_datos[
+                                "quien_entrega"
+                            ],
+
+                        estado=
+                            "Pendiente",
+                    )
+
+                    cheques_creados.append(
+                        cheque.id
+                    )
+
+
+                # =================================
+                # RETENCIONES
+                # =================================
+
+                for retencion_datos in (
+                    pago_datos[
+                        "retenciones"
+                    ]
+                ):
+
+                    retencion_pago = (
+                        RetencionPago.objects.create(
+
+                            pago=
+                                pago,
+
+                            tipo=
+                                retencion_datos[
+                                    "tipo"
+                                ],
+
+                            importe=
+                                retencion_datos[
+                                    "importe"
+                                ],
+
+                            comprobante=
+                                retencion_datos[
+                                    "comprobante"
+                                ],
+                        )
+                    )
+
+
+                    retenciones_creadas.append(
+                        retencion_pago.id
+                    )
+
+
+                # =================================
                 # APLICACIÓN DEL PAGO
                 # =================================
 
@@ -7273,6 +7975,12 @@ def guardar_movimiento(request):
 
                 "tarjetas_ids":
                     tarjetas_creadas,
+
+                "cheques_ids":
+                    cheques_creados,
+
+                "retenciones_ids":
+                    retenciones_creadas,
 
                 "total_aplicado":
                     str(

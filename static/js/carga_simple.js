@@ -69,26 +69,7 @@ async function guardarRegistroSimple(){
             );
 
 
-            /*
-             * =====================================
-             * MEDIOS TODAVÍA NO IMPLEMENTADOS
-             * =====================================
-             */
-
-            if(
-                pago.cheques.length > 0 ||
-                pago.retenciones.length > 0
-            ){
-
-                alert(
-                    "En esta etapa todavía no se pueden guardar Cheques ni Retenciones."
-                );
-
-                return;
-
-            }
-
-
+            
             /*
              * =====================================
              * FECHA DEL PAGO
@@ -568,31 +549,345 @@ async function guardarRegistroSimple(){
 
             }
 
-
             /*
-             * =====================================
-             * TOTAL DEL PAGO
-             * =====================================
-             */
+            * =====================================
+            * CHEQUES
+            * =====================================
+            */
 
-            const totalPago =
-                efectivo +
-                totalOperaciones +
-                totalTarjetas;
+            const chequesPreparados = [];
+
+            let totalCheques =
+                0;
 
 
-            if(
-                totalPago <= 0
+            for(
+                let indiceCheque = 0;
+                indiceCheque < pago.cheques.length;
+                indiceCheque++
             ){
 
-                alert(
-                    "El Pago debe tener un importe mayor a cero."
-                );
+                const cheque =
+                    pago.cheques[
+                        indiceCheque
+                    ];
 
-                return;
+
+                if(
+                    cheque.instrumento !== "Cheque" &&
+                    cheque.instrumento !== "ECheq"
+                ){
+
+                    alert(
+                        "Existe un cheque con un tipo de instrumento no válido."
+                    );
+
+                    return;
+
+                }
+
+
+                const origenCheque =
+                    String(
+                        cheque.origen || ""
+                    ).toLowerCase();
+
+
+                let origenPreparado =
+                    "";
+
+
+                if(
+                    origenCheque === "propio"
+                ){
+
+                    origenPreparado =
+                        "Propio";
+
+                }else if(
+                    origenCheque === "tercero"
+                ){
+
+                    origenPreparado =
+                        "Tercero";
+
+                }else{
+
+                    alert(
+                        "Existe un cheque con un origen no válido."
+                    );
+
+                    return;
+
+                }
+
+
+                const tipoCheque =
+                    String(
+                        cheque.tipo || ""
+                    ).toLowerCase();
+
+
+                let tipoChequePreparado =
+                    "";
+
+
+                if(
+                    tipoCheque === "comun" ||
+                    tipoCheque === "simple"
+                ){
+
+                    tipoChequePreparado =
+                        "Comun";
+
+                }else if(
+                    tipoCheque === "diferido"
+                ){
+
+                    tipoChequePreparado =
+                        "Diferido";
+
+                }else{
+
+                    alert(
+                        "Existe un cheque con un tipo no válido."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !cheque.entidad_id
+                ){
+
+                    alert(
+                        "El cheque debe tener una cuenta bancaria o banco asociado."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !cheque.numero
+                ){
+
+                    alert(
+                        "Ingrese el número del cheque."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    !cheque.fecha_emision
+                ){
+
+                    alert(
+                        "Ingrese la fecha de emisión del cheque."
+                    );
+
+                    return;
+
+                }
+
+
+                const importeCheque =
+                    Number(
+                        cheque.importe || 0
+                    );
+
+
+                if(
+                    importeCheque <= 0
+                ){
+
+                    alert(
+                        "El importe del cheque debe ser mayor a cero."
+                    );
+
+                    return;
+
+                }
+
+
+                totalCheques +=
+                    importeCheque;
+
+
+                chequesPreparados.push(
+                    {
+                        tipo_instrumento:
+                            cheque.instrumento,
+
+                        origen:
+                            origenPreparado,
+
+                        tipo_cheque:
+                            tipoChequePreparado,
+
+                        entidad_id:
+                            cheque.entidad_id,
+
+                        numero:
+                            cheque.numero,
+
+                        importe:
+                            importeCheque,
+
+                        fecha_emision:
+                            cheque.fecha_emision,
+
+                        fecha_acreditacion:
+                            cheque.fecha_acreditacion || "",
+
+                        quien_entrega:
+                            cheque.quien_entrega || ""
+                    }
+                );
 
             }
 
+                        /*
+                        * =====================================
+                        * RETENCIONES
+                        * =====================================
+                        */
+
+                        const retencionesPreparadas = [];
+
+                        let totalRetenciones =
+                            0;
+
+
+                        for(
+                            let indiceRetencion = 0;
+                            indiceRetencion < pago.retenciones.length;
+                            indiceRetencion++
+                        ){
+
+                            const operacionRetencion =
+                                pago.retenciones[
+                                    indiceRetencion
+                                ];
+
+
+                            if(
+                                !operacionRetencion.retencion_id
+                            ){
+
+                                alert(
+                                    "Existe una retención sin un tipo seleccionado."
+                                );
+
+                                return;
+
+                            }
+
+
+                            const importeRetencion =
+                                Number(
+                                    operacionRetencion.importe || 0
+                                );
+
+
+                            if(
+                                importeRetencion <= 0
+                            ){
+
+                                alert(
+                                    "El importe de la retención debe ser mayor a cero."
+                                );
+
+                                return;
+
+                            }
+
+
+                            totalRetenciones +=
+                                importeRetencion;
+
+
+                            /*
+                            * =================================
+                            * COMPROBANTE DE RETENCIÓN
+                            * =================================
+                            */
+
+                            let comprobanteRetencionClave =
+                                "";
+
+
+                            if(
+                                operacionRetencion.comprobante instanceof File
+                            ){
+
+                                comprobanteRetencionClave =
+                                    `pago_${indicePago}_retencion_${indiceRetencion}_comprobante`;
+
+
+                                archivosPagos.push(
+                                    {
+                                        clave:
+                                            comprobanteRetencionClave,
+
+                                        archivo:
+                                            operacionRetencion.comprobante
+                                    }
+                                );
+
+                            }
+
+
+                            retencionesPreparadas.push(
+                                {
+                                    retencion_id:
+                                        operacionRetencion.retencion_id,
+
+                                    retencion_tipo:
+                                        operacionRetencion.retencion_tipo || "",
+
+                                    importe:
+                                        importeRetencion,
+
+                                    comprobante_clave:
+                                        comprobanteRetencionClave
+                                }
+                            );
+
+                        }
+
+
+                        /*
+                        * =====================================
+                        * TOTAL DEL PAGO
+                        * =====================================
+                        */
+
+                        const totalPago =
+                            efectivo +
+                            totalOperaciones +
+                            totalTarjetas +
+                            totalCheques +
+                            totalRetenciones;
+
+
+                        if(
+                            totalPago <= 0
+                        ){
+
+                            alert(
+                                "El Pago debe tener un importe mayor a cero."
+                            );
+
+                            return;
+
+                        }
 
             /*
              * =====================================
@@ -612,7 +907,14 @@ async function guardarRegistroSimple(){
                         operacionesBancarias,
 
                     tarjetas:
-                        tarjetasPreparadas
+                        tarjetasPreparadas,
+
+                    cheques:
+                        chequesPreparados,
+
+                    retenciones:
+                        retencionesPreparadas
+
                 }
             );
 
