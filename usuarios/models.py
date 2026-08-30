@@ -320,6 +320,13 @@ class Movimiento(models.Model):
 
     ]
 
+    MODALIDADES_PAGO = [
+
+        ('Manual', 'Pago manual'),
+        ('DebitoAutomatico', 'Débito automático'),
+
+    ]
+
 
     empresa = models.ForeignKey(
         Empresa,
@@ -385,6 +392,21 @@ class Movimiento(models.Model):
 
 
     fecha_vencimiento = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    modalidad_pago = models.CharField(
+        max_length=30,
+        choices=MODALIDADES_PAGO,
+        default='Manual'
+    )
+
+
+    cuenta_debito = models.ForeignKey(
+        'CuentaBancaria',
+        on_delete=models.PROTECT,
+        related_name='movimientos_debito_automatico',
         blank=True,
         null=True
     )
@@ -871,6 +893,12 @@ class DebitoAutomaticoPago(models.Model):
     importe = models.DecimalField(
         max_digits=14,
         decimal_places=2
+    )
+
+    intereses_mora = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0
     )
 
     fecha_debito = models.DateField()

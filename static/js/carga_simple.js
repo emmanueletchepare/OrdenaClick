@@ -971,9 +971,27 @@ async function guardarRegistroSimple(){
         );
 
 
+    const modalidadPago =
+        document.getElementById(
+            "modalidadPagoRegistro"
+        );
+
+
+    const cuentaDebito =
+        document.getElementById(
+            "cuentaDebitoRegistro"
+        );
+
+
     const tipoComprobante =
         document.getElementById(
             "tipoComprobanteRegistro"
+        );
+
+
+    const puntoVentaComprobante =
+        document.getElementById(
+            "puntoVentaComprobanteRegistro"
         );
 
 
@@ -1122,6 +1140,130 @@ async function guardarRegistroSimple(){
 
     }
 
+    /*
+     * =========================================
+     * COMPROBANTE
+     * =========================================
+     */
+
+    let puntoVentaNormalizado =
+        (
+            puntoVentaComprobante?.value ||
+            ""
+        ).trim();
+
+
+    let numeroComprobanteNormalizado =
+        (
+            numeroComprobante?.value ||
+            ""
+        ).trim();
+
+
+    if(
+        !/^\d{1,4}$/.test(
+            puntoVentaNormalizado
+        )
+    ){
+
+        alert(
+            "Ingrese un punto de venta válido."
+        );
+
+        puntoVentaComprobante?.focus();
+
+        return;
+
+    }
+
+
+    if(
+        !/^\d{1,8}$/.test(
+            numeroComprobanteNormalizado
+        )
+    ){
+
+        alert(
+            "Ingrese un número de comprobante válido."
+        );
+
+        numeroComprobante?.focus();
+
+        return;
+
+    }
+
+
+    puntoVentaNormalizado =
+        puntoVentaNormalizado.padStart(
+            4,
+            "0"
+        );
+
+
+    numeroComprobanteNormalizado =
+        numeroComprobanteNormalizado.padStart(
+            8,
+            "0"
+        );
+
+
+    puntoVentaComprobante.value =
+        puntoVentaNormalizado;
+
+
+    numeroComprobante.value =
+        numeroComprobanteNormalizado;
+
+
+    const comprobanteNormalizado =
+        puntoVentaNormalizado +
+        "-" +
+        numeroComprobanteNormalizado;
+
+
+    /*
+    * =========================================
+    * PREVISIÓN DE PAGO
+    * =========================================
+    */
+
+    if(
+        !modalidadPago ||
+        (
+            modalidadPago.value !==
+                "Manual" &&
+            modalidadPago.value !==
+                "DebitoAutomatico"
+        )
+    ){
+
+        alert(
+            "Seleccione una forma prevista de pago válida."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        modalidadPago.value ===
+            "DebitoAutomatico" &&
+        (
+            !cuentaDebito ||
+            !cuentaDebito.value
+        )
+    ){
+
+        alert(
+            "Seleccione la cuenta prevista para el débito automático."
+        );
+
+        return;
+
+    }
+
 
     const total =
         Number(
@@ -1142,6 +1284,214 @@ async function guardarRegistroSimple(){
 
     }
 
+    /*
+     * =========================================
+     * DÉBITO AUTOMÁTICO REAL
+     * =========================================
+     *
+     * La previsión del Movimiento y el Pago real
+     * son conceptos diferentes.
+     *
+     * Si el usuario solamente seleccionó Débito
+     * automático pero no abrió "Registrar Pago",
+     * el Movimiento se guarda sin Pago y queda
+     * pendiente.
+     *
+     * Si registró el débito, enviamos al backend:
+     *
+     * - fecha real del débito;
+     * - importe realmente debitado;
+     * - confirmación de intereses por mora cuando
+     *   el importe supera el saldo.
+     *
+     * El backend vuelve a validar todas estas reglas.
+     */
+
+    let debitoAutomaticoPreparado =
+        null;
+
+
+    if(
+        modalidadPago.value ===
+        "DebitoAutomatico"
+    ){
+
+        const bloqueDebito =
+            document.getElementById(
+                "pagoDebitoAutomaticoRegistro"
+            );
+
+
+        if(bloqueDebito){
+
+            const fechaPagoDebito =
+                document.getElementById(
+                    "fechaPagoDebitoAutomaticoRegistro"
+                );
+
+
+            const importePagoDebito =
+                document.getElementById(
+                    "importePagoDebitoAutomaticoRegistro"
+                );
+
+
+            if(
+                !fechaPagoDebito ||
+                !fechaPagoDebito.value
+            ){
+
+                alert(
+                    "Ingrese la fecha real del débito."
+                );
+
+                return;
+
+            }
+
+
+            const importeDebitado =
+                Number(
+                    leerImporte(
+                        importePagoDebito?.value
+                    )
+                );
+
+
+            if(
+                !Number.isFinite(
+                    importeDebitado
+                ) ||
+                importeDebitado <= 0
+            ){
+
+                alert(
+                    "El importe debitado debe ser mayor a cero."
+                );
+
+                return;
+
+            }
+
+
+            let confirmarInteresesMora =
+                false;
+
+
+            /*
+             * Si el débito supera el saldo del
+             * Movimiento, solamente puede tratarse
+             * como interés por mora cuando ocurrió
+             * después del vencimiento.
+             */
+
+            if(
+                importeDebitado >
+                total
+            ){
+
+                const diferencia =
+                    Math.round(
+                        (
+                            importeDebitado -
+                            total
+                        ) * 100
+                    ) / 100;
+
+
+                if(
+                    !fechaVencimiento ||
+                    !fechaVencimiento.value
+                ){
+
+                    alert(
+                        "El importe debitado supera el total del registro. " +
+                        "Sin una fecha de vencimiento no puede clasificarse " +
+                        "la diferencia como interés por mora."
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    fechaPagoDebito.value <=
+                    fechaVencimiento.value
+                ){
+
+                    alert(
+                        "El importe debitado supera el total del registro, " +
+                        "pero el débito no ocurrió después del vencimiento. " +
+                        "La diferencia no puede registrarse automáticamente " +
+                        "como interés por mora."
+                    );
+
+                    return;
+
+                }
+
+
+                const diferenciaFormateada =
+                    diferencia.toLocaleString(
+                        "es-AR",
+                        {
+                            minimumFractionDigits:
+                                2,
+
+                            maximumFractionDigits:
+                                2
+                        }
+                    );
+
+
+                const confirmado =
+                    confirm(
+                        "El débito se produjo después del vencimiento " +
+                        "y el importe ingresado supera en $" +
+                        diferenciaFormateada +
+                        " el saldo pendiente.\n\n" +
+                        "¿Los $" +
+                        diferenciaFormateada +
+                        " corresponden a intereses por mora?"
+                    );
+
+
+                if(!confirmado){
+
+                    /*
+                     * No enviamos nada y conservamos
+                     * Fecha e Importe para que el
+                     * usuario pueda corregirlos.
+                     */
+
+                    return;
+
+                }
+
+
+                confirmarInteresesMora =
+                    true;
+
+            }
+
+
+            debitoAutomaticoPreparado = {
+
+                fecha:
+                    fechaPagoDebito.value,
+
+                importe_debitado:
+                    importeDebitado,
+
+                confirmar_intereses_mora:
+                    confirmarInteresesMora
+
+            };
+
+        }
+
+    }
 
     /*
      * =========================================
@@ -1196,14 +1546,32 @@ async function guardarRegistroSimple(){
 
 
     datos.append(
-        "tipo_comprobante",
+        "modalidad_pago",
+        modalidadPago?.value || "Manual"
+    );
+
+
+    datos.append(
+        "cuenta_debito",
+        modalidadPago?.value ===
+            "DebitoAutomatico"
+            ? (
+                cuentaDebito?.value ||
+                ""
+            )
+            : ""
+    );
+
+
+    datos.append(
+    "tipo_comprobante",
         tipoComprobante?.value || ""
     );
 
 
     datos.append(
         "numero_comprobante",
-        numeroComprobante?.value || ""
+        comprobanteNormalizado
     );
 
 
@@ -1338,6 +1706,18 @@ async function guardarRegistroSimple(){
         )
     );
 
+    /*
+     * =========================================
+     * DÉBITO AUTOMÁTICO
+     * =========================================
+     */
+
+    datos.append(
+        "debito_automatico",
+        JSON.stringify(
+            debitoAutomaticoPreparado
+        )
+    );
 
     /*
      * =========================================
@@ -1541,6 +1921,988 @@ document.addEventListener(
 
 
         guardarRegistroSimple();
+
+    }
+);
+
+/*
+ * =========================================
+ * CUENTAS PARA DÉBITO AUTOMÁTICO
+ * =========================================
+ *
+ * Carga las cuentas bancarias disponibles para
+ * la modalidad prevista Débito automático.
+ *
+ * Reglas Beta:
+ *
+ * - pertenecen a la empresa activa;
+ * - solamente se muestran cuentas en ARS;
+ * - el endpoint de Cuentas Bancarias entrega
+ *   las cuentas disponibles de la empresa.
+ *
+ * No se crea ningún Pago en esta instancia.
+ * Solamente se define la cuenta prevista desde
+ * la cual se espera que ocurra el débito.
+ */
+
+
+async function cargarCuentasDebitoRegistro(){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    const select =
+        document.getElementById(
+            "cuentaDebitoRegistro"
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !select
+    ){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Seleccione una cuenta...
+        </option>
+
+    `;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.cuentas
+            )
+        ){
+
+            console.error(
+                "No se pudieron cargar las cuentas para débito automático."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * BETA ORDENACLICK
+         * SOLO CUENTAS EN PESOS
+         * =========================================
+         */
+
+        resultado.cuentas
+
+            .filter(
+                function(cuenta){
+
+                    return (
+                        cuenta.moneda ===
+                        "ARS"
+                    );
+
+                }
+            )
+
+            .forEach(
+                function(cuenta){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            cuenta.id
+                        );
+
+
+                    opcion.textContent =
+                        `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                    select.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+        /*
+         * Si la cuenta seleccionada anteriormente
+         * continúa disponible, la conservamos.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando cuentas para débito automático:",
+            error
+        );
+
+    }
+
+}
+
+/*
+ * =========================================
+ * PREVISIÓN DE PAGO
+ * =========================================
+ *
+ * Controla la modalidad prevista del Movimiento.
+ *
+ * Pago manual:
+ * - no requiere una cuenta bancaria;
+ * - conserva el espacio visual de la segunda
+ *   columna para no alterar la alineación.
+ *
+ * Débito automático:
+ * - muestra la cuenta prevista para el débito;
+ * - todavía no crea ningún Pago real.
+ */
+
+function normalizarComprobanteRegistro(){
+
+    const puntoVenta =
+        document.getElementById(
+            "puntoVentaComprobanteRegistro"
+        );
+
+
+    const numero =
+        document.getElementById(
+            "numeroComprobanteRegistro"
+        );
+
+
+    if(
+        puntoVenta &&
+        puntoVenta.value.trim() !== ""
+    ){
+
+        const valorPuntoVenta =
+            puntoVenta.value.trim();
+
+
+        if(
+            /^\d{1,4}$/.test(
+                valorPuntoVenta
+            )
+        ){
+
+            puntoVenta.value =
+                valorPuntoVenta.padStart(
+                    4,
+                    "0"
+                );
+
+        }
+
+    }
+
+
+    if(
+        numero &&
+        numero.value.trim() !== ""
+    ){
+
+        const valorNumero =
+            numero.value.trim();
+
+
+        if(
+            /^\d{1,8}$/.test(
+                valorNumero
+            )
+        ){
+
+            numero.value =
+                valorNumero.padStart(
+                    8,
+                    "0"
+                );
+
+        }
+
+    }
+
+}
+
+function actualizarPrevisionPagoRegistro(){
+
+    const modalidad =
+        document.getElementById(
+            "modalidadPagoRegistro"
+        );
+
+
+    const campoCuenta =
+        document.getElementById(
+            "campoCuentaDebitoRegistro"
+        );
+
+
+    const cuenta =
+        document.getElementById(
+            "cuentaDebitoRegistro"
+        );
+
+
+    const listaPagos =
+        document.getElementById(
+            "listaPagosRegistro"
+        );
+
+
+    if(
+        !modalidad ||
+        !campoCuenta ||
+        !cuenta
+    ){
+
+        return;
+
+    }
+
+
+    const esDebitoAutomatico =
+        modalidad.value ===
+        "DebitoAutomatico";
+
+
+    /*
+     * El botón debe reflejar siempre
+     * la modalidad seleccionada.
+     */
+
+    actualizarBotonPagoSegunModalidad();
+
+
+    if(esDebitoAutomatico){
+
+        campoCuenta.style.visibility =
+            "visible";
+
+        campoCuenta.style.pointerEvents =
+            "auto";
+
+        cuenta.disabled =
+            false;
+
+
+        cargarCuentasDebitoRegistro();
+
+
+        /*
+         * =========================================
+         * DESCARTAR BORRADORES DE PAGO MANUAL
+         * =========================================
+         *
+         * Mientras todavía no exista un Pago
+         * persistido, los Pagos abiertos dentro
+         * de Carga Simple son solamente borradores.
+         *
+         * Al pasar a Débito automático eliminamos
+         * esos borradores para no mezclar ambas
+         * modalidades dentro del mismo registro.
+         */
+
+        pagosRegistro = [];
+
+
+        if(listaPagos){
+
+            listaPagos.innerHTML =
+                "";
+
+        }
+
+
+        limpiarPagoDebitoAutomaticoRegistro();
+
+
+        actualizarResumenGeneralPagos();
+
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * PAGO MANUAL
+     * =========================================
+     */
+
+    campoCuenta.style.visibility =
+        "hidden";
+
+    campoCuenta.style.pointerEvents =
+        "none";
+
+    cuenta.disabled =
+        true;
+
+    cuenta.value =
+        "";
+
+
+    /*
+     * Si veníamos de Débito automático,
+     * retiramos su formulario reducido.
+     */
+
+    limpiarPagoDebitoAutomaticoRegistro();
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+
+/*
+ * =========================================
+ * EVENTO MODALIDAD DE PAGO
+ * =========================================
+ *
+ * Carga Simple se genera dinámicamente.
+ * Se utiliza delegación de eventos para
+ * mantener todo el JavaScript fuera del HTML.
+ */
+
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const modalidad =
+            event.target.closest(
+                "#modalidadPagoRegistro"
+            );
+
+
+        if(!modalidad){
+
+            return;
+
+        }
+
+
+        actualizarPrevisionPagoRegistro();
+
+    }
+);
+
+/*
+ * =========================================
+ * PAGO PREVISTO POR DÉBITO AUTOMÁTICO
+ * =========================================
+ *
+ * Adapta la interfaz de Carga Simple cuando
+ * el Movimiento tiene como modalidad prevista
+ * Débito automático.
+ *
+ * En esta etapa el bloque es solamente visual.
+ * El débito real todavía NO se incorpora a
+ * pagosRegistro ni se persiste como Pago.
+ *
+ * Esto evita registrar accidentalmente el
+ * importe como Efectivo, que es la estructura
+ * utilizada actualmente por los Pagos manuales.
+ */
+
+
+function actualizarBotonPagoSegunModalidad(){
+
+    const modalidad =
+        document.getElementById(
+            "modalidadPagoRegistro"
+        );
+
+
+    const boton =
+        document.getElementById(
+            "btnAgregarPagoRegistro"
+        );
+
+
+    if(
+        !modalidad ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        modalidad.value ===
+        "DebitoAutomatico"
+    ){
+
+        boton.textContent =
+            "Registrar Pago";
+
+        return;
+
+    }
+
+
+    boton.textContent =
+        "+ Agregar pago";
+
+}
+
+
+/*
+ * =========================================
+ * MOSTRAR REGISTRO DE DÉBITO AUTOMÁTICO
+ * =========================================
+ *
+ * Muestra solamente los datos que necesitamos
+ * para confirmar posteriormente el débito real:
+ *
+ * - Fecha de Pago.
+ * - Importe debitado.
+ *
+ * La cuenta bancaria no se vuelve a solicitar
+ * porque ya fue definida en la previsión del
+ * Movimiento.
+ */
+
+
+function mostrarPagoDebitoAutomaticoRegistro(){
+
+    const lista =
+        document.getElementById(
+            "listaPagosRegistro"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    /*
+     * Para esta modalidad solamente necesitamos
+     * un bloque de confirmación del débito.
+     */
+
+    lista.innerHTML = `
+
+        <div
+            id="pagoDebitoAutomaticoRegistro"
+            style="
+                background:#171c26;
+                border:1px solid #252c3d;
+                border-radius:24px;
+                padding:32px;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    margin-bottom:22px;
+                "
+            >
+
+                <strong>
+                    Registrar débito
+                </strong>
+
+                <span
+                    style="
+                        color:#8b93a7;
+                        font-size:13px;
+                    "
+                >
+                    Débito automático
+                </span>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label
+                        class="label"
+                        for="fechaPagoDebitoAutomaticoRegistro"
+                    >
+                        Fecha de Pago
+                    </label>
+
+                    <input
+                        id="fechaPagoDebitoAutomaticoRegistro"
+                        type="date"
+                        class="input-box"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label
+                        class="label"
+                        for="importePagoDebitoAutomaticoRegistro"
+                    >
+                        Importe
+                    </label>
+
+                    <input
+                        id="importePagoDebitoAutomaticoRegistro"
+                        type="text"
+                        inputmode="decimal"
+                        class="input-box"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/*
+ * =========================================
+ * LIMPIAR REGISTRO DE DÉBITO
+ * =========================================
+ */
+
+
+function limpiarPagoDebitoAutomaticoRegistro(){
+
+    const bloque =
+        document.getElementById(
+            "pagoDebitoAutomaticoRegistro"
+        );
+
+
+    if(bloque){
+
+        bloque.remove();
+
+    }
+
+}
+
+/*
+ * =========================================
+ * ADAPTADOR AGREGAR / REGISTRAR PAGO
+ * =========================================
+ *
+ * Conservamos intacto agregarPagoRegistro()
+ * para Pago manual.
+ *
+ * Cuando la modalidad prevista es Débito
+ * automático desviamos la acción hacia el
+ * bloque reducido.
+ */
+
+
+if(
+    typeof agregarPagoRegistro ===
+    "function"
+){
+
+    const agregarPagoRegistroManual =
+        agregarPagoRegistro;
+
+
+    agregarPagoRegistro =
+        function(){
+
+            const modalidad =
+                document.getElementById(
+                    "modalidadPagoRegistro"
+                );
+
+
+            if(
+                modalidad &&
+                modalidad.value ===
+                    "DebitoAutomatico"
+            ){
+
+                mostrarPagoDebitoAutomaticoRegistro();
+
+                return;
+
+            }
+
+
+            agregarPagoRegistroManual();
+
+        };
+
+}
+
+/*
+ * =========================================
+ * VERIFICACIÓN TEMPRANA DE COMPROBANTES
+ * =========================================
+ *
+ * Consulta al backend cuando ya están completos
+ * los datos que identifican documentalmente
+ * un comprobante:
+ *
+ * - Empresa.
+ * - Proveedor.
+ * - Tipo de comprobante.
+ * - Punto de venta.
+ * - Número.
+ *
+ * La validación definitiva se mantiene también
+ * en guardar_movimiento().
+ */
+
+let ultimaClaveComprobanteDuplicadoAvisada =
+    "";
+
+
+/**
+ * Verifica si el comprobante actualmente cargado
+ * ya existe para la empresa y el proveedor.
+ *
+ * La función solamente consulta al backend cuando
+ * todos los datos necesarios están completos.
+ */
+async function verificarComprobanteDuplicadoRegistro(){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const proveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    const tipoComprobante =
+        document.getElementById(
+            "tipoComprobanteRegistro"
+        );
+
+    const puntoVenta =
+        document.getElementById(
+            "puntoVentaComprobanteRegistro"
+        );
+
+    const numeroComprobante =
+        document.getElementById(
+            "numeroComprobanteRegistro"
+        );
+
+
+    if(
+        !empresa?.value ||
+        !proveedor?.value ||
+        !tipoComprobante?.value ||
+        !puntoVenta?.value ||
+        !numeroComprobante?.value
+    ){
+
+        ultimaClaveComprobanteDuplicadoAvisada =
+            "";
+
+        return;
+
+    }
+
+
+    let puntoVentaNormalizado =
+        puntoVenta.value.trim();
+
+    let numeroNormalizado =
+        numeroComprobante.value.trim();
+
+
+    if(
+        !/^\d{1,4}$/.test(
+            puntoVentaNormalizado
+        ) ||
+        !/^\d{1,8}$/.test(
+            numeroNormalizado
+        )
+    ){
+
+        return;
+
+    }
+
+
+    puntoVentaNormalizado =
+        puntoVentaNormalizado.padStart(
+            4,
+            "0"
+        );
+
+    numeroNormalizado =
+        numeroNormalizado.padStart(
+            8,
+            "0"
+        );
+
+
+    puntoVenta.value =
+        puntoVentaNormalizado;
+
+    numeroComprobante.value =
+        numeroNormalizado;
+
+
+    const comprobanteNormalizado =
+        puntoVentaNormalizado +
+        "-" +
+        numeroNormalizado;
+
+
+    const claveActual =
+        [
+            empresa.value,
+            proveedor.value,
+            tipoComprobante.value,
+            comprobanteNormalizado
+        ].join(
+            "|"
+        );
+
+
+    const parametros =
+        new URLSearchParams(
+            {
+                empresa:
+                    empresa.value,
+
+                proveedor:
+                    proveedor.value,
+
+                tipo_comprobante:
+                    tipoComprobante.value,
+
+                numero_comprobante:
+                    comprobanteNormalizado
+            }
+        );
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                "/movimientos/verificar-comprobante/?" +
+                parametros.toString(),
+                {
+                    method:
+                        "GET",
+
+                    headers:
+                        {
+                            "X-Requested-With":
+                                "XMLHttpRequest"
+                        }
+                }
+            );
+
+
+        const tipoContenido =
+            respuesta.headers.get(
+                "content-type"
+            ) || "";
+
+
+        if(
+            !tipoContenido.includes(
+                "application/json"
+            )
+        ){
+
+            return;
+
+        }
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            console.warn(
+                "No se pudo verificar el comprobante:",
+                resultado.mensaje || ""
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !resultado.duplicado
+        ){
+
+            ultimaClaveComprobanteDuplicadoAvisada =
+                "";
+
+            return;
+
+        }
+
+
+        if(
+            ultimaClaveComprobanteDuplicadoAvisada ===
+            claveActual
+        ){
+
+            return;
+
+        }
+
+
+        ultimaClaveComprobanteDuplicadoAvisada =
+            claveActual;
+
+
+        alert(
+            "Ese comprobante ya fue registrado para este proveedor."
+        );
+
+
+        numeroComprobante.focus();
+
+        numeroComprobante.select();
+
+
+    }catch(error){
+
+        console.error(
+            "Error verificando comprobante:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+ * =========================================
+ * EVENTOS DE VERIFICACIÓN
+ * =========================================
+ *
+ * Como Carga Simple se genera dinámicamente,
+ * utilizamos delegación de eventos sobre document.
+ */
+
+document.addEventListener(
+    "focusout",
+    function(event){
+
+        if(
+            event.target.id !==
+                "puntoVentaComprobanteRegistro" &&
+            event.target.id !==
+                "numeroComprobanteRegistro"
+        ){
+
+            return;
+
+        }
+
+
+        verificarComprobanteDuplicadoRegistro();
+
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        if(
+            event.target.id !==
+                "empresaActiva" &&
+            event.target.id !==
+                "proveedorRegistro" &&
+            event.target.id !==
+                "tipoComprobanteRegistro"
+        ){
+
+            return;
+
+        }
+
+
+        ultimaClaveComprobanteDuplicadoAvisada =
+            "";
+
+
+        verificarComprobanteDuplicadoRegistro();
 
     }
 );

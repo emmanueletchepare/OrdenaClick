@@ -45,6 +45,7 @@ from .models import (
     Pago,
     AplicacionPago,
     OperacionBancariaPago,
+    DebitoAutomaticoPago,
     TarjetaPago,
     Cheque,
     CentroOperativo,
@@ -5510,6 +5511,152 @@ def reactivar_tipo_gasto(request):
     })
 
 @login_required
+def verificar_comprobante_duplicado(request):
+    """
+    Verifica si ya existe un Movimiento con el mismo
+    comprobante para una empresa y proveedor.
+
+    La identidad documental se determina por:
+
+    - Empresa.
+    - Proveedor.
+    - Tipo de comprobante.
+    - Número de comprobante normalizado.
+
+    El tipo de gasto no forma parte de la identidad
+    del comprobante.
+    """
+
+    if request.method != "GET":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido.",
+            },
+            status=405,
+        )
+
+
+    empresa_id = (
+        request.GET.get(
+            "empresa"
+        )
+        or ""
+    ).strip()
+
+    proveedor_id = (
+        request.GET.get(
+            "proveedor"
+        )
+        or ""
+    ).strip()
+
+    tipo_comprobante = (
+        request.GET.get(
+            "tipo_comprobante"
+        )
+        or ""
+    ).strip()
+
+    numero_comprobante = (
+        request.GET.get(
+            "numero_comprobante"
+        )
+        or ""
+    ).strip()
+
+
+    if(
+        not empresa_id or
+        not proveedor_id or
+        not tipo_comprobante or
+        not numero_comprobante
+    ):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Faltan datos para verificar "
+                    "el comprobante."
+                ),
+            },
+            status=400,
+        )
+
+
+    if not re.fullmatch(
+        r"\d{4}-\d{8}",
+        numero_comprobante
+    ):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El número de comprobante "
+                    "no tiene un formato válido."
+                ),
+            },
+            status=400,
+        )
+
+
+    empresa = Empresa.objects.filter(
+        id=empresa_id
+    ).first()
+
+    if not empresa:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "La empresa seleccionada "
+                    "no existe."
+                ),
+            },
+            status=404,
+        )
+
+
+    proveedor = Proveedor.objects.filter(
+        id=proveedor_id,
+        empresa=empresa,
+        activo=True,
+    ).first()
+
+    if not proveedor:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El proveedor seleccionado "
+                    "no es válido."
+                ),
+            },
+            status=400,
+        )
+
+
+    duplicado = Movimiento.objects.filter(
+        empresa=empresa,
+        proveedor=proveedor,
+        tipo_comprobante=tipo_comprobante,
+        numero_comprobante=numero_comprobante,
+    ).exists()
+
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "duplicado": duplicado,
+        }
+    )
+
+@login_required
 def guardar_movimiento(request):
     """
     Guarda un Movimiento creado desde Carga Simple.
@@ -5575,6 +5722,20 @@ def guardar_movimiento(request):
         fecha_vencimiento = request.POST.get(
             "fecha_vencimiento"
         )
+
+        modalidad_pago = (
+            request.POST.get(
+                "modalidad_pago"
+            )
+            or "Manual"
+        ).strip()
+
+        cuenta_debito_id = (
+            request.POST.get(
+                "cuenta_debito"
+            )
+            or ""
+        ).strip()
 
         tipo_comprobante = (
             request.POST.get(
@@ -5660,6 +5821,86 @@ def guardar_movimiento(request):
                 status=404,
             )
 
+        # =========================================
+        # PREVISIÓN DE PAGO
+        # =========================================
+
+        modalidades_validas = {
+            valor
+            for valor, etiqueta
+            in Movimiento.MODALIDADES_PAGO
+        }
+
+
+        if modalidad_pago not in modalidades_validas:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "La forma prevista de pago "
+                        "no es válida."
+                    ),
+                },
+                status=400,
+            )
+
+
+        cuenta_debito = None
+
+
+        if modalidad_pago == "DebitoAutomatico":
+
+            if not cuenta_debito_id:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Seleccione la cuenta prevista "
+                            "para el débito automático."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            cuenta_debito = (
+                CuentaBancaria.objects.filter(
+                    id=cuenta_debito_id,
+                    empresa=empresa,
+                    activo=True,
+                    moneda="ARS",
+                ).first()
+            )
+
+
+            if not cuenta_debito:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La cuenta seleccionada para "
+                            "el débito automático no es válida."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+        elif cuenta_debito_id:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Un Pago manual no debe tener "
+                        "una cuenta prevista para débito."
+                    ),
+                },
+                status=400,
+            )
 
         # =========================================
         # EJERCICIO ABIERTO
@@ -5730,6 +5971,71 @@ def guardar_movimiento(request):
                 status=400,
             )
 
+        # =========================================
+        # COMPROBANTE
+        # =========================================
+
+        tipos_comprobante_validos = {
+            "A",
+            "B",
+            "C",
+            "X",
+        }
+
+
+        if tipo_comprobante not in tipos_comprobante_validos:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Seleccione un tipo de comprobante válido."
+                    ),
+                },
+                status=400,
+            )
+
+
+        if not re.fullmatch(
+            r"\d{4}-\d{8}",
+            numero_comprobante
+        ):
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El número de comprobante no tiene "
+                        "un formato válido."
+                    ),
+                },
+                status=400,
+            )
+
+
+        comprobante_duplicado = (
+            Movimiento.objects.filter(
+                empresa=empresa,
+                proveedor=proveedor,
+                tipo_comprobante=tipo_comprobante,
+                numero_comprobante=numero_comprobante,
+            )
+            .exists()
+        )
+
+
+        if comprobante_duplicado:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Ese comprobante ya fue registrado "
+                        "para este proveedor."
+                    ),
+                },
+                status=400,
+            )
 
         # =========================================
         # CENTRO OPERATIVO
@@ -7504,6 +7810,371 @@ def guardar_movimiento(request):
                 }
             )
 
+        # =========================================
+        # DÉBITO AUTOMÁTICO REAL
+        # =========================================
+        #
+        # La modalidad DebitoAutomatico del Movimiento
+        # representa solamente la previsión de pago.
+        #
+        # Este bloque registra el débito únicamente
+        # cuando el usuario confirmó que efectivamente
+        # ocurrió.
+        #
+        # El importe recibido desde el navegador es el
+        # total efectivamente debitado por el banco.
+        #
+        # Si existe interés por mora:
+        #
+        # importe aplicado al Movimiento
+        #     = saldo pendiente
+        #
+        # intereses_mora
+        #     = importe debitado - saldo pendiente
+        #
+        # El interés nunca incrementa la AplicacionPago.
+        #
+
+        debito_automatico_validado = None
+
+        debito_automatico_raw = (
+            request.POST.get(
+                "debito_automatico"
+            )
+            or "null"
+        )
+
+        try:
+
+            debito_automatico = json.loads(
+                debito_automatico_raw
+            )
+
+        except json.JSONDecodeError:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Los datos del débito automático "
+                        "no son válidos."
+                    ),
+                },
+                status=400,
+            )
+
+
+        if debito_automatico is not None:
+
+            if modalidad_pago != "DebitoAutomatico":
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "No puede registrarse un débito automático "
+                            "en un Movimiento configurado como Pago manual."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if pagos_validados:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Un Movimiento con débito automático "
+                            "no puede contener simultáneamente "
+                            "Pagos manuales en esta carga."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if not isinstance(
+                debito_automatico,
+                dict
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El formato del débito automático "
+                            "no es válido."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            # =====================================
+            # FECHA REAL DEL DÉBITO
+            # =====================================
+
+            fecha_debito = (
+                debito_automatico.get(
+                    "fecha"
+                )
+                or ""
+            ).strip()
+
+
+            if not fecha_debito:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Ingrese la fecha real del débito."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            try:
+
+                fecha_debito_validada = (
+                    datetime.strptime(
+                        fecha_debito,
+                        "%Y-%m-%d"
+                    ).date()
+                )
+
+            except ValueError:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La fecha del débito automático "
+                            "no es válida."
+                        ),
+                    },
+                    status=400,
+                )
+
+            # =====================================
+            # FECHA DEL GASTO
+            # =====================================
+
+            try:
+
+                fecha_registro_validada = (
+                    datetime.strptime(
+                        fecha_registro,
+                        "%Y-%m-%d"
+                    ).date()
+                )
+
+            except ValueError:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La fecha del registro "
+                            "no es válida."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if (
+                fecha_debito_validada <
+                fecha_registro_validada
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La fecha real del débito "
+                            "no puede ser anterior a "
+                            "la fecha del gasto."
+                        ),
+                    },
+                    status=400,
+                )
+
+            # =====================================
+            # IMPORTE REAL DEBITADO
+            # =====================================
+
+            try:
+
+                importe_debitado = Decimal(
+                    str(
+                        debito_automatico.get(
+                            "importe_debitado",
+                            0
+                        )
+                    )
+                )
+
+            except (
+                InvalidOperation,
+                TypeError,
+                ValueError
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El importe del débito automático "
+                            "no es válido."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if importe_debitado <= 0:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El importe debitado debe ser "
+                            "mayor a cero."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            confirmar_intereses_mora = (
+                debito_automatico.get(
+                    "confirmar_intereses_mora"
+                )
+                is True
+            )
+
+
+            # =====================================
+            # IMPORTE APLICADO / INTERÉS
+            # =====================================
+
+            intereses_mora = Decimal(
+                "0.00"
+            )
+
+            importe_aplicado_debito = (
+                importe_debitado
+            )
+
+
+            if importe_debitado > total:
+
+                if not fecha_vencimiento:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El débito supera el total del registro "
+                                "y no existe una fecha de vencimiento "
+                                "que permita clasificar la diferencia "
+                                "como interés por mora."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                try:
+
+                    fecha_vencimiento_validada = (
+                        datetime.strptime(
+                            fecha_vencimiento,
+                            "%Y-%m-%d"
+                        ).date()
+                    )
+
+                except ValueError:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La fecha de vencimiento "
+                                "no es válida."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if (
+                    fecha_debito_validada <=
+                    fecha_vencimiento_validada
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El débito supera el total del registro, "
+                                "pero no ocurrió después del vencimiento."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if not confirmar_intereses_mora:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La diferencia del débito debe "
+                                "confirmarse como interés por mora "
+                                "antes de guardar."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                importe_aplicado_debito = (
+                    total
+                )
+
+                intereses_mora = (
+                    importe_debitado -
+                    total
+                )
+
+
+            total_aplicado += (
+                importe_aplicado_debito
+            )
+
+
+            debito_automatico_validado = {
+
+                "fecha":
+                    fecha_debito_validada,
+
+                "importe_debitado":
+                    importe_debitado,
+
+                "importe_aplicado":
+                    importe_aplicado_debito,
+
+                "intereses_mora":
+                    intereses_mora,
+
+            }
+
 
         # =========================================
         # CONTROL DE SOBREAPLICACIÓN
@@ -7599,6 +8270,12 @@ def guardar_movimiento(request):
                     or None
                 ),
 
+                modalidad_pago=
+                    modalidad_pago,
+
+                cuenta_debito=
+                    cuenta_debito,
+
                 tipo_comprobante=
                     tipo_comprobante,
 
@@ -7670,6 +8347,8 @@ def guardar_movimiento(request):
             cheques_creados = []
 
             retenciones_creadas = []
+
+            debitos_automaticos_creados = []
 
 
             for pago_datos in pagos_validados:
@@ -7951,6 +8630,83 @@ def guardar_movimiento(request):
                     pago.id
                 )
 
+            # =====================================
+            # DÉBITO AUTOMÁTICO REAL
+            # =====================================
+
+            debitos_automaticos_creados = []
+
+
+            if debito_automatico_validado:
+
+                pago_debito = Pago.objects.create(
+
+                    empresa=
+                        empresa,
+
+                    fecha=
+                        debito_automatico_validado[
+                            "fecha"
+                        ],
+
+                    importe_efectivo=
+                        Decimal("0.00"),
+
+                )
+
+
+                debito_creado = (
+                    DebitoAutomaticoPago.objects.create(
+
+                        pago=
+                            pago_debito,
+
+                        cuenta_bancaria=
+                            cuenta_debito,
+
+                        importe=
+                            debito_automatico_validado[
+                                "importe_debitado"
+                            ],
+
+                        intereses_mora=
+                            debito_automatico_validado[
+                                "intereses_mora"
+                            ],
+
+                        fecha_debito=
+                            debito_automatico_validado[
+                                "fecha"
+                            ],
+
+                    )
+                )
+
+
+                AplicacionPago.objects.create(
+
+                    pago=
+                        pago_debito,
+
+                    movimiento=
+                        movimiento,
+
+                    importe=
+                        debito_automatico_validado[
+                            "importe_aplicado"
+                        ],
+
+                )
+
+
+                pagos_creados.append(
+                    pago_debito.id
+                )
+
+
+                debitos_automaticos_creados.append(
+                    debito_creado.id
+                )
 
         # =========================================
         # RESPUESTA

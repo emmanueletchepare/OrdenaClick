@@ -60,6 +60,7 @@ from .views import (
     modificar_retencion,
     eliminar_retencion,
     guardar_movimiento,
+    verificar_comprobante_duplicado,
     reactivar_retencion
     
 )
@@ -455,6 +456,12 @@ urlpatterns = [
     # =========================================
     # MOVIMIENTOS
     # =========================================
+
+    path(
+        "movimientos/verificar-comprobante/",
+        verificar_comprobante_duplicado,
+        name="verificar_comprobante_duplicado"
+    ),
 
     path(
         "movimientos/guardar/",

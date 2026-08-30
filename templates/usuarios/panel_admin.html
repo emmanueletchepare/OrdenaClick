@@ -6057,16 +6057,43 @@ class="input-box">
 
 <div class="field">
 
-<label class="label">
+    <label class="label">
+        Número
+    </label>
 
-Número
+    <div style="
+        display:grid;
+        grid-template-columns:110px 18px 1fr;
+        gap:8px;
+        align-items:center;
+    ">
 
-</label>
+        <input
+        id="puntoVentaComprobanteRegistro"
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        class="input-box"
+        placeholder="0000"
+        onblur="normalizarComprobanteRegistro()">
 
-<input
-id="numeroComprobanteRegistro"
-class="input-box"
-placeholder="0000-00000000">
+        <div style="
+            text-align:center;
+            color:#98a2b3;
+        ">
+            -
+        </div>
+
+        <input
+        id="numeroComprobanteRegistro"
+        type="text"
+        inputmode="numeric"
+        maxlength="8"
+        class="input-box"
+        placeholder="00000000"
+        onblur="normalizarComprobanteRegistro()">
+
+    </div>
 
 </div>
 
@@ -6447,6 +6474,89 @@ id="archivoFacturaRegistro"
 type="file"
 accept=".pdf,.jpg,.jpeg,.png,.webp"
 hidden>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- PREVISIÓN DE PAGO -->
+<!-- ===================================================== -->
+
+<div
+id="bloquePrevisionPagoRegistro"
+style="
+grid-column:1 / -1;
+margin-top:6px;
+padding-top:22px;
+border-top:1px solid #252c3d;
+"
+>
+
+<div
+style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+"
+>
+
+<div class="field">
+
+<label
+class="label"
+for="modalidadPagoRegistro">
+
+Forma prevista de pago
+
+</label>
+
+<select
+id="modalidadPagoRegistro"
+class="input-box">
+
+<option value="Manual">
+Pago manual
+</option>
+
+<option value="DebitoAutomatico">
+Débito automático
+</option>
+
+</select>
+
+</div>
+
+
+<div
+id="campoCuentaDebitoRegistro"
+class="field"
+style="
+visibility:hidden;
+pointer-events:none;
+"
+>
+
+<label
+class="label"
+for="cuentaDebitoRegistro">
+
+Cuenta para débito
+
+</label>
+
+<select
+id="cuentaDebitoRegistro"
+class="input-box"
+disabled>
+
+<option value="">
+Seleccione una cuenta...
+</option>
+
+</select>
+
+</div>
 
 </div>
 
@@ -18425,11 +18535,21 @@ document.addEventListener(
             );
 
 
+        /*
+         * DÉBITO AUTOMÁTICO
+         */
+
+        const esImporteDebitoAutomatico =
+            input.id ===
+                "importePagoDebitoAutomaticoRegistro";
+
+
         if(
             !esImporteCargaSimple &&
             !esImportePago &&
             !esImporteOperacion &&
-            !esImporteCheque
+            !esImporteCheque &&
+            !esImporteDebitoAutomatico
         ){
 
             return;
@@ -18956,7 +19076,7 @@ Sí
 
 <script src="{% static 'js/retenciones.js' %}?v=1"></script>
 
-<script src="{% static 'js/carga_simple.js' %}?v=6"></script>
+<script src="{% static 'js/carga_simple.js' %}?v=7"></script>
 
 </body>
 </html>

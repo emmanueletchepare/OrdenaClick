@@ -1925,3 +1925,359 @@ PENDIENTE / DEFINIDO
 =========================================================
 FIN DEL DOCUMENTO
 =========================================================
+
+=========================================================
+28. PREVISIÓN DE PAGO, PRÓXIMOS VENCIMIENTOS Y LLAMADOR
+=========================================================
+
+PREVISIÓN DE PAGO DEL MOVIMIENTO
+
+Antes de cerrar un gasto debe indicarse:
+
+- Pago Manual.
+- Débito automático + Cuenta Bancaria propia.
+
+Durante la Beta solamente se ofrecerán cuentas activas, ARS y de la
+Empresa.
+
+Elegir Débito automático NO crea un Pago. Es una previsión de
+cancelación y de necesidad futura de fondos. El hecho financiero existe
+recién cuando el débito ocurre o se confirma.
+
+La previsión debe conservar modalidad, cuenta cuando corresponda y fecha
+de vencimiento.
+
+
+REGLA DE SALDO
+
+Saldo pendiente =
+Total Movimiento - Aplicaciones de Pago válidas.
+
+Un Movimiento parcialmente pagado muestra solamente su saldo pendiente.
+Uno totalmente pagado no aparece como obligación pendiente.
+Un compromiso vencido continúa visible mientras siga abierto.
+
+Los Cheques/e-Cheqs propios también generan previsibilidad por su Cuenta
+Bancaria, importe, fecha de acreditación/débito y estado real. Aunque
+Cheques propios y Débitos automáticos puedan agruparse visualmente por
+Cuenta, conservan naturaleza e histórico independientes.
+
+
+PRÓXIMOS VENCIMIENTOS - MENÚ OPERATIVO
+
+[ Alerta ] [ Hoy ] [ Esta semana ] [ Rango de fechas ]
+
+Listar:
+[ Todos / Tipo de gasto / Proveedor / Centro Operativo /
+  Recurso Operativo / Débitos por cuenta ]
+
+Si Listar es distinto de Todos, debe seleccionarse el valor concreto.
+
+Hoy muestra compromisos del día + TOTAL HOY.
+
+Esta semana y Rango de fechas agrupan por día, muestran subtotal de cada
+día y finalizan con TOTAL GENERAL.
+
+Todos reutilizan una misma lógica financiera.
+
+
+VISTA ESPECIAL ALERTA
+
+Alerta NO es solamente otro rango de fechas.
+
+Es una vista inmediata de previsión de tesorería para CUATRO DÍAS
+CORRIDOS:
+
+- Hoy.
+- Hoy + 1.
+- Hoy + 2.
+- Hoy + 3.
+
+Dentro de cada día, los compromisos se agrupan cuando corresponda por
+Cuenta Bancaria.
+
+Ejemplo:
+
+HOY · fecha                                      $ TOTAL DÍA
+
+Caja de ahorro Banco Provincia                   $ subtotal cuenta
+Cheque 0002545 | Gasto | Proveedor               $ importe
+Débito        | Gasto | Proveedor                $ importe
+
+Cuenta Corriente Banco Comafi                     $ subtotal cuenta
+Débito        | Gasto | Proveedor                $ importe
+
+Otros / Pagos manuales                            $ subtotal manual
+Gasto | Proveedor                                 $ importe
+
+Cada subtotal debe ser la suma real de sus renglones.
+
+La vista debe ser clara, resumida y concreta y permitir prever cuánto
+dinero deberá estar disponible y en qué Cuenta Bancaria.
+
+
+FUENTE COMÚN
+
+Alerta, Hoy, Esta semana y Rango de fechas deben utilizar una misma
+lógica capaz de devolver:
+
+- Empresa.
+- Fecha.
+- Tipo/origen del compromiso.
+- Importe pendiente o comprometido.
+- Cuenta Bancaria cuando corresponda.
+- Tipo de gasto.
+- Proveedor.
+- Centro Operativo.
+- Recurso Operativo.
+- Observaciones relevantes.
+
+La misma fuente deberá reutilizarse por Reportes, Llamador y futuras
+notificaciones móviles.
+
+
+LLAMADOR DE ORDENACLICK
+
+Se define un componente visual genérico denominado conceptualmente
+LLAMADOR DE ORDENACLICK.
+
+No debe quedar acoplado visualmente a Vencimientos.
+
+Primera implementación:
+
+1. Al seleccionar Empresa, consultar silenciosamente si existen
+   compromisos para la vista Alerta.
+2. Si no existen, NO mostrar el Llamador.
+3. Si existen, esperar aproximadamente 60 segundos.
+4. Si cambia la Empresa, cancelar el temporizador anterior.
+5. Emerger con animación breve y un sonido corto de campana.
+6. Quedar quieto.
+
+El Llamador NO muestra:
+
+- mensaje;
+- texto;
+- importe;
+- cantidad;
+- Empresa;
+- motivo.
+
+Su función es llamar la atención sin anticipar la información.
+
+Debe permitir drag & drop y permanecer dentro del área visible. No es
+necesario guardar inicialmente su posición en la base.
+
+Si sigue pendiente, aproximadamente cada 20 minutos podrá realizar un
+pequeño movimiento de campana y un sonido corto.
+
+No debe mantener animación ni sonido constantes. Las restricciones del
+navegador implican que el funcionamiento crítico no puede depender sólo
+del audio.
+
+Al hacer clic:
+
+Operativo
+→ Próximos Vencimientos
+→ Alerta
+
+Debe abrir directamente esa vista y desaparecer el Llamador.
+
+
+SEPARACIÓN CONCEPTUAL
+
+VENCIMIENTO / COMPROMISO
+= fuente de verdad.
+
+VISTA ALERTA
+= presentación inmediata y resumida.
+
+LLAMADOR DE ORDENACLICK
+= componente de interfaz que reclama atención.
+
+Ni Alerta ni el Llamador crean obligaciones.
+
+
+USOS FUTUROS DEL LLAMADOR
+
+NO implementar todavía un sistema genérico completo.
+
+El componente debe poder evolucionar para llamar la atención por otros
+motivos, por ejemplo:
+
+- proximidad de cierre contable;
+- vencimiento de acta de designación de autoridades;
+- documentación que requiera atención;
+- otros compromisos administrativos u operativos;
+- necesidades futuras surgidas de usuarios reales.
+
+
+NOTIFICACIONES MÓVILES FUTURAS
+
+La futura versión móvil deberá permitir que el usuario elija si desea
+recibir una notificación cuando exista una Alerta aunque no haya abierto
+OrdenaClick.
+
+Debe reutilizar la misma fuente común de compromisos. Configuración,
+horarios, anticipación y tecnología push quedan pendientes.
+
+
+ORDEN DE IMPLEMENTACIÓN ACORDADO
+
+1. Previsión de pago:
+   Pago Manual / Débito automático + Cuenta Bancaria.
+
+2. Próximos Vencimientos:
+   Alerta / Hoy / Esta semana / Rango de fechas / Listar.
+
+3. Llamador de OrdenaClick:
+   condición + delay + animación + sonido + drag & drop +
+   recordatorio + navegación directa a Alerta.
+
+4. Reportes:
+   reutilizando la lógica financiera común.
+
+
+=========================================================
+36. REGISTRAR PAGO REAL DE UN DÉBITO AUTOMÁTICO
+=========================================================
+
+Cuando un Movimiento tenga modalidad prevista:
+
+DÉBITO AUTOMÁTICO
+
+OrdenaClick ya conoce:
+
+- el medio previsto;
+- la Cuenta Bancaria;
+- el compromiso;
+- su fecha de vencimiento.
+
+Por lo tanto, el botón habitual:
+
+[ + Agregar pago ]
+
+debe cambiar a:
+
+[ Registrar Pago ]
+
+
+---------------------------------------------------------
+ACORDEÓN SIMPLIFICADO
+---------------------------------------------------------
+
+Al utilizar Registrar Pago NO debe mostrarse el formulario completo de
+medios de pago.
+
+Debe mostrarse únicamente:
+
+▼ Pago 1                                      $ 0,00
+
+Fecha de Pago                     Importe
+[ dd/mm/aaaa ]                    [          ]
+
+
+En este flujo el campo que en el formulario general aparece como
+"Efectivo" debe llamarse:
+
+IMPORTE
+
+No deben volver a solicitarse:
+
+- Banco.
+- Cuenta Bancaria.
+- Forma de pago.
+
+Esos datos ya pertenecen a la previsión de Débito automático del
+Movimiento.
+
+El Importe representa el débito real observado.
+
+
+---------------------------------------------------------
+IMPORTE IGUAL AL SALDO
+---------------------------------------------------------
+
+Si:
+
+Importe debitado = saldo pendiente
+
+se registra una cancelación total normal.
+
+
+---------------------------------------------------------
+IMPORTE MENOR AL SALDO
+---------------------------------------------------------
+
+Si:
+
+Importe debitado < saldo pendiente
+
+se registra un Pago parcial.
+
+El compromiso continúa abierto por el saldo restante.
+
+
+---------------------------------------------------------
+IMPORTE MAYOR AL SALDO
+---------------------------------------------------------
+
+Si:
+
+Importe debitado > saldo pendiente
+
+la diferencia NO debe aplicarse automáticamente al Movimiento.
+
+Si además la Fecha de Pago es posterior al vencimiento, OrdenaClick debe
+solicitar confirmación antes de guardar.
+
+Ejemplo:
+
+Saldo pendiente:                 $100.000
+Importe debitado:                $107.500
+Diferencia:                        $7.500
+
+
+Modal conceptual:
+
+El débito se produjo después del vencimiento y el importe ingresado
+supera en $7.500 el saldo pendiente.
+
+¿Los $7.500 corresponden a intereses por mora?
+
+[ Sí ] [ No ]
+
+
+SI EL USUARIO ELIGE SÍ:
+
+- Se aplica al Movimiento solamente el importe necesario para cancelar
+  el saldo pendiente.
+- La diferencia se registra separadamente como interés/costo financiero.
+- El interés NO aumenta el importe aplicado al Movimiento.
+- Se conserva la fecha real del Pago.
+- Se actualizan saldo, estado y compromiso correspondientes.
+
+
+SI EL USUARIO ELIGE NO:
+
+- NO se guarda el Pago.
+- NO se modifica el Movimiento.
+- NO se modifica el compromiso.
+- Se vuelve al acordeón simplificado.
+- Se conservan Fecha e Importe para que el usuario pueda corregirlos.
+
+
+OrdenaClick NO debe asumir automáticamente que un excedente corresponde
+a intereses.
+
+Si el importe supera el saldo pero la Fecha de Pago NO es posterior al
+vencimiento, la diferencia NO debe clasificarse automáticamente como
+interés por mora.
+
+La clasificación definitiva de otros excedentes queda pendiente de
+definición.
+
+
+REGLA FINANCIERA:
+
+Los intereses y costos financieros son económicamente reales, pero NO
+incrementan el importe aplicado a la cancelación del Movimiento.
