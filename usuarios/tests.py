@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -11,6 +12,13 @@ from usuarios.services.financiero import (
     estado_financiero_movimiento,
     saldo_pendiente_movimiento,
     total_aplicado_movimiento,
+    VENCIMIENTO_FUTURO,
+    VENCIMIENTO_HOY,
+    VENCIMIENTO_PAGADO,
+    VENCIMIENTO_SIN_FECHA,
+    VENCIMIENTO_VENCIDO,
+    estado_vencimiento_movimiento,
+    resumen_financiero_movimiento,
 )
 
 
@@ -229,4 +237,205 @@ class ServicioFinancieroMovimientoTests(SimpleTestCase):
         self.assertEqual(
             estado_financiero_movimiento(movimiento),
             ESTADO_PAGADO,
+        )
+
+class ServicioVencimientosMovimientoTests(SimpleTestCase):
+    """
+    Prueba la interpretación temporal de las obligaciones
+    financieras asociadas a un Movimiento.
+    """
+
+    def crear_movimiento(
+        self,
+        total,
+        total_aplicado,
+        fecha_vencimiento,
+        modalidad_pago="Manual",
+        cuenta_debito=None,
+    ):
+        """
+        Crea un Movimiento controlado con la información
+        necesaria para probar vencimientos y resúmenes.
+        """
+
+        aplicaciones_pago = MagicMock()
+
+        aplicaciones_pago.aggregate.return_value = {
+            "total": Decimal(total_aplicado)
+        }
+
+        return SimpleNamespace(
+            total=Decimal(total),
+            fecha_vencimiento=fecha_vencimiento,
+            modalidad_pago=modalidad_pago,
+            cuenta_debito=cuenta_debito,
+            aplicaciones_pago=aplicaciones_pago,
+        )
+
+    def test_movimiento_pendiente_sin_fecha(self):
+        """
+        Una obligación con saldo pero sin vencimiento
+        se identifica como SinFecha.
+        """
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "0.00",
+            None,
+        )
+
+        estado = estado_vencimiento_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            estado,
+            VENCIMIENTO_SIN_FECHA,
+        )
+
+    def test_movimiento_con_vencimiento_futuro(self):
+        """
+        Una obligación pendiente posterior a la fecha
+        de referencia se considera futura.
+        """
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "0.00",
+            date(2026, 9, 15),
+        )
+
+        estado = estado_vencimiento_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            estado,
+            VENCIMIENTO_FUTURO,
+        )
+
+    def test_movimiento_que_vence_hoy(self):
+        """
+        Una obligación pendiente cuya fecha coincide
+        con la referencia se identifica como Hoy.
+        """
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "0.00",
+            date(2026, 9, 10),
+        )
+
+        estado = estado_vencimiento_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            estado,
+            VENCIMIENTO_HOY,
+        )
+
+    def test_movimiento_vencido_permanece_visible(self):
+        """
+        Una obligación vencida que todavía posee saldo
+        conserva su condición de Vencida.
+        """
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "40000.00",
+            date(2026, 9, 5),
+        )
+
+        estado = estado_vencimiento_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            estado,
+            VENCIMIENTO_VENCIDO,
+        )
+
+        resumen = resumen_financiero_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            resumen["saldo_pendiente"],
+            Decimal("60000.00"),
+        )
+
+        self.assertEqual(
+            resumen["estado_financiero"],
+            ESTADO_PARCIAL,
+        )
+
+    def test_movimiento_pagado_no_es_vencimiento_pendiente(self):
+        """
+        Una obligación totalmente cancelada deja de ser
+        un vencimiento pendiente aunque su fecha sea anterior.
+        """
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "100000.00",
+            date(2026, 9, 5),
+        )
+
+        estado = estado_vencimiento_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            estado,
+            VENCIMIENTO_PAGADO,
+        )
+
+    def test_resumen_conserva_prevision_de_debito(self):
+        """
+        El resumen financiero expone la modalidad prevista
+        y la cuenta bancaria sin convertirlas en un Pago.
+        """
+
+        cuenta = SimpleNamespace(
+            id=25,
+        )
+
+        movimiento = self.crear_movimiento(
+            "100000.00",
+            "0.00",
+            date(2026, 9, 12),
+            modalidad_pago="DebitoAutomatico",
+            cuenta_debito=cuenta,
+        )
+
+        resumen = resumen_financiero_movimiento(
+            movimiento,
+            date(2026, 9, 10),
+        )
+
+        self.assertEqual(
+            resumen["saldo_pendiente"],
+            Decimal("100000.00"),
+        )
+
+        self.assertEqual(
+            resumen["modalidad_pago"],
+            "DebitoAutomatico",
+        )
+
+        self.assertIs(
+            resumen["cuenta_debito"],
+            cuenta,
+        )
+
+        self.assertEqual(
+            resumen["estado_vencimiento"],
+            VENCIMIENTO_FUTURO,
         )
