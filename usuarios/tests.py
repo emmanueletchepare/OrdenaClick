@@ -21,6 +21,15 @@ from usuarios.services.financiero import (
     resumen_financiero_movimiento,
 )
 
+from django.contrib.auth.models import AnonymousUser, User
+from django.core.exceptions import PermissionDenied
+from django.test import TestCase
+
+from usuarios.models import Empresa
+from usuarios.services.seguridad import (
+    obtener_empresa_autorizada,
+)
+
 
 class ServicioFinancieroMovimientoTests(SimpleTestCase):
     """
@@ -439,3 +448,114 @@ class ServicioVencimientosMovimientoTests(SimpleTestCase):
             resumen["estado_vencimiento"],
             VENCIMIENTO_FUTURO,
         )
+
+class SeguridadEmpresaTests(TestCase):
+    """
+    Verifica que el acceso a una Empresa dependa de permisos reales
+    y no solamente de conocer su identificador.
+    """
+
+    def setUp(self):
+        """
+        Crea usuarios y empresas para probar autorización empresarial.
+        """
+
+        self.propietario = User.objects.create_user(
+            username="propietario",
+            password="prueba123",
+        )
+
+        self.otro_usuario = User.objects.create_user(
+            username="otro_usuario",
+            password="prueba123",
+        )
+
+        self.superusuario = User.objects.create_superuser(
+            username="superusuario",
+            email="superusuario@example.com",
+            password="prueba123",
+        )
+
+        self.empresa_propietario = Empresa.objects.create(
+            propietario=self.propietario,
+            razon_social="Empresa Propietario",
+        )
+
+        self.empresa_ajena = Empresa.objects.create(
+            propietario=self.otro_usuario,
+            razon_social="Empresa Ajena",
+        )
+
+
+    def test_propietario_puede_acceder_a_su_empresa(self):
+        """
+        El propietario normal puede operar sobre su propia Empresa.
+        """
+
+        empresa = obtener_empresa_autorizada(
+            self.propietario,
+            self.empresa_propietario.id,
+        )
+
+        self.assertEqual(
+            empresa,
+            self.empresa_propietario,
+        )
+
+
+    def test_usuario_no_puede_acceder_a_empresa_ajena(self):
+        """
+        Conocer el ID de otra Empresa no concede autorización.
+        """
+
+        with self.assertRaises(
+            PermissionDenied
+        ):
+            obtener_empresa_autorizada(
+                self.propietario,
+                self.empresa_ajena.id,
+            )
+
+
+    def test_superusuario_puede_acceder_a_cualquier_empresa(self):
+        """
+        El superusuario puede operar sobre cualquier Empresa.
+        """
+
+        empresa = obtener_empresa_autorizada(
+            self.superusuario,
+            self.empresa_ajena.id,
+        )
+
+        self.assertEqual(
+            empresa,
+            self.empresa_ajena,
+        )
+
+
+    def test_empresa_inexistente_es_denegada(self):
+        """
+        Una Empresa inexistente no debe considerarse autorizada.
+        """
+
+        with self.assertRaises(
+            PermissionDenied
+        ):
+            obtener_empresa_autorizada(
+                self.propietario,
+                999999,
+            )
+
+
+    def test_usuario_anonimo_es_denegado(self):
+        """
+        Un usuario no autenticado nunca puede acceder a una Empresa.
+        """
+
+        with self.assertRaises(
+            PermissionDenied
+        ):
+            obtener_empresa_autorizada(
+                AnonymousUser(),
+                self.empresa_propietario.id,
+            )

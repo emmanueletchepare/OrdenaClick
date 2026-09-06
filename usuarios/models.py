@@ -7,6 +7,14 @@ from django.db import models
 
 class Empresa(models.Model):
 
+    propietario = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="empresas_propias",
+        blank=True,
+        null=True,
+    )
+
     CONDICION_FISCAL = [
 
         ('Responsable inscripto', 'Responsable inscripto'),

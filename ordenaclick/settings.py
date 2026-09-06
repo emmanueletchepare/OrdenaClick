@@ -22,7 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@5+rr#d3+n16(v%t^js*doz@$j-d0x*hz7cxlpiuj_p^sxrxrj'
+SECRET_KEY = os.environ.get(
+    "ORDENACLICK_SECRET_KEY"
+)
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "Falta definir la variable de entorno "
+        "ORDENACLICK_SECRET_KEY."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -120,18 +128,17 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATIC_URL = 'static/'
-
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+
+# Media files
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
-MEDIA_URL = '/media/'
 
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # =========================================
 # GESTIÓN DE CLAVES
@@ -141,6 +148,7 @@ GESTION_CLAVES_KEY = os.environ.get(
     "ORDENACLICK_CLAVES_KEY",
     ""
 )
+
 
 # =========================================
 # SESIONES
