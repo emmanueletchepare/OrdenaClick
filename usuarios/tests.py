@@ -20,6 +20,8 @@ from usuarios.services.financiero import (
     VENCIMIENTO_VENCIDO,
     estado_vencimiento_movimiento,
     resumen_financiero_movimiento,
+    DIAS_ANTICIPACION_ALERTA,
+    movimientos_en_alerta,
 )
 
 from django.contrib.auth.models import AnonymousUser, User
@@ -452,7 +454,6 @@ class ServicioVencimientosMovimientoTests(SimpleTestCase):
             VENCIMIENTO_FUTURO,
         )
 
-
 class SeguridadEmpresaTests(TestCase):
     """
     Verifica que el acceso a una Empresa dependa de permisos reales
@@ -780,5 +781,256 @@ class ProximosVencimientosViewTests(TestCase):
 
         self.assertIn(
             movimiento.id,
+            ids_movimientos,
+        )
+
+    def test_alertas_respeta_politica_de_tres_dias(self):
+        """
+        El endpoint de Próximos Vencimientos debe utilizar
+        la política central de Alertas.
+
+        Un Movimiento que vence dentro de tres días debe
+        aparecer y uno que vence dentro de cuatro días no.
+        """
+
+        from datetime import timedelta
+
+        movimiento_tres_dias = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=date.today(),
+            fecha_vencimiento=(
+                date.today() + timedelta(days=3)
+            ),
+            total=Decimal("1000.00"),
+            importe=Decimal("1000.00"),
+            estado="Pendiente",
+        )
+
+        movimiento_cuatro_dias = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=date.today(),
+            fecha_vencimiento=(
+                date.today() + timedelta(days=4)
+            ),
+            total=Decimal("2000.00"),
+            importe=Decimal("2000.00"),
+            estado="Pendiente",
+        )
+
+        respuesta = self.client.get(
+            reverse(
+                "listar_proximos_vencimientos"
+            ),
+            {
+                "empresa": self.empresa.id,
+                "periodo": "alertas",
+            },
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            200,
+        )
+
+        datos = respuesta.json()
+
+        self.assertTrue(
+            datos["ok"]
+        )
+
+        self.assertEqual(
+            datos["periodo"],
+            "alertas",
+        )
+
+        ids_movimientos = {
+            item["id"]
+            for item in datos["movimientos"]
+        }
+
+        self.assertIn(
+            movimiento_tres_dias.id,
+            ids_movimientos,
+        )
+
+        self.assertNotIn(
+            movimiento_cuatro_dias.id,
+            ids_movimientos,
+        )
+
+    def test_endpoint_informa_estado_de_vencimiento(self):
+        """
+        El endpoint debe informar explícitamente el estado
+        temporal de cada obligación para que la interfaz
+        no tenga que recalcular reglas de vencimiento.
+        """
+
+        from datetime import timedelta
+
+        movimiento_vencido = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=date.today(),
+            fecha_vencimiento=(
+                date.today() - timedelta(days=1)
+            ),
+            total=Decimal("1000.00"),
+            importe=Decimal("1000.00"),
+            estado="Pendiente",
+        )
+
+        movimiento_hoy = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=date.today(),
+            fecha_vencimiento=date.today(),
+            total=Decimal("2000.00"),
+            importe=Decimal("2000.00"),
+            estado="Pendiente",
+        )
+
+        respuesta = self.client.get(
+            reverse(
+                "listar_proximos_vencimientos"
+            ),
+            {
+                "empresa": self.empresa.id,
+                "periodo": "alertas",
+            },
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            200,
+        )
+
+        datos = respuesta.json()
+
+        movimientos_por_id = {
+            item["id"]: item
+            for item in datos["movimientos"]
+        }
+
+        self.assertEqual(
+            movimientos_por_id[
+                movimiento_vencido.id
+            ]["estado_vencimiento"],
+            "Vencido",
+        )
+
+        self.assertEqual(
+            movimientos_por_id[
+                movimiento_hoy.id
+            ]["estado_vencimiento"],
+            "Hoy",
+        )
+
+class AlertasMovimientoTests(TestCase):
+    """
+    Prueba la política inicial de Alertas
+    para Movimientos con saldo pendiente.
+    """
+
+    def setUp(self):
+        """
+        Crea la Empresa y el Ejercicio necesarios
+        para probar la selección de Alertas.
+        """
+
+        self.usuario = User.objects.create_user(
+            username="usuario_alertas",
+            password="clave-prueba-123",
+        )
+
+        self.empresa = Empresa.objects.create(
+            razon_social="Empresa Alertas",
+            propietario=self.usuario,
+        )
+
+        self.ejercicio = Ejercicio.objects.create(
+            empresa=self.empresa,
+            numero=2026,
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 12, 31),
+        )
+
+    def test_alertas_respeta_limite_de_tres_dias(self):
+        """
+        Una obligación vencida y una que vence dentro
+        de tres días deben entrar en Alertas.
+
+        Una obligación que vence dentro de cuatro días
+        todavía no debe entrar.
+        """
+
+        from datetime import timedelta
+
+        fecha_referencia = date(2026, 9, 12)
+
+        movimiento_vencido = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=fecha_referencia,
+            fecha_vencimiento=(
+                fecha_referencia
+                - timedelta(days=1)
+            ),
+            total=Decimal("1000.00"),
+            importe=Decimal("1000.00"),
+            estado="Pendiente",
+        )
+
+        movimiento_tres_dias = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=fecha_referencia,
+            fecha_vencimiento=(
+                fecha_referencia
+                + timedelta(days=3)
+            ),
+            total=Decimal("2000.00"),
+            importe=Decimal("2000.00"),
+            estado="Pendiente",
+        )
+
+        movimiento_cuatro_dias = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=fecha_referencia,
+            fecha_vencimiento=(
+                fecha_referencia
+                + timedelta(days=4)
+            ),
+            total=Decimal("3000.00"),
+            importe=Decimal("3000.00"),
+            estado="Pendiente",
+        )
+
+        movimientos = movimientos_en_alerta(
+            empresa=self.empresa,
+            fecha_referencia=fecha_referencia,
+        )
+
+        ids_movimientos = set(
+            movimientos.values_list(
+                "id",
+                flat=True,
+            )
+        )
+
+        self.assertIn(
+            movimiento_vencido.id,
+            ids_movimientos,
+        )
+
+        self.assertIn(
+            movimiento_tres_dias.id,
+            ids_movimientos,
+        )
+
+        self.assertNotIn(
+            movimiento_cuatro_dias.id,
             ids_movimientos,
         )

@@ -126,34 +126,65 @@ function construirEstructuraProximosVencimientos(){
     contenido.innerHTML = `
         <div class="vencimientos-contenedor">
 
-            <h2 class="vencimientos-titulo">
-                Próximos vencimientos
-            </h2>
-
-            <div class="vencimientos-botonera">
+            <div class="vencimientos-navegacion">
 
                 <button
                     type="button"
-                    class="module-card"
-                    id="btnVencimientosHoy"
+                    class="vencimientos-flecha vencimientos-flecha-izquierda"
+                    id="btnVencimientosAnterior"
+                    aria-label="Opciones anteriores"
+                    title="Opciones anteriores"
                 >
-                    Hoy
+                    ‹
                 </button>
 
-                <button
-                    type="button"
-                    class="module-card"
-                    id="btnVencimientosSemana"
+                <div
+                    class="vencimientos-botonera"
+                    id="botoneraVencimientos"
                 >
-                    Esta semana
-                </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento activo"
+                        id="btnVencimientosAlertas"
+                    >
+                        Alertas
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btnVencimientosHoy"
+                    >
+                        Hoy
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btnVencimientosSemana"
+                    >
+                        Esta semana
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btnVencimientosRango"
+                    >
+                        Rango de fechas
+                    </button>
+
+                </div>
 
                 <button
                     type="button"
-                    class="module-card"
-                    id="btnVencimientosRango"
+                    class="vencimientos-flecha vencimientos-flecha-derecha"
+                    id="btnVencimientosSiguiente"
+                    aria-label="Opciones siguientes"
+                    title="Opciones siguientes"
                 >
-                    Rango de fechas
+                    ›
                 </button>
 
             </div>
@@ -224,8 +255,132 @@ function construirEstructuraProximosVencimientos(){
 
 }
 
+function marcarSegmentoVencimientosActivo(
+    botonActivo
+){
+
+    const botones =
+        document.querySelectorAll(
+            ".vencimientos-segmento"
+        );
+
+    botones.forEach(
+        function(boton){
+
+            boton.classList.remove(
+                "activo"
+            );
+
+        }
+    );
+
+    if(botonActivo){
+
+        botonActivo.classList.add(
+            "activo"
+        );
+
+    }
+
+}
+
+function actualizarFlechasVencimientos(){
+
+    const botonera =
+        document.getElementById(
+            "botoneraVencimientos"
+        );
+
+    const btnAnterior =
+        document.getElementById(
+            "btnVencimientosAnterior"
+        );
+
+    const btnSiguiente =
+        document.getElementById(
+            "btnVencimientosSiguiente"
+        );
+
+    if(
+        !botonera ||
+        !btnAnterior ||
+        !btnSiguiente
+    ){
+        return;
+    }
+
+    const botones =
+        botonera.querySelectorAll(
+            ".vencimientos-segmento"
+        );
+
+    const necesitaNavegacion =
+        botones.length > 4 ||
+        botonera.scrollWidth >
+            botonera.clientWidth + 2;
+
+    btnAnterior.classList.toggle(
+        "visible",
+        necesitaNavegacion
+    );
+
+    btnSiguiente.classList.toggle(
+        "visible",
+        necesitaNavegacion
+    );
+
+    if(!necesitaNavegacion){
+        return;
+    }
+
+    const maximoScroll =
+        botonera.scrollWidth -
+        botonera.clientWidth;
+
+    btnAnterior.disabled =
+        botonera.scrollLeft <= 2;
+
+    btnSiguiente.disabled =
+        botonera.scrollLeft >=
+        maximoScroll - 2;
+
+}
+
+
+function desplazarBotoneraVencimientos(
+    direccion
+){
+
+    const botonera =
+        document.getElementById(
+            "botoneraVencimientos"
+        );
+
+    if(!botonera){
+        return;
+    }
+
+    const desplazamiento =
+        Math.max(
+            180,
+            botonera.clientWidth * 0.45
+        );
+
+    botonera.scrollBy({
+        left:
+            direccion *
+            desplazamiento,
+        behavior: "smooth"
+    });
+
+}
 
 function conectarControlesProximosVencimientos(){
+
+    const btnAlertas =
+        document.getElementById(
+            "btnVencimientosAlertas"
+        );
 
     const btnHoy =
         document.getElementById(
@@ -247,10 +402,47 @@ function conectarControlesProximosVencimientos(){
             "btnAplicarRangoVencimientos"
         );
 
+    const btnAnterior =
+        document.getElementById(
+            "btnVencimientosAnterior"
+        );
+
+    const btnSiguiente =
+        document.getElementById(
+            "btnVencimientosSiguiente"
+        );
+
+    const botonera =
+        document.getElementById(
+            "botoneraVencimientos"
+        );
+
     const rango =
         document.getElementById(
             "rangoFechasVencimientos"
         );
+
+    if(btnAlertas){
+
+        btnAlertas.addEventListener(
+            "click",
+            function(){
+
+                rango.style.display =
+                    "none";
+
+                marcarSegmentoVencimientosActivo(
+                    btnAlertas
+                );
+
+                cargarProximosVencimientos(
+                    "alertas"
+                );
+
+            }
+        );
+
+    }
 
     if(btnHoy){
 
@@ -260,6 +452,10 @@ function conectarControlesProximosVencimientos(){
 
                 rango.style.display =
                     "none";
+
+                marcarSegmentoVencimientosActivo(
+                    btnHoy
+                );
 
                 cargarProximosVencimientos(
                     "hoy"
@@ -279,6 +475,10 @@ function conectarControlesProximosVencimientos(){
                 rango.style.display =
                     "none";
 
+                marcarSegmentoVencimientosActivo(
+                    btnSemana
+                );
+
                 cargarProximosVencimientos(
                     "semana"
                 );
@@ -296,6 +496,10 @@ function conectarControlesProximosVencimientos(){
 
                 rango.style.display =
                     "grid";
+
+                marcarSegmentoVencimientosActivo(
+                    btnRango
+                );
 
                 const fechaHasta =
                     document.getElementById(
@@ -359,11 +563,13 @@ function conectarControlesProximosVencimientos(){
                     !fechaDesde ||
                     !fechaHasta
                 ){
+
                     alert(
                         "Ingrese las fechas desde y hasta."
                     );
 
                     return;
+
                 }
 
                 cargarProximosVencimientos(
@@ -376,6 +582,50 @@ function conectarControlesProximosVencimientos(){
         );
 
     }
+
+    if(btnAnterior){
+
+        btnAnterior.addEventListener(
+            "click",
+            function(){
+
+                desplazarBotoneraVencimientos(
+                    -1
+                );
+
+            }
+        );
+
+    }
+
+    if(btnSiguiente){
+
+        btnSiguiente.addEventListener(
+            "click",
+            function(){
+
+                desplazarBotoneraVencimientos(
+                    1
+                );
+
+            }
+        );
+
+    }
+
+    if(botonera){
+
+        botonera.addEventListener(
+            "scroll",
+            actualizarFlechasVencimientos
+        );
+
+    }
+
+    window.setTimeout(
+        actualizarFlechasVencimientos,
+        0
+    );
 
 }
 
@@ -400,7 +650,7 @@ async function mostrarProximosVencimientos(){
     conectarControlesProximosVencimientos();
 
     await cargarProximosVencimientos(
-        "hoy"
+        "alertas"
     );
 
 }
@@ -541,118 +791,396 @@ function mostrarTablaProximosVencimientos(
     estado.style.display =
         "none";
 
-    let filas = "";
+    const proximos =
+        movimientos.filter(
+            function(movimiento){
 
-    movimientos.forEach(
-        function(movimiento){
+                return (
+                    movimiento.estado_vencimiento ===
+                        "Hoy" ||
+                    movimiento.estado_vencimiento ===
+                        "Futuro"
+                );
 
-            const comprobante =
-                [
-                    movimiento.tipo_comprobante,
-                    movimiento.numero_comprobante
-                ]
-                .filter(Boolean)
-                .join(" ");
+            }
+        );
 
-            const modalidad =
-                movimiento.modalidad_pago ===
-                "DebitoAutomatico"
-                    ? "Débito automático"
-                    : "Manual";
+    const vencidos =
+        movimientos.filter(
+            function(movimiento){
 
-            filas += `
-                <tr>
+                return (
+                    movimiento.estado_vencimiento ===
+                    "Vencido"
+                );
 
-                    <td>
-                        ${formatearFechaVencimiento(
-                            movimiento.fecha_vencimiento
-                        )}
-                    </td>
+            }
+        );
 
-                    <td>
-                        ${movimiento.proveedor || "-"}
-                    </td>
+    const calcularSubtotal =
+        function(lista){
 
-                    <td>
-                        ${comprobante || "-"}
-                    </td>
+            return lista.reduce(
+                function(total, movimiento){
 
-                    <td class="importe">
-                        ${formatearImporteVencimiento(
-                            movimiento.total
-                        )}
-                    </td>
-
-                    <td class="importe">
-                        ${formatearImporteVencimiento(
-                            movimiento.total_aplicado
-                        )}
-                    </td>
-
-                    <td class="importe pendiente">
-                        ${formatearImporteVencimiento(
+                    const importe =
+                        Number(
                             movimiento.saldo_pendiente
-                        )}
-                    </td>
+                        );
 
-                    <td class="modalidad">
-                        ${modalidad}
-                    </td>
+                    if(
+                        Number.isNaN(importe)
+                    ){
+                        return total;
+                    }
 
-                </tr>
+                    return total + importe;
+
+                },
+                0
+            );
+
+        };
+
+    const construirFilas =
+        function(lista){
+
+            let filas = "";
+
+            lista.forEach(
+                function(movimiento){
+
+                    const comprobante =
+                        [
+                            movimiento.tipo_comprobante,
+                            movimiento.numero_comprobante
+                        ]
+                        .filter(Boolean)
+                        .join(" ");
+
+                    const modalidad =
+                        movimiento.modalidad_pago ===
+                        "DebitoAutomatico"
+                            ? "Débito automático"
+                            : (
+                                movimiento.modalidad_pago ||
+                                "Manual"
+                            );
+
+                    filas += `
+                        <tr>
+
+                            <td>
+                                ${formatearFechaVencimiento(
+                                    movimiento.fecha_vencimiento
+                                )}
+                            </td>
+
+                            <td>
+                                ${movimiento.proveedor || "-"}
+                            </td>
+
+                            <td>
+                                ${comprobante || "-"}
+                            </td>
+
+                            <td class="importe">
+                                ${formatearImporteVencimiento(
+                                    movimiento.total
+                                )}
+                            </td>
+
+                            <td class="importe">
+                                ${formatearImporteVencimiento(
+                                    movimiento.total_aplicado
+                                )}
+                            </td>
+
+                            <td class="importe pendiente">
+                                ${formatearImporteVencimiento(
+                                    movimiento.saldo_pendiente
+                                )}
+                            </td>
+
+                            <td class="modalidad">
+                                ${modalidad}
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            );
+
+            return filas;
+
+        };
+
+    const construirTabla =
+        function(lista){
+
+            if(lista.length === 0){
+
+                return `
+                    <div class="vencimientos-sin-items">
+                        Sin movimientos en este grupo.
+                    </div>
+                `;
+
+            }
+
+            return `
+                <div class="vencimientos-tabla-contenedor">
+
+                    <table class="vencimientos-tabla">
+
+                        <thead>
+
+                            <tr>
+
+                                <th class="col-vencimiento">
+                                    Vencimiento
+                                </th>
+
+                                <th class="col-proveedor">
+                                    Proveedor
+                                </th>
+
+                                <th class="col-comprobante">
+                                    Comprobante
+                                </th>
+
+                                <th class="col-total">
+                                    Total
+                                </th>
+
+                                <th class="col-aplicado">
+                                    Aplicado
+                                </th>
+
+                                <th class="col-pendiente">
+                                    Pendiente
+                                </th>
+
+                                <th class="col-modalidad">
+                                    Modalidad
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+                            ${construirFilas(lista)}
+                        </tbody>
+
+                    </table>
+
+                </div>
             `;
 
-        }
-    );
+        };
+
+    const subtotalProximos =
+        calcularSubtotal(
+            proximos
+        );
+
+    const subtotalVencidos =
+        calcularSubtotal(
+            vencidos
+        );
+
+    const totalGeneral =
+        subtotalProximos +
+        subtotalVencidos;
 
     tabla.innerHTML = `
-        <div class="vencimientos-tabla-contenedor">
 
-            <table class="vencimientos-tabla">
+        <section
+            class="vencimientos-grupo vencimientos-grupo-proximos"
+        >
 
-                <thead>
+            <div class="vencimientos-grupo-cabecera">
 
-                    <tr>
+                <div class="vencimientos-grupo-identidad">
 
-                        <th class="col-vencimiento">
-                            Vencimiento
-                        </th>
+                    <span
+                        class="vencimientos-grupo-icono"
+                        aria-hidden="true"
+                    >
+                        ◫
+                    </span>
 
-                        <th class="col-proveedor">
-                            Proveedor
-                        </th>
+                    <span class="vencimientos-grupo-titulo">
+                        Próximos a vencer
+                    </span>
 
-                        <th class="col-comprobante">
-                            Comprobante
-                        </th>
+                    <span class="vencimientos-contador">
+                        ${proximos.length}
+                    </span>
 
-                        <th class="col-total">
-                            Total
-                        </th>
+                </div>
 
-                        <th class="col-aplicado">
-                            Aplicado
-                        </th>
+                <div class="vencimientos-subtotal">
 
-                        <th class="col-pendiente">
-                            Pendiente
-                        </th>
+                    <span>
+                        Subtotal próximos
+                    </span>
 
-                        <th class="col-modalidad">
-                            Modalidad
-                        </th>
+                    <strong>
+                        ${formatearImporteVencimiento(
+                            subtotalProximos
+                        )}
+                    </strong>
 
-                    </tr>
+                </div>
 
-                </thead>
+            </div>
 
-                <tbody>
-                    ${filas}
-                </tbody>
+            ${construirTabla(proximos)}
 
-            </table>
+        </section>
+
+
+        <section
+            class="vencimientos-grupo vencimientos-grupo-vencidos"
+        >
+
+            <button
+                type="button"
+                class="vencimientos-grupo-cabecera vencimientos-grupo-toggle"
+                id="btnToggleVencidos"
+                aria-expanded="true"
+            >
+
+                <span class="vencimientos-grupo-identidad">
+
+                    <span
+                        class="vencimientos-grupo-icono"
+                        aria-hidden="true"
+                    >
+                        ◴
+                    </span>
+
+                    <span class="vencimientos-grupo-titulo">
+                        Vencidos
+                    </span>
+
+                    <span class="vencimientos-contador">
+                        ${vencidos.length}
+                    </span>
+
+                </span>
+
+                <span class="vencimientos-subtotal">
+
+                    <span>
+                        Subtotal vencidos
+                    </span>
+
+                    <strong>
+                        ${formatearImporteVencimiento(
+                            subtotalVencidos
+                        )}
+                    </strong>
+
+                    <span
+                        class="vencimientos-chevron"
+                        id="iconoToggleVencidos"
+                        aria-hidden="true"
+                    >
+                       ⌃
+                    </span>
+
+                </span>
+
+            </button>
+
+            <div id="contenidoVencidos">
+
+                ${construirTabla(vencidos)}
+
+            </div>
+
+        </section>
+
+
+        <div class="vencimientos-total-general">
+
+            <span class="vencimientos-total-etiqueta">
+
+                <span
+                    class="vencimientos-total-icono"
+                    aria-hidden="true"
+                >
+                    ◎
+                </span>
+
+                Total general
+
+            </span>
+
+            <strong>
+                ${formatearImporteVencimiento(
+                    totalGeneral
+                )}
+            </strong>
 
         </div>
     `;
+
+    const btnToggleVencidos =
+        document.getElementById(
+            "btnToggleVencidos"
+        );
+
+    const contenidoVencidos =
+        document.getElementById(
+            "contenidoVencidos"
+        );
+
+    const iconoToggleVencidos =
+        document.getElementById(
+            "iconoToggleVencidos"
+        );
+
+    if(
+        btnToggleVencidos &&
+        contenidoVencidos
+    ){
+
+        btnToggleVencidos.addEventListener(
+            "click",
+            function(){
+
+                const expandido =
+                    btnToggleVencidos.getAttribute(
+                        "aria-expanded"
+                    ) === "true";
+
+                btnToggleVencidos.setAttribute(
+                    "aria-expanded",
+                    String(!expandido)
+                );
+
+                contenidoVencidos.classList.toggle(
+                    "oculto",
+                    expandido
+                );
+
+                if(iconoToggleVencidos){
+
+                    iconoToggleVencidos.textContent =
+                        expandido
+                            ? "⌄"
+                            : "⌃";
+
+                }
+
+            }
+        );
+
+    }
 
 }

@@ -23,6 +23,15 @@ ESTADO_PAGADO = "Pagado"
 
 
 # =========================================
+# ESTADOS FINANCIEROS
+# =========================================
+
+ESTADO_PENDIENTE = "Pendiente"
+ESTADO_PARCIAL = "Parcial"
+ESTADO_PAGADO = "Pagado"
+
+
+# =========================================
 # ESTADOS DE VENCIMIENTO
 # =========================================
 
@@ -31,6 +40,13 @@ VENCIMIENTO_FUTURO = "Futuro"
 VENCIMIENTO_HOY = "Hoy"
 VENCIMIENTO_VENCIDO = "Vencido"
 VENCIMIENTO_PAGADO = "Pagado"
+
+
+# =========================================
+# POLÍTICAS DE ALERTA
+# =========================================
+
+DIAS_ANTICIPACION_ALERTA = 3
 
 
 # =========================================
@@ -304,4 +320,41 @@ def movimientos_con_saldo_pendiente(
     return movimientos.order_by(
         "fecha_vencimiento",
         "id",
+    )
+
+def movimientos_en_alerta(
+    empresa,
+    fecha_referencia=None,
+):
+    """
+    Devuelve los Movimientos que requieren atención
+    dentro de la política inicial de Alertas.
+
+    Reglas actuales:
+    - El Movimiento debe conservar saldo pendiente.
+    - Debe poseer fecha de vencimiento.
+    - Entra en Alerta desde tres días antes.
+    - Si ya venció y continúa pendiente, permanece
+      en Alerta sin límite hacia atrás.
+
+    Las futuras fuentes de Alertas, como Cartera de
+    Cheques/e-Cheqs, deberán aplicar su propia política
+    temporal sin duplicar esta regla en la interfaz.
+    """
+
+    from datetime import date, timedelta
+
+    if fecha_referencia is None:
+        fecha_referencia = date.today()
+
+    fecha_limite = (
+        fecha_referencia
+        + timedelta(
+            days=DIAS_ANTICIPACION_ALERTA,
+        )
+    )
+
+    return movimientos_con_saldo_pendiente(
+        empresa=empresa,
+        fecha_hasta=fecha_limite,
     )

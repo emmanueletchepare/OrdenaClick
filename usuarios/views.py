@@ -8791,6 +8791,9 @@ def listar_proximos_vencimientos(request):
     Los períodos "hoy" y "semana" incluyen también obligaciones
     vencidas que continúan con saldo pendiente.
 
+    El período "alertas" utiliza la política central de Alertas
+    definida en el servicio financiero.
+
     La vista no calcula saldos ni estados financieros.
     Toda regla financiera se obtiene desde el servicio central.
     """
@@ -8798,7 +8801,9 @@ def listar_proximos_vencimientos(request):
     from datetime import date, timedelta
 
     from usuarios.services.financiero import (
+        estado_vencimiento_movimiento,
         movimientos_con_saldo_pendiente,
+        movimientos_en_alerta,
     )
     from usuarios.services.seguridad import (
         obtener_empresa_autorizada,
@@ -8833,12 +8838,55 @@ def listar_proximos_vencimientos(request):
     fecha_desde = None
     fecha_hasta = None
 
-    if periodo == "hoy":
+    if periodo == "alertas":
+        movimientos = (
+            movimientos_en_alerta(
+                empresa=empresa,
+                fecha_referencia=hoy,
+            )
+            .select_related(
+                "proveedor",
+                "tipo_gasto",
+                "centro_operativo",
+                "recurso_operativo",
+                "cuenta_debito",
+            )
+        )
+
+    elif periodo == "hoy":
         fecha_hasta = hoy
+
+        movimientos = (
+            movimientos_con_saldo_pendiente(
+                empresa=empresa,
+                fecha_hasta=fecha_hasta,
+            )
+            .select_related(
+                "proveedor",
+                "tipo_gasto",
+                "centro_operativo",
+                "recurso_operativo",
+                "cuenta_debito",
+            )
+        )
 
     elif periodo == "semana":
         fecha_hasta = hoy + timedelta(
             days=6,
+        )
+
+        movimientos = (
+            movimientos_con_saldo_pendiente(
+                empresa=empresa,
+                fecha_hasta=fecha_hasta,
+            )
+            .select_related(
+                "proveedor",
+                "tipo_gasto",
+                "centro_operativo",
+                "recurso_operativo",
+                "cuenta_debito",
+            )
         )
 
     elif periodo == "rango":
@@ -8898,6 +8946,21 @@ def listar_proximos_vencimientos(request):
                 status=400,
             )
 
+        movimientos = (
+            movimientos_con_saldo_pendiente(
+                empresa=empresa,
+                fecha_desde=fecha_desde,
+                fecha_hasta=fecha_hasta,
+            )
+            .select_related(
+                "proveedor",
+                "tipo_gasto",
+                "centro_operativo",
+                "recurso_operativo",
+                "cuenta_debito",
+            )
+        )
+
     else:
         return JsonResponse(
             {
@@ -8906,21 +8969,6 @@ def listar_proximos_vencimientos(request):
             },
             status=400,
         )
-
-    movimientos = (
-        movimientos_con_saldo_pendiente(
-            empresa=empresa,
-            fecha_desde=fecha_desde,
-            fecha_hasta=fecha_hasta,
-        )
-        .select_related(
-            "proveedor",
-            "tipo_gasto",
-            "centro_operativo",
-            "recurso_operativo",
-            "cuenta_debito",
-        )
-    )
 
     datos = []
 
@@ -8939,6 +8987,11 @@ def listar_proximos_vencimientos(request):
                     movimiento.fecha_vencimiento.isoformat()
                     if movimiento.fecha_vencimiento
                     else None
+                ),
+                "estado_vencimiento": (
+                    estado_vencimiento_movimiento(
+                        movimiento
+                    )
                 ),
                 "proveedor": proveedor,
                 "tipo_comprobante": (

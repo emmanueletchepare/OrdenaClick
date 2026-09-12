@@ -1,4 +1,4 @@
-reemplazá completa construirEstructuraProximosVenc/* =========================================
+/* =========================================
    PRÓXIMOS VENCIMIENTOS
 ========================================= */
 
@@ -6,26 +6,140 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
     width:100%;
 }
 
-.vencimientos-titulo{
-    margin:0 0 20px 0;
+
+/* =========================================
+   NAVEGACIÓN SEGMENTADA
+========================================= */
+
+.vencimientos-navegacion{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+
+    width:100%;
+    margin:10px auto 28px auto;
+}
+
+.vencimientos-botonera{
+    display:flex;
+    align-items:center;
+    gap:4px;
+
+    width:min(720px, 100%);
+    padding:5px;
+
+    background:#171d29;
+    border:1px solid #2b3447;
+    border-radius:16px;
+
+    box-sizing:border-box;
+
+    overflow-x:auto;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+}
+
+.vencimientos-botonera::-webkit-scrollbar{
+    display:none;
+}
+
+.vencimientos-segmento{
+    appearance:none;
+
+    flex:1 0 145px;
+
+    min-width:145px;
+    height:42px;
+
+    padding:0 18px;
+
+    border:0;
+    border-radius:11px;
+
+    background:transparent;
+    color:#98a2b3;
+
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+
+    white-space:nowrap;
+    cursor:pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.vencimientos-segmento:hover{
+    background:#202838;
+    color:#e5e7eb;
+}
+
+.vencimientos-segmento.activo{
+    background:#e5e7eb;
+    color:#111827;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.vencimientos-segmento.activo:hover{
+    background:#f3f4f6;
+    color:#111827;
 }
 
 
 /* =========================================
-   BOTONERA
+   FLECHAS DE NAVEGACIÓN
 ========================================= */
 
-.vencimientos-botonera{
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-    margin-bottom:20px;
+.vencimientos-flecha{
+    display:none;
+
+    flex:0 0 44px;
+
+    width:44px;
+    height:44px;
+
+    padding:0;
+
+    border:1px solid #2b3447;
+    border-radius:50%;
+
+    background:#171d29;
+    color:#dbe5f4;
+
+    font-size:34px;
+    font-weight:300;
+    line-height:38px;
+
+    cursor:pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        opacity 0.18s ease,
+        transform 0.18s ease;
 }
 
-.vencimientos-botonera .module-card{
-    flex:0 0 auto;
-    min-width:150px;
-    padding:14px 22px;
+.vencimientos-flecha.visible{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.vencimientos-flecha:hover:not(:disabled){
+    background:#202a3b;
+    border-color:#3b4a63;
+    transform:scale(1.04);
+}
+
+.vencimientos-flecha:disabled{
+    opacity:0.28;
+    cursor:default;
 }
 
 
@@ -35,13 +149,17 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
 
 .vencimientos-rango{
     display:none;
+
     grid-template-columns:
         minmax(220px, 1fr)
         minmax(220px, 1fr)
         auto;
+
     gap:18px;
     align-items:end;
-    margin-bottom:22px;
+
+    margin:0 auto 24px auto;
+    max-width:850px;
 }
 
 .vencimientos-rango .field{
@@ -60,41 +178,242 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
 
 
 /* =========================================
-   RESULTADOS
+   GRUPOS
+========================================= */
+
+.vencimientos-grupo{
+    width:100%;
+    margin-bottom:16px;
+
+    border:1px solid #2b3447;
+    border-radius:14px;
+
+    box-sizing:border-box;
+    overflow:hidden;
+}
+
+.vencimientos-grupo-proximos{
+    border-color:rgba(38, 190, 156, 0.48);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15, 91, 77, 0.13),
+            rgba(23, 29, 41, 0.15)
+        );
+}
+
+.vencimientos-grupo-vencidos{
+    border-color:rgba(220, 86, 86, 0.40);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(126, 42, 42, 0.13),
+            rgba(23, 29, 41, 0.15)
+        );
+}
+
+
+/* =========================================
+   CABECERA DE GRUPOS
+========================================= */
+
+.vencimientos-grupo-cabecera{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+
+    width:100%;
+    min-height:68px;
+
+    padding:12px 18px;
+
+    box-sizing:border-box;
+}
+
+.vencimientos-grupo-toggle{
+    appearance:none;
+
+    border:0;
+    background:transparent;
+
+    color:inherit;
+    font-family:inherit;
+
+    text-align:left;
+    cursor:pointer;
+}
+
+.vencimientos-grupo-identidad{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    min-width:0;
+}
+
+.vencimientos-grupo-icono{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    width:30px;
+    height:30px;
+
+    flex:0 0 30px;
+
+    font-size:23px;
+}
+
+.vencimientos-grupo-proximos
+.vencimientos-grupo-icono,
+.vencimientos-grupo-proximos
+.vencimientos-grupo-titulo{
+    color:#45dfbd;
+}
+
+.vencimientos-grupo-vencidos
+.vencimientos-grupo-icono,
+.vencimientos-grupo-vencidos
+.vencimientos-grupo-titulo{
+    color:#ff7474;
+}
+
+.vencimientos-grupo-titulo{
+    font-size:20px;
+    font-weight:700;
+}
+
+.vencimientos-contador{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-width:34px;
+    height:28px;
+
+    padding:0 9px;
+
+    border-radius:999px;
+
+    box-sizing:border-box;
+
+    color:#ffffff;
+
+    font-size:14px;
+    font-weight:700;
+}
+
+.vencimientos-grupo-proximos
+.vencimientos-contador{
+    background:rgba(24, 150, 119, 0.65);
+}
+
+.vencimientos-grupo-vencidos
+.vencimientos-contador{
+    background:rgba(156, 66, 66, 0.65);
+}
+
+
+/* =========================================
+   SUBTOTALES
+========================================= */
+
+.vencimientos-subtotal{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    flex-wrap:wrap;
+    justify-content:flex-end;
+
+    font-size:14px;
+}
+
+.vencimientos-subtotal strong{
+    font-size:20px;
+}
+
+.vencimientos-grupo-proximos
+.vencimientos-subtotal{
+    color:#45dfbd;
+}
+
+.vencimientos-grupo-vencidos
+.vencimientos-subtotal{
+    color:#ff7474;
+}
+
+.vencimientos-chevron{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    width:26px;
+    height:26px;
+
+    color:#f3f4f6;
+
+    font-size:23px;
+    font-weight:700;
+
+    margin-left:8px;
+}
+
+
+/* =========================================
+   TABLAS
 ========================================= */
 
 .vencimientos-tabla-contenedor{
-    width:100%;
+    width:auto;
+
+    margin:0 12px 12px 12px;
+
     overflow-x:auto;
+
     background:#171d29;
     border:1px solid #2b3447;
-    border-radius:14px;
-    padding:10px 14px;
+    border-radius:10px;
+
     box-sizing:border-box;
 }
 
 .vencimientos-tabla{
     width:100%;
+
     border-collapse:collapse;
     table-layout:fixed;
 }
 
 .vencimientos-tabla th{
     color:#98a2b3;
+
     font-size:14px;
     font-weight:600;
+
     text-align:center;
+
     padding:14px 10px;
+
     border-bottom:1px solid #2b3447;
+
     white-space:nowrap;
 }
 
 .vencimientos-tabla td{
     color:#e5e7eb;
+
     font-size:14px;
+
     text-align:center;
+
     padding:13px 10px;
+
     border-bottom:1px solid #252c3d;
+
     vertical-align:middle;
 }
 
@@ -104,6 +423,16 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
 
 .vencimientos-tabla tbody tr:hover{
     background:#1b2230;
+}
+
+.vencimientos-grupo-proximos
+.vencimientos-tabla td:first-child{
+    color:#59e6c4;
+}
+
+.vencimientos-grupo-vencidos
+.vencimientos-tabla td:first-child{
+    color:#ff8585;
 }
 
 .vencimientos-tabla .col-vencimiento{
@@ -149,10 +478,102 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
 
 
 /* =========================================
+   SIN ELEMENTOS
+========================================= */
+
+.vencimientos-sin-items{
+    padding:18px;
+
+    color:#7f8999;
+
+    text-align:center;
+    font-size:14px;
+}
+
+
+/* =========================================
+   PLEGADO
+========================================= */
+
+#contenidoVencidos{
+    max-height:2000px;
+
+    opacity:1;
+
+    transition:
+        max-height 0.28s ease,
+        opacity 0.20s ease;
+}
+
+#contenidoVencidos.oculto{
+    max-height:0;
+
+    opacity:0;
+
+    overflow:hidden;
+}
+
+
+/* =========================================
+   TOTAL GENERAL
+========================================= */
+
+.vencimientos-total-general{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+
+    width:100%;
+
+    margin-top:14px;
+
+    padding:18px 22px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #15243a,
+            #17283f
+        );
+
+    border:1px solid #31445f;
+    border-radius:14px;
+
+    box-sizing:border-box;
+
+    color:#f3f4f6;
+}
+
+.vencimientos-total-etiqueta{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    font-size:19px;
+    font-weight:700;
+}
+
+.vencimientos-total-icono{
+    color:#67b7ff;
+    font-size:25px;
+}
+
+.vencimientos-total-general strong{
+    font-size:22px;
+    white-space:nowrap;
+}
+
+
+/* =========================================
    RESPONSIVE
 ========================================= */
 
 @media(max-width:900px){
+
+    .vencimientos-navegacion{
+        gap:8px;
+    }
 
     .vencimientos-rango{
         grid-template-columns:1fr 1fr;
@@ -162,16 +583,35 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
         grid-column:1 / -1;
     }
 
+    .vencimientos-grupo-cabecera{
+        align-items:flex-start;
+    }
+
 }
+
 
 @media(max-width:650px){
 
-    .vencimientos-botonera{
-        flex-direction:column;
+    .vencimientos-navegacion{
+        width:100%;
     }
 
-    .vencimientos-botonera .module-card{
+    .vencimientos-botonera{
         width:100%;
+    }
+
+    .vencimientos-segmento{
+        flex:0 0 auto;
+        min-width:135px;
+    }
+
+    .vencimientos-flecha{
+        flex-basis:38px;
+
+        width:38px;
+        height:38px;
+
+        font-size:29px;
     }
 
     .vencimientos-rango{
@@ -181,6 +621,21 @@ reemplazá completa construirEstructuraProximosVenc/* ==========================
     .vencimientos-aplicar{
         grid-column:auto;
         width:100%;
+    }
+
+    .vencimientos-grupo-cabecera{
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .vencimientos-subtotal{
+        width:100%;
+        justify-content:space-between;
+    }
+
+    .vencimientos-total-general{
+        align-items:flex-start;
+        flex-direction:column;
     }
 
 }
