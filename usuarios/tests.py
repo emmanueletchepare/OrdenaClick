@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+from django.urls import reverse
 
 from django.test import SimpleTestCase
 
@@ -27,6 +28,7 @@ from django.test import TestCase
 
 from usuarios.models import Empresa
 from usuarios.services.seguridad import (
+    empresas_autorizadas,
     obtener_empresa_autorizada,
 )
 
@@ -559,3 +561,142 @@ class SeguridadEmpresaTests(TestCase):
                 AnonymousUser(),
                 self.empresa_propietario.id,
             )
+
+    def test_empresas_autorizadas_devuelve_solo_las_propias(self):
+        """
+        Un usuario normal sólo debe listar las Empresas que le pertenecen.
+        """
+
+        empresas = empresas_autorizadas(
+            self.propietario
+        )
+
+        self.assertIn(
+            self.empresa_propietario,
+            empresas,
+        )
+
+        self.assertNotIn(
+            self.empresa_ajena,
+            empresas,
+        )
+
+
+    def test_superusuario_lista_todas_las_empresas(self):
+        """
+        El superusuario puede listar todas las Empresas existentes.
+        """
+
+        empresas = empresas_autorizadas(
+            self.superusuario
+        )
+
+        self.assertIn(
+            self.empresa_propietario,
+            empresas,
+        )
+
+        self.assertIn(
+            self.empresa_ajena,
+            empresas,
+        )
+
+
+    def test_panel_admin_rechaza_empresa_ajena(self):
+        """
+        El panel Administrador no debe permitir seleccionar
+        una Empresa perteneciente a otro usuario.
+        """
+
+        self.client.force_login(
+            self.propietario
+        )
+
+        respuesta = self.client.get(
+            reverse(
+                "panel_admin"
+            ),
+            {
+                "empresa":
+                    self.empresa_ajena.id,
+            },
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            403,
+        )
+
+
+    def test_panel_admin_lista_solo_empresas_autorizadas(self):
+        """
+        El panel Administrador no debe exponer Empresas ajenas
+        dentro del listado disponible para el usuario.
+        """
+
+        self.client.force_login(
+            self.propietario
+        )
+
+        respuesta = self.client.get(
+            reverse(
+                "panel_admin"
+            )
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            200,
+        )
+
+        empresas = list(
+            respuesta.context[
+                "empresas"
+            ]
+        )
+
+        self.assertIn(
+            self.empresa_propietario,
+            empresas,
+        )
+
+        self.assertNotIn(
+            self.empresa_ajena,
+            empresas,
+        )
+
+    def test_empresa_nueva_queda_asociada_al_usuario_creador(self):
+        """
+        Una Empresa creada desde el panel Administrador debe quedar
+        asociada automáticamente al usuario que realizó el alta.
+        """
+
+        self.client.force_login(
+            self.propietario
+        )
+
+        respuesta = self.client.post(
+            reverse(
+                "panel_admin"
+            ),
+            {
+                "guardar_empresa": "1",
+                "razon_social": "Empresa Nueva Segura",
+                "nombre_fantasia": "Empresa Nueva",
+                "cuit": "30-12345678-9",
+            },
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            302,
+        )
+
+        empresa = Empresa.objects.get(
+            cuit="30-12345678-9"
+        )
+
+        self.assertEqual(
+            empresa.propietario,
+            self.propietario,
+        )

@@ -41,3 +41,22 @@ def obtener_empresa_autorizada(
     raise PermissionDenied(
         "No tiene permisos para operar sobre esta Empresa."
     )
+
+def empresas_autorizadas(usuario):
+    """
+    Devuelve las Empresas que el usuario puede consultar.
+
+    Reglas actuales:
+    - Un superusuario puede consultar todas las Empresas.
+    - Un Administrador normal consulta únicamente sus Empresas.
+    """
+
+    if not usuario.is_authenticated:
+        return Empresa.objects.none()
+
+    if usuario.is_superuser:
+        return Empresa.objects.all()
+
+    return Empresa.objects.filter(
+        propietario=usuario,
+    )

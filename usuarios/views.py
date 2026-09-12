@@ -338,7 +338,14 @@ def panel_admin(request):
     if empresa_id:
 
         try:
-            empresa_actual = Empresa.objects.get(id=empresa_id)
+            from usuarios.services.seguridad import (
+                obtener_empresa_autorizada,
+            )
+
+            empresa_actual = obtener_empresa_autorizada(
+                request.user,
+                empresa_id,
+            )
 
         except Empresa.DoesNotExist:
             empresa_actual = None
@@ -395,6 +402,8 @@ def panel_admin(request):
 
 
             nueva_empresa = Empresa.objects.create(
+
+                propietario=request.user,
 
                 razon_social=request.POST.get(
                     'razon_social'
@@ -658,7 +667,13 @@ def panel_admin(request):
         None
     )
 
-    empresas = Empresa.objects.all().order_by(
+    from usuarios.services.seguridad import (
+        empresas_autorizadas,
+    )
+
+    empresas = empresas_autorizadas(
+        request.user
+    ).order_by(
         'nombre_fantasia',
         'razon_social'
     )

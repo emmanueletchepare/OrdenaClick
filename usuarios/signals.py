@@ -3,7 +3,8 @@ from django.dispatch import receiver
 
 from .models import (
     CentroOperativo,
-    RecursoOperativo
+    RecursoOperativo,
+    RecursoOperativoCentro,
 )
 
 
@@ -17,29 +18,33 @@ def crear_recurso_general_casa_central(
     created,
     **kwargs
 ):
+    """
+    Crea el Recurso Operativo GENERAL para una Casa Central
+    y asegura su relación con el Centro Operativo creado.
+    """
 
     if not created:
-
         return
 
     if instance.tipo != "Casa Central":
-
         return
 
-    RecursoOperativo.objects.get_or_create(
+    recurso_general, _ = (
+        RecursoOperativo.objects.get_or_create(
+            empresa=instance.empresa,
+            nombre="GENERAL",
+            defaults={
+                "tipo_recurso": "Inmueble",
+                "descripcion": (
+                    "Recurso operativo general "
+                    "creado automáticamente."
+                ),
+                "activo": True,
+            },
+        )
+    )
 
-        empresa=instance.empresa,
-
-        nombre="GENERAL",
-
-        defaults={
-            "tipo_recurso": "Inmueble",
-            "centro_operativo": instance,
-            "descripcion": (
-                "Recurso operativo general "
-                "creado automáticamente."
-            ),
-            "activo": True
-        }
-
+    RecursoOperativoCentro.objects.get_or_create(
+        recurso_operativo=recurso_general,
+        centro_operativo=instance,
     )
