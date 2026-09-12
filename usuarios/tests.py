@@ -26,7 +26,8 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase
 
-from usuarios.models import Empresa
+from usuarios.models import Empresa, Ejercicio, Movimiento
+
 from usuarios.services.seguridad import (
     empresas_autorizadas,
     obtener_empresa_autorizada,
@@ -451,6 +452,7 @@ class ServicioVencimientosMovimientoTests(SimpleTestCase):
             VENCIMIENTO_FUTURO,
         )
 
+
 class SeguridadEmpresaTests(TestCase):
     """
     Verifica que el acceso a una Empresa dependa de permisos reales
@@ -699,4 +701,84 @@ class SeguridadEmpresaTests(TestCase):
         self.assertEqual(
             empresa.propietario,
             self.propietario,
+        )
+
+class ProximosVencimientosViewTests(TestCase):
+    """
+    Prueba el comportamiento HTTP de la vista
+    de Próximos Vencimientos.
+    """
+
+    def setUp(self):
+        """
+        Crea el usuario, la empresa y el ejercicio
+        necesarios para probar la vista.
+        """
+
+        self.usuario = User.objects.create_user(
+            username="usuario_vencimientos",
+            password="clave-prueba-123",
+        )
+
+        self.empresa = Empresa.objects.create(
+            razon_social="Empresa Vencimientos",
+            propietario=self.usuario,
+        )
+
+        self.ejercicio = Ejercicio.objects.create(
+            empresa=self.empresa,
+            numero=2026,
+            fecha_inicio=date(2026, 1, 1),
+            fecha_cierre=date(2026, 12, 31),
+        )
+
+        self.client.force_login(
+            self.usuario
+        )
+
+    def test_hoy_incluye_movimiento_vencido_con_saldo(self):
+        """
+        El período Hoy mantiene visible una obligación
+        vencida que todavía posee saldo pendiente.
+        """
+
+        from datetime import timedelta
+
+        movimiento = Movimiento.objects.create(
+            empresa=self.empresa,
+            ejercicio=self.ejercicio,
+            fecha_registro=date.today(),
+            fecha_vencimiento=(
+                date.today() - timedelta(days=1)
+            ),
+            total=Decimal("1000.00"),
+            importe=Decimal("1000.00"),
+            estado="Pendiente",
+        )
+
+        respuesta = self.client.get(
+            reverse(
+                "listar_proximos_vencimientos"
+            ),
+            {
+                "empresa": self.empresa.id,
+                "periodo": "hoy",
+            },
+        )
+
+        self.assertEqual(
+            respuesta.status_code,
+            200,
+        )
+
+        datos = respuesta.json()
+
+        ids_movimientos = [
+            item["id"]
+            for item in datos["movimientos"]
+        ]
+
+        self.assertIn(
+            movimiento.id,
+            ids_movimientos,
         )

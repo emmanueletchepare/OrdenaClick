@@ -797,6 +797,13 @@ body{
 
 </style>
 
+{% load static %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/vencimientos.css' %}?v=1"
+>
+
 </head>
 
 <body>
@@ -895,8 +902,9 @@ Dashboard
 </button>
 
 <button
-class="sidebar-btn"
-onclick="mostrarContenido('Próximos vencimientos')">
+id="btnProximosVencimientos"
+type="button"
+class="sidebar-btn">
 
 Próximos vencimientos
 
@@ -19056,7 +19064,6 @@ Sí
 
 {% endif %}
 
-{% load static %}
 
 <script src="{% static 'js/bancos.js' %}?v=2"></script>
 
@@ -19077,6 +19084,8 @@ Sí
 <script src="{% static 'js/retenciones.js' %}?v=1"></script>
 
 <script src="{% static 'js/carga_simple.js' %}?v=7"></script>
+
+<script src="{% static 'js/vencimientos.js' %}?v=1"></script>
 
 </body>
 </html>

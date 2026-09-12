@@ -1,0 +1,186 @@
+reemplazá completa construirEstructuraProximosVenc/* =========================================
+   PRÓXIMOS VENCIMIENTOS
+========================================= */
+
+.vencimientos-contenedor{
+    width:100%;
+}
+
+.vencimientos-titulo{
+    margin:0 0 20px 0;
+}
+
+
+/* =========================================
+   BOTONERA
+========================================= */
+
+.vencimientos-botonera{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.vencimientos-botonera .module-card{
+    flex:0 0 auto;
+    min-width:150px;
+    padding:14px 22px;
+}
+
+
+/* =========================================
+   RANGO DE FECHAS
+========================================= */
+
+.vencimientos-rango{
+    display:none;
+    grid-template-columns:
+        minmax(220px, 1fr)
+        minmax(220px, 1fr)
+        auto;
+    gap:18px;
+    align-items:end;
+    margin-bottom:22px;
+}
+
+.vencimientos-rango .field{
+    min-width:0;
+}
+
+.vencimientos-rango .input-box{
+    box-sizing:border-box;
+}
+
+.vencimientos-aplicar{
+    height:50px;
+    min-width:130px;
+    margin:0;
+}
+
+
+/* =========================================
+   RESULTADOS
+========================================= */
+
+.vencimientos-tabla-contenedor{
+    width:100%;
+    overflow-x:auto;
+    background:#171d29;
+    border:1px solid #2b3447;
+    border-radius:14px;
+    padding:10px 14px;
+    box-sizing:border-box;
+}
+
+.vencimientos-tabla{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.vencimientos-tabla th{
+    color:#98a2b3;
+    font-size:14px;
+    font-weight:600;
+    text-align:center;
+    padding:14px 10px;
+    border-bottom:1px solid #2b3447;
+    white-space:nowrap;
+}
+
+.vencimientos-tabla td{
+    color:#e5e7eb;
+    font-size:14px;
+    text-align:center;
+    padding:13px 10px;
+    border-bottom:1px solid #252c3d;
+    vertical-align:middle;
+}
+
+.vencimientos-tabla tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.vencimientos-tabla tbody tr:hover{
+    background:#1b2230;
+}
+
+.vencimientos-tabla .col-vencimiento{
+    width:12%;
+}
+
+.vencimientos-tabla .col-proveedor{
+    width:18%;
+}
+
+.vencimientos-tabla .col-comprobante{
+    width:15%;
+}
+
+.vencimientos-tabla .col-total{
+    width:13%;
+}
+
+.vencimientos-tabla .col-aplicado{
+    width:13%;
+}
+
+.vencimientos-tabla .col-pendiente{
+    width:14%;
+}
+
+.vencimientos-tabla .col-modalidad{
+    width:15%;
+}
+
+.vencimientos-tabla .importe{
+    text-align:right;
+    white-space:nowrap;
+}
+
+.vencimientos-tabla .pendiente{
+    font-weight:700;
+}
+
+.vencimientos-tabla .modalidad{
+    white-space:nowrap;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:900px){
+
+    .vencimientos-rango{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .vencimientos-aplicar{
+        grid-column:1 / -1;
+    }
+
+}
+
+@media(max-width:650px){
+
+    .vencimientos-botonera{
+        flex-direction:column;
+    }
+
+    .vencimientos-botonera .module-card{
+        width:100%;
+    }
+
+    .vencimientos-rango{
+        grid-template-columns:1fr;
+    }
+
+    .vencimientos-aplicar{
+        grid-column:auto;
+        width:100%;
+    }
+
+}

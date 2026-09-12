@@ -61,6 +61,7 @@ from .views import (
     eliminar_retencion,
     guardar_movimiento,
     verificar_comprobante_duplicado,
+    listar_proximos_vencimientos,
     reactivar_retencion
     
 )
@@ -277,7 +278,7 @@ urlpatterns = [
         name="reactivar_tarjeta"
     ),
 
-        # =========================================
+    # =========================================
     # RETENCIONES
     # =========================================
 
@@ -451,6 +452,16 @@ urlpatterns = [
         "gestion-claves/reactivar/",
         reactivar_gestion_clave,
         name="reactivar_gestion_clave"
+    ),
+
+    # =========================================
+    # PRÓXIMOS VENCIMIENTOS
+    # =========================================
+
+    path(
+        "proximos-vencimientos/",
+        listar_proximos_vencimientos,
+        name="listar_proximos_vencimientos",
     ),
 
     # =========================================
