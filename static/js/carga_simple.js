@@ -1920,6 +1920,27 @@ document.addEventListener(
         }
 
 
+        const contenido =
+            document.getElementById(
+                "contenido-operativo"
+            );
+
+
+        const movimientoEdicionId =
+            contenido?.dataset
+                .movimientoEdicionId ||
+            "";
+
+
+        if(movimientoEdicionId){
+
+            guardarEdicionMovimiento();
+
+            return;
+
+        }
+
+
         guardarRegistroSimple();
 
     }
@@ -2545,6 +2566,301 @@ function limpiarPagoDebitoAutomaticoRegistro(){
 
 }
 
+/**
+ * Registra el Pago real de un débito automático
+ * sobre un Movimiento existente.
+ *
+ * La validación definitiva del saldo y de los
+ * intereses por mora pertenece al backend.
+ */
+async function registrarPagoDebitoAutomaticoEdicion(){
+
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const fechaPago =
+        document.getElementById(
+            "fechaPagoDebitoAutomaticoRegistro"
+        );
+
+    const importePago =
+        document.getElementById(
+            "importePagoDebitoAutomaticoRegistro"
+        );
+
+    const fechaVencimiento =
+        document.getElementById(
+            "fechaVencimientoRegistro"
+        );
+
+
+    const movimientoId =
+        contenido?.dataset
+            .movimientoEdicionId ||
+        "";
+
+
+    if(!movimientoId){
+
+        alert(
+            "No se pudo identificar el Movimiento."
+        );
+
+        return;
+    }
+
+
+    if(
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+    }
+
+
+    if(
+        !fechaPago ||
+        !fechaPago.value
+    ){
+
+        alert(
+            "Ingrese la fecha real del débito."
+        );
+
+        return;
+    }
+
+
+    const importeDebitado =
+        Number(
+            leerImporte(
+                importePago?.value
+            )
+        );
+
+
+    if(
+        !Number.isFinite(
+            importeDebitado
+        ) ||
+        importeDebitado <= 0
+    ){
+
+        alert(
+            "El importe debitado debe ser mayor a cero."
+        );
+
+        return;
+    }
+
+
+    const saldoPendiente =
+        Number(
+            contenido?.dataset
+                .saldoPendienteEdicion ||
+            0
+        );
+
+
+    let confirmarInteresesMora =
+        false;
+
+
+    /*
+     * La comparación del navegador es solamente
+     * anticipatoria para la experiencia del usuario.
+     *
+     * El backend vuelve a calcular el saldo real
+     * dentro de una transacción con bloqueo.
+     */
+    if(
+        Number.isFinite(
+            saldoPendiente
+        ) &&
+        saldoPendiente > 0 &&
+        importeDebitado > saldoPendiente
+    ){
+
+        const diferencia =
+            Math.round(
+                (
+                    importeDebitado -
+                    saldoPendiente
+                ) * 100
+            ) / 100;
+
+
+        if(
+            !fechaVencimiento ||
+            !fechaVencimiento.value
+        ){
+
+            alert(
+                "El importe debitado supera el saldo pendiente. " +
+                "Sin una fecha de vencimiento no puede clasificarse " +
+                "la diferencia como interés por mora."
+            );
+
+            return;
+        }
+
+
+        if(
+            fechaPago.value <=
+            fechaVencimiento.value
+        ){
+
+            alert(
+                "El importe debitado supera el saldo pendiente, " +
+                "pero el débito no ocurrió después del vencimiento. " +
+                "La diferencia no puede registrarse automáticamente " +
+                "como interés por mora."
+            );
+
+            return;
+        }
+
+
+        const diferenciaFormateada =
+            diferencia.toLocaleString(
+                "es-AR",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+
+        const confirmado =
+            confirm(
+                "El débito se produjo después del vencimiento " +
+                "y el importe ingresado supera en $" +
+                diferenciaFormateada +
+                " el saldo pendiente.\n\n" +
+                "¿Los $" +
+                diferenciaFormateada +
+                " corresponden a intereses por mora?"
+            );
+
+
+        if(!confirmado){
+
+            return;
+        }
+
+
+        confirmarInteresesMora =
+            true;
+    }
+
+
+    const datos =
+        new FormData();
+
+
+    datos.append(
+        "empresa",
+        empresa.value
+    );
+
+    datos.append(
+        "movimiento",
+        movimientoId
+    );
+
+    datos.append(
+        "fecha",
+        fechaPago.value
+    );
+
+    datos.append(
+        "importe_debitado",
+        String(
+            importeDebitado
+        )
+    );
+
+    datos.append(
+        "confirmar_intereses_mora",
+        confirmarInteresesMora
+            ? "true"
+            : "false"
+    );
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                "/movimientos/registrar-debito-automatico/",
+                {
+                    method:
+                        "POST",
+
+                    headers:
+                        {
+                            "X-CSRFToken":
+                                obtenerCSRFToken()
+                        },
+
+                    body:
+                        datos
+                }
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo registrar el Pago."
+            );
+
+            return;
+        }
+
+
+        alert(
+            resultado.mensaje ||
+            "Pago registrado correctamente."
+        );
+
+
+        await volverAProximosVencimientos();
+
+
+    }catch(error){
+
+        console.error(
+            "Error registrando débito automático:",
+            error
+        );
+
+        alert(
+            "No se pudo registrar el Pago."
+        );
+    }
+}
+
 /*
  * =========================================
  * ADAPTADOR AGREGAR / REGISTRAR PAGO
@@ -2576,6 +2892,16 @@ if(
                     "modalidadPagoRegistro"
                 );
 
+            const contenido =
+                document.getElementById(
+                    "contenido-operativo"
+                );
+
+            const movimientoEdicionId =
+                contenido?.dataset
+                    .movimientoEdicionId ||
+                "";
+
 
             if(
                 modalidad &&
@@ -2583,17 +2909,48 @@ if(
                     "DebitoAutomatico"
             ){
 
+                const bloqueDebito =
+                    document.getElementById(
+                        "pagoDebitoAutomaticoRegistro"
+                    );
+
+
+                /*
+                 * En edición:
+                 *
+                 * Primer click:
+                 * muestra Fecha + Importe.
+                 *
+                 * Segundo click:
+                 * registra el Pago real.
+                 */
+                if(movimientoEdicionId){
+
+                    if(!bloqueDebito){
+
+                        mostrarPagoDebitoAutomaticoRegistro();
+
+                        return;
+                    }
+
+
+                    registrarPagoDebitoAutomaticoEdicion();
+
+                    return;
+                }
+
+
+                /*
+                 * Alta normal de Carga Simple.
+                 */
                 mostrarPagoDebitoAutomaticoRegistro();
 
                 return;
-
             }
 
 
             agregarPagoRegistroManual();
-
         };
-
 }
 
 /*
@@ -2728,6 +3085,29 @@ async function verificarComprobanteDuplicadoRegistro(){
         );
 
 
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    const movimientoEdicionId =
+        contenido?.dataset
+            .movimientoEdicionId ||
+        "";
+
+    const cargandoEdicionMovimiento =
+        contenido?.dataset
+            .cargandoEdicionMovimiento ===
+        "true";
+
+
+    if(cargandoEdicionMovimiento){
+
+        return;
+
+    }
+
     const parametros =
         new URLSearchParams(
             {
@@ -2744,6 +3124,16 @@ async function verificarComprobanteDuplicadoRegistro(){
                     comprobanteNormalizado
             }
         );
+
+
+    if(movimientoEdicionId){
+
+        parametros.set(
+            "movimiento",
+            movimientoEdicionId
+        );
+
+    }
 
 
     try{
@@ -2906,3 +3296,1887 @@ document.addEventListener(
 
     }
 );
+
+/**
+ * Guarda las modificaciones documentales de un Movimiento
+ * ya existente.
+ *
+ * Los Pagos históricos no se reconstruyen ni se envían.
+ * La vista de actualización del backend conserva las
+ * AplicacionPago existentes y recalcula el saldo financiero.
+ */
+async function guardarEdicionMovimiento(){
+
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    const movimientoId =
+        contenido?.dataset
+            .movimientoEdicionId ||
+        "";
+
+
+    if(!movimientoId){
+
+        alert(
+            "No se pudo identificar el Movimiento a modificar."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    const tipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+
+    const proveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+
+    const centroOperativo =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+
+    const recursoOperativo =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+
+    const fechaRegistro =
+        document.getElementById(
+            "fechaRegistro"
+        );
+
+
+    const fechaVencimiento =
+        document.getElementById(
+            "fechaVencimientoRegistro"
+        );
+
+
+    const modalidadPago =
+        document.getElementById(
+            "modalidadPagoRegistro"
+        );
+
+
+    const cuentaDebito =
+        document.getElementById(
+            "cuentaDebitoRegistro"
+        );
+
+
+    const tipoComprobante =
+        document.getElementById(
+            "tipoComprobanteRegistro"
+        );
+
+
+    const puntoVenta =
+        document.getElementById(
+            "puntoVentaComprobanteRegistro"
+        );
+
+
+    const numeroComprobante =
+        document.getElementById(
+            "numeroComprobanteRegistro"
+        );
+
+
+    const neto =
+        document.getElementById(
+            "neto"
+        );
+
+
+    const exento =
+        document.getElementById(
+            "exento"
+        );
+
+
+    const iva21 =
+        document.getElementById(
+            "iva21"
+        );
+
+
+    const iva27 =
+        document.getElementById(
+            "iva27"
+        );
+
+
+    const iva105 =
+        document.getElementById(
+            "iva105"
+        );
+
+
+    const recargos =
+        document.getElementById(
+            "recargosIntereses"
+        );
+
+
+    const ajuste =
+        document.getElementById(
+            "ajuste"
+        );
+
+
+    const percepcionIIBB =
+        document.getElementById(
+            "percepcionIIBB"
+        );
+
+
+    const percepcionIVA =
+        document.getElementById(
+            "percepcionIVA"
+        );
+
+
+    const percepcionGanancias =
+        document.getElementById(
+            "percepcionGanancias"
+        );
+
+
+    const percepcionTasas =
+        document.getElementById(
+            "percepcionTasasMunicipales"
+        );
+
+
+    const totalRegistro =
+        document.getElementById(
+            "total_registro"
+        );
+
+
+    const archivoFactura =
+        document.getElementById(
+            "archivoFacturaRegistro"
+        );
+
+
+    /*
+     * =========================================
+     * VALIDACIONES GENERALES
+     * =========================================
+     */
+
+    if(
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !tipoGasto ||
+        !tipoGasto.value
+    ){
+
+        alert(
+            "Seleccione un tipo de gasto."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !proveedor ||
+        !proveedor.value
+    ){
+
+        alert(
+            "Seleccione un proveedor."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !fechaRegistro ||
+        !fechaRegistro.value
+    ){
+
+        alert(
+            "Ingrese la fecha del registro."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !tipoComprobante ||
+        !tipoComprobante.value
+    ){
+
+        alert(
+            "Seleccione un tipo de comprobante."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * COMPROBANTE
+     * =========================================
+     *
+     * Un comprobante legado puede conservarse
+     * exactamente como fue persistido.
+     *
+     * Si el usuario modifica su identificación,
+     * debe utilizar el formato vigente.
+     * =========================================
+     */
+
+    const comprobanteOriginal =
+        contenido?.dataset
+            .comprobanteOriginal ||
+        "";
+
+
+    const comprobanteLegado =
+        contenido?.dataset
+            .comprobanteLegado ===
+        "true";
+
+
+    const tipoComprobanteOriginal =
+        contenido?.dataset
+            .tipoComprobanteOriginal ||
+        "";
+
+
+    let puntoVentaIngresado =
+        (
+            puntoVenta?.value ||
+            ""
+        ).trim();
+
+
+    let numeroIngresado =
+        (
+            numeroComprobante?.value ||
+            ""
+        ).trim();
+
+
+    let comprobanteEnviar =
+        "";
+
+
+    const conservaLegado =
+        comprobanteLegado &&
+        puntoVentaIngresado === "" &&
+        numeroIngresado ===
+            comprobanteOriginal &&
+        tipoComprobante.value ===
+            tipoComprobanteOriginal;
+
+
+    if(conservaLegado){
+
+        comprobanteEnviar =
+            comprobanteOriginal;
+
+    }else{
+
+        if(
+            !/^\d{1,4}$/.test(
+                puntoVentaIngresado
+            )
+        ){
+
+            alert(
+                "Ingrese un punto de venta válido."
+            );
+
+            puntoVenta?.focus();
+
+            return;
+
+        }
+
+
+        if(
+            !/^\d{1,8}$/.test(
+                numeroIngresado
+            )
+        ){
+
+            alert(
+                "Ingrese un número de comprobante válido."
+            );
+
+            numeroComprobante?.focus();
+
+            return;
+
+        }
+
+
+        puntoVentaIngresado =
+            puntoVentaIngresado.padStart(
+                4,
+                "0"
+            );
+
+
+        numeroIngresado =
+            numeroIngresado.padStart(
+                8,
+                "0"
+            );
+
+
+        if(puntoVenta){
+
+            puntoVenta.value =
+                puntoVentaIngresado;
+
+        }
+
+
+        if(numeroComprobante){
+
+            numeroComprobante.value =
+                numeroIngresado;
+
+        }
+
+
+        comprobanteEnviar =
+            puntoVentaIngresado +
+            "-" +
+            numeroIngresado;
+
+    }
+
+
+    /*
+     * =========================================
+     * PREVISIÓN DE PAGO
+     * =========================================
+     */
+
+    if(
+        !modalidadPago ||
+        (
+            modalidadPago.value !==
+                "Manual" &&
+            modalidadPago.value !==
+                "DebitoAutomatico"
+        )
+    ){
+
+        alert(
+            "Seleccione una forma prevista de pago válida."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        modalidadPago.value ===
+            "DebitoAutomatico" &&
+        (
+            !cuentaDebito ||
+            !cuentaDebito.value
+        )
+    ){
+
+        alert(
+            "Seleccione la cuenta prevista para el débito automático."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * TOTAL
+     * =========================================
+     */
+
+    const total =
+        Number(
+            totalRegistro?.dataset
+                .valorNumerico ||
+            0
+        );
+
+
+    if(
+        !Number.isFinite(total) ||
+        total <= 0
+    ){
+
+        alert(
+            "El total del registro debe ser mayor a cero."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * FORM DATA
+     * =========================================
+     */
+
+    const datos =
+        new FormData();
+
+
+    datos.append(
+        "empresa",
+        empresa.value
+    );
+
+
+    datos.append(
+        "movimiento",
+        movimientoId
+    );
+
+
+    datos.append(
+        "tipo_gasto",
+        tipoGasto.value
+    );
+
+
+    datos.append(
+        "proveedor",
+        proveedor.value
+    );
+
+
+    datos.append(
+        "centro_operativo",
+        centroOperativo?.value || ""
+    );
+
+
+    datos.append(
+        "recurso_operativo",
+        recursoOperativo?.value || ""
+    );
+
+
+    datos.append(
+        "fecha_registro",
+        fechaRegistro.value
+    );
+
+
+    datos.append(
+        "fecha_vencimiento",
+        fechaVencimiento?.value || ""
+    );
+
+
+    datos.append(
+        "modalidad_pago",
+        modalidadPago.value
+    );
+
+
+    datos.append(
+        "cuenta_debito",
+        modalidadPago.value ===
+            "DebitoAutomatico"
+            ? (
+                cuentaDebito?.value ||
+                ""
+            )
+            : ""
+    );
+
+
+    datos.append(
+        "tipo_comprobante",
+        tipoComprobante.value
+    );
+
+
+    datos.append(
+        "numero_comprobante",
+        comprobanteEnviar
+    );
+
+
+    datos.append(
+        "neto_gravado",
+        String(
+            leerImporte(
+                neto?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "no_gravado_exento",
+        String(
+            leerImporte(
+                exento?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "iva_21",
+        String(
+            leerImporte(
+                iva21?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "iva_27",
+        String(
+            leerImporte(
+                iva27?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "iva_105",
+        String(
+            leerImporte(
+                iva105?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "recargos_intereses",
+        String(
+            leerImporte(
+                recargos?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "ajuste_redondeo",
+        String(
+            leerImporte(
+                ajuste?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "percepcion_iibb",
+        String(
+            leerImporte(
+                percepcionIIBB?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "percepcion_iva",
+        String(
+            leerImporte(
+                percepcionIVA?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "percepcion_ganancias",
+        String(
+            leerImporte(
+                percepcionGanancias?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "percepcion_tasas_municipales",
+        String(
+            leerImporte(
+                percepcionTasas?.value
+            )
+        )
+    );
+
+
+    datos.append(
+        "total",
+        String(
+            total
+        )
+    );
+
+
+    if(
+        archivoFactura &&
+        archivoFactura.files &&
+        archivoFactura.files.length > 0
+    ){
+
+        datos.append(
+            "archivo",
+            archivoFactura.files[0]
+        );
+
+    }
+
+
+    const csrfToken =
+        document.querySelector(
+            "[name=csrfmiddlewaretoken]"
+        )?.value;
+
+
+    /*
+     * =========================================
+     * ACTUALIZAR
+     * =========================================
+     */
+
+    try{
+
+        const respuesta =
+            await fetch(
+                "/movimientos/actualizar/",
+                {
+                    method:
+                        "POST",
+
+                    headers:
+                        csrfToken
+                            ? {
+                                "X-CSRFToken":
+                                    csrfToken
+                            }
+                            : {},
+
+                    body:
+                        datos
+                }
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo actualizar el Movimiento."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            resultado.mensaje ||
+            "Movimiento actualizado correctamente."
+        );
+
+
+        /*
+         * Volvemos al origen.
+         *
+         * Próximos Vencimientos realizará una
+         * consulta nueva al backend, por lo que
+         * saldo, estado, subtotales y pertenencia
+         * al filtro se recalculan.
+         */
+        await volverAProximosVencimientos();
+
+
+    }catch(error){
+
+        console.error(
+            "Error actualizando Movimiento:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al actualizar el Movimiento."
+        );
+
+    }
+
+}
+
+/*
+ * =========================================
+ * EDICIÓN DESDE PRÓXIMOS VENCIMIENTOS
+ * =========================================
+ *
+ * Abre Carga Simple utilizando un Movimiento
+ * ya persistido.
+ *
+ * En esta primera etapa solamente se realiza
+ * la lectura y precarga.
+ *
+ * El guardado permanece bloqueado hasta que
+ * exista el endpoint específico de actualización,
+ * evitando crear accidentalmente otro Movimiento.
+ */
+
+
+/**
+ * Espera a que los datos auxiliares de Carga Simple
+ * hayan terminado de cargarse antes de precargar
+ * un Movimiento existente.
+ */
+async function esperarCargaSimpleParaEdicion(){
+
+    const limite =
+        Date.now() + 5000;
+
+
+    while(Date.now() < limite){
+
+        const tipoGasto =
+            document.getElementById(
+                "tipoGastoRegistro"
+            );
+
+
+        const centro =
+            document.getElementById(
+                "centroOperativoRegistro"
+            );
+
+
+        if(
+            tipoGasto &&
+            tipoGasto.options.length > 1 &&
+            centro &&
+            centro.options.length > 1
+        ){
+
+            return true;
+
+        }
+
+
+        await new Promise(
+            function(resolve){
+
+                window.setTimeout(
+                    resolve,
+                    50
+                );
+
+            }
+        );
+
+    }
+
+
+    return false;
+
+}
+
+
+/**
+ * Asigna un importe recibido desde backend a
+ * un campo monetario de Carga Simple.
+ */
+function asignarImporteEdicionRegistro(
+    campoId,
+    valor
+){
+
+    const campo =
+        document.getElementById(
+            campoId
+        );
+
+
+    if(!campo){
+
+        return;
+
+    }
+
+
+    const numero =
+        Number(
+            valor || 0
+        );
+
+
+    if(
+        typeof formatearImporte ===
+        "function"
+    ){
+
+        campo.value =
+            formatearImporte(
+                numero
+            );
+
+        return;
+
+    }
+
+
+    campo.value =
+        String(
+            numero
+        );
+
+}
+
+
+/**
+ * Abre Carga Simple y precarga un Movimiento
+ * solicitado desde Próximos Vencimientos.
+ *
+ * El Movimiento queda identificado como edición.
+ * Los Pagos históricos solamente se muestran como
+ * resumen y nunca se reconstruyen como borradores.
+ */
+async function abrirCargaSimpleEdicionMovimiento(
+    movimientoId
+){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    let datos;
+
+
+    try{
+
+        const parametros =
+            new URLSearchParams(
+                {
+                    empresa:
+                        empresa.value,
+
+                    movimiento:
+                        String(
+                            movimientoId
+                        )
+                }
+            );
+
+
+        const respuesta =
+            await fetch(
+                "/movimientos/edicion/?" +
+                parametros.toString()
+            );
+
+
+        datos =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !datos.ok ||
+            !datos.movimiento
+        ){
+
+            alert(
+                datos.mensaje ||
+                "No se pudo cargar el Movimiento."
+            );
+
+            return;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error obteniendo Movimiento para edición:",
+            error
+        );
+
+
+        alert(
+            "No se pudo cargar el Movimiento."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Recién destruimos la pantalla de Vencimientos
+     * cuando sabemos que el Movimiento pudo leerse.
+     */
+    mostrarCargaSimple();
+
+
+    const formularioListo =
+        await esperarCargaSimpleParaEdicion();
+
+
+    if(!formularioListo){
+
+        console.error(
+            "Carga Simple no terminó de inicializarse para edición."
+        );
+
+
+        alert(
+            "No se pudo preparar Carga Simple."
+        );
+
+        return;
+
+    }
+
+
+    const movimiento =
+        datos.movimiento;
+
+
+    /*
+    * =========================================
+    * CONTEXTO DE EDICIÓN
+    * =========================================
+    *
+    * El identificador del Movimiento debe quedar
+    * establecido antes de precargar cualquier campo.
+    *
+    * De esta manera, si la precarga dispara una
+    * verificación temprana de comprobante, el backend
+    * puede excluir correctamente al propio Movimiento.
+    */
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    if(contenido){
+
+        contenido.dataset.movimientoEdicionId =
+            String(
+                movimiento.id
+            );
+
+        contenido.dataset.cargandoEdicionMovimiento =
+            "true";
+
+    }
+
+
+    /*
+    * =========================================
+    * TIPO DE GASTO / PROVEEDOR
+    * =========================================
+     */
+
+    const tipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+
+    if(tipoGasto){
+
+        tipoGasto.value =
+            String(
+                movimiento.tipo_gasto_id || ""
+            );
+
+
+        actualizarProveedoresPorTipoGasto();
+
+    }
+
+
+    const proveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+
+    if(proveedor){
+
+        proveedor.value =
+            String(
+                movimiento.proveedor_id || ""
+            );
+
+    }
+
+
+    /*
+     * =========================================
+     * CENTRO / RECURSO
+     * =========================================
+     */
+
+    const centro =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+
+    if(centro){
+
+        centro.value =
+            String(
+                movimiento.centro_operativo_id || ""
+            );
+
+
+        actualizarRecursosPorCentroOperativo();
+
+    }
+
+
+    const recurso =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+
+    if(recurso){
+
+        recurso.value =
+            String(
+                movimiento.recurso_operativo_id || ""
+            );
+
+    }
+
+
+    /*
+     * =========================================
+     * DATOS DOCUMENTALES
+     * =========================================
+     */
+
+    const fechaRegistro =
+        document.getElementById(
+            "fechaRegistro"
+        );
+
+
+    const fechaVencimiento =
+        document.getElementById(
+            "fechaVencimientoRegistro"
+        );
+
+
+    const tipoComprobante =
+        document.getElementById(
+            "tipoComprobanteRegistro"
+        );
+
+
+    const puntoVenta =
+        document.getElementById(
+            "puntoVentaComprobanteRegistro"
+        );
+
+
+    const numeroComprobante =
+        document.getElementById(
+            "numeroComprobanteRegistro"
+        );
+
+
+    if(fechaRegistro){
+
+        fechaRegistro.value =
+            movimiento.fecha_registro || "";
+
+    }
+
+
+    if(fechaVencimiento){
+
+        fechaVencimiento.value =
+            movimiento.fecha_vencimiento || "";
+
+    }
+
+
+    if(tipoComprobante){
+
+        tipoComprobante.value =
+            movimiento.tipo_comprobante || "";
+
+    }
+
+
+    if(puntoVenta){
+
+        puntoVenta.value =
+            movimiento.punto_venta || "";
+
+    }
+
+
+    if(numeroComprobante){
+
+        numeroComprobante.value =
+            movimiento.numero_comprobante || "";
+
+    }
+
+
+    /*
+     * =========================================
+     * IMPORTES
+     * =========================================
+     */
+
+    asignarImporteEdicionRegistro(
+        "neto",
+        movimiento.neto_gravado
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "exento",
+        movimiento.no_gravado_exento
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "iva21",
+        movimiento.iva_21
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "iva27",
+        movimiento.iva_27
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "iva105",
+        movimiento.iva_105
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "recargosIntereses",
+        movimiento.recargos_intereses
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "ajuste",
+        movimiento.ajuste_redondeo
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "percepcionIIBB",
+        movimiento.percepcion_iibb
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "percepcionIVA",
+        movimiento.percepcion_iva
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "percepcionGanancias",
+        movimiento.percepcion_ganancias
+    );
+
+
+    asignarImporteEdicionRegistro(
+        "percepcionTasasMunicipales",
+        movimiento.percepcion_tasas_municipales
+    );
+
+
+    if(
+        typeof calcularTotalPercepciones ===
+        "function"
+    ){
+
+        calcularTotalPercepciones();
+
+    }
+
+
+    if(
+        typeof calcularTotalRegistro ===
+        "function"
+    ){
+
+        calcularTotalRegistro();
+
+    }
+
+
+    /*
+     * =========================================
+     * PREVISIÓN DE PAGO
+     * =========================================
+     */
+
+    const modalidad =
+        document.getElementById(
+            "modalidadPagoRegistro"
+        );
+
+
+    const campoCuenta =
+        document.getElementById(
+            "campoCuentaDebitoRegistro"
+        );
+
+
+    const cuenta =
+        document.getElementById(
+            "cuentaDebitoRegistro"
+        );
+
+
+    if(modalidad){
+
+        modalidad.value =
+            movimiento.modalidad_pago ||
+            "Manual";
+
+    }
+
+
+    if(
+        modalidad &&
+        modalidad.value ===
+        "DebitoAutomatico"
+    ){
+
+        if(campoCuenta){
+
+            campoCuenta.style.visibility =
+                "visible";
+
+            campoCuenta.style.pointerEvents =
+                "auto";
+
+        }
+
+
+        if(cuenta){
+
+            cuenta.disabled =
+                false;
+
+        }
+
+
+        await cargarCuentasDebitoRegistro();
+
+
+        if(cuenta){
+
+            cuenta.value =
+                String(
+                    movimiento.cuenta_debito_id || ""
+                );
+
+        }
+
+    }else{
+
+        if(campoCuenta){
+
+            campoCuenta.style.visibility =
+                "hidden";
+
+            campoCuenta.style.pointerEvents =
+                "none";
+
+        }
+
+
+        if(cuenta){
+
+            cuenta.disabled =
+                true;
+
+            cuenta.value =
+                "";
+
+        }
+
+    }
+
+
+    actualizarBotonPagoSegunModalidad();
+
+
+    /*
+     * =========================================
+     * IDENTIFICACIÓN DEL MODO EDICIÓN
+     * =========================================
+     */
+
+
+    if(contenido){
+
+        contenido.dataset.movimientoEdicionId =
+            String(
+                movimiento.id
+            );
+
+        contenido.dataset.origenEdicion =
+            "proximos_vencimientos";
+
+        contenido.dataset.comprobanteOriginal =
+            movimiento.comprobante_original || "";
+
+        contenido.dataset.comprobanteLegado =
+            movimiento.comprobante_legado
+                ? "true"
+                : "false";
+
+        contenido.dataset.tipoComprobanteOriginal =
+            movimiento.tipo_comprobante || "";
+
+        contenido.dataset.saldoPendienteEdicion =
+            String(
+                movimiento.saldo_pendiente || "0"
+            );
+
+        contenido.dataset.modalidadPagoOriginal =
+            movimiento.modalidad_pago || "";
+    }
+
+
+    /*
+     * =========================================
+     * ESTADO FINANCIERO EXISTENTE
+     * =========================================
+     *
+     * Los Pagos persistidos no son borradores.
+     * Solamente mostramos su efecto financiero.
+     */
+
+    const listaPagos =
+        document.getElementById(
+            "listaPagosRegistro"
+        );
+
+
+    if(listaPagos){
+
+        listaPagos.innerHTML = `
+
+            <div
+                style="
+                    background:#171c26;
+                    border:1px solid #252c3d;
+                    border-radius:18px;
+                    padding:18px 20px;
+                "
+            >
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:20px;
+                        flex-wrap:wrap;
+                    "
+                >
+
+                    <span>
+                        Aplicado anteriormente:
+                        <strong>
+                            ${
+                                formatearImporteVencimiento(
+                                    movimiento.total_aplicado
+                                )
+                            }
+                        </strong>
+                    </span>
+
+                    <span>
+                        Saldo pendiente:
+                        <strong>
+                            ${
+                                formatearImporteVencimiento(
+                                    movimiento.saldo_pendiente
+                                )
+                            }
+                        </strong>
+                    </span>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * ACCIONES DE EDICIÓN
+     * =========================================
+     *
+     * Guardar cambios ya utiliza el endpoint
+     * específico de actualización.
+     *
+     * Registrar Pago y Plan de Pago continúan
+     * bloqueados hasta implementar sus circuitos
+     * financieros específicos.
+     */
+
+    const botonGuardar =
+        document.getElementById(
+            "btnGuardarRegistro"
+        );
+
+
+    const botonAgregarPago =
+        document.getElementById(
+            "btnAgregarPagoRegistro"
+        );
+
+
+    const botonPlan =
+        document.getElementById(
+            "btnPlanPagoRegistro"
+        );
+
+
+    const contenedorAcciones =
+        botonGuardar
+            ? botonGuardar.parentElement
+            : null;
+
+
+    if(botonGuardar){
+
+        botonGuardar.disabled =
+            false;
+
+        botonGuardar.textContent =
+            "Guardar cambios";
+
+    }
+
+
+    if(botonAgregarPago){
+
+        botonAgregarPago.disabled =
+            movimiento.modalidad_pago !==
+            "DebitoAutomatico";
+
+        if(
+            movimiento.modalidad_pago ===
+            "DebitoAutomatico"
+        ){
+
+            botonAgregarPago.textContent =
+                "Registrar Pago";
+        }
+    }
+
+
+    if(botonPlan){
+
+        botonPlan.disabled =
+            true;
+
+    }
+
+
+    /*
+     * =========================================
+     * CANCELAR / VOLVER
+     * =========================================
+     */
+
+    if(contenedorAcciones){
+
+        const botonCancelar =
+            document.createElement(
+                "button"
+            );
+
+
+        botonCancelar.type =
+            "button";
+
+        botonCancelar.id =
+            "btnCancelarEdicionMovimiento";
+
+        botonCancelar.className =
+            "action-btn";
+
+        botonCancelar.textContent =
+            "Cancelar";
+
+        botonCancelar.style.height =
+            "52px";
+
+
+        botonCancelar.addEventListener(
+            "click",
+            function(){
+
+                volverAProximosVencimientos();
+
+            }
+        );
+
+
+        /*
+         * El contenedor original tiene tres columnas.
+         * En edición usamos cuatro acciones.
+         */
+        contenedorAcciones.style.gridTemplateColumns =
+            "1fr 1fr 1fr 1fr";
+
+
+        contenedorAcciones.appendChild(
+            botonCancelar
+        );
+
+    }
+
+
+    /*
+     * Dejamos el formulario arriba para que el
+     * usuario vea inmediatamente el registro.
+     */
+
+    const tarjeta =
+        contenido?.querySelector(
+            ".card"
+        );
+
+
+    if(tarjeta){
+
+        posicionarMainEnElemento(
+            tarjeta
+        );
+
+    }
+
+    /*
+    * =========================================
+    * FIN DE PRECARGA DE EDICIÓN
+    * =========================================
+    *
+    * A partir de este punto las modificaciones
+    * corresponden a acciones reales del usuario,
+    * por lo que vuelve a habilitarse la verificación
+    * temprana de comprobantes duplicados.
+    */
+    if(contenido){
+
+        contenido.dataset.cargandoEdicionMovimiento =
+            "false";
+
+    }
+
+}
+
+/**
+ * Vuelve desde la edición de Carga Simple hacia
+ * Próximos Vencimientos.
+ *
+ * Se restaura únicamente el contexto de navegación.
+ * Los movimientos y saldos se consultan nuevamente
+ * al backend.
+ */
+async function volverAProximosVencimientos(){
+
+    const contexto =
+        window.contextoRetornoProximosVencimientos;
+
+
+    /*
+     * Si por algún motivo no existe contexto,
+     * volvemos al módulo con su estado inicial.
+     */
+    if(!contexto){
+
+        if(
+            typeof mostrarProximosVencimientos ===
+            "function"
+        ){
+
+            await mostrarProximosVencimientos();
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+     * Reconstruimos la pantalla completa.
+     */
+    construirEstructuraProximosVencimientos();
+
+    conectarControlesProximosVencimientos();
+
+
+    const periodo =
+        contexto.periodo ||
+        "alertas";
+
+
+    /*
+     * Restauramos el segmento visual activo.
+     */
+    const botonesPorPeriodo = {
+
+        alertas:
+            "btnVencimientosAlertas",
+
+        hoy:
+            "btnVencimientosHoy",
+
+        semana:
+            "btnVencimientosSemana",
+
+        rango:
+            "btnVencimientosRango"
+
+    };
+
+
+    const botonActivo =
+        document.getElementById(
+            botonesPorPeriodo[
+                periodo
+            ] ||
+            "btnVencimientosAlertas"
+        );
+
+
+    if(botonActivo){
+
+        marcarSegmentoVencimientosActivo(
+            botonActivo
+        );
+
+    }
+
+
+    const bloqueRango =
+        document.getElementById(
+            "rangoFechasVencimientos"
+        );
+
+
+    const fechaDesde =
+        document.getElementById(
+            "fechaDesdeVencimientos"
+        );
+
+
+    const fechaHasta =
+        document.getElementById(
+            "fechaHastaVencimientos"
+        );
+
+
+    if(periodo === "rango"){
+
+        if(bloqueRango){
+
+            bloqueRango.style.display =
+                "grid";
+
+        }
+
+
+        if(fechaDesde){
+
+            fechaDesde.value =
+                contexto.fechaDesde || "";
+
+        }
+
+
+        if(fechaHasta){
+
+            fechaHasta.value =
+                contexto.fechaHasta || "";
+
+        }
+
+    }else{
+
+        if(bloqueRango){
+
+            bloqueRango.style.display =
+                "none";
+
+        }
+
+    }
+
+
+    /*
+     * Siempre recargamos datos reales.
+     */
+    await cargarProximosVencimientos(
+        periodo,
+        contexto.fechaDesde || "",
+        contexto.fechaHasta || ""
+    );
+
+
+    /*
+     * Restauramos el estado abierto/cerrado
+     * del bloque Vencidos después de renderizar.
+     */
+    const btnToggleVencidos =
+        document.getElementById(
+            "btnToggleVencidos"
+        );
+
+
+    const contenidoVencidos =
+        document.getElementById(
+            "contenidoVencidos"
+        );
+
+
+    const iconoToggleVencidos =
+        document.getElementById(
+            "iconoToggleVencidos"
+        );
+
+
+    if(
+        btnToggleVencidos &&
+        contenidoVencidos &&
+        contexto.vencidosExpandido === false
+    ){
+
+        btnToggleVencidos.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+
+        contenidoVencidos.classList.add(
+            "oculto"
+        );
+
+
+        if(iconoToggleVencidos){
+
+            iconoToggleVencidos.textContent =
+                "⌄";
+
+        }
+
+    }
+
+
+    /*
+     * El contexto se conserva mientras el usuario
+     * permanezca en este circuito.
+     *
+     * Cuando más adelante Guardar/Pagar/Plan usen
+     * esta misma función, podrán volver con el mismo
+     * comportamiento.
+     */
+}

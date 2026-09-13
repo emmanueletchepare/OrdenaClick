@@ -50,82 +50,6 @@ body{
    SIDEBAR
 ========================= */
 
-.sidebar{
-
-    width:290px;
-
-    height:100vh;
-
-    background:var(--sidebar);
-
-    border-right:1px solid #242938;
-
-    display:flex;
-
-    flex-direction:column;
-
-    justify-content:space-between;
-
-    padding:28px 22px;
-
-    overflow-y:auto;
-
-    overflow-x:hidden;
-
-    flex-shrink:0;
-}
-
-.logo{
-
-    font-size:28px;
-
-    font-weight:700;
-
-    margin-bottom:40px;
-}
-
-.logo span{
-    color:var(--primary);
-}
-
-.user-box{
-
-    background:var(--panel-2);
-
-    border:1px solid #2a3142;
-
-    border-radius:16px;
-
-    padding:18px;
-
-    margin-bottom:24px;
-}
-
-.user-label{
-
-    font-size:12px;
-
-    color:var(--muted);
-
-    margin-bottom:6px;
-}
-
-.user-name{
-
-    font-size:16px;
-
-    font-weight:600;
-}
-
-.menu{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:12px;
-}
-
 .sidebar-btn{
 
     width:100%;
@@ -218,7 +142,6 @@ body{
 
     border-color:var(--primary);
 }
-
 /* =========================
    MAIN
 ========================= */
@@ -761,23 +684,6 @@ body{
         overflow-x:hidden;
     }
 
-
-    .sidebar{
-
-        width:100%;
-
-        height:auto;
-
-        overflow:visible;
-
-        border-right:none;
-
-        border-bottom:1px solid #242938;
-
-        flex-shrink:1;
-    }
-
-
     .main{
 
         height:auto;
@@ -801,7 +707,27 @@ body{
 
 <link
     rel="stylesheet"
-    href="{% static 'css/vencimientos.css' %}?v=1"
+    href="{% static 'css/sidebar.css' %}?v=2"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/navegacion_modulos.css' %}?v=5"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/abms.css' %}?v=2"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/vencimientos.css' %}?v=3"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/llamador_alertas.css' %}?v=1"
 >
 
 </head>
@@ -837,160 +763,528 @@ Usuario
 
 </div>
 
+
 {% if not empresa_actual %}
 
-<div class="menu" id="menu-principal">
+<div
+    class="menu"
+    id="menu-principal"
+>
 
 <button
-class="sidebar-btn"
-type="button"
-onclick="mostrarEmpresas()">
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarEmpresas()"
+>
 
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="3"
+        y="5"
+        width="18"
+        height="14"
+        rx="2"
+    ></rect>
+    <path d="M3 10h18"></path>
+    <path d="M8 15h3"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Seleccionar empresa
+</span>
 
 </button>
+
 
 <button
-class="sidebar-btn"
-type="button"
-onclick="mostrarAltaEmpresa()">
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarAltaEmpresa()"
+>
 
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M12 5v14"></path>
+    <path d="M5 12h14"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Alta nueva empresa
+</span>
 
 </button>
+
+
+<div class="sidebar-separator"></div>
+
 
 <a
-href="{% url 'home' %}"
-class="sidebar-btn"
-style="text-decoration:none; display:flex; align-items:center; justify-content:center;">
+    href="{% url 'home' %}"
+    class="
+        sidebar-nav-btn
+        sidebar-nav-secondary
+    "
+>
 
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M9 18l-6-6 6-6"></path>
+    <path d="M3 12h18"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Volver a roles
+</span>
 
 </a>
 
-<a
-href="{% url 'logout' %}"
-class="sidebar-btn"
-style="text-decoration:none; display:flex; align-items:center; justify-content:center;">
 
+<a
+    href="{% url 'logout' %}"
+    class="
+        sidebar-nav-btn
+        sidebar-nav-danger
+    "
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M10 17l5-5-5-5"></path>
+    <path d="M15 12H3"></path>
+    <path
+        d="
+            M15 3h4
+            a2 2 0 0 1 2 2
+            v14
+            a2 2 0 0 1-2 2
+            h-4
+        "
+    ></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Salir
+</span>
 
 </a>
 
 </div>
 
 {% endif %}
+
 
 {% if empresa_actual %}
 
-<div class="menu" id="menu-empresa">
+<div
+    class="menu"
+    id="menu-empresa"
+>
+
 
 <button
-class="sidebar-btn"
-onclick="mostrarSubmenu('registros')">
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarSubmenu('registros')"
+>
 
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="4"
+        y="3"
+        width="16"
+        height="18"
+        rx="2"
+    ></rect>
+    <path d="M8 8h8"></path>
+    <path d="M8 12h8"></path>
+    <path d="M8 16h5"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Registros
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarContenido('Dashboard')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Dashboard')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="3"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="14"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="3"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="14"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Dashboard
+</span>
 
 </button>
 
-<button
-id="btnProximosVencimientos"
-type="button"
-class="sidebar-btn">
 
+<button
+    id="btnProximosVencimientos"
+    type="button"
+    class="sidebar-nav-btn"
+    data-sidebar-item
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="3"
+        y="5"
+        width="18"
+        height="16"
+        rx="2"
+    ></rect>
+    <path d="M8 3v4"></path>
+    <path d="M16 3v4"></path>
+    <path d="M3 10h18"></path>
+    <path d="M12 14v3"></path>
+    <path d="M12 17h2"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Próximos vencimientos
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarContenido('Reportes')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Reportes')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 20V10"></path>
+    <path d="M10 20V4"></path>
+    <path d="M16 20v-7"></path>
+    <path d="M22 20H2"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Reportes
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarContenido('Estado de Resultados')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="
+        mostrarContenido(
+            'Estado de Resultados'
+        )
+    "
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 19V9"></path>
+    <path d="M10 19V5"></path>
+    <path d="M16 19v-7"></path>
+    <path d="M3 19h18"></path>
+    <path d="M18 8l2-2"></path>
+    <path d="M20 6v4"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Estado de Resultados
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarContenido('Balance')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Balance')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M12 3v18"></path>
+    <path d="M5 6h14"></path>
+    <path d="M7 6l-4 7h8L7 6z"></path>
+    <path d="M17 6l-4 7h8l-4-7z"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Balance
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarSubmenu('herramientas')">
 
+<div class="sidebar-separator"></div>
+
+
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarSubmenu('herramientas')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path
+        d="
+            M14.7 6.3
+            a4 4 0 0 0-5 5
+            L3 18
+            l3 3
+            6.7-6.7
+            a4 4 0 0 0 5-5
+        "
+    ></path>
+    <path d="M15 4l5 5"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Herramientas
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarSubmenu('abms')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarSubmenu('abms')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 7h16"></path>
+    <path d="M4 12h16"></path>
+    <path d="M4 17h16"></path>
+    <circle cx="7" cy="7" r="1"></circle>
+    <circle cx="12" cy="12" r="1"></circle>
+    <circle cx="17" cy="17" r="1"></circle>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 ABMs
+</span>
 
 </button>
 
-<button
-class="sidebar-btn"
-onclick="mostrarSubmenu('configuracion')">
 
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="
+        mostrarSubmenu(
+            'configuracion'
+        )
+    "
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <circle
+        cx="12"
+        cy="12"
+        r="3"
+    ></circle>
+    <path
+        d="
+            M19.4 15
+            a1.7 1.7 0 0 0 .3 1.9
+            l.1.1-2 3.4-.2-.1
+            a1.7 1.7 0 0 0-2-.1
+            1.7 1.7 0 0 0-1 .9
+            V21h-4v-.1
+            a1.7 1.7 0 0 0-1-.9
+            1.7 1.7 0 0 0-2 .1
+            l-.2.1-2-3.4.1-.1
+            a1.7 1.7 0 0 0 .3-1.9
+            1.7 1.7 0 0 0-1.5-1
+            H4v-4h.1
+            a1.7 1.7 0 0 0 1.5-1
+            1.7 1.7 0 0 0-.3-1.9
+            l-.1-.1 2-3.4.2.1
+            a1.7 1.7 0 0 0 2 .1
+            1.7 1.7 0 0 0 1-.9
+            V3h4v.1
+            a1.7 1.7 0 0 0 1 .9
+            1.7 1.7 0 0 0 2-.1
+            l.2-.1 2 3.4-.1.1
+            a1.7 1.7 0 0 0-.3 1.9
+            1.7 1.7 0 0 0 1.5 1
+            h.1v4h-.1
+            a1.7 1.7 0 0 0-1.3 1.2
+        "
+    ></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Configuración
-
-<button
-type="button"
-class="sidebar-btn"
-onclick="console.log('CAMBIAR'); mostrarEmpresas();">
-
-Cambiar empresa
+</span>
 
 </button>
+
+
+<div class="sidebar-separator"></div>
+
+
+<button
+    type="button"
+    class="
+        sidebar-nav-btn
+        sidebar-nav-secondary
+    "
+    onclick="mostrarEmpresas()"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 21V5h12v16"></path>
+    <path d="M8 9h4"></path>
+    <path d="M8 13h4"></path>
+    <path d="M8 17h4"></path>
+    <path d="M16 9h4v12"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Cambiar empresa
+</span>
+
+</button>
+
 
 <a
-class="sidebar-btn"
-href="{% url 'home' %}"
-style="text-decoration:none;">
+    class="
+        sidebar-nav-btn
+        sidebar-nav-secondary
+    "
+    href="{% url 'home' %}"
+>
 
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M3 11l9-8 9 8"></path>
+    <path d="M5 10v10h14V10"></path>
+    <path d="M9 20v-6h6v6"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
 Volver al inicio
+</span>
 
 </a>
-
 
 </div>
 
 {% endif %}
+
 
 <!-- MENU EMPRESAS -->
 
 <div
-class="menu"
-id="menu-empresas"
-style="display:none;">
+    class="menu"
+    id="menu-empresas"
+    style="display:none;"
+>
 
 {% for empresa in empresas %}
 
 <a
-href="?empresa={{ empresa.id }}"
-class="sidebar-btn">
+    href="?empresa={{ empresa.id }}"
+    class="sidebar-company-btn"
+>
 
 {{ empresa.nombre_fantasia|default:empresa.razon_social }}
 
@@ -998,20 +1292,31 @@ class="sidebar-btn">
 
 {% empty %}
 
-<div class="sidebar-btn">
-
+<div class="sidebar-empty">
 Sin empresas cargadas
-
 </div>
 
 {% endfor %}
 
-<button
-class="sidebar-btn"
-type="button"
-onclick="window.location.reload()">
 
-← Volver
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    onclick="window.location.reload()"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M9 18l-6-6 6-6"></path>
+    <path d="M3 12h18"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Volver
+</span>
 
 </button>
 
@@ -1756,6 +2061,44 @@ Eliminar Empresa
 
 </main>
 
+{% if empresa_actual %}
+
+<button
+    type="button"
+    id="llamadorAlertas"
+    class="llamador-alertas"
+    aria-label="Abrir alertas"
+    title="Alertas"
+>
+    <span class="llamador-alertas-icono">
+
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path
+                d="
+                    M18 8
+                    a6 6 0 0 0-12 0
+                    c0 7-3 7-3 9
+                    h18
+                    c0-2-3-2-3-9
+                "
+            ></path>
+
+            <path
+                d="
+                    M10 21
+                    h4
+                "
+            ></path>
+        </svg>
+
+    </span>
+</button>
+
+{% endif %}
+
 <script>
 
 let origenABM = "menu";
@@ -2172,30 +2515,88 @@ function mostrarSubmenu(tipo){
 
         html = `
 
-            <button
-                class="module-card"
-                onclick="mostrarCargaSimple()"
+            <div
+                class="
+                    vencimientos-navegacion
+                    registros-navegacion
+                "
             >
-                Carga Simple
-            </button>
 
-            <button
-                class="module-card"
-            >
-                Carga Planificada
-            </button>
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-izquierda
+                    "
+                    id="btnRegistrosAnterior"
+                    aria-label="Opciones anteriores"
+                    title="Opciones anteriores"
+                >
+                    ❮
+                </button>
 
-            <button
-                class="module-card"
-            >
-                Registrar Pago
-            </button>
+                <div
+                    class="
+                        vencimientos-botonera
+                        registros-botonera
+                    "
+                    id="botoneraRegistros"
+                >
 
-            <button
-                class="module-card"
-            >
-                Modificar / Eliminar
-            </button>
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btnRegistrosComprobantes"
+                        onclick="mostrarCargaSimple()"
+                    >
+                        Comprobantes
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btn-obligaciones"
+                    >
+                        Obligaciones
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Carga Planificada
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Registrar Pago
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Modificar / Eliminar
+                    </button>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-derecha
+                    "
+                    id="btnRegistrosSiguiente"
+                    aria-label="Opciones siguientes"
+                    title="Opciones siguientes"
+                >
+                    ❯
+                </button>
+
+            </div>
 
         `;
 
@@ -2212,73 +2613,169 @@ function mostrarSubmenu(tipo){
 
         html = `
 
-            <button
-                class="module-card"
-                onclick="mostrarABMBancos('menu')"
-            >
-                Bancos
-            </button>
+            <div class="abms-grupos">
 
 
-            <button
-                type="button"
-                class="module-card"
-                onclick="mostrarABMCuentasBancarias('menu')"
-            >
-                Cuentas Bancarias
-            </button>
+                <!-- =================================
+                     ESTRUCTURA OPERATIVA
+                ================================== -->
+
+                <section class="abms-grupo">
+
+                    <div class="abms-grupo-titulo">
+                        Estructura operativa
+                    </div>
+
+                    <div
+                        class="
+                            vencimientos-navegacion
+                            abms-navegacion
+                        "
+                    >
+
+                        <div
+                            class="
+                                vencimientos-botonera
+                                abms-botonera
+                            "
+                        >
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMCentrosOperativos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Centros Operativos
+                            </button>
 
 
-            <button
-                type="button"
-                class="module-card"
-                onclick="mostrarABMTarjetas('menu')"
-            >
-                Tarjetas
-            </button>
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMRecursosOperativos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Recurso operativo
+                            </button>
 
 
-            <button
-                id="btnAbrirABMRetenciones"
-                type="button"
-                class="module-card"
-            >
-                Retenciones
-            </button>
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMProveedores(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Proveedores
+                            </button>
 
 
-            <button
-                class="module-card"
-                onclick="mostrarABMCentrosOperativos('menu')"
-            >
-                Centros Operativos
-            </button>
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMTiposGasto(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Tipos de gasto
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
 
-            <button
-                class="module-card"
-                onclick="mostrarABMProveedores('menu')"
-            >
-                Proveedores
-            </button>
+                <!-- =================================
+                     FINANZAS Y MEDIOS DE PAGO
+                ================================== -->
+
+                <section class="abms-grupo">
+
+                    <div class="abms-grupo-titulo">
+                        Finanzas y medios de pago
+                    </div>
+
+                    <div
+                        class="
+                            vencimientos-navegacion
+                            abms-navegacion
+                        "
+                    >
+
+                        <div
+                            class="
+                                vencimientos-botonera
+                                abms-botonera
+                            "
+                        >
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMBancos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Bancos
+                            </button>
 
 
-            <button
-                type="button"
-                class="module-card"
-                onclick="mostrarABMTiposGasto('menu')"
-            >
-                Tipos de gasto
-            </button>
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMCuentasBancarias(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Cuentas Bancarias
+                            </button>
 
 
-            <button
-                type="button"
-                class="module-card"
-                onclick="mostrarABMRecursosOperativos('menu')"
-            >
-                Recurso operativo
-            </button>
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMTarjetas(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Tarjetas
+                            </button>
+
+
+                            <button
+                                id="btnAbrirABMRetenciones"
+                                type="button"
+                                class="vencimientos-segmento"
+                            >
+                                Retenciones
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
 
         `;
 
@@ -2358,13 +2855,7 @@ function mostrarSubmenu(tipo){
 
     if(contenido){
 
-        contenido.innerHTML = `
-
-            <div class="empty-state">
-                Seleccione una opción
-            </div>
-
-        `;
+        contenido.innerHTML = "";
 
     }
 
@@ -19083,9 +19574,17 @@ Sí
 
 <script src="{% static 'js/retenciones.js' %}?v=1"></script>
 
-<script src="{% static 'js/carga_simple.js' %}?v=7"></script>
+<script src="{% static 'js/carga_simple.js' %}?v=15"></script>
 
-<script src="{% static 'js/vencimientos.js' %}?v=1"></script>
+<script src="{% static 'js/obligaciones.js' %}?v=1"></script>
+
+<script src="{% static 'js/navegacion_modulos.js' %}?v=1"></script>
+
+<script src="{% static 'js/sidebar.js' %}?v=1"></script>
+
+<script src="{% static 'js/vencimientos.js' %}?v=4"></script>
+
+<script src="{% static 'js/llamador_alertas.js' %}?v=2"></script>
 
 </body>
 </html>

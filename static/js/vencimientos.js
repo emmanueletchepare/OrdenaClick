@@ -259,28 +259,16 @@ function marcarSegmentoVencimientosActivo(
     botonActivo
 ){
 
-    const botones =
-        document.querySelectorAll(
-            ".vencimientos-segmento"
+    const botonera =
+        document.getElementById(
+            "botoneraVencimientos"
         );
 
-    botones.forEach(
-        function(boton){
 
-            boton.classList.remove(
-                "activo"
-            );
-
-        }
+    marcarSegmentoNavegacionActivo(
+        botonera,
+        botonActivo
     );
-
-    if(botonActivo){
-
-        botonActivo.classList.add(
-            "activo"
-        );
-
-    }
 
 }
 
@@ -301,48 +289,12 @@ function actualizarFlechasVencimientos(){
             "btnVencimientosSiguiente"
         );
 
-    if(
-        !botonera ||
-        !btnAnterior ||
-        !btnSiguiente
-    ){
-        return;
-    }
 
-    const botones =
-        botonera.querySelectorAll(
-            ".vencimientos-segmento"
-        );
-
-    const necesitaNavegacion =
-        botones.length > 4 ||
-        botonera.scrollWidth >
-            botonera.clientWidth + 2;
-
-    btnAnterior.classList.toggle(
-        "visible",
-        necesitaNavegacion
+    actualizarFlechasNavegacion(
+        botonera,
+        btnAnterior,
+        btnSiguiente
     );
-
-    btnSiguiente.classList.toggle(
-        "visible",
-        necesitaNavegacion
-    );
-
-    if(!necesitaNavegacion){
-        return;
-    }
-
-    const maximoScroll =
-        botonera.scrollWidth -
-        botonera.clientWidth;
-
-    btnAnterior.disabled =
-        botonera.scrollLeft <= 2;
-
-    btnSiguiente.disabled =
-        botonera.scrollLeft >=
-        maximoScroll - 2;
 
 }
 
@@ -356,22 +308,11 @@ function desplazarBotoneraVencimientos(
             "botoneraVencimientos"
         );
 
-    if(!botonera){
-        return;
-    }
 
-    const desplazamiento =
-        Math.max(
-            180,
-            botonera.clientWidth * 0.45
-        );
-
-    botonera.scrollBy({
-        left:
-            direccion *
-            desplazamiento,
-        behavior: "smooth"
-    });
+    desplazarBotoneraNavegacion(
+        botonera,
+        direccion
+    );
 
 }
 
@@ -749,6 +690,123 @@ async function cargarProximosVencimientos(
 
 }
 
+/**
+ * Abre un Movimiento desde Próximos Vencimientos
+ * conservando el contexto de navegación actual.
+ *
+ * El estado financiero no se conserva localmente:
+ * cuando se regrese a Vencimientos se volverá a
+ * consultar el backend.
+ */
+async function editarMovimientoDesdeVencimientos(
+    movimientoId
+){
+
+    const botonActivo =
+        document.querySelector(
+            ".vencimientos-segmento.activo"
+        );
+
+
+    let periodo =
+        "alertas";
+
+
+    if(botonActivo){
+
+        const periodosPorBoton = {
+            btnVencimientosAlertas:
+                "alertas",
+
+            btnVencimientosHoy:
+                "hoy",
+
+            btnVencimientosSemana:
+                "semana",
+
+            btnVencimientosRango:
+                "rango"
+        };
+
+
+        periodo =
+            periodosPorBoton[
+                botonActivo.id
+            ] || "alertas";
+
+    }
+
+
+    const fechaDesde =
+        document.getElementById(
+            "fechaDesdeVencimientos"
+        );
+
+
+    const fechaHasta =
+        document.getElementById(
+            "fechaHastaVencimientos"
+        );
+
+
+    const btnToggleVencidos =
+        document.getElementById(
+            "btnToggleVencidos"
+        );
+
+
+    /*
+     * Solamente guardamos contexto de navegación.
+     *
+     * Los Movimientos y saldos NO se guardan porque
+     * deberán recalcularse desde backend al regresar.
+     */
+    window.contextoRetornoProximosVencimientos = {
+
+        periodo:
+            periodo,
+
+        fechaDesde:
+            fechaDesde?.value || "",
+
+        fechaHasta:
+            fechaHasta?.value || "",
+
+        vencidosExpandido:
+            btnToggleVencidos
+                ? (
+                    btnToggleVencidos.getAttribute(
+                        "aria-expanded"
+                    ) === "true"
+                )
+                : true
+
+    };
+
+
+    if(
+        typeof abrirCargaSimpleEdicionMovimiento !==
+        "function"
+    ){
+
+        console.error(
+            "No está disponible la apertura de Carga Simple en modo edición."
+        );
+
+        alert(
+            "No se pudo abrir el Movimiento."
+        );
+
+        return;
+
+    }
+
+
+    await abrirCargaSimpleEdicionMovimiento(
+        movimientoId
+    );
+
+}
 
 function mostrarTablaProximosVencimientos(
     movimientos
@@ -759,17 +817,22 @@ function mostrarTablaProximosVencimientos(
             "estadoProximosVencimientos"
         );
 
+
     const tabla =
         document.getElementById(
             "tablaProximosVencimientos"
         );
 
+
     if(
         !estado ||
         !tabla
     ){
+
         return;
+
     }
+
 
     if(
         !Array.isArray(movimientos) ||
@@ -779,17 +842,23 @@ function mostrarTablaProximosVencimientos(
         estado.style.display =
             "block";
 
+
         estado.textContent =
             "No hay vencimientos pendientes para el período seleccionado.";
 
-        tabla.innerHTML = "";
+
+        tabla.innerHTML =
+            "";
+
 
         return;
 
     }
 
+
     estado.style.display =
         "none";
+
 
     const proximos =
         movimientos.filter(
@@ -805,6 +874,7 @@ function mostrarTablaProximosVencimientos(
             }
         );
 
+
     const vencidos =
         movimientos.filter(
             function(movimiento){
@@ -817,6 +887,7 @@ function mostrarTablaProximosVencimientos(
             }
         );
 
+
     const calcularSubtotal =
         function(lista){
 
@@ -828,11 +899,15 @@ function mostrarTablaProximosVencimientos(
                             movimiento.saldo_pendiente
                         );
 
+
                     if(
                         Number.isNaN(importe)
                     ){
+
                         return total;
+
                     }
+
 
                     return total + importe;
 
@@ -842,10 +917,13 @@ function mostrarTablaProximosVencimientos(
 
         };
 
+
     const construirFilas =
         function(lista){
 
-            let filas = "";
+            let filas =
+                "";
+
 
             lista.forEach(
                 function(movimiento){
@@ -858,6 +936,7 @@ function mostrarTablaProximosVencimientos(
                         .filter(Boolean)
                         .join(" ");
 
+
                     const modalidad =
                         movimiento.modalidad_pago ===
                         "DebitoAutomatico"
@@ -867,7 +946,9 @@ function mostrarTablaProximosVencimientos(
                                 "Manual"
                             );
 
+
                     filas += `
+
                         <tr>
 
                             <td>
@@ -885,36 +966,77 @@ function mostrarTablaProximosVencimientos(
                             </td>
 
                             <td class="importe">
+
                                 ${formatearImporteVencimiento(
                                     movimiento.total
                                 )}
+
                             </td>
 
                             <td class="importe">
+
                                 ${formatearImporteVencimiento(
                                     movimiento.total_aplicado
                                 )}
+
                             </td>
 
                             <td class="importe pendiente">
+
                                 ${formatearImporteVencimiento(
                                     movimiento.saldo_pendiente
                                 )}
+
                             </td>
 
                             <td class="modalidad">
                                 ${modalidad}
                             </td>
 
+                            <td class="vencimientos-col-acciones">
+
+                                <button
+                                    type="button"
+                                    class="vencimientos-btn-editar"
+                                    data-movimiento-id="${movimiento.id}"
+                                    title="Editar movimiento"
+                                    aria-label="Editar movimiento"
+                                >
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="
+                                                M12 20
+                                                h9
+                                                M16.5 3.5
+                                                a2.12 2.12 0 0 1 3 3
+                                                L8 18
+                                                l-4 1
+                                                l1-4
+                                                Z
+                                            "
+                                        ></path>
+                                    </svg>
+
+                                </button>
+
+                            </td>
+
                         </tr>
+
                     `;
 
                 }
             );
 
+
             return filas;
 
         };
+
 
     const construirTabla =
         function(lista){
@@ -922,14 +1044,18 @@ function mostrarTablaProximosVencimientos(
             if(lista.length === 0){
 
                 return `
+
                     <div class="vencimientos-sin-items">
                         Sin movimientos en este grupo.
                     </div>
+
                 `;
 
             }
 
+
             return `
+
                 <div class="vencimientos-tabla-contenedor">
 
                     <table class="vencimientos-tabla">
@@ -966,6 +1092,8 @@ function mostrarTablaProximosVencimientos(
                                     Modalidad
                                 </th>
 
+                                <th class="vencimientos-col-acciones"></th>
+
                             </tr>
 
                         </thead>
@@ -977,23 +1105,28 @@ function mostrarTablaProximosVencimientos(
                     </table>
 
                 </div>
+
             `;
 
         };
+
 
     const subtotalProximos =
         calcularSubtotal(
             proximos
         );
 
+
     const subtotalVencidos =
         calcularSubtotal(
             vencidos
         );
 
+
     const totalGeneral =
         subtotalProximos +
         subtotalVencidos;
+
 
     tabla.innerHTML = `
 
@@ -1022,6 +1155,7 @@ function mostrarTablaProximosVencimientos(
 
                 </div>
 
+
                 <div class="vencimientos-subtotal">
 
                     <span>
@@ -1029,14 +1163,17 @@ function mostrarTablaProximosVencimientos(
                     </span>
 
                     <strong>
+
                         ${formatearImporteVencimiento(
                             subtotalProximos
                         )}
+
                     </strong>
 
                 </div>
 
             </div>
+
 
             ${construirTabla(proximos)}
 
@@ -1073,6 +1210,7 @@ function mostrarTablaProximosVencimientos(
 
                 </span>
 
+
                 <span class="vencimientos-subtotal">
 
                     <span>
@@ -1080,9 +1218,11 @@ function mostrarTablaProximosVencimientos(
                     </span>
 
                     <strong>
+
                         ${formatearImporteVencimiento(
                             subtotalVencidos
                         )}
+
                     </strong>
 
                     <span
@@ -1096,6 +1236,7 @@ function mostrarTablaProximosVencimientos(
                 </span>
 
             </button>
+
 
             <div id="contenidoVencidos">
 
@@ -1122,28 +1263,35 @@ function mostrarTablaProximosVencimientos(
             </span>
 
             <strong>
+
                 ${formatearImporteVencimiento(
                     totalGeneral
                 )}
+
             </strong>
 
         </div>
+
     `;
+
 
     const btnToggleVencidos =
         document.getElementById(
             "btnToggleVencidos"
         );
 
+
     const contenidoVencidos =
         document.getElementById(
             "contenidoVencidos"
         );
 
+
     const iconoToggleVencidos =
         document.getElementById(
             "iconoToggleVencidos"
         );
+
 
     if(
         btnToggleVencidos &&
@@ -1159,15 +1307,18 @@ function mostrarTablaProximosVencimientos(
                         "aria-expanded"
                     ) === "true";
 
+
                 btnToggleVencidos.setAttribute(
                     "aria-expanded",
                     String(!expandido)
                 );
 
+
                 contenidoVencidos.classList.toggle(
                     "oculto",
                     expandido
                 );
+
 
                 if(iconoToggleVencidos){
 
@@ -1182,5 +1333,40 @@ function mostrarTablaProximosVencimientos(
         );
 
     }
+
+
+    const botonesEditar =
+        tabla.querySelectorAll(
+            ".vencimientos-btn-editar"
+        );
+
+
+    botonesEditar.forEach(
+        function(boton){
+
+            boton.addEventListener(
+                "click",
+                function(){
+
+                    const movimientoId =
+                        boton.dataset.movimientoId;
+
+
+                    if(!movimientoId){
+
+                        return;
+
+                    }
+
+
+                    editarMovimientoDesdeVencimientos(
+                        movimientoId
+                    );
+
+                }
+            );
+
+        }
+    );
 
 }

@@ -53,6 +53,65 @@ DIAS_ANTICIPACION_ALERTA = 3
 # SALDO DE MOVIMIENTOS
 # =========================================
 
+def validar_importe_aplicable(
+    saldo_pendiente,
+    importe_aplicar,
+):
+    """
+    Valida que una nueva aplicación sobre un destino financiero
+    no supere su saldo pendiente actual.
+
+    Permite una aplicación nula, parcial o exacta.
+
+    No permite importes negativos ni sobreaplicaciones.
+
+    La función valida exclusivamente el importe que cancela
+    obligación. Un Pago real puede contener otros importes
+    financieros que no formen parte de la aplicación, como
+    intereses por mora confirmados.
+    """
+
+    saldo_pendiente = Decimal(
+        str(
+            saldo_pendiente
+            if saldo_pendiente is not None
+            else "0.00"
+        )
+    )
+
+    importe_aplicar = Decimal(
+        str(
+            importe_aplicar
+            if importe_aplicar is not None
+            else "0.00"
+        )
+    )
+
+
+    if saldo_pendiente < Decimal("0.00"):
+
+        raise ValueError(
+            "El saldo pendiente no puede ser negativo."
+        )
+
+
+    if importe_aplicar < Decimal("0.00"):
+
+        raise ValueError(
+            "El importe a aplicar no puede ser negativo."
+        )
+
+
+    if importe_aplicar > saldo_pendiente:
+
+        raise ValueError(
+            "El importe a aplicar no puede superar "
+            "el saldo pendiente."
+        )
+
+
+    return importe_aplicar
+
 def total_aplicado_movimiento(movimiento):
     """
     Devuelve el importe total aplicado a un Movimiento.
@@ -358,3 +417,202 @@ def movimientos_en_alerta(
         empresa=empresa,
         fecha_hasta=fecha_limite,
     )
+
+def crear_pago_validado_movimiento(
+    empresa,
+    movimiento,
+    pago_datos,
+):
+    """
+    Persiste un Pago previamente validado y lo aplica
+    a un Movimiento.
+
+    La función no interpreta datos HTTP ni valida
+    formularios. Recibe exclusivamente estructuras
+    financieras ya validadas por el circuito llamador.
+
+    Crea el Pago y sus componentes asociados:
+    operaciones bancarias, tarjetas, cheques y
+    retenciones.
+
+    Finalmente crea la AplicacionPago correspondiente
+    al Movimiento.
+
+    La validación del saldo disponible debe realizarse
+    antes de invocar esta función.
+    """
+
+    from usuarios.models import (
+        AplicacionPago,
+        Cheque,
+        OperacionBancariaPago,
+        Pago,
+        RetencionPago,
+        TarjetaPago,
+    )
+
+    pago = Pago.objects.create(
+        empresa=empresa,
+        fecha=pago_datos["fecha"],
+        importe_efectivo=pago_datos[
+            "importe_efectivo"
+        ],
+    )
+
+    operaciones_creadas = []
+    tarjetas_creadas = []
+    cheques_creados = []
+    retenciones_creadas = []
+
+    for operacion_datos in pago_datos[
+        "operaciones_bancarias"
+    ]:
+        operacion = (
+            OperacionBancariaPago.objects.create(
+                pago=pago,
+                tipo_operacion=operacion_datos[
+                    "tipo_operacion"
+                ],
+                cuenta_origen=operacion_datos[
+                    "cuenta_origen"
+                ],
+                banco_destino=operacion_datos[
+                    "banco_destino"
+                ],
+                referencia_destino=operacion_datos[
+                    "referencia_destino"
+                ],
+                moneda="ARS",
+                importe=operacion_datos[
+                    "importe"
+                ],
+                fecha=operacion_datos[
+                    "fecha"
+                ],
+                comprobante=operacion_datos[
+                    "comprobante"
+                ],
+            )
+        )
+
+        operaciones_creadas.append(
+            operacion.id
+        )
+
+    for tarjeta_datos in pago_datos[
+        "tarjetas"
+    ]:
+        tarjeta_pago = TarjetaPago.objects.create(
+            pago=pago,
+            tarjeta=tarjeta_datos[
+                "tarjeta"
+            ],
+            fecha=tarjeta_datos[
+                "fecha"
+            ],
+            importe=tarjeta_datos[
+                "importe"
+            ],
+            cuotas=tarjeta_datos[
+                "cuotas"
+            ],
+            intereses_financiacion=tarjeta_datos[
+                "intereses_financiacion"
+            ],
+            referencia=tarjeta_datos[
+                "referencia"
+            ],
+            comprobante=tarjeta_datos[
+                "comprobante"
+            ],
+        )
+
+        tarjetas_creadas.append(
+            tarjeta_pago.id
+        )
+
+    for cheque_datos in pago_datos[
+        "cheques"
+    ]:
+        cheque = Cheque.objects.create(
+            empresa=empresa,
+            pago=pago,
+            tipo_instrumento=cheque_datos[
+                "tipo_instrumento"
+            ],
+            origen=cheque_datos[
+                "origen"
+            ],
+            tipo_cheque=cheque_datos[
+                "tipo_cheque"
+            ],
+            banco=cheque_datos[
+                "banco"
+            ],
+            cuenta_bancaria=cheque_datos[
+                "cuenta_bancaria"
+            ],
+            numero=cheque_datos[
+                "numero"
+            ],
+            importe=cheque_datos[
+                "importe"
+            ],
+            fecha_emision=cheque_datos[
+                "fecha_emision"
+            ],
+            fecha_acreditacion=cheque_datos[
+                "fecha_acreditacion"
+            ],
+            quien_entrega=cheque_datos[
+                "quien_entrega"
+            ],
+            estado="Pendiente",
+        )
+
+        cheques_creados.append(
+            cheque.id
+        )
+
+    for retencion_datos in pago_datos[
+        "retenciones"
+    ]:
+        retencion_pago = (
+            RetencionPago.objects.create(
+                pago=pago,
+                tipo=retencion_datos[
+                    "tipo"
+                ],
+                importe=retencion_datos[
+                    "importe"
+                ],
+                comprobante=retencion_datos[
+                    "comprobante"
+                ],
+            )
+        )
+
+        retenciones_creadas.append(
+            retencion_pago.id
+        )
+
+    aplicacion = AplicacionPago.objects.create(
+        pago=pago,
+        movimiento=movimiento,
+        importe=pago_datos[
+            "importe_pago"
+        ],
+    )
+
+    return {
+        "pago_id": pago.id,
+        "aplicacion_id": aplicacion.id,
+        "operaciones_bancarias_ids":
+            operaciones_creadas,
+        "tarjetas_ids":
+            tarjetas_creadas,
+        "cheques_ids":
+            cheques_creados,
+        "retenciones_ids":
+            retenciones_creadas,
+    }

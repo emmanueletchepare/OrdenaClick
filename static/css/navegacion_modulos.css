@@ -1,0 +1,285 @@
+/* =========================================
+   NAVEGACIÓN SEGMENTADA DE MÓDULOS
+========================================= */
+
+.vencimientos-navegacion{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:14px;
+
+    width:100%;
+
+    margin:10px auto 28px auto;
+}
+
+
+.vencimientos-botonera{
+
+    display:flex;
+    align-items:center;
+
+    gap:4px;
+
+    width:min(720px, 100%);
+
+    padding:5px;
+
+    background:#171d29;
+
+    border:1px solid #2b3447;
+    border-radius:16px;
+
+    box-sizing:border-box;
+
+    overflow-x:auto;
+
+    scroll-behavior:smooth;
+
+    scrollbar-width:none;
+}
+
+
+.vencimientos-botonera::-webkit-scrollbar{
+
+    display:none;
+}
+
+
+.vencimientos-segmento{
+
+    appearance:none;
+
+    flex:1 0 145px;
+
+    min-width:145px;
+    height:42px;
+
+    padding:0 18px;
+
+    border:0;
+    border-radius:11px;
+
+    background:transparent;
+
+    color:#98a2b3;
+
+    font-family:inherit;
+
+    font-size:14px;
+    font-weight:600;
+
+    white-space:nowrap;
+
+    cursor:pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.vencimientos-segmento:hover{
+
+    background:#202838;
+
+    color:#e5e7eb;
+}
+
+
+.vencimientos-segmento.activo{
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,.18),
+            rgba(37,99,235,.08)
+        );
+
+    color:#ffffff;
+
+    box-shadow:
+        inset 3px 0 0 #3b82f6,
+        0 8px 24px rgba(0,0,0,.12);
+}
+
+
+.vencimientos-segmento.activo:hover{
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,.22),
+            rgba(37,99,235,.11)
+        );
+
+    color:#ffffff;
+}
+
+
+/* =========================================
+   REGISTROS
+========================================= */
+
+.registros-navegacion{
+
+    width:min(820px, 100%);
+
+    margin:0 auto 8px;
+
+    gap:8px;
+}
+
+
+.registros-botonera{
+
+    /*
+     * La ventana muestra como máximo cuatro
+     * opciones completas.
+     *
+     * Las opciones restantes se recorren
+     * mediante las flechas laterales.
+     */
+    width:min(680px, calc(100% - 88px));
+
+    margin:0;
+
+    flex:0 1 680px;
+}
+
+
+.registros-botonera
+.vencimientos-segmento{
+
+    /*
+     * Cuatro segmentos visibles dentro de
+     * la ventana de navegación.
+     */
+    flex:0 0 calc(
+        (100% - 12px) / 4
+    );
+
+    min-width:calc(
+        (100% - 12px) / 4
+    );
+
+    padding:0 12px;
+}
+
+
+.registros-navegacion
+.vencimientos-flecha{
+
+    width:38px;
+    height:38px;
+
+    flex:0 0 38px;
+
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    line-height:1;
+
+    border-radius:11px;
+
+    color:#98a2b3;
+
+    background:#171d29;
+
+    border:1px solid #2b3447;
+
+    box-shadow:none;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+
+.registros-navegacion
+.vencimientos-flecha:hover:not(:disabled){
+
+    color:#ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,.18),
+            rgba(37,99,235,.08)
+        );
+
+    border-color:
+        rgba(59,130,246,.38);
+
+    box-shadow:
+        0 0 0 1px
+            rgba(59,130,246,.08),
+        0 6px 18px
+            rgba(37,99,235,.16);
+
+    transform:translateY(-1px);
+}
+
+
+.registros-navegacion
+.vencimientos-flecha:disabled{
+
+    color:#475569;
+
+    background:#121722;
+
+    border-color:#202838;
+
+    box-shadow:none;
+
+    cursor:default;
+
+    opacity:.55;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:900px){
+
+    .vencimientos-navegacion{
+
+        gap:8px;
+    }
+
+}
+
+
+@media(max-width:650px){
+
+    .vencimientos-navegacion{
+
+        width:100%;
+    }
+
+
+    .vencimientos-botonera{
+
+        width:100%;
+    }
+
+
+    .vencimientos-segmento{
+
+        flex:0 0 auto;
+
+        min-width:135px;
+    }
+
+}

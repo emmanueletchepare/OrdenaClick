@@ -1,0 +1,425 @@
+/* =========================================
+   SIDEBAR - ORDENACLICK
+========================================= */
+
+.sidebar{
+
+    width:290px;
+    height:100vh;
+
+    background:var(--sidebar);
+
+    border-right:1px solid #242938;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+
+    padding:28px 22px;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    flex-shrink:0;
+}
+
+
+/* =========================================
+   IDENTIDAD
+========================================= */
+
+.logo{
+
+    font-size:28px;
+    font-weight:700;
+
+    margin-bottom:40px;
+}
+
+
+.logo span{
+
+    color:var(--primary);
+}
+
+
+/* =========================================
+   USUARIO
+========================================= */
+
+.user-box{
+
+    background:var(--panel-2);
+
+    border:1px solid #2a3142;
+    border-radius:16px;
+
+    padding:18px;
+
+    margin-bottom:24px;
+}
+
+
+.user-label{
+
+    font-size:12px;
+
+    color:var(--muted);
+
+    margin-bottom:6px;
+}
+
+
+.user-name{
+
+    font-size:16px;
+    font-weight:600;
+}
+
+
+/* =========================================
+   CONTENEDOR DE MENÚ
+========================================= */
+
+.sidebar .menu{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:8px;
+}
+
+
+/* =========================================
+   NAVEGACIÓN PRINCIPAL
+========================================= */
+
+.sidebar-nav-btn,
+.sidebar-company-btn{
+
+    width:100%;
+    min-height:50px;
+
+    border:1px solid transparent;
+    border-radius:14px;
+
+    background:transparent;
+
+    color:#aeb8ca;
+
+    display:flex;
+    align-items:center;
+
+    gap:12px;
+
+    padding:8px 12px;
+
+    text-decoration:none;
+    text-align:left;
+
+    font-family:inherit;
+    font-size:14px;
+    font-weight:500;
+
+    cursor:pointer;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+
+.sidebar-nav-btn:hover,
+.sidebar-company-btn:hover{
+
+    background:#1c2433;
+
+    border-color:#303b50;
+
+    color:#ffffff;
+
+    transform:translateX(2px);
+}
+
+
+/* =========================================
+   ESTADO ACTIVO
+========================================= */
+
+.sidebar-nav-btn.activo{
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,.18),
+            rgba(37,99,235,.08)
+        );
+
+    border-color:
+        rgba(59,130,246,.38);
+
+    color:#ffffff;
+
+    box-shadow:
+        inset 3px 0 0 #3b82f6,
+        0 8px 24px rgba(0,0,0,.12);
+}
+
+
+/* =========================================
+   ICONOS
+========================================= */
+
+.sidebar-nav-icon{
+
+    width:34px;
+    height:34px;
+
+    flex:0 0 34px;
+
+    border-radius:10px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#202838;
+
+    border:1px solid #2b3548;
+
+    color:#8995aa;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+
+.sidebar-nav-btn:hover
+.sidebar-nav-icon{
+
+    color:#bfdbfe;
+
+    background:#263249;
+
+    border-color:#3b4a65;
+}
+
+
+.sidebar-nav-btn.activo
+.sidebar-nav-icon{
+
+    color:#ffffff;
+
+    background:#2563eb;
+
+    border-color:#3b82f6;
+
+    box-shadow:
+        0 5px 14px
+        rgba(37,99,235,.28);
+}
+
+
+.sidebar-nav-icon svg{
+
+    width:18px;
+    height:18px;
+
+    fill:none;
+
+    stroke:currentColor;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+
+.sidebar-nav-text{
+
+    flex:1;
+
+    white-space:nowrap;
+}
+
+
+/* =========================================
+   SEPARADORES
+========================================= */
+
+.sidebar-separator{
+
+    height:1px;
+
+    margin:6px 8px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #2a3344,
+            transparent
+        );
+}
+
+
+/* =========================================
+   ACCIONES SECUNDARIAS
+========================================= */
+
+.sidebar-nav-btn.sidebar-nav-secondary{
+
+    color:#8791a4;
+}
+
+
+.sidebar-nav-btn.sidebar-nav-danger:hover{
+
+    color:#fecaca;
+
+    background:
+        rgba(220,38,38,.10);
+
+    border-color:
+        rgba(248,113,113,.25);
+}
+
+
+.sidebar-nav-btn.sidebar-nav-danger:hover
+.sidebar-nav-icon{
+
+    color:#f87171;
+
+    background:
+        rgba(220,38,38,.13);
+
+    border-color:
+        rgba(248,113,113,.30);
+}
+
+
+/* =========================================
+   EMPRESAS
+========================================= */
+
+.sidebar-company-btn{
+
+    justify-content:flex-start;
+}
+
+
+.sidebar-company-btn::before{
+
+    content:"";
+
+    width:8px;
+    height:8px;
+
+    flex:0 0 8px;
+
+    border-radius:50%;
+
+    background:#475569;
+
+    transition:.18s ease;
+}
+
+
+.sidebar-company-btn:hover::before{
+
+    background:#3b82f6;
+
+    box-shadow:
+        0 0 10px
+        rgba(59,130,246,.65);
+}
+
+
+.sidebar-empty{
+
+    min-height:48px;
+
+    display:flex;
+    align-items:center;
+
+    padding:0 14px;
+
+    color:#64748b;
+
+    font-size:13px;
+}
+
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+.sidebar{
+
+    scrollbar-width:thin;
+
+    scrollbar-color:
+        #334155
+        transparent;
+}
+
+
+.sidebar::-webkit-scrollbar{
+
+    width:8px;
+}
+
+
+.sidebar::-webkit-scrollbar-track{
+
+    background:transparent;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb{
+
+    background:#334155;
+
+    border-radius:999px;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb:hover{
+
+    background:#3b82f6;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:1000px){
+
+    .sidebar{
+
+        width:100%;
+        height:auto;
+
+        overflow:visible;
+
+        border-right:none;
+        border-bottom:1px solid #242938;
+
+        flex-shrink:1;
+    }
+
+}

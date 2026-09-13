@@ -5540,6 +5540,10 @@ def verificar_comprobante_duplicado(request):
 
     El tipo de gasto no forma parte de la identidad
     del comprobante.
+
+    Cuando la consulta proviene de la edición de un
+    Movimiento existente, ese mismo Movimiento se
+    excluye de la búsqueda de duplicados.
     """
 
     if request.method != "GET":
@@ -5577,6 +5581,13 @@ def verificar_comprobante_duplicado(request):
     numero_comprobante = (
         request.GET.get(
             "numero_comprobante"
+        )
+        or ""
+    ).strip()
+
+    movimiento_id = (
+        request.GET.get(
+            "movimiento"
         )
         or ""
     ).strip()
@@ -5622,6 +5633,7 @@ def verificar_comprobante_duplicado(request):
         id=empresa_id
     ).first()
 
+
     if not empresa:
 
         return JsonResponse(
@@ -5642,6 +5654,7 @@ def verificar_comprobante_duplicado(request):
         activo=True,
     ).first()
 
+
     if not proveedor:
 
         return JsonResponse(
@@ -5656,12 +5669,28 @@ def verificar_comprobante_duplicado(request):
         )
 
 
-    duplicado = Movimiento.objects.filter(
-        empresa=empresa,
-        proveedor=proveedor,
-        tipo_comprobante=tipo_comprobante,
-        numero_comprobante=numero_comprobante,
-    ).exists()
+    movimientos_coincidentes = (
+        Movimiento.objects.filter(
+            empresa=empresa,
+            proveedor=proveedor,
+            tipo_comprobante=tipo_comprobante,
+            numero_comprobante=numero_comprobante,
+        )
+    )
+
+
+    if movimiento_id:
+
+        movimientos_coincidentes = (
+            movimientos_coincidentes.exclude(
+                id=movimiento_id
+            )
+        )
+
+
+    duplicado = (
+        movimientos_coincidentes.exists()
+    )
 
 
     return JsonResponse(
@@ -5692,6 +5721,10 @@ def guardar_movimiento(request):
     Tarjetas, Cheques y Retenciones se guardan dentro
     de una única transacción atómica.
     """
+    from usuarios.services.financiero import (
+        crear_pago_validado_movimiento,
+        validar_importe_aplicable,
+    )
 
     if request.method != "POST":
 
@@ -8194,16 +8227,30 @@ def guardar_movimiento(request):
         # =========================================
         # CONTROL DE SOBREAPLICACIÓN
         # =========================================
+        #
+        # En una Carga Simple nueva el saldo
+        # disponible para aplicar coincide con el
+        # total documental del Movimiento.
+        #
+        # La validación pertenece al servicio
+        # financiero común para que la misma regla
+        # pueda reutilizarse luego en edición,
+        # Carga Planificada y otros circuitos.
+        # =========================================
 
-        if total_aplicado > total:
+        try:
+
+            validar_importe_aplicable(
+                saldo_pendiente=total,
+                importe_aplicar=total_aplicado,
+            )
+
+        except ValueError as error:
 
             return JsonResponse(
                 {
                     "ok": False,
-                    "mensaje": (
-                        "El total de los Pagos "
-                        "no puede superar el total del registro."
-                    ),
+                    "mensaje": str(error),
                 },
                 status=400,
             )
@@ -8368,281 +8415,47 @@ def guardar_movimiento(request):
 
             for pago_datos in pagos_validados:
 
-                pago = Pago.objects.create(
-
-                    empresa=
-                        empresa,
-
-                    fecha=
-                        pago_datos[
-                            "fecha"
-                        ],
-
-                    importe_efectivo=
-                        pago_datos[
-                            "importe_efectivo"
-                        ],
-                )
-
-
-                # =================================
-                # OPERACIONES BANCARIAS
-                # =================================
-
-                for operacion_datos in (
-                    pago_datos[
-                        "operaciones_bancarias"
-                    ]
-                ):
-
-                    operacion = (
-                        OperacionBancariaPago.objects.create(
-
-                            pago=
-                                pago,
-
-                            tipo_operacion=
-                                operacion_datos[
-                                    "tipo_operacion"
-                                ],
-
-                            cuenta_origen=
-                                operacion_datos[
-                                    "cuenta_origen"
-                                ],
-
-                            banco_destino=
-                                operacion_datos[
-                                    "banco_destino"
-                                ],
-
-                            referencia_destino=
-                                operacion_datos[
-                                    "referencia_destino"
-                                ],
-
-                            moneda=
-                                "ARS",
-
-                            importe=
-                                operacion_datos[
-                                    "importe"
-                                ],
-
-                            fecha=
-                                operacion_datos[
-                                    "fecha"
-                                ],
-
-                            comprobante=
-                                operacion_datos[
-                                    "comprobante"
-                                ],
-                        )
+                resultado_pago = (
+                    crear_pago_validado_movimiento(
+                        empresa=empresa,
+                        movimiento=movimiento,
+                        pago_datos=pago_datos,
                     )
-
-
-                    operaciones_creadas.append(
-                        operacion.id
-                    )
-
-
-                # =================================
-                # TARJETAS
-                # =================================
-
-                for tarjeta_datos in (
-                    pago_datos[
-                        "tarjetas"
-                    ]
-                ):
-
-                    tarjeta_pago = (
-                        TarjetaPago.objects.create(
-
-                            pago=
-                                pago,
-
-                            tarjeta=
-                                tarjeta_datos[
-                                    "tarjeta"
-                                ],
-
-                            fecha=
-                                tarjeta_datos[
-                                    "fecha"
-                                ],
-
-                            importe=
-                                tarjeta_datos[
-                                    "importe"
-                                ],
-
-                            cuotas=
-                                tarjeta_datos[
-                                    "cuotas"
-                                ],
-
-                            intereses_financiacion=
-                                tarjeta_datos[
-                                    "intereses_financiacion"
-                                ],
-
-                            referencia=
-                                tarjeta_datos[
-                                    "referencia"
-                                ],
-
-                            comprobante=
-                                tarjeta_datos[
-                                    "comprobante"
-                                ],
-                        )
-                    )
-
-
-                    tarjetas_creadas.append(
-                        tarjeta_pago.id
-                    )
-
-
-                # =================================
-                # CHEQUES / E-CHEQS
-                # =================================
-
-                for cheque_datos in (
-                    pago_datos[
-                        "cheques"
-                    ]
-                ):
-
-                    cheque = Cheque.objects.create(
-
-                        empresa=
-                            empresa,
-
-                        pago=
-                            pago,
-
-                        tipo_instrumento=
-                            cheque_datos[
-                                "tipo_instrumento"
-                            ],
-
-                        origen=
-                            cheque_datos[
-                                "origen"
-                            ],
-
-                        tipo_cheque=
-                            cheque_datos[
-                                "tipo_cheque"
-                            ],
-
-                        banco=
-                            cheque_datos[
-                                "banco"
-                            ],
-
-                        cuenta_bancaria=
-                            cheque_datos[
-                                "cuenta_bancaria"
-                            ],
-
-                        numero=
-                            cheque_datos[
-                                "numero"
-                            ],
-
-                        importe=
-                            cheque_datos[
-                                "importe"
-                            ],
-
-                        fecha_emision=
-                            cheque_datos[
-                                "fecha_emision"
-                            ],
-
-                        fecha_acreditacion=
-                            cheque_datos[
-                                "fecha_acreditacion"
-                            ],
-
-                        quien_entrega=
-                            cheque_datos[
-                                "quien_entrega"
-                            ],
-
-                        estado=
-                            "Pendiente",
-                    )
-
-                    cheques_creados.append(
-                        cheque.id
-                    )
-
-
-                # =================================
-                # RETENCIONES
-                # =================================
-
-                for retencion_datos in (
-                    pago_datos[
-                        "retenciones"
-                    ]
-                ):
-
-                    retencion_pago = (
-                        RetencionPago.objects.create(
-
-                            pago=
-                                pago,
-
-                            tipo=
-                                retencion_datos[
-                                    "tipo"
-                                ],
-
-                            importe=
-                                retencion_datos[
-                                    "importe"
-                                ],
-
-                            comprobante=
-                                retencion_datos[
-                                    "comprobante"
-                                ],
-                        )
-                    )
-
-
-                    retenciones_creadas.append(
-                        retencion_pago.id
-                    )
-
-
-                # =================================
-                # APLICACIÓN DEL PAGO
-                # =================================
-
-                AplicacionPago.objects.create(
-
-                    pago=
-                        pago,
-
-                    movimiento=
-                        movimiento,
-
-                    importe=
-                        pago_datos[
-                            "importe_pago"
-                        ],
                 )
 
 
                 pagos_creados.append(
-                    pago.id
+                    resultado_pago[
+                        "pago_id"
+                    ]
+                )
+
+
+                operaciones_creadas.extend(
+                    resultado_pago[
+                        "operaciones_bancarias_ids"
+                    ]
+                )
+
+
+                tarjetas_creadas.extend(
+                    resultado_pago[
+                        "tarjetas_ids"
+                    ]
+                )
+
+
+                cheques_creados.extend(
+                    resultado_pago[
+                        "cheques_ids"
+                    ]
+                )
+
+
+                retenciones_creadas.extend(
+                    resultado_pago[
+                        "retenciones_ids"
+                    ]
                 )
 
             # =====================================
@@ -8781,6 +8594,1682 @@ def guardar_movimiento(request):
             },
             status=500,
         )
+
+@login_required
+def obtener_movimiento_edicion(request):
+    """
+    Devuelve los datos necesarios para editar un Movimiento
+    existente desde Carga Simple.
+
+    La Empresa se valida mediante el servicio central de
+    autorización.
+
+    Los importes aplicado y pendiente se obtienen desde el
+    servicio financiero central para no duplicar reglas de
+    cálculo dentro de la vista.
+
+    Si el Movimiento posee un comprobante histórico con formato
+    legado, se informa explícitamente para permitir conservarlo
+    sin habilitar ese formato para nuevos comprobantes.
+    """
+
+    from usuarios.services.financiero import (
+        movimientos_con_saldo_pendiente,
+    )
+
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+
+    empresa_id = (
+        request.GET.get("empresa")
+        or ""
+    ).strip()
+
+
+    movimiento_id = (
+        request.GET.get("movimiento")
+        or ""
+    ).strip()
+
+
+    if not empresa_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "No hay una empresa seleccionada.",
+            },
+            status=400,
+        )
+
+
+    if not movimiento_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "No se indicó el Movimiento.",
+            },
+            status=400,
+        )
+
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+
+    movimiento = (
+        movimientos_con_saldo_pendiente(
+            empresa=empresa,
+        )
+        .filter(
+            id=movimiento_id,
+        )
+        .select_related(
+            "tipo_gasto",
+            "proveedor",
+            "centro_operativo",
+            "recurso_operativo",
+            "cuenta_debito",
+        )
+        .first()
+    )
+
+
+    if not movimiento:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El Movimiento no existe "
+                    "o ya no posee saldo pendiente."
+                ),
+            },
+            status=404,
+        )
+
+
+    comprobante_original = (
+        movimiento.numero_comprobante
+        or ""
+    ).strip()
+
+
+    comprobante_normalizado = bool(
+        re.fullmatch(
+            r"\d{4}-\d{8}",
+            comprobante_original,
+        )
+    )
+
+
+    punto_venta = ""
+    numero = ""
+
+
+    if comprobante_normalizado:
+
+        punto_venta, numero = (
+            comprobante_original.split(
+                "-",
+                1,
+            )
+        )
+
+    else:
+
+        numero = comprobante_original
+
+
+    return JsonResponse(
+        {
+            "ok": True,
+
+            "movimiento": {
+
+                "id":
+                    movimiento.id,
+
+                # Mientras Carga Planificada todavía no
+                # exista, los Movimientos persistidos por
+                # este flujo provienen de Carga Simple.
+                "origen":
+                    "carga_simple",
+
+                "tipo_gasto_id":
+                    movimiento.tipo_gasto_id,
+
+                "proveedor_id":
+                    movimiento.proveedor_id,
+
+                "centro_operativo_id":
+                    movimiento.centro_operativo_id,
+
+                "recurso_operativo_id":
+                    movimiento.recurso_operativo_id,
+
+                "fecha_registro": (
+                    movimiento.fecha_registro.isoformat()
+                    if movimiento.fecha_registro
+                    else ""
+                ),
+
+                "fecha_vencimiento": (
+                    movimiento.fecha_vencimiento.isoformat()
+                    if movimiento.fecha_vencimiento
+                    else ""
+                ),
+
+                "modalidad_pago":
+                    movimiento.modalidad_pago,
+
+                "cuenta_debito_id":
+                    movimiento.cuenta_debito_id,
+
+                "tipo_comprobante":
+                    movimiento.tipo_comprobante or "",
+
+                "punto_venta":
+                    punto_venta,
+
+                "numero_comprobante":
+                    numero,
+
+                # Identificación documental persistida.
+                # Se utiliza exclusivamente para distinguir
+                # un comprobante legado conservado de uno
+                # nuevo o modificado por el usuario.
+                "comprobante_original":
+                    comprobante_original,
+
+                "comprobante_legado":
+                    not comprobante_normalizado,
+
+                "neto_gravado":
+                    str(movimiento.neto_gravado),
+
+                "no_gravado_exento":
+                    str(movimiento.no_gravado_exento),
+
+                "iva_21":
+                    str(movimiento.iva_21),
+
+                "iva_27":
+                    str(movimiento.iva_27),
+
+                "iva_105":
+                    str(movimiento.iva_105),
+
+                "recargos_intereses":
+                    str(movimiento.recargos_intereses),
+
+                "ajuste_redondeo":
+                    str(movimiento.ajuste_redondeo),
+
+                "percepcion_iibb":
+                    str(movimiento.percepcion_iibb),
+
+                "percepcion_iva":
+                    str(movimiento.percepcion_iva),
+
+                "percepcion_ganancias":
+                    str(movimiento.percepcion_ganancias),
+
+                "percepcion_tasas_municipales":
+                    str(
+                        movimiento.percepcion_tasas_municipales
+                    ),
+
+                "total":
+                    str(movimiento.total),
+
+                "total_aplicado":
+                    str(
+                        movimiento.total_aplicado_calculado
+                    ),
+
+                "saldo_pendiente":
+                    str(
+                        movimiento.saldo_pendiente_calculado
+                    ),
+
+                "estado":
+                    movimiento.estado,
+
+                "tiene_archivo":
+                    bool(movimiento.archivo),
+            },
+        }
+    )
+
+@login_required
+def actualizar_movimiento(request):
+    """
+    Actualiza los datos documentales de un Movimiento existente.
+
+    La edición preserva todos los Pagos y AplicacionPago
+    históricos ya registrados.
+
+    Si cambia el total documental, el nuevo total nunca puede
+    quedar por debajo del importe históricamente aplicado.
+
+    Un comprobante histórico con formato legado puede conservarse
+    exactamente como está. Si el usuario modifica su identificación
+    documental, el nuevo comprobante debe cumplir el formato vigente.
+
+    Esta vista no registra Pagos nuevos. La incorporación de un
+    nuevo Pago se realiza mediante su circuito financiero
+    específico.
+    """
+
+    from decimal import Decimal, InvalidOperation
+
+    from usuarios.services.financiero import (
+        total_aplicado_movimiento,
+        validar_importe_aplicable,
+    )
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido.",
+            },
+            status=405,
+        )
+
+
+    empresa_id = (
+        request.POST.get("empresa")
+        or ""
+    ).strip()
+
+    movimiento_id = (
+        request.POST.get("movimiento")
+        or ""
+    ).strip()
+
+
+    if not empresa_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Seleccione una empresa.",
+            },
+            status=400,
+        )
+
+
+    if not movimiento_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "No se indicó el Movimiento a modificar.",
+            },
+            status=400,
+        )
+
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+
+    tipo_gasto_id = (
+        request.POST.get("tipo_gasto")
+        or ""
+    ).strip()
+
+    proveedor_id = (
+        request.POST.get("proveedor")
+        or ""
+    ).strip()
+
+    centro_operativo_id = (
+        request.POST.get("centro_operativo")
+        or ""
+    ).strip()
+
+    recurso_operativo_id = (
+        request.POST.get("recurso_operativo")
+        or ""
+    ).strip()
+
+    fecha_registro = (
+        request.POST.get("fecha_registro")
+        or ""
+    ).strip()
+
+    fecha_vencimiento = (
+        request.POST.get("fecha_vencimiento")
+        or ""
+    ).strip()
+
+    modalidad_pago = (
+        request.POST.get("modalidad_pago")
+        or "Manual"
+    ).strip()
+
+    cuenta_debito_id = (
+        request.POST.get("cuenta_debito")
+        or ""
+    ).strip()
+
+    tipo_comprobante = (
+        request.POST.get("tipo_comprobante")
+        or ""
+    ).strip()
+
+    numero_comprobante = (
+        request.POST.get("numero_comprobante")
+        or ""
+    ).strip()
+
+
+    if not tipo_gasto_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Seleccione un tipo de gasto.",
+            },
+            status=400,
+        )
+
+
+    if not proveedor_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Seleccione un proveedor.",
+            },
+            status=400,
+        )
+
+
+    if not fecha_registro:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Ingrese la fecha del registro.",
+            },
+            status=400,
+        )
+
+
+    tipo_gasto = (
+        TipoGasto.objects.filter(
+            id=tipo_gasto_id,
+            empresa=empresa,
+            activo=True,
+        ).first()
+    )
+
+
+    if not tipo_gasto:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "El tipo de gasto no es válido.",
+            },
+            status=400,
+        )
+
+
+    proveedor = (
+        Proveedor.objects.filter(
+            id=proveedor_id,
+            empresa=empresa,
+            activo=True,
+        ).first()
+    )
+
+
+    if not proveedor:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "El proveedor no es válido.",
+            },
+            status=400,
+        )
+
+
+    tipos_comprobante_validos = {
+        "A",
+        "B",
+        "C",
+        "X",
+    }
+
+
+    if tipo_comprobante not in tipos_comprobante_validos:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Seleccione un tipo de comprobante válido."
+                ),
+            },
+            status=400,
+        )
+
+
+    centro_operativo = None
+
+
+    if centro_operativo_id:
+
+        centro_operativo = (
+            CentroOperativo.objects.filter(
+                id=centro_operativo_id,
+                empresa=empresa,
+                activo=True,
+            ).first()
+        )
+
+
+        if not centro_operativo:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El Centro Operativo no es válido."
+                    ),
+                },
+                status=400,
+            )
+
+
+    recurso_operativo = None
+
+
+    if recurso_operativo_id:
+
+        recurso_operativo = (
+            RecursoOperativo.objects.filter(
+                id=recurso_operativo_id,
+                empresa=empresa,
+                activo=True,
+            ).first()
+        )
+
+
+        if not recurso_operativo:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El Recurso Operativo no es válido."
+                    ),
+                },
+                status=400,
+            )
+
+
+        if (
+            centro_operativo and
+            hasattr(
+                recurso_operativo,
+                "centro_operativo"
+            ) and
+            recurso_operativo.centro_operativo_id !=
+            centro_operativo.id
+        ):
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El Recurso Operativo no pertenece "
+                        "al Centro Operativo seleccionado."
+                    ),
+                },
+                status=400,
+            )
+
+
+    modalidades_validas = {
+        valor
+        for valor, etiqueta
+        in Movimiento.MODALIDADES_PAGO
+    }
+
+
+    if modalidad_pago not in modalidades_validas:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "La forma prevista de pago no es válida."
+                ),
+            },
+            status=400,
+        )
+
+
+    cuenta_debito = None
+
+
+    if modalidad_pago == "DebitoAutomatico":
+
+        if not cuenta_debito_id:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Seleccione la cuenta prevista "
+                        "para el débito automático."
+                    ),
+                },
+                status=400,
+            )
+
+
+        cuenta_debito = (
+            CuentaBancaria.objects.filter(
+                id=cuenta_debito_id,
+                empresa=empresa,
+                activo=True,
+                moneda="ARS",
+            ).first()
+        )
+
+
+        if not cuenta_debito:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "La cuenta seleccionada para "
+                        "el débito automático no es válida."
+                    ),
+                },
+                status=400,
+            )
+
+
+    elif cuenta_debito_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Un Pago manual no debe tener "
+                    "una cuenta prevista para débito."
+                ),
+            },
+            status=400,
+        )
+
+
+    def decimal_post(nombre):
+        """
+        Convierte un importe recibido mediante POST
+        en Decimal para persistencia.
+        """
+
+        valor = (
+            request.POST.get(nombre)
+            or "0"
+        )
+
+
+        try:
+
+            return Decimal(
+                str(valor)
+            )
+
+
+        except (
+            InvalidOperation,
+            TypeError,
+            ValueError,
+        ):
+
+            return Decimal("0")
+
+
+    neto_gravado = decimal_post(
+        "neto_gravado"
+    )
+
+    no_gravado_exento = decimal_post(
+        "no_gravado_exento"
+    )
+
+    iva_21 = decimal_post(
+        "iva_21"
+    )
+
+    iva_27 = decimal_post(
+        "iva_27"
+    )
+
+    iva_105 = decimal_post(
+        "iva_105"
+    )
+
+    recargos_intereses = decimal_post(
+        "recargos_intereses"
+    )
+
+    ajuste_redondeo = decimal_post(
+        "ajuste_redondeo"
+    )
+
+    percepcion_iibb = decimal_post(
+        "percepcion_iibb"
+    )
+
+    percepcion_iva = decimal_post(
+        "percepcion_iva"
+    )
+
+    percepcion_ganancias = decimal_post(
+        "percepcion_ganancias"
+    )
+
+    percepcion_tasas_municipales = (
+        decimal_post(
+            "percepcion_tasas_municipales"
+        )
+    )
+
+    total = decimal_post(
+        "total"
+    )
+
+
+    if total <= Decimal("0.00"):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El total del registro debe ser mayor a cero."
+                ),
+            },
+            status=400,
+        )
+
+
+    archivo = request.FILES.get(
+        "archivo"
+    )
+
+
+    try:
+
+        with transaction.atomic():
+
+            movimiento = (
+                Movimiento.objects
+                .select_for_update()
+                .filter(
+                    id=movimiento_id,
+                    empresa=empresa,
+                )
+                .first()
+            )
+
+
+            if not movimiento:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento no existe "
+                            "o no pertenece a la empresa."
+                        ),
+                    },
+                    status=404,
+                )
+
+
+            if movimiento.estado == "Cancelado":
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Un Movimiento cancelado "
+                            "no puede modificarse."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            comprobante_original = (
+                movimiento.numero_comprobante
+                or ""
+            ).strip()
+
+
+            comprobante_original_normalizado = bool(
+                re.fullmatch(
+                    r"\d{4}-\d{8}",
+                    comprobante_original,
+                )
+            )
+
+
+            conserva_comprobante_legado = (
+                not comprobante_original_normalizado
+                and
+                tipo_comprobante ==
+                (movimiento.tipo_comprobante or "")
+                and
+                numero_comprobante ==
+                comprobante_original
+            )
+
+
+            if (
+                not conserva_comprobante_legado
+                and
+                not re.fullmatch(
+                    r"\d{4}-\d{8}",
+                    numero_comprobante,
+                )
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El número de comprobante no tiene "
+                            "un formato válido."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            comprobante_duplicado = (
+                Movimiento.objects.filter(
+                    empresa=empresa,
+                    proveedor=proveedor,
+                    tipo_comprobante=
+                        tipo_comprobante,
+                    numero_comprobante=
+                        numero_comprobante,
+                )
+                .exclude(
+                    id=movimiento.id,
+                )
+                .exists()
+            )
+
+
+            if comprobante_duplicado:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Ese comprobante ya fue registrado "
+                            "para este proveedor."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            total_aplicado_existente = (
+                total_aplicado_movimiento(
+                    movimiento
+                )
+            )
+
+
+            try:
+
+                validar_importe_aplicable(
+                    saldo_pendiente=total,
+                    importe_aplicar=
+                        total_aplicado_existente,
+                )
+
+
+            except ValueError:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El total del registro no puede "
+                            "ser menor al importe que ya fue "
+                            "aplicado mediante Pagos."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            saldo_nuevo = (
+                total -
+                total_aplicado_existente
+            )
+
+
+            if (
+                total_aplicado_existente <=
+                Decimal("0.00")
+            ):
+
+                estado_movimiento = (
+                    "Pendiente"
+                )
+
+
+            elif saldo_nuevo > Decimal("0.00"):
+
+                estado_movimiento = (
+                    "Parcial"
+                )
+
+
+            else:
+
+                estado_movimiento = (
+                    "Pagado"
+                )
+
+
+            movimiento.tipo_gasto = (
+                tipo_gasto
+            )
+
+            movimiento.proveedor = (
+                proveedor
+            )
+
+            movimiento.centro_operativo = (
+                centro_operativo
+            )
+
+            movimiento.recurso_operativo = (
+                recurso_operativo
+            )
+
+            movimiento.fecha_registro = (
+                fecha_registro
+            )
+
+            movimiento.fecha_vencimiento = (
+                fecha_vencimiento
+                or None
+            )
+
+            movimiento.modalidad_pago = (
+                modalidad_pago
+            )
+
+            movimiento.cuenta_debito = (
+                cuenta_debito
+            )
+
+            movimiento.tipo_comprobante = (
+                tipo_comprobante
+            )
+
+            movimiento.numero_comprobante = (
+                numero_comprobante
+            )
+
+            movimiento.neto_gravado = (
+                neto_gravado
+            )
+
+            movimiento.no_gravado_exento = (
+                no_gravado_exento
+            )
+
+            movimiento.iva_21 = (
+                iva_21
+            )
+
+            movimiento.iva_27 = (
+                iva_27
+            )
+
+            movimiento.iva_105 = (
+                iva_105
+            )
+
+            movimiento.recargos_intereses = (
+                recargos_intereses
+            )
+
+            movimiento.ajuste_redondeo = (
+                ajuste_redondeo
+            )
+
+            movimiento.percepcion_iibb = (
+                percepcion_iibb
+            )
+
+            movimiento.percepcion_iva = (
+                percepcion_iva
+            )
+
+            movimiento.percepcion_ganancias = (
+                percepcion_ganancias
+            )
+
+            movimiento.percepcion_tasas_municipales = (
+                percepcion_tasas_municipales
+            )
+
+            movimiento.total = (
+                total
+            )
+
+            # Compatibilidad temporal con el campo
+            # histórico importe.
+            movimiento.importe = (
+                total
+            )
+
+            movimiento.estado = (
+                estado_movimiento
+            )
+
+
+            if archivo:
+
+                movimiento.archivo = (
+                    archivo
+                )
+
+
+            campos_actualizados = [
+                "tipo_gasto",
+                "proveedor",
+                "centro_operativo",
+                "recurso_operativo",
+                "fecha_registro",
+                "fecha_vencimiento",
+                "modalidad_pago",
+                "cuenta_debito",
+                "tipo_comprobante",
+                "numero_comprobante",
+                "neto_gravado",
+                "no_gravado_exento",
+                "iva_21",
+                "iva_27",
+                "iva_105",
+                "recargos_intereses",
+                "ajuste_redondeo",
+                "percepcion_iibb",
+                "percepcion_iva",
+                "percepcion_ganancias",
+                "percepcion_tasas_municipales",
+                "total",
+                "importe",
+                "estado",
+            ]
+
+
+            if archivo:
+
+                campos_actualizados.append(
+                    "archivo"
+                )
+
+
+            movimiento.save(
+                update_fields=
+                    campos_actualizados
+            )
+
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "mensaje": (
+                    "Movimiento actualizado correctamente."
+                ),
+                "movimiento_id":
+                    movimiento.id,
+                "total":
+                    str(total),
+                "total_aplicado":
+                    str(
+                        total_aplicado_existente
+                    ),
+                "saldo_pendiente":
+                    str(saldo_nuevo),
+                "estado":
+                    estado_movimiento,
+            }
+        )
+
+
+    except Exception as error:
+
+        print(
+            "Error actualizando Movimiento:",
+            error,
+        )
+
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Ocurrió un error al actualizar "
+                    "el Movimiento."
+                ),
+            },
+            status=500,
+        )
+
+@login_required
+def registrar_debito_automatico_movimiento(request):
+    """
+    Registra el Pago real de un débito automático
+    sobre un Movimiento existente.
+
+    El Movimiento se bloquea durante la operación
+    para recalcular su saldo pendiente real antes
+    de aplicar el Pago.
+
+    Si el importe debitado supera el saldo pendiente,
+    la diferencia solamente puede registrarse como
+    interés por mora cuando:
+
+    - el Movimiento posee fecha de vencimiento;
+    - el débito ocurrió después del vencimiento;
+    - el usuario confirmó expresamente la mora.
+
+    Los intereses por mora nunca incrementan el
+    importe aplicado al Movimiento.
+    """
+
+    from decimal import (
+        Decimal,
+        InvalidOperation,
+    )
+
+    from usuarios.services.financiero import (
+        total_aplicado_movimiento,
+        validar_importe_aplicable,
+    )
+
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido.",
+            },
+            status=405,
+        )
+
+
+    empresa_id = (
+        request.POST.get("empresa")
+        or ""
+    ).strip()
+
+    movimiento_id = (
+        request.POST.get("movimiento")
+        or ""
+    ).strip()
+
+    fecha_debito_texto = (
+        request.POST.get("fecha")
+        or ""
+    ).strip()
+
+    importe_debitado_texto = (
+        request.POST.get("importe_debitado")
+        or ""
+    ).strip()
+
+    confirmar_intereses_mora = (
+        (
+            request.POST.get(
+                "confirmar_intereses_mora"
+            )
+            or ""
+        ).strip().lower()
+        in {
+            "1",
+            "true",
+            "si",
+            "sí",
+        }
+    )
+
+
+    if not empresa_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Seleccione una empresa.",
+            },
+            status=400,
+        )
+
+
+    if not movimiento_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "No se indicó el Movimiento."
+                ),
+            },
+            status=400,
+        )
+
+
+    if not fecha_debito_texto:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Ingrese la fecha real del débito."
+                ),
+            },
+            status=400,
+        )
+
+
+    try:
+
+        fecha_debito = datetime.strptime(
+            fecha_debito_texto,
+            "%Y-%m-%d",
+        ).date()
+
+    except ValueError:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "La fecha del débito automático "
+                    "no es válida."
+                ),
+            },
+            status=400,
+        )
+
+
+    try:
+
+        importe_debitado = Decimal(
+            importe_debitado_texto
+        )
+
+    except (
+        InvalidOperation,
+        TypeError,
+        ValueError,
+    ):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El importe del débito automático "
+                    "no es válido."
+                ),
+            },
+            status=400,
+        )
+
+
+    if importe_debitado <= Decimal("0.00"):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El importe debitado debe ser "
+                    "mayor a cero."
+                ),
+            },
+            status=400,
+        )
+
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+
+    try:
+
+        with transaction.atomic():
+
+            movimiento = (
+                Movimiento.objects
+                .select_for_update()
+                .filter(
+                    id=movimiento_id,
+                    empresa=empresa,
+                )
+                .first()
+            )
+
+
+            if not movimiento:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento no existe "
+                            "o no pertenece a la empresa."
+                        ),
+                    },
+                    status=404,
+                )
+
+
+            if movimiento.estado == "Cancelado":
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Un Movimiento cancelado "
+                            "no puede recibir Pagos."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if (
+                movimiento.modalidad_pago !=
+                "DebitoAutomatico"
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento no está configurado "
+                            "para débito automático."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            cuenta_debito = (
+                movimiento.cuenta_debito
+            )
+
+
+            if (
+                not cuenta_debito
+                or not cuenta_debito.activo
+                or cuenta_debito.empresa_id !=
+                    empresa.id
+                or cuenta_debito.moneda !=
+                    "ARS"
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La cuenta prevista para el débito "
+                            "automático no es válida."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if (
+                movimiento.fecha_registro
+                and
+                fecha_debito <
+                movimiento.fecha_registro
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "La fecha real del débito "
+                            "no puede ser anterior a "
+                            "la fecha del gasto."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            total_aplicado_existente = (
+                total_aplicado_movimiento(
+                    movimiento
+                )
+            )
+
+
+            saldo_pendiente = (
+                movimiento.total -
+                total_aplicado_existente
+            )
+
+
+            if saldo_pendiente <= Decimal("0.00"):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento ya no posee "
+                            "saldo pendiente."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            importe_aplicado = (
+                importe_debitado
+            )
+
+            intereses_mora = Decimal(
+                "0.00"
+            )
+
+
+            if importe_debitado > saldo_pendiente:
+
+                if not movimiento.fecha_vencimiento:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El débito supera el saldo "
+                                "pendiente y el Movimiento "
+                                "no posee fecha de vencimiento."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if (
+                    fecha_debito <=
+                    movimiento.fecha_vencimiento
+                ):
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El débito supera el saldo "
+                                "pendiente, pero no ocurrió "
+                                "después del vencimiento."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                if not confirmar_intereses_mora:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "La diferencia del débito debe "
+                                "confirmarse como interés por "
+                                "mora antes de guardar."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                importe_aplicado = (
+                    saldo_pendiente
+                )
+
+                intereses_mora = (
+                    importe_debitado -
+                    saldo_pendiente
+                )
+
+
+            try:
+
+                validar_importe_aplicable(
+                    saldo_pendiente=
+                        saldo_pendiente,
+                    importe_aplicar=
+                        importe_aplicado,
+                )
+
+            except ValueError as error:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": str(error),
+                    },
+                    status=400,
+                )
+
+
+            pago = Pago.objects.create(
+                empresa=empresa,
+                fecha=fecha_debito,
+                importe_efectivo=
+                    Decimal("0.00"),
+            )
+
+
+            debito = (
+                DebitoAutomaticoPago.objects.create(
+                    pago=pago,
+                    cuenta_bancaria=
+                        cuenta_debito,
+                    importe=
+                        importe_debitado,
+                    intereses_mora=
+                        intereses_mora,
+                    fecha_debito=
+                        fecha_debito,
+                )
+            )
+
+
+            aplicacion = (
+                AplicacionPago.objects.create(
+                    pago=pago,
+                    movimiento=movimiento,
+                    importe=
+                        importe_aplicado,
+                )
+            )
+
+
+            total_aplicado_nuevo = (
+                total_aplicado_existente +
+                importe_aplicado
+            )
+
+            saldo_nuevo = (
+                movimiento.total -
+                total_aplicado_nuevo
+            )
+
+
+            if saldo_nuevo <= Decimal("0.00"):
+
+                estado_movimiento = (
+                    "Pagado"
+                )
+
+            else:
+
+                estado_movimiento = (
+                    "Parcial"
+                )
+
+
+            movimiento.estado = (
+                estado_movimiento
+            )
+
+            movimiento.save(
+                update_fields=[
+                    "estado",
+                ]
+            )
+
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "mensaje": (
+                    "Pago registrado correctamente."
+                ),
+                "movimiento_id":
+                    movimiento.id,
+                "pago_id":
+                    pago.id,
+                "debito_automatico_id":
+                    debito.id,
+                "aplicacion_id":
+                    aplicacion.id,
+                "importe_debitado":
+                    str(importe_debitado),
+                "importe_aplicado":
+                    str(importe_aplicado),
+                "intereses_mora":
+                    str(intereses_mora),
+                "total_aplicado":
+                    str(total_aplicado_nuevo),
+                "saldo_pendiente":
+                    str(saldo_nuevo),
+                "estado":
+                    estado_movimiento,
+            }
+        )
+
+
+    except Exception as error:
+
+        print(
+            "Error registrando débito "
+            "automático en Movimiento:",
+            error,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Ocurrió un error al registrar "
+                    "el Pago."
+                ),
+            },
+            status=500,
+        )
+
+@login_required
+def estado_llamador_alertas(request):
+    """
+    Indica si corresponde mostrar el llamador de Alertas
+    para la empresa activa.
+
+    La vista no expone movimientos, importes ni cantidades.
+    La política de Alertas se obtiene exclusivamente desde
+    el servicio financiero central.
+    """
+    from datetime import date
+
+    from usuarios.services.financiero import (
+        movimientos_en_alerta,
+    )
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+    empresa_id = (
+        request.GET.get("empresa")
+        or ""
+    ).strip()
+
+    if not empresa_id:
+        return JsonResponse(
+            {
+                "ok": False,
+                "mostrar_llamador": False,
+                "mensaje": "No hay una empresa seleccionada.",
+            },
+            status=400,
+        )
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+    mostrar_llamador = (
+        movimientos_en_alerta(
+            empresa=empresa,
+            fecha_referencia=date.today(),
+        )
+        .exists()
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "mostrar_llamador": mostrar_llamador,
+        }
+    )
 
 @login_required
 def listar_proximos_vencimientos(request):

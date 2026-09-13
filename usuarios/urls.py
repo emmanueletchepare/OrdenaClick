@@ -62,6 +62,10 @@ from .views import (
     guardar_movimiento,
     verificar_comprobante_duplicado,
     listar_proximos_vencimientos,
+    estado_llamador_alertas,
+    obtener_movimiento_edicion,
+    actualizar_movimiento,
+    registrar_debito_automatico_movimiento,
     reactivar_retencion
     
 )
@@ -455,13 +459,37 @@ urlpatterns = [
     ),
 
     # =========================================
-    # PRÓXIMOS VENCIMIENTOS
+    # PRÓXIMOS VENCIMIENTOS / ALERTAS
     # =========================================
 
     path(
         "proximos-vencimientos/",
         listar_proximos_vencimientos,
         name="listar_proximos_vencimientos",
+    ),
+
+    path(
+        "movimientos/edicion/",
+        obtener_movimiento_edicion,
+        name="obtener_movimiento_edicion",
+    ),
+
+    path(
+        "movimientos/actualizar/",
+        actualizar_movimiento,
+        name="actualizar_movimiento",
+    ),
+
+    path(
+        "movimientos/registrar-debito-automatico/",
+        registrar_debito_automatico_movimiento,
+        name="registrar_debito_automatico_movimiento",
+    ),
+
+    path(
+        "alertas/llamador/",
+        estado_llamador_alertas,
+        name="estado_llamador_alertas",
     ),
 
     # =========================================

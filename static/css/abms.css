@@ -1,0 +1,63 @@
+/* =========================================
+   ABMs - AGRUPACIÓN DE MÓDULOS
+========================================= */
+
+.abms-grupos{
+
+    width:100%;
+
+    flex:0 0 100%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    gap:26px;
+}
+
+
+.abms-grupo{
+
+    width:100%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+
+.abms-grupo-titulo{
+
+    width:min(900px, 100%);
+
+    margin:0 auto 9px;
+
+    padding-left:8px;
+
+    box-sizing:border-box;
+
+    color:#7f8ba0;
+
+    font-size:11px;
+    font-weight:700;
+
+    letter-spacing:.10em;
+
+    text-transform:uppercase;
+}
+
+
+.abms-navegacion{
+
+    width:min(900px, 100%);
+
+    margin:0 auto;
+}
+
+
+.abms-botonera{
+
+    width:100%;
+
+    margin:0 auto;
+}

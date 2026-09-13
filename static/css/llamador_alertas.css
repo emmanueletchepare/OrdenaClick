@@ -1,0 +1,356 @@
+/*
+ * =========================================
+ * LLAMADOR DE ALERTAS
+ * =========================================
+ *
+ * Burbuja flotante utilizada para indicar
+ * que existen compromisos dentro de Alertas.
+ *
+ * La animación se ejecuta únicamente cuando
+ * el llamador pasa al estado visible.
+ */
+
+
+/* =========================================
+   CONTENEDOR
+========================================= */
+
+.llamador-alertas{
+    position:fixed;
+
+    right:28px;
+    bottom:28px;
+
+    width:58px;
+    height:58px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:0;
+
+    border:
+        1px solid
+        rgba(245, 158, 11, .65);
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle at 50% 42%,
+            #252b38 0%,
+            #171d29 62%,
+            #10141d 100%
+        );
+
+    color:#fbbf24;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.40),
+        0 0 0 1px rgba(251,191,36,.08);
+
+    cursor:pointer;
+
+    z-index:10000;
+
+    opacity:0;
+
+    transform:
+        scale(.82);
+
+    pointer-events:none;
+
+    transition:
+        opacity .20s ease,
+        transform .20s ease,
+        background .20s ease,
+        border-color .20s ease,
+        box-shadow .20s ease;
+}
+
+
+/* =========================================
+   ESTADO VISIBLE
+========================================= */
+
+.llamador-alertas.visible{
+    opacity:1;
+
+    transform:
+        scale(1);
+
+    pointer-events:auto;
+
+    animation:
+        llamadorEntrada .35s ease-out,
+        llamadorPulso 1.8s ease-out .35s 2;
+}
+
+
+/* =========================================
+   HOVER
+========================================= */
+
+.llamador-alertas:hover{
+    border-color:#fbbf24;
+
+    background:
+        radial-gradient(
+            circle at 50% 42%,
+            #303746 0%,
+            #1d2431 62%,
+            #121720 100%
+        );
+
+    box-shadow:
+        0 12px 34px rgba(0,0,0,.45),
+        0 0 18px rgba(251,191,36,.22);
+}
+
+
+/* =========================================
+   CAMPANA
+========================================= */
+
+.llamador-alertas-icono{
+    position:relative;
+
+    width:25px;
+    height:25px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    filter:
+        drop-shadow(
+            0 0 5px
+            rgba(251,191,36,.40)
+        );
+}
+
+
+.llamador-alertas-icono svg{
+    width:100%;
+    height:100%;
+
+    fill:none;
+
+    stroke:#fbbf24;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+
+/*
+ * Cuando aparece el llamador,
+ * la campana oscila brevemente.
+ */
+.llamador-alertas.visible
+.llamador-alertas-icono{
+
+    transform-origin:
+        50% 10%;
+
+    animation:
+        llamadorCampana .72s ease-in-out
+        .22s 3;
+}
+
+
+/* =========================================
+   ONDAS LATERALES
+========================================= */
+
+.llamador-alertas::before,
+.llamador-alertas::after{
+
+    content:"";
+
+    position:absolute;
+
+    top:50%;
+
+    width:9px;
+    height:24px;
+
+    opacity:0;
+
+    pointer-events:none;
+}
+
+
+.llamador-alertas::before{
+
+    right:calc(100% + 5px);
+
+    border-left:
+        3px solid
+        #fbbf24;
+
+    border-radius:
+        50% 0 0 50%;
+}
+
+
+.llamador-alertas::after{
+
+    left:calc(100% + 5px);
+
+    border-right:
+        3px solid
+        #fbbf24;
+
+    border-radius:
+        0 50% 50% 0;
+}
+
+
+.llamador-alertas.visible::before,
+.llamador-alertas.visible::after{
+
+    animation:
+        llamadorOndas .72s ease-in-out
+        .22s 3;
+}
+
+
+/* =========================================
+   ANIMACIONES
+========================================= */
+
+@keyframes llamadorEntrada{
+
+    0%{
+        transform:
+            scale(.75);
+
+        opacity:0;
+    }
+
+    70%{
+        transform:
+            scale(1.10);
+
+        opacity:1;
+    }
+
+    100%{
+        transform:
+            scale(1);
+
+        opacity:1;
+    }
+
+}
+
+
+@keyframes llamadorCampana{
+
+    0%{
+        transform:
+            rotate(0deg);
+    }
+
+    20%{
+        transform:
+            rotate(18deg);
+    }
+
+    40%{
+        transform:
+            rotate(-16deg);
+    }
+
+    60%{
+        transform:
+            rotate(12deg);
+    }
+
+    80%{
+        transform:
+            rotate(-8deg);
+    }
+
+    100%{
+        transform:
+            rotate(0deg);
+    }
+
+}
+
+
+@keyframes llamadorOndas{
+
+    0%{
+        opacity:0;
+
+        transform:
+            translateY(-50%)
+            scale(.65);
+    }
+
+    30%{
+        opacity:1;
+    }
+
+    70%{
+        opacity:.85;
+    }
+
+    100%{
+        opacity:0;
+
+        transform:
+            translateY(-50%)
+            scale(1.20);
+    }
+
+}
+
+
+@keyframes llamadorPulso{
+
+    0%{
+        box-shadow:
+            0 10px 30px rgba(0,0,0,.40),
+            0 0 0 0 rgba(251,191,36,.30);
+    }
+
+    60%{
+        box-shadow:
+            0 10px 30px rgba(0,0,0,.40),
+            0 0 0 10px rgba(251,191,36,0);
+    }
+
+    100%{
+        box-shadow:
+            0 10px 30px rgba(0,0,0,.40),
+            0 0 0 0 rgba(251,191,36,0);
+    }
+
+}
+
+
+/* =========================================
+   ACCESIBILIDAD
+========================================= */
+
+@media(
+    prefers-reduced-motion:
+    reduce
+){
+
+    .llamador-alertas.visible,
+    .llamador-alertas.visible
+    .llamador-alertas-icono,
+    .llamador-alertas.visible::before,
+    .llamador-alertas.visible::after{
+
+        animation:none;
+
+    }
+
+}
