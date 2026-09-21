@@ -21,16 +21,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "ORDENACLICK_SECRET_KEY"
+# =========================================
+# CONFIGURACIÓN PRIVADA DE LA INSTALACIÓN
+# =========================================
+
+from usuarios.services.configuracion_instalacion import (
+    obtener_valor_privado,
 )
+
+
+# SECURITY WARNING: keep the secret key used in production secret!
+#
+# La variable de entorno tiene prioridad para permitir que un servidor
+# de producción utilice su propio gestor de secretos.
+#
+# Como alternativa, OrdenaClick puede cargar la clave desde su
+# configuración privada persistente fuera del repositorio.
+SECRET_KEY = (
+    os.environ.get(
+        "ORDENACLICK_SECRET_KEY",
+        "",
+    ).strip()
+    or obtener_valor_privado(
+        "ordenaclick_secret_key",
+        "",
+    )
+)
+
 
 if not SECRET_KEY:
     raise RuntimeError(
-        "Falta definir la variable de entorno "
-        "ORDENACLICK_SECRET_KEY."
-    )
+        "Falta configurar ORDENACLICK_SECRET_KEY "
+        "en el entorno o en la configuración privada "
+        "de la instalación."
+    )   
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -62,6 +86,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'ordenaclick.urls'
+
+# Ruta de autenticación utilizada por @login_required
+# cuando una sesión no existe o deja de ser válida.
+LOGIN_URL = "login"
 
 TEMPLATES = [
     {

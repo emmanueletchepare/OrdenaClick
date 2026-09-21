@@ -1,0 +1,693 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        OrdenaClick | Desarrollador
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/sidebar.css' %}?v=2"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/navegacion_modulos.css' %}?v=6"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/desarrollador/panel_desarrollador.css' %}?v=3"
+    >
+
+</head>
+
+<body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================= -->
+
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="logo">
+                Ordena<span>click</span>
+            </div>
+
+            <div class="user-box">
+
+                <div class="user-label">
+                    Desarrollador conectado
+                </div>
+
+                <div class="user-name">
+                    {{ request.user.get_full_name|default:request.user.username }}
+                </div>
+
+            </div>
+
+
+            <div class="menu">
+
+                <button
+                    type="button"
+                    class="sidebar-nav-btn activo"
+                    data-sidebar-item
+                >
+
+                    <span class="sidebar-nav-icon">
+
+                        <svg viewBox="0 0 24 24">
+
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="3"
+                            ></circle>
+
+                            <path
+                                d="
+                                    M19.4 15
+                                    a1.7 1.7 0 0 0 .3 1.9
+                                    l.1.1-2 3.4-.2-.1
+                                    a1.7 1.7 0 0 0-2-.1
+                                    1.7 1.7 0 0 0-1 .9
+                                    V21h-4v-.1
+                                    a1.7 1.7 0 0 0-1-.9
+                                    1.7 1.7 0 0 0-2 .1
+                                    l-.2.1-2-3.4.1-.1
+                                    a1.7 1.7 0 0 0 .3-1.9
+                                    1.7 1.7 0 0 0-1.5-1
+                                    H4v-4h.1
+                                    a1.7 1.7 0 0 0 1.5-1
+                                    1.7 1.7 0 0 0-.3-1.9
+                                    l-.1-.1 2-3.4.2.1
+                                    a1.7 1.7 0 0 0 2 .1
+                                    1.7 1.7 0 0 0 1-.9
+                                    V3h4v.1
+                                    a1.7 1.7 0 0 0 1 .9
+                                    1.7 1.7 0 0 0 2-.1
+                                    l.2-.1 2 3.4-.1.1
+                                    a1.7 1.7 0 0 0-.3 1.9
+                                    1.7 1.7 0 0 0 1.5 1
+                                    h.1v4h-.1
+                                    a1.7 1.7 0 0 0-1.3 1.2
+                                "
+                            ></path>
+
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-nav-text">
+                        Config. de Seguridad
+                    </span>
+
+                </button>
+
+
+                <div class="sidebar-separator"></div>
+
+
+                <a
+                    href="{% url 'home' %}"
+                    class="
+                        sidebar-nav-btn
+                        sidebar-nav-secondary
+                    "
+                >
+
+                    <span class="sidebar-nav-icon">
+
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 11l9-8 9 8"></path>
+                            <path d="M5 10v10h14V10"></path>
+                            <path d="M9 20v-6h6v6"></path>
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-nav-text">
+                        Volver al Inicio
+                    </span>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================
+         PANEL OPERATIVO
+    ========================= -->
+
+    <main class="main">
+
+        <div class="topbar">
+
+            <div class="title">
+                Config. de <span>Seguridad</span>
+            </div>
+
+            <div class="subtitle">
+                Configuración técnica de la instalación de OrdenaClick
+            </div>
+
+        </div>
+
+
+        <section class="card">
+
+            <!-- =========================
+                 NAVEGACIÓN DE MÓDULOS
+            ========================= -->
+
+            <div
+                class="
+                    vencimientos-navegacion
+                    registros-navegacion
+                "
+            >
+
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-izquierda
+                    "
+                    aria-label="Opciones anteriores"
+                    title="Opciones anteriores"
+                    disabled
+                >
+                    ❮
+                </button>
+
+
+                <div
+                    class="
+                        vencimientos-botonera
+                        registros-botonera
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="
+                            vencimientos-segmento
+                            activo
+                        "
+                        data-developer-module="ordenaclick"
+                    >
+                        ORDENACLICK
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        data-developer-module="arca"
+                    >
+                        ARCA
+                    </button>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-derecha
+                    "
+                    aria-label="Opciones siguientes"
+                    title="Opciones siguientes"
+                    disabled
+                >
+                    ❯
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 CONTENIDO
+            ========================= -->
+
+            <!-- =========================
+                ORDENACLICK
+            ========================= -->
+
+            <div
+                class="developer-content"
+                data-developer-content="ordenaclick"
+            >
+
+                <div class="developer-section-title">
+                    ORDENACLICK
+                </div>
+
+                <div class="developer-section-description">
+                    Configuración general y seguridad propia de la instalación.
+                </div>
+
+
+                <div class="security-setting">
+
+                    <div class="security-setting-info">
+
+                        <div class="security-setting-name">
+                            ORDENACLICK_SECRET_KEY
+                        </div>
+
+                        <div class="security-setting-description">
+                            Clave utilizada por Django para firmas criptográficas
+                            y otros mecanismos internos de seguridad.
+                        </div>
+
+                    </div>
+
+
+                    {% if secret_key_configurada %}
+
+                        <div class="security-status security-status-ok">
+                            Configurada
+                        </div>
+
+                    {% else %}  
+
+                        <div class="security-status security-status-pending">
+                            No configurada
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+                <div class="security-origin">
+
+                    <span>
+                        Origen activo:
+                    </span>
+
+                    <strong>
+                        {{ secret_key_origen }}
+                    </strong>
+
+                </div>
+
+                {% if secret_key_administrada_externamente %}
+
+                    <div class="developer-notice">
+
+                        La clave está administrada externamente mediante
+                        la variable de entorno ORDENACLICK_SECRET_KEY.
+
+                        Mientras esa variable exista, tendrá prioridad y
+                        la clave no podrá reemplazarse desde este panel.
+
+                    </div>
+
+                {% elif secret_key_reinicio_pendiente %}
+
+                    <div class="developer-notice">
+
+                        Se preparó una nueva SECRET_KEY para esta instalación.
+
+                        OrdenaClick continúa utilizando la clave anterior hasta
+                        que la aplicación sea reiniciada. No se permitirá preparar
+                        otro reemplazo mientras este reinicio esté pendiente.
+
+                    </div>
+
+                    <div class="security-status security-status-pending">
+                        Reinicio pendiente
+                    </div>
+
+                {% else %}
+
+                    <div class="developer-notice">
+
+                        La clave puede administrarse mediante la configuración
+                        privada de esta instalación.
+
+                        Su valor nunca será mostrado por OrdenaClick.
+                        Cualquier reemplazo requerirá reiniciar la aplicación
+                        para entrar en vigencia.
+
+                    </div>
+
+                    <div class="security-action">
+
+                        <div class="security-action-info">
+
+                            <div class="security-action-title">
+                                Reemplazar SECRET_KEY
+                            </div>
+
+                            <div class="security-action-description">
+                                Generará una nueva clave criptográfica para esta
+                                instalación. La clave actual continuará en uso hasta
+                                que OrdenaClick sea reiniciado.
+                            </div>
+
+                        </div>
+
+                        <form
+                            method="post"
+                            action="{% url 'reemplazar_secret_key_desarrollador' %}"
+                            data-secret-key-form
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="button"
+                                class="security-action-button"
+                                data-secret-key-replace
+                            >
+                                Preparar nueva clave
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- =========================
+                ARCA
+            ========================= -->
+
+            <div
+                class="developer-content"
+                data-developer-content="arca"
+                hidden
+            >
+
+                <div class="developer-section-title">
+                    ARCA
+                </div>
+
+                <div class="developer-section-description">
+                    Configuración global de los servicios web de ARCA
+                    utilizados por esta instalación de OrdenaClick.
+                </div>
+
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    action="{% url 'guardar_configuracion_arca_desarrollador' %}"
+                    data-arca-form
+                >
+                    {% csrf_token %}
+
+                    <div class="security-setting">
+
+                        <div class="security-setting-info">
+
+                            <div class="security-setting-name">
+                                Ambiente operativo
+                            </div>
+
+                            <div class="security-setting-description">
+                                Ambiente utilizado por las consultas de
+                                OrdenaClick a ARCA.
+                            </div>
+
+                        </div>
+
+                        <select
+                            name="arca_ambiente"
+                            class="developer-config-input"
+                            required
+                        >
+                            <option
+                                value="homologacion"
+                                {% if arca_ambiente == "homologacion" %}selected{% endif %}
+                            >
+                                Homologación
+                            </option>
+
+                            <option
+                                value="produccion"
+                                {% if arca_ambiente == "produccion" %}selected{% endif %}
+                            >
+                                Producción
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <div class="security-setting developer-setting-separated">
+
+                        <div class="security-setting-info">
+
+                            <label
+                                class="security-setting-name"
+                                for="arcaCuitRepresentada"
+                            >
+                                CUIT representada
+                            </label>
+
+                            <div class="security-setting-description">
+                                CUIT de la identidad que representa a esta
+                                instalación ante los servicios web de ARCA.
+                            </div>
+
+                        </div>
+
+                        <input
+                            id="arcaCuitRepresentada"
+                            type="text"
+                            name="arca_cuit_representada"
+                            class="developer-config-input"
+                            value="{{ arca_cuit_representada }}"
+                            inputmode="numeric"
+                            maxlength="13"
+                            autocomplete="off"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="security-setting developer-setting-separated">
+
+                        <div class="security-setting-info">
+
+                            <div class="security-setting-name">
+                                Homologación
+                            </div>
+
+                            <div class="security-setting-description">
+                                Credenciales destinadas al entorno de pruebas
+                                de ARCA.
+                            </div>
+
+                        </div>
+
+                        {% if arca_homologacion_configurada %}
+
+                            <div class="security-status security-status-ok">
+                                Configurado
+                            </div>
+
+                        {% else %}
+
+                            <div class="security-status security-status-pending">
+                                Sin configurar
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="security-action">
+
+                        <div class="security-action-info">
+
+                            <div class="security-action-title">
+                                Credenciales de Homologación
+                            </div>
+
+                            <div class="security-action-description">
+                                Seleccioná ambos archivos únicamente para
+                                instalar o reemplazar estas credenciales.
+                                Si no seleccionás archivos, se conservan
+                                las actuales.
+                            </div>
+
+                        </div>
+
+                        <div class="developer-credential-fields">
+
+                            <label class="developer-file-field">
+                                Certificado (.crt)
+
+                                <input
+                                    type="file"
+                                    name="arca_homologacion_certificado"
+                                    accept=".crt,.pem"
+                                >
+                            </label>
+
+                            <label class="developer-file-field">
+                                Clave privada (.key)
+
+                                <input
+                                    type="file"
+                                    name="arca_homologacion_clave"
+                                    accept=".key,.pem"
+                                >
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="security-setting developer-setting-separated">
+
+                        <div class="security-setting-info">
+
+                            <div class="security-setting-name">
+                                Producción
+                            </div>
+
+                            <div class="security-setting-description">
+                                Credenciales destinadas al entorno productivo
+                                de ARCA.
+                            </div>
+
+                        </div>
+
+                        {% if arca_produccion_configurada %}
+
+                            <div class="security-status security-status-ok">
+                                Configurado
+                            </div>
+
+                        {% else %}
+
+                            <div class="security-status security-status-pending">
+                                Sin configurar
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="security-action">
+
+                        <div class="security-action-info">
+
+                            <div class="security-action-title">
+                                Credenciales de Producción
+                            </div>
+
+                            <div class="security-action-description">
+                                Seleccioná ambos archivos únicamente para
+                                instalar o reemplazar estas credenciales.
+                                Si no seleccionás archivos, se conservan
+                                las actuales.
+                            </div>
+
+                        </div>
+
+                        <div class="developer-credential-fields">
+
+                            <label class="developer-file-field">
+                                Certificado (.crt)
+
+                                <input
+                                    type="file"
+                                    name="arca_produccion_certificado"
+                                    accept=".crt,.pem"
+                                >
+                            </label>
+
+                            <label class="developer-file-field">
+                                Clave privada (.key)
+
+                                <input
+                                    type="file"
+                                    name="arca_produccion_clave"
+                                    accept=".key,.pem"
+                                >
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="developer-notice">
+
+                        Homologación y Producción mantienen credenciales
+                        independientes. Los certificados y claves privadas
+                        se almacenan fuera del repositorio y nunca son
+                        mostrados nuevamente por OrdenaClick.
+
+                    </div>
+
+
+                    <div class="security-action">
+
+                        <div class="security-action-info">
+
+                            <div class="security-action-title">
+                                Aplicar configuración ARCA
+                            </div>
+
+                            <div class="security-action-description">
+                                Guarda el ambiente operativo, el CUIT
+                                representado y, cuando fueron seleccionadas,
+                                las nuevas credenciales.
+                            </div>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="security-action-button"
+                            data-arca-save
+                        >
+                            Guardar configuración
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script
+        src="{% static 'js/desarrollador/panel_desarrollador.js' %}?v=4"
+    ></script>
+
+</body>
+
+</html>

@@ -11,6 +11,8 @@ from .views import (
     panel_colaborador,
     panel_contable,
     panel_legal,
+    panel_desarrollador,
+    reemplazar_secret_key_desarrollador,
     listar_bancos,
     listar_centros_operativos,
     panel_admin,
@@ -34,6 +36,12 @@ from .views import (
     modificar_proveedor,
     eliminar_proveedor,
     reactivar_proveedor,
+    listar_clientes,
+    autocompletar_cliente_arca,
+    guardar_cliente,
+    modificar_cliente,
+    eliminar_cliente,
+    reactivar_cliente,
     listar_tipos_gasto,
     guardar_tipo_gasto,
     modificar_tipo_gasto,
@@ -65,7 +73,10 @@ from .views import (
     estado_llamador_alertas,
     obtener_movimiento_edicion,
     actualizar_movimiento,
+    registrar_pago_manual_movimiento,
+    eliminar_pago_movimiento,
     registrar_debito_automatico_movimiento,
+    guardar_configuracion_arca_desarrollador,
     reactivar_retencion
     
 )
@@ -140,6 +151,24 @@ urlpatterns = [
         'panel-legal/',
         panel_legal,
         name='panel_legal'
+    ),
+
+    path(
+        'panel-desarrollador/',
+        panel_desarrollador,
+        name='panel_desarrollador'
+    ),
+
+    path(
+        'panel-desarrollador/seguridad/reemplazar-secret-key/',
+        reemplazar_secret_key_desarrollador,
+        name='reemplazar_secret_key_desarrollador'
+    ),
+
+    path(
+        "panel-desarrollador/arca/guardar/",
+        guardar_configuracion_arca_desarrollador,
+        name="guardar_configuracion_arca_desarrollador",
     ),
 
     path(
@@ -385,6 +414,46 @@ urlpatterns = [
     ),
 
     # =========================================
+    # CLIENTES
+    # =========================================
+
+    path(
+        "clientes/",
+        listar_clientes,
+        name="listar_clientes"
+    ),
+
+    path(
+        "clientes/guardar/",
+        guardar_cliente,
+        name="guardar_cliente"
+    ),
+
+    path(
+        "clientes/autocompletar-arca/",
+        autocompletar_cliente_arca,
+        name="autocompletar_cliente_arca"
+    ),
+
+    path(
+        "clientes/modificar/",
+        modificar_cliente,
+        name="modificar_cliente"
+    ),
+
+    path(
+        "clientes/eliminar/",
+        eliminar_cliente,
+        name="eliminar_cliente"
+    ),
+
+    path(
+        "clientes/reactivar/",
+        reactivar_cliente,
+        name="reactivar_cliente"
+    ),
+
+    # =========================================
     # TIPOS DE GASTO
     # =========================================
 
@@ -478,6 +547,18 @@ urlpatterns = [
         "movimientos/actualizar/",
         actualizar_movimiento,
         name="actualizar_movimiento",
+    ),
+
+    path(
+        "movimientos/registrar-pago/",
+        registrar_pago_manual_movimiento,
+        name="registrar_pago_manual_movimiento",
+    ),
+
+    path(
+        "movimientos/eliminar-pago/",
+        eliminar_pago_movimiento,
+        name="eliminar_pago_movimiento",
     ),
 
     path(

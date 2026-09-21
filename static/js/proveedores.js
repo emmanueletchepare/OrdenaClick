@@ -172,44 +172,68 @@ function filtrarProveedoresABM(){
    FUNCIONES AUXILIARES
 ========================================= */
 
+/**
+ * Formatea progresivamente el CUIT del Proveedor
+ * mientras el usuario lo escribe.
+ *
+ * Ejemplo:
+ * 20          -> 20-
+ * 2012345678  -> 20-12345678-
+ * 20123456783 -> 20-12345678-3
+ */
 function formatearCuitProveedor(valor){
 
     const numeros =
         String(valor || "")
-        .replace(
-            /\D/g,
-            ""
-        )
-        .slice(
-            0,
-            11
-        );
+            .replace(/\D/g, "")
+            .slice(0, 11);
 
 
-    if(numeros.length <= 2){
+    if(numeros.length === 0){
+
+        return "";
+
+    }
+
+
+    if(numeros.length < 2){
 
         return numeros;
 
     }
 
 
-    if(numeros.length <= 10){
+    if(numeros.length === 2){
+
+        return `${numeros}-`;
+
+    }
+
+
+    if(numeros.length < 10){
 
         return (
-            numeros.slice(0, 2) +
-            "-" +
+            `${numeros.slice(0, 2)}-` +
             numeros.slice(2)
         );
 
     }
 
 
+    if(numeros.length === 10){
+
+        return (
+            `${numeros.slice(0, 2)}-` +
+            `${numeros.slice(2, 10)}-`
+        );
+
+    }
+
+
     return (
-        numeros.slice(0, 2) +
-        "-" +
-        numeros.slice(2, 10) +
-        "-" +
-        numeros.slice(10)
+        `${numeros.slice(0, 2)}-` +
+        `${numeros.slice(2, 10)}-` +
+        numeros.slice(10, 11)
     );
 
 }

@@ -1,0 +1,459 @@
+<div class="card">
+
+    <div
+    style="
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:10px;
+    ">
+
+        Clientes
+
+    </div>
+
+    <div
+    style="
+    color:#8b93a7;
+    margin-bottom:30px;
+    ">
+
+        Administración de clientes por Centro Operativo.
+
+    </div>
+
+
+    <div class="form-grid">
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="clienteCentroOperativo">
+
+                Centro Operativo
+
+            </label>
+
+            <div
+            style="
+            display:flex;
+            gap:10px;
+            ">
+
+                <select
+                id="clienteCentroOperativo"
+                class="input-box"
+                style="flex:1;">
+
+                    <option value="">
+                        Seleccione...
+                    </option>
+
+                    {% for centro in centros_operativos %}
+
+                        <option value="{{ centro.id }}">
+                            {{ centro.nombre }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <button
+                id="btnAgregarCentroOperativoCliente"
+                type="button"
+                class="action-btn"
+                title="Agregar Centro Operativo"
+                style="
+                width:54px;
+                height:44px;
+                padding:0;
+                flex-shrink:0;
+                align-self:center;
+                ">
+                    +
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="clienteNumero">
+
+                N.º Cliente
+
+            </label>
+
+            <input
+            id="clienteNumero"
+            type="text"
+            class="input-box"
+            maxlength="50"
+            placeholder="Número de cliente"
+            autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="clienteCuit">
+
+                CUIT
+
+            </label>
+
+            <input
+            id="clienteCuit"
+            type="text"
+            class="input-box"
+            maxlength="13"
+            inputmode="numeric"
+            placeholder="20-12345678-6"
+            autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="btnAutocompletarClienteArca">
+
+                Datos fiscales
+
+            </label>
+
+            <button
+            id="btnAutocompletarClienteArca"
+            type="button"
+            class="action-btn"
+            data-url="{% url 'autocompletar_cliente_arca' %}"
+            title="Completar razón social y dirección consultando ARCA">
+
+                Autocompletar con ARCA
+
+            </button>
+
+        </div>
+
+
+        <div class="field field-full">
+
+            <label
+            class="label"
+            for="clienteRazonSocial">
+
+                Nombre / Razón social
+
+            </label>
+
+            <input
+            id="clienteRazonSocial"
+            type="text"
+            class="input-box"
+            maxlength="200"
+            placeholder="Nombre o razón social"
+            autocomplete="off">
+
+        </div>
+
+
+        <div class="field field-full">
+
+            <label
+            class="label"
+            for="clienteDireccion">
+
+                Dirección
+
+            </label>
+
+            <input
+            id="clienteDireccion"
+            type="text"
+            class="input-box"
+            maxlength="255"
+            placeholder="Dirección"
+            autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="clienteCelular">
+
+                Celular
+
+            </label>
+
+            <input
+            id="clienteCelular"
+            type="text"
+            class="input-box"
+            maxlength="50"
+            placeholder="Celular"
+            autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label
+            class="label"
+            for="clienteTelefono">
+
+                Teléfono
+
+            </label>
+
+            <input
+            id="clienteTelefono"
+            type="text"
+            class="input-box"
+            maxlength="50"
+            placeholder="Teléfono"
+            autocomplete="off">
+
+        </div>
+
+    </div>
+
+
+    <div
+    style="
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    ">
+
+        <button
+        id="btnGuardarCliente"
+        type="button"
+        class="guardar"
+        style="
+        margin-top:0;
+        flex:1;
+        ">
+
+            Guardar
+
+        </button>
+
+        <button
+        id="btnCancelarCliente"
+        type="button"
+        class="action-btn"
+        style="
+        display:none;
+        height:52px;
+        width:180px;
+        ">
+
+            Cancelar
+
+        </button>
+
+    </div>
+
+
+    <div
+    style="
+    border-top:1px solid #2b3447;
+    margin-top:28px;
+    padding-top:24px;
+    margin-bottom:16px;
+    ">
+
+        <label
+        class="label"
+        for="buscarClienteABM"
+        style="
+        display:block;
+        margin-bottom:8px;
+        ">
+
+            Buscar cliente
+
+        </label>
+
+        <input
+        id="buscarClienteABM"
+        type="text"
+        class="input-box"
+        placeholder="Buscar por centro, número, CUIT, nombre o razón social"
+        autocomplete="off">
+
+    </div>
+
+
+    <div
+    id="grillaClientes"
+    style="
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    ">
+
+        {% for cliente in clientes %}
+
+        <div
+        class="tarjeta-cliente-abm"
+        data-busqueda="
+            {{ cliente.centro_operativo.nombre|default:''|escape }}
+            {{ cliente.numero_cliente|default:''|escape }}
+            {{ cliente.cuit|default:''|escape }}
+            {{ cliente.razon_social|default:''|escape }}
+            {{ cliente.direccion|default:''|escape }}
+            {{ cliente.celular|default:''|escape }}
+            {{ cliente.telefono|default:''|escape }}
+        "
+        style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:14px 18px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+        ">
+
+            <div>
+
+                <div
+                style="
+                font-weight:700;
+                margin-bottom:5px;
+                ">
+
+                    {{ cliente.numero_cliente }}
+                    ·
+                    {{ cliente.razon_social }}
+
+                </div>
+
+                <div
+                style="
+                color:#8b93a7;
+                font-size:14px;
+                ">
+
+                    {{ cliente.centro_operativo.nombre }}
+
+                    {% if cliente.cuit %}
+                        · CUIT {{ cliente.cuit }}
+                    {% endif %}
+
+                    {% if cliente.direccion %}
+                        · {{ cliente.direccion }}
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div
+            style="
+            display:flex;
+            gap:8px;
+            ">
+
+                <button
+                type="button"
+                class="action-btn btn-modificar-cliente"
+                data-cliente-id="{{ cliente.id }}"
+                data-centro-id="{{ cliente.centro_operativo_id }}"
+                data-numero="{{ cliente.numero_cliente|escape }}"
+                data-cuit="{{ cliente.cuit|default:''|escape }}"
+                data-razon-social="{{ cliente.razon_social|escape }}"
+                data-direccion="{{ cliente.direccion|default:''|escape }}"
+                data-celular="{{ cliente.celular|default:''|escape }}"
+                data-telefono="{{ cliente.telefono|default:''|escape }}">
+
+                    Modificar
+
+                </button>
+
+
+                <button
+                type="button"
+                class="action-btn btn-eliminar-cliente"
+                data-cliente-id="{{ cliente.id }}"
+                data-cliente-nombre="{{ cliente.razon_social|escape }}"
+                style="
+                background:#7f1d1d;
+                border-color:#991b1b;
+                ">
+
+                    Eliminar
+
+                </button>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div
+        style="
+        color:#8b93a7;
+        padding:20px;
+        text-align:center;
+        ">
+
+            No hay clientes cargados.
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div
+    id="sinResultadosClienteABM"
+    style="
+    display:none;
+    color:#8b93a7;
+    padding:20px;
+    text-align:center;
+    ">
+
+        No se encontraron clientes.
+
+    </div>
+
+</div>
+
+
+<div
+style="
+display:flex;
+justify-content:flex-end;
+margin-top:30px;
+">
+
+    <button
+    id="btnVolverCliente"
+    type="button"
+    class="action-btn">
+
+        ← Volver
+
+    </button>
+
+</div>

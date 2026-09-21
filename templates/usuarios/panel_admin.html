@@ -712,7 +712,7 @@ body{
 
 <link
     rel="stylesheet"
-    href="{% static 'css/navegacion_modulos.css' %}?v=5"
+    href="{% static 'css/navegacion_modulos.css' %}?v=6"
 >
 
 <link
@@ -758,7 +758,7 @@ Administrador conectado
 </div>
 
 <div class="user-name">
-Usuario
+{{ request.user.get_full_name|default:request.user.username }}
 </div>
 
 </div>
@@ -2617,7 +2617,7 @@ function mostrarSubmenu(tipo){
 
 
                 <!-- =================================
-                     ESTRUCTURA OPERATIVA
+                    ESTRUCTURA OPERATIVA
                 ================================== -->
 
                 <section class="abms-grupo">
@@ -2633,11 +2633,25 @@ function mostrarSubmenu(tipo){
                         "
                     >
 
+                        <button
+                            type="button"
+                            class="
+                                vencimientos-flecha
+                                vencimientos-flecha-izquierda
+                            "
+                            id="btnEstructuraOperativaAnterior"
+                            aria-label="Opciones anteriores"
+                            title="Opciones anteriores"
+                        >
+                            ❮
+                        </button>
+
                         <div
                             class="
                                 vencimientos-botonera
                                 abms-botonera
                             "
+                            id="botoneraEstructuraOperativa"
                         >
 
                             <button
@@ -2691,12 +2705,39 @@ function mostrarSubmenu(tipo){
                                 Tipos de gasto
                             </button>
 
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMClientes(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Clientes
+                            </button>
+
                         </div>
+
+                        <button
+                            type="button"
+                            class="
+                                vencimientos-flecha
+                                vencimientos-flecha-derecha
+                            "
+                            id="btnEstructuraOperativaSiguiente"
+                            aria-label="Opciones siguientes"
+                            title="Opciones siguientes"
+                        >
+                            ❯
+                        </button>
 
                     </div>
 
                 </section>
 
+                
 
                 <!-- =================================
                      FINANZAS Y MEDIOS DE PAGO
@@ -2849,6 +2890,13 @@ function mostrarSubmenu(tipo){
 
         submenu.innerHTML =
             html;
+
+    }
+
+
+    if(tipo === "abms"){
+
+        inicializarNavegacionEstructuraOperativa();
 
     }
 
@@ -3050,7 +3098,10 @@ async function mostrarABMCentrosOperativos(origen = "menu"){
         );
 
     if(
-        origen === "registro" &&
+        (
+            origen === "registro" ||
+            origen === "cliente"
+        ) &&
         contenidoAnteriorABM === null
     ){
 
@@ -3110,12 +3161,154 @@ async function mostrarABMCentrosOperativos(origen = "menu"){
 
 }
 
+/**
+ * Carga el ABM de Clientes correspondiente a la Empresa
+ * activa y conserva el origen de navegación para permitir
+ * el futuro retorno contextual desde formularios.
+ */
+async function mostrarABMClientes(origen = "menu"){
+
+    origenABM = origen;
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const inputEmpresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !inputEmpresa
+    ){
+
+        console.error(
+            "No se encontraron los elementos necesarios para abrir Clientes."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        inputEmpresa.value;
+
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/clientes/?empresa=${empresa}`
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de clientes."
+            );
+
+            return;
+
+        }
+
+
+        const datos =
+            await respuesta.json();
+
+
+        const bloqueAlta =
+            document.getElementById(
+                "bloque-alta-empresa"
+            );
+
+
+        if(bloqueAlta){
+
+            bloqueAlta.style.display =
+                "none";
+
+        }
+
+
+        contenidoOperativo.innerHTML =
+            datos.html;
+
+
+        iniciarABMClientes();
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando clientes:",
+            error
+        );
+
+        alert(
+            "Ocurrió un error al cargar el módulo de clientes."
+        );
+
+    }
+
+}
+
+
+/**
+ * Regresa desde el ABM de Clientes al menú general de ABMs.
+ *
+ * El retorno contextual desde formularios se incorporará
+ * cuando exista el primer selector de Cliente con botón [+].
+ */
+function volverDesdeABMClientes(){
+
+    mostrarSubmenu(
+        "abms"
+    );
+
+}
+
 function volverDesdeABMCentrosOperativos(){
 
     const contenidoOperativo =
         document.getElementById(
             "contenido-operativo"
         );
+
+    if(
+        origenABM === "cliente" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        actualizarCentroOperativoDelCliente();
+
+        return;
+
+    }
 
     if(
         origenABM === "registro" &&
@@ -19574,17 +19767,19 @@ Sí
 
 <script src="{% static 'js/retenciones.js' %}?v=1"></script>
 
-<script src="{% static 'js/carga_simple.js' %}?v=15"></script>
+<script src="{% static 'js/carga_simple.js' %}?v=16"></script>
 
 <script src="{% static 'js/obligaciones.js' %}?v=1"></script>
 
-<script src="{% static 'js/navegacion_modulos.js' %}?v=1"></script>
+<script src="{% static 'js/navegacion_modulos.js' %}?v=2"></script>
 
 <script src="{% static 'js/sidebar.js' %}?v=1"></script>
 
 <script src="{% static 'js/vencimientos.js' %}?v=4"></script>
 
 <script src="{% static 'js/llamador_alertas.js' %}?v=2"></script>
+
+<script src="{% static 'js/clientes.js' %}?v=5"></script>
 
 </body>
 </html>

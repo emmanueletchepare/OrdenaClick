@@ -237,6 +237,97 @@ function inicializarNavegacionRegistros(){
 
 }
 
+/**
+ * Inicializa las flechas de la botonera de Estructura
+ * Operativa dentro del menú general de ABMs.
+ *
+ * Cuando existen más de cuatro opciones, conserva cuatro
+ * segmentos visibles y permite recorrer las restantes con
+ * las mismas flechas utilizadas por Registros.
+ */
+function inicializarNavegacionEstructuraOperativa(){
+
+    const botonera =
+        document.getElementById(
+            "botoneraEstructuraOperativa"
+        );
+
+    const btnAnterior =
+        document.getElementById(
+            "btnEstructuraOperativaAnterior"
+        );
+
+    const btnSiguiente =
+        document.getElementById(
+            "btnEstructuraOperativaSiguiente"
+        );
+
+
+    if(
+        !botonera ||
+        !btnAnterior ||
+        !btnSiguiente
+    ){
+
+        return;
+
+    }
+
+
+    btnAnterior.addEventListener(
+        "click",
+        function(){
+
+            desplazarBotoneraNavegacion(
+                botonera,
+                -1
+            );
+
+        }
+    );
+
+
+    btnSiguiente.addEventListener(
+        "click",
+        function(){
+
+            desplazarBotoneraNavegacion(
+                botonera,
+                1
+            );
+
+        }
+    );
+
+
+    botonera.addEventListener(
+        "scroll",
+        function(){
+
+            actualizarFlechasNavegacion(
+                botonera,
+                btnAnterior,
+                btnSiguiente
+            );
+
+        }
+    );
+
+
+    window.setTimeout(
+        function(){
+
+            actualizarFlechasNavegacion(
+                botonera,
+                btnAnterior,
+                btnSiguiente
+            );
+
+        },
+        0
+    );
+
+}
 
 /**
  * Atiende segmentos creados dinámicamente dentro del

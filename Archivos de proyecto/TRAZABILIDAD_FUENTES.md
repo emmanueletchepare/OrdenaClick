@@ -1,12 +1,14 @@
 # TRAZABILIDAD_FUENTES.md
 
-Este archivo no forma parte de los siete documentos operativos. Es un resguardo de trazabilidad para garantizar que la reorganización no haga desaparecer contenido fuente.
-Los siete documentos normalizados son la referencia de trabajo; ante una duda histórica, este anexo permite volver al texto recibido.
-
+Este archivo no forma parte de los siete documentos operativos. Es un
+resguardo de trazabilidad para garantizar que la reorganización no haga
+desaparecer contenido fuente. Los siete documentos normalizados son la
+referencia de trabajo; ante una duda histórica, este anexo permite
+volver al texto recibido.
 
 ## FUENTE: Reglas_del_desarrollo.md
 
-```text
+``` text
 -no JavaScripts inline
 -no eliminar comentarios importantes
 -cada funcion debe tener docstrings
@@ -75,10 +77,9 @@ Registro, Pago y Plan son etapas relacionadas,
 pero no deben confundirse visualmente entre sí.
 ```
 
-
 ## FUENTE: Reglas_Exportacion_Empresa.txt
 
-```text
+``` text
 EXPORTACIÓN / IMPORTACIÓN DE EMPRESA - REGLAS DE ARQUITECTURA
 
 OBJETIVO
@@ -339,10 +340,9 @@ Al importar deben reconstruirse después de haber reconstruido:
 - Cuotas.
 ```
 
-
 ## FUENTE: TODO.md
 
-```text
+``` text
 
 
 
@@ -366,131 +366,129 @@ Buscador dinámico en listados de tarjetas de todos los ABM.
 ---
 ```
 
-
 ## FUENTE: Arquitectura Panel_admin.txt
 
-```text
+``` text
 
 ORDENACLICK
 │
 ├── Login
-│		├── Selección de Rol
-│		│		├ADMINISTRADOR
-│		│		│	├Alta nueva empresa
-│		│		│	├Seleccionar Empresa
-│		│		│	│	├Empresa Seleccionada
-│		│		│	│	│	├ Registros
-│		│		│ 	│  	│	│	├ Carga Simple
-│		│		│	│	│	│	├ Carga Planificada
-│		│		│	│	│	│	├ Registrar Pago
-│		│		│	│	│	│	└ Modificar / Eliminar
-│		│		│	│	│	├ Dashboard
-│		│		│	│	│	├ Próximos Vencimientos
-│		│		│	│	│	├ Reportes
-│		│		│	│	│	├ Estado de Resultados
-│		│		│	│	│	├ Balance
-│		│		│	│	│	├ ABMs
-│		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Recursos Operativos
-│		│		│	│	│	│	│	├ Personas
-│		│		│	│	│	│	│	├ Vehiculos
-│		│		│	│	│	│	│	├ Inmuebles
-│		│		│	│	│	│	│	├ Equipos
-│		│		│	│	│	│	│	└  Otros
-│		│		│	│	│	│	├ Tipos de Gastos
-│		│		│	│	│	│	│	├ Proveedores relacionados
-│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
-│		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
-│		│		│	│	│	├ Configuración
-│		│		│	│	│	│	├ Modificar Empresa
-│		│		│	│	│	│	└ Designar Colaboradores
-│		│		│	│	│	├ Cambiar Empresa
-│		│		│	│	│	└ Volver a inicio
-│		│		│	│	└Volver
-│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
-│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
-│		│		├COLABORADOR
-│		│		│	├Submenu a desarrollar (Se postula o acepta solicitudes para trabajar con empresas)
-│		│		│	├Seleccionar Empresa (El listado sale de empresas que acepto o lo aceptaron del submenú anterior)
-│		│		│	│	├Empresa Seleccionada
-│		│		│	│	│	├ Registros
-│		│		│ 	│  	│	│	├ Carga Simple
-│		│		│	│	│	│	├ Carga Planificada
-│		│		│	│	│	│	├ Registrar Pago
-│		│		│	│	│	│	└ Modificar / Eliminar
-│		│		│	│	│	├ Dashboard (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Próximos Vencimientos (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Reportes (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Estado de Resultados (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
-│		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
-│		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Recursos Operativos
-│		│		│	│	│	│	│	├ Personas
-│		│		│	│	│	│	│	├ Vehiculos
-│		│		│	│	│	│	│	├ Inmuebles
-│		│		│	│	│	│	│	├ Equipos
-│		│		│	│	│	│	│	└  Otros
-│		│		│	│	│	│	├ Tipos de Gastos
-│		│		│	│	│	│	│	├ Proveedores relacionados
-│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
-│		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
-│		│		│	│	│	├ Configuración (si o si oculto)
-│		│		│	│	│	│	├ Modificar Empresa
-│		│		│	│	│	│	└ Designar Colaboradores
-│		│		│	│	│	├ Cambiar Empresa
-│		│		│	│	│	└ Volver a inicio
-│		│		│	│	└Volver
-│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
-│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
-│		│		├CONTADOR/ES
-│		│		│	├Submenu a desarrollar (Donde se postula o acepta solicitudes para trabajar con empresas)
-│		│		│	│
-│		│		│	├Seleccionar Empresa (El listado no sale de empresas que creo el sino de las que acepto o lo aceptaron del submenú anterior)
-│		│		│	│	├Empresa Seleccionada
-│		│		│	│	│	├ Registros
-│		│		│ 	│  	│	│	├ Carga Simple
-│		│		│	│	│	│	├ Carga Planificada
-│		│		│	│	│	│	├ Registrar Pago
-│		│		│	│	│	│	└ Modificar / Eliminar
-│		│		│	│	│	├ Dashboard (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Próximos Vencimientos (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Reportes (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Estado de Resultados (Admin decide si oculta en permisos)
-│		│		│	│	│	├ Balance (Admin decide si oculta en permisos)
-│		│		│	│	│	├ ABMs (Admin decide si oculta en permisos)
-│		│		│	│	│	│	├ Centros Operativos
-│		│		│	│	│	│	├ Recursos Operativos
-│		│		│	│	│	│	│	├ Personas
-│		│		│	│	│	│	│	├ Vehiculos
-│		│		│	│	│	│	│	├ Inmuebles
-│		│		│	│	│	│	│	├ Equipos
-│		│		│	│	│	│	│	└  Otros
-│		│		│	│	│	│	├ Tipos de Gastos
-│		│		│	│	│	│	│	├ Proveedores relacionados
-│		│		│	│	│	│	│	└  Cuenta Contable (futuro)
-│		│		│	│	│	│	├ Proveedores
-│		│		│	│	│	│	└ Plan Contable (antes Cuentas)
-│		│		│	│	│	├ Configuración (Admin decide si oculta en permisos)
-│		│		│	│	│	│	├ Modificar Empresa
-│		│		│	│	│	│	└ Designar Colaboradores
-│		│		│	│	│	├ Cambiar Empresa
-│		│		│	│	│	└ Volver a inicio
-│		│		│	│	└Volver
-│		│		│	├ Volver a roles (Este vuelve a la selección de roles)
-│		│		│	└ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
-│		│		├ABOGADO/S (Vera casos y posiblemente algo de lo contable... por ahora a desarrollar)
-│		│		├MODIFICAR DATOS PERSONALES
-│		│		└CERRAR SESION
-x	└Registrarse
+│       ├── Selección de Rol
+│       │       ├ADMINISTRADOR
+│       │       │   ├Alta nueva empresa
+│       │       │   ├Seleccionar Empresa
+│       │       │   │   ├Empresa Seleccionada
+│       │       │   │   │   ├ Registros
+│       │       │   │   │   │   ├ Carga Simple
+│       │       │   │   │   │   ├ Carga Planificada
+│       │       │   │   │   │   ├ Registrar Pago
+│       │       │   │   │   │   └ Modificar / Eliminar
+│       │       │   │   │   ├ Dashboard
+│       │       │   │   │   ├ Próximos Vencimientos
+│       │       │   │   │   ├ Reportes
+│       │       │   │   │   ├ Estado de Resultados
+│       │       │   │   │   ├ Balance
+│       │       │   │   │   ├ ABMs
+│       │       │   │   │   │   ├ Centros Operativos
+│       │       │   │   │   │   ├ Recursos Operativos
+│       │       │   │   │   │   │   ├ Personas
+│       │       │   │   │   │   │   ├ Vehiculos
+│       │       │   │   │   │   │   ├ Inmuebles
+│       │       │   │   │   │   │   ├ Equipos
+│       │       │   │   │   │   │   └  Otros
+│       │       │   │   │   │   ├ Tipos de Gastos
+│       │       │   │   │   │   │   ├ Proveedores relacionados
+│       │       │   │   │   │   │   └  Cuenta Contable (futuro)
+│       │       │   │   │   │   ├ Proveedores
+│       │       │   │   │   │   └ Plan Contable (antes Cuentas)
+│       │       │   │   │   ├ Configuración
+│       │       │   │   │   │   ├ Modificar Empresa
+│       │       │   │   │   │   └ Designar Colaboradores
+│       │       │   │   │   ├ Cambiar Empresa
+│       │       │   │   │   └ Volver a inicio
+│       │       │   │   └Volver
+│       │       │   ├ Volver a roles (Este vuelve a la selección de roles)
+│       │       │   └ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│       │       ├COLABORADOR
+│       │       │   ├Submenu a desarrollar (Se postula o acepta solicitudes para trabajar con empresas)
+│       │       │   ├Seleccionar Empresa (El listado sale de empresas que acepto o lo aceptaron del submenú anterior)
+│       │       │   │   ├Empresa Seleccionada
+│       │       │   │   │   ├ Registros
+│       │       │   │   │   │   ├ Carga Simple
+│       │       │   │   │   │   ├ Carga Planificada
+│       │       │   │   │   │   ├ Registrar Pago
+│       │       │   │   │   │   └ Modificar / Eliminar
+│       │       │   │   │   ├ Dashboard (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Próximos Vencimientos (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Reportes (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Estado de Resultados (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Balance (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ ABMs (Admin decide si oculta en permisos)
+│       │       │   │   │   │   ├ Centros Operativos
+│       │       │   │   │   │   ├ Recursos Operativos
+│       │       │   │   │   │   │   ├ Personas
+│       │       │   │   │   │   │   ├ Vehiculos
+│       │       │   │   │   │   │   ├ Inmuebles
+│       │       │   │   │   │   │   ├ Equipos
+│       │       │   │   │   │   │   └  Otros
+│       │       │   │   │   │   ├ Tipos de Gastos
+│       │       │   │   │   │   │   ├ Proveedores relacionados
+│       │       │   │   │   │   │   └  Cuenta Contable (futuro)
+│       │       │   │   │   │   ├ Proveedores
+│       │       │   │   │   │   └ Plan Contable (antes Cuentas)
+│       │       │   │   │   ├ Configuración (si o si oculto)
+│       │       │   │   │   │   ├ Modificar Empresa
+│       │       │   │   │   │   └ Designar Colaboradores
+│       │       │   │   │   ├ Cambiar Empresa
+│       │       │   │   │   └ Volver a inicio
+│       │       │   │   └Volver
+│       │       │   ├ Volver a roles (Este vuelve a la selección de roles)
+│       │       │   └ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│       │       ├CONTADOR/ES
+│       │       │   ├Submenu a desarrollar (Donde se postula o acepta solicitudes para trabajar con empresas)
+│       │       │   │
+│       │       │   ├Seleccionar Empresa (El listado no sale de empresas que creo el sino de las que acepto o lo aceptaron del submenú anterior)
+│       │       │   │   ├Empresa Seleccionada
+│       │       │   │   │   ├ Registros
+│       │       │   │   │   │   ├ Carga Simple
+│       │       │   │   │   │   ├ Carga Planificada
+│       │       │   │   │   │   ├ Registrar Pago
+│       │       │   │   │   │   └ Modificar / Eliminar
+│       │       │   │   │   ├ Dashboard (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Próximos Vencimientos (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Reportes (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Estado de Resultados (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ Balance (Admin decide si oculta en permisos)
+│       │       │   │   │   ├ ABMs (Admin decide si oculta en permisos)
+│       │       │   │   │   │   ├ Centros Operativos
+│       │       │   │   │   │   ├ Recursos Operativos
+│       │       │   │   │   │   │   ├ Personas
+│       │       │   │   │   │   │   ├ Vehiculos
+│       │       │   │   │   │   │   ├ Inmuebles
+│       │       │   │   │   │   │   ├ Equipos
+│       │       │   │   │   │   │   └  Otros
+│       │       │   │   │   │   ├ Tipos de Gastos
+│       │       │   │   │   │   │   ├ Proveedores relacionados
+│       │       │   │   │   │   │   └  Cuenta Contable (futuro)
+│       │       │   │   │   │   ├ Proveedores
+│       │       │   │   │   │   └ Plan Contable (antes Cuentas)
+│       │       │   │   │   ├ Configuración (Admin decide si oculta en permisos)
+│       │       │   │   │   │   ├ Modificar Empresa
+│       │       │   │   │   │   └ Designar Colaboradores
+│       │       │   │   │   ├ Cambiar Empresa
+│       │       │   │   │   └ Volver a inicio
+│       │       │   │   └Volver
+│       │       │   ├ Volver a roles (Este vuelve a la selección de roles)
+│       │       │   └ CERRAR SESION (Este cierra hasta el Loguin y carga la primer pantalla de Ordenaclick)
+│       │       ├ABOGADO/S (Vera casos y posiblemente algo de lo contable... por ahora a desarrollar)
+│       │       ├MODIFICAR DATOS PERSONALES
+│       │       └CERRAR SESION
+x   └Registrarse
 ```
-
 
 ## FUENTE: Arquitectura_Movimientos_Pagos_Vencimientos_Alertas.txt
 
-```text
+``` text
 =========================================================
 ORDENACLICK
 ARQUITECTURA DE MOVIMIENTOS, PAGOS,
@@ -2776,10 +2774,9 @@ Los intereses y costos financieros son económicamente reales, pero NO
 incrementan el importe aplicado a la cancelación del Movimiento.
 ```
 
-
 ## FUENTE: ARQUITECTURA_NUCLEO_FINANCIERO_v2.md
 
-```text
+``` text
 # Arquitectura del Núcleo Financiero --- OrdenaClick
 
 ## 1. Propósito
@@ -3069,28 +3066,33 @@ corresponda por una acción real de negocio, por ejemplo:
 
 ------------------------------------------------------------------------
 
-
 ### Correspondencia con los modelos Django actuales
 
-En la implementación actual de OrdenaClick, la entidad conceptual **Obligación** se encuentra representada técnicamente por el modelo `Vencimiento`.
+En la implementación actual de OrdenaClick, la entidad conceptual
+**Obligación** se encuentra representada técnicamente por el modelo
+`Vencimiento`.
 
 Por lo tanto:
 
-```text
+``` text
 OBLIGACIÓN conceptual
         =
 Vencimiento en models.py
 ```
 
-`Vencimiento` es la fuente de verdad del compromiso financiero abierto: conserva origen, fecha de vencimiento, importe original, importe pendiente y estado.
+`Vencimiento` es la fuente de verdad del compromiso financiero abierto:
+conserva origen, fecha de vencimiento, importe original, importe
+pendiente y estado.
 
 **Alerta no es sinónimo de Obligación.**
 
-El modelo `Alerta` representa el aviso asociado a un `Vencimiento`, por ejemplo la fecha desde la cual corresponde llamar la atención del usuario y sus datos de anticipación/atención.
+El modelo `Alerta` representa el aviso asociado a un `Vencimiento`, por
+ejemplo la fecha desde la cual corresponde llamar la atención del
+usuario y sus datos de anticipación/atención.
 
 Conceptualmente:
 
-```text
+``` text
 Movimiento / Cuota / Cheque
           ↓
      Vencimiento
@@ -3100,10 +3102,16 @@ Movimiento / Cuota / Cheque
        (Aviso)
 ```
 
-Una obligación vencida no desaparece por el paso del tiempo. Mientras `Vencimiento.importe_pendiente` continúe abierto y su estado no sea Pagado o Cancelado, debe seguir formando parte de los compromisos de la Empresa aunque su fecha ya haya pasado.
+Una obligación vencida no desaparece por el paso del tiempo. Mientras
+`Vencimiento.importe_pendiente` continúe abierto y su estado no sea
+Pagado o Cancelado, debe seguir formando parte de los compromisos de la
+Empresa aunque su fecha ya haya pasado.
 
-La campanita y la futura sección [Próximos vencimientos] deben tomar como fuente principal los `Vencimiento` abiertos. Las `Alerta` pueden utilizarse para programación, anticipación, atención o reprogramación del aviso, pero no deben reemplazar al `Vencimiento` como fuente de verdad del compromiso.
-
+La campanita y la futura sección \[Próximos vencimientos\] deben tomar
+como fuente principal los `Vencimiento` abiertos. Las `Alerta` pueden
+utilizarse para programación, anticipación, atención o reprogramación
+del aviso, pero no deben reemplazar al `Vencimiento` como fuente de
+verdad del compromiso.
 
 ## 10. Campanita y Próximos vencimientos
 
@@ -3518,39 +3526,50 @@ con Pago.
 
 ### 24.1 Previsión de pago del Movimiento
 
-Antes de cerrar la carga de un gasto, el Movimiento debe indicar cómo se prevé atender su saldo pendiente:
+Antes de cerrar la carga de un gasto, el Movimiento debe indicar cómo se
+prevé atender su saldo pendiente:
 
-- **Pago Manual**.
-- **Débito automático**, asociado a una Cuenta Bancaria propia.
+-   **Pago Manual**.
+-   **Débito automático**, asociado a una Cuenta Bancaria propia.
 
-Durante la Beta, las cuentas ofrecidas para débito automático deben estar activas, pertenecer a la Empresa y operar en ARS.
+Durante la Beta, las cuentas ofrecidas para débito automático deben
+estar activas, pertenecer a la Empresa y operar en ARS.
 
-Elegir Débito automático **NO crea un Pago**. Representa una previsión de cancelación y una futura necesidad de fondos. El hecho financiero se registra recién cuando el débito ocurre o se confirma.
+Elegir Débito automático **NO crea un Pago**. Representa una previsión
+de cancelación y una futura necesidad de fondos. El hecho financiero se
+registra recién cuando el débito ocurre o se confirma.
 
 La previsión debe conservar conceptualmente:
 
-- modalidad prevista de pago;
-- Cuenta Bancaria prevista, cuando corresponda;
-- fecha de vencimiento del Movimiento.
+-   modalidad prevista de pago;
+-   Cuenta Bancaria prevista, cuando corresponda;
+-   fecha de vencimiento del Movimiento.
 
 ### 24.2 Regla común de saldo y compromisos
 
 Para Movimientos pendientes:
 
-```text
+``` text
 Saldo pendiente =
 Total del Movimiento - Aplicaciones de Pago válidas
 ```
 
-Un Movimiento parcialmente pagado muestra únicamente su saldo pendiente. Uno totalmente pagado no aparece como obligación pendiente del Movimiento. Una obligación vencida continúa visible mientras siga abierta.
+Un Movimiento parcialmente pagado muestra únicamente su saldo pendiente.
+Uno totalmente pagado no aparece como obligación pendiente del
+Movimiento. Una obligación vencida continúa visible mientras siga
+abierta.
 
-Los Cheques/e-Cheqs propios también generan previsibilidad: aunque ya hayan aplicado su importe a un Pago, representan una salida futura de fondos según su cuenta y fecha de acreditación/débito. Débitos automáticos y Cheques propios pueden agruparse visualmente por Cuenta Bancaria, pero conservan entidades, estados e histórico independientes.
+Los Cheques/e-Cheqs propios también generan previsibilidad: aunque ya
+hayan aplicado su importe a un Pago, representan una salida futura de
+fondos según su cuenta y fecha de acreditación/débito. Débitos
+automáticos y Cheques propios pueden agruparse visualmente por Cuenta
+Bancaria, pero conservan entidades, estados e histórico independientes.
 
 ### 24.3 Próximos Vencimientos
 
 Dentro del menú Operativo, Próximos Vencimientos tendrá:
 
-```text
+``` text
 [ Alerta ] [ Hoy ] [ Esta semana ] [ Rango de fechas ]
 
 Listar:
@@ -3558,30 +3577,36 @@ Listar:
   Recurso Operativo / Débitos por cuenta ]
 ```
 
-Si `Listar` es distinto de `Todos`, deberá permitirse seleccionar el valor concreto del criterio elegido.
+Si `Listar` es distinto de `Todos`, deberá permitirse seleccionar el
+valor concreto del criterio elegido.
 
-**Hoy** muestra los compromisos del día, sus importes pendientes y un total del día.
+**Hoy** muestra los compromisos del día, sus importes pendientes y un
+total del día.
 
-**Esta semana** y **Rango de fechas** agrupan por día, muestran subtotal por día y finalizan con un **TOTAL GENERAL**.
+**Esta semana** y **Rango de fechas** agrupan por día, muestran subtotal
+por día y finalizan con un **TOTAL GENERAL**.
 
-Los filtros modifican el conjunto mostrado, pero no deben implementar motores financieros diferentes.
+Los filtros modifican el conjunto mostrado, pero no deben implementar
+motores financieros diferentes.
 
 ### 24.4 Vista especial Alerta
 
-`Alerta` no es simplemente otro rango. Es una vista inmediata de previsión de tesorería.
+`Alerta` no es simplemente otro rango. Es una vista inmediata de
+previsión de tesorería.
 
 La ventana inicial comprende cuatro días corridos:
 
-```text
+``` text
 HOY
 HOY + 1
 HOY + 2
 HOY + 3
 ```
 
-Dentro de cada día, los compromisos se agrupan cuando corresponda por Cuenta Bancaria:
+Dentro de cada día, los compromisos se agrupan cuando corresponda por
+Cuenta Bancaria:
 
-```text
+``` text
 HOY · fecha                                      $ TOTAL DÍA
 
 Caja de ahorro Banco Provincia                   $ subtotal cuenta
@@ -3595,57 +3620,75 @@ Otros / Pagos manuales                            $ subtotal manual
 Gasto | Proveedor                                 $ importe
 ```
 
-Cada subtotal debe ser la suma real de sus renglones. La vista debe ser clara, resumida y concreta, orientada a responder cuánto debe preverse y en qué Cuenta Bancaria.
+Cada subtotal debe ser la suma real de sus renglones. La vista debe ser
+clara, resumida y concreta, orientada a responder cuánto debe preverse y
+en qué Cuenta Bancaria.
 
 ### 24.5 Fuente común
 
-Alerta, Hoy, Esta semana y Rango de fechas deben reutilizar una única lógica capaz de proporcionar como mínimo:
+Alerta, Hoy, Esta semana y Rango de fechas deben reutilizar una única
+lógica capaz de proporcionar como mínimo:
 
-- Empresa;
-- fecha;
-- tipo y origen del compromiso;
-- importe pendiente o comprometido;
-- Cuenta Bancaria, cuando corresponda;
-- Tipo de gasto;
-- Proveedor;
-- Centro Operativo;
-- Recurso Operativo;
-- observaciones relevantes.
+-   Empresa;
+-   fecha;
+-   tipo y origen del compromiso;
+-   importe pendiente o comprometido;
+-   Cuenta Bancaria, cuando corresponda;
+-   Tipo de gasto;
+-   Proveedor;
+-   Centro Operativo;
+-   Recurso Operativo;
+-   observaciones relevantes.
 
-La misma fuente deberá poder reutilizarse posteriormente por Reportes, el Llamador y notificaciones móviles.
+La misma fuente deberá poder reutilizarse posteriormente por Reportes,
+el Llamador y notificaciones móviles.
 
 ### 24.6 Llamador de OrdenaClick
 
-Se define un componente visual genérico denominado conceptualmente **Llamador de OrdenaClick**. No debe quedar acoplado visualmente a Vencimientos porque en el futuro podrá utilizarse para otros motivos que requieran atención.
+Se define un componente visual genérico denominado conceptualmente
+**Llamador de OrdenaClick**. No debe quedar acoplado visualmente a
+Vencimientos porque en el futuro podrá utilizarse para otros motivos que
+requieran atención.
 
 Para su primera implementación:
 
-1. Al seleccionar una Empresa se consulta silenciosamente si existen compromisos para la vista Alerta.
-2. Si no existen, el Llamador no aparece.
-3. Si existen, espera aproximadamente 60 segundos.
-4. Si cambia la Empresa durante la espera, se cancela el temporizador anterior.
-5. Luego emerge mediante una animación breve y una campana produce un sonido corto.
-6. Después permanece quieto.
+1.  Al seleccionar una Empresa se consulta silenciosamente si existen
+    compromisos para la vista Alerta.
+2.  Si no existen, el Llamador no aparece.
+3.  Si existen, espera aproximadamente 60 segundos.
+4.  Si cambia la Empresa durante la espera, se cancela el temporizador
+    anterior.
+5.  Luego emerge mediante una animación breve y una campana produce un
+    sonido corto.
+6.  Después permanece quieto.
 
-El Llamador **no muestra texto, importes, cantidad, Empresa ni motivo**. Su función es llamar la atención y despertar la consulta.
+El Llamador **no muestra texto, importes, cantidad, Empresa ni motivo**.
+Su función es llamar la atención y despertar la consulta.
 
-Debe permitir **drag & drop**, permanecer dentro del área visible y conservar su posición durante la interacción. No es necesario persistir inicialmente esa posición en la base.
+Debe permitir **drag & drop**, permanecer dentro del área visible y
+conservar su posición durante la interacción. No es necesario persistir
+inicialmente esa posición en la base.
 
-Si continúa pendiente, aproximadamente cada **20 minutos** puede realizar un pequeño movimiento de campana y reproducir un sonido corto. No debe mantener animaciones o sonidos constantes. El funcionamiento crítico no dependerá exclusivamente del audio debido a posibles restricciones del navegador.
+Si continúa pendiente, aproximadamente cada **20 minutos** puede
+realizar un pequeño movimiento de campana y reproducir un sonido corto.
+No debe mantener animaciones o sonidos constantes. El funcionamiento
+crítico no dependerá exclusivamente del audio debido a posibles
+restricciones del navegador.
 
 Al hacer clic:
 
-```text
+``` text
 Operativo
 → Próximos Vencimientos
 → Alerta
 ```
 
-La vista debe abrirse directamente configurada como Alerta y el Llamador desaparece.
+La vista debe abrirse directamente configurada como Alerta y el Llamador
+desaparece.
 
 ### 24.7 Separación conceptual
 
-```text
+``` text
 VENCIMIENTO / COMPROMISO
 = fuente de verdad.
 
@@ -3660,25 +3703,30 @@ Ni la vista Alerta ni el Llamador crean obligaciones.
 
 ### 24.8 Reutilización futura
 
-No se implementará ahora un sistema genérico completo, pero el Llamador no debe quedar limitado a compromisos financieros.
+No se implementará ahora un sistema genérico completo, pero el Llamador
+no debe quedar limitado a compromisos financieros.
 
 Posibles usos futuros:
 
-- proximidad de cierre contable;
-- vencimiento de acta de designación de autoridades;
-- documentación que requiera atención;
-- otros compromisos administrativos u operativos;
-- nuevas necesidades surgidas de usuarios reales.
+-   proximidad de cierre contable;
+-   vencimiento de acta de designación de autoridades;
+-   documentación que requiera atención;
+-   otros compromisos administrativos u operativos;
+-   nuevas necesidades surgidas de usuarios reales.
 
 ### 24.9 Notificaciones móviles futuras
 
-La futura versión móvil deberá permitir que el usuario elija si desea recibir una notificación cuando exista una Alerta aunque no haya abierto OrdenaClick.
+La futura versión móvil deberá permitir que el usuario elija si desea
+recibir una notificación cuando exista una Alerta aunque no haya abierto
+OrdenaClick.
 
-Debe reutilizarse la misma fuente común de compromisos. Configuración, horarios, anticipación y tecnología push quedan para una etapa posterior.
+Debe reutilizarse la misma fuente común de compromisos. Configuración,
+horarios, anticipación y tecnología push quedan para una etapa
+posterior.
 
 ### 24.10 Orden de implementación acordado
 
-```text
+``` text
 1. Previsión de pago:
    Pago Manual / Débito automático + Cuenta Bancaria.
 
@@ -3693,45 +3741,53 @@ Debe reutilizarse la misma fuente común de compromisos. Configuración, horario
    reutilizando la lógica financiera común.
 ```
 
-El objetivo es que OrdenaClick no se limite a registrar hechos pasados, sino que transforme esos datos en previsibilidad concreta de compromisos futuros.
-
+El objetivo es que OrdenaClick no se limite a registrar hechos pasados,
+sino que transforme esos datos en previsibilidad concreta de compromisos
+futuros.
 
 ### 24.11 Registro del Pago real de un Débito automático
 
-Cuando un Movimiento tenga como modalidad prevista **Débito automático**, la interfaz de carga del Pago debe simplificarse porque OrdenaClick ya conoce el medio previsto y la Cuenta Bancaria asociada.
+Cuando un Movimiento tenga como modalidad prevista **Débito
+automático**, la interfaz de carga del Pago debe simplificarse porque
+OrdenaClick ya conoce el medio previsto y la Cuenta Bancaria asociada.
 
 En este caso el botón habitual:
 
-```text
+``` text
 [ + Agregar pago ]
 ```
 
 debe presentarse como:
 
-```text
+``` text
 [ Registrar Pago ]
 ```
 
-Al utilizarlo no debe mostrarse el conjunto completo de medios de pago. El acordeón debe contener únicamente:
+Al utilizarlo no debe mostrarse el conjunto completo de medios de pago.
+El acordeón debe contener únicamente:
 
-```text
+``` text
 ▼ Pago 1                                      $ 0,00
 
 Fecha de Pago                     Importe
 [ dd/mm/aaaa ]                    [          ]
 ```
 
-El campo que en el formulario general corresponde visualmente a `Efectivo` debe denominarse **Importe** en este flujo.
+El campo que en el formulario general corresponde visualmente a
+`Efectivo` debe denominarse **Importe** en este flujo.
 
-No deben volver a solicitarse Banco, Cuenta Bancaria ni forma de pago, porque esos datos provienen de la previsión de Débito automático del Movimiento.
+No deben volver a solicitarse Banco, Cuenta Bancaria ni forma de pago,
+porque esos datos provienen de la previsión de Débito automático del
+Movimiento.
 
-El importe ingresado representa el débito real observado en la Cuenta Bancaria.
+El importe ingresado representa el débito real observado en la Cuenta
+Bancaria.
 
 #### Importe igual, menor o mayor al compromiso
 
 Si:
 
-```text
+``` text
 Importe debitado = saldo pendiente
 ```
 
@@ -3739,25 +3795,27 @@ se registra una cancelación total normal.
 
 Si:
 
-```text
+``` text
 Importe debitado < saldo pendiente
 ```
 
-se registra un Pago parcial y el compromiso continúa abierto por el saldo restante.
+se registra un Pago parcial y el compromiso continúa abierto por el
+saldo restante.
 
 Si:
 
-```text
+``` text
 Importe debitado > saldo pendiente
 ```
 
 la diferencia NO debe aplicarse automáticamente al Movimiento.
 
-Cuando además la fecha real del Pago sea posterior al vencimiento, OrdenaClick debe solicitar confirmación antes de guardar.
+Cuando además la fecha real del Pago sea posterior al vencimiento,
+OrdenaClick debe solicitar confirmación antes de guardar.
 
 Ejemplo:
 
-```text
+``` text
 Saldo pendiente:                 $100.000
 Importe debitado:                $107.500
 Diferencia:                        $7.500
@@ -3765,7 +3823,7 @@ Diferencia:                        $7.500
 
 Modal conceptual:
 
-```text
+``` text
 El débito se produjo después del vencimiento y el importe ingresado
 supera en $7.500 el saldo pendiente.
 
@@ -3776,1026 +3834,1053 @@ supera en $7.500 el saldo pendiente.
 
 Si el usuario selecciona **Sí**:
 
-- se registra como importe aplicado únicamente el saldo que corresponde cancelar;
-- la diferencia se conserva separadamente como interés/costo financiero;
-- el interés NO incrementa el importe aplicado al Movimiento;
-- se registra la fecha real del Pago;
-- se actualiza el saldo y estado del compromiso.
+-   se registra como importe aplicado únicamente el saldo que
+    corresponde cancelar;
+-   la diferencia se conserva separadamente como interés/costo
+    financiero;
+-   el interés NO incrementa el importe aplicado al Movimiento;
+-   se registra la fecha real del Pago;
+-   se actualiza el saldo y estado del compromiso.
 
 Si selecciona **No**:
 
-- no se guarda el Pago;
-- no se modifica el Movimiento ni el compromiso;
-- se vuelve al acordeón;
-- deben conservarse Fecha e Importe ingresados para permitir su corrección.
+-   no se guarda el Pago;
+-   no se modifica el Movimiento ni el compromiso;
+-   se vuelve al acordeón;
+-   deben conservarse Fecha e Importe ingresados para permitir su
+    corrección.
 
-La confirmación del usuario es necesaria: OrdenaClick no debe asumir automáticamente que todo excedente corresponde a intereses.
+La confirmación del usuario es necesaria: OrdenaClick no debe asumir
+automáticamente que todo excedente corresponde a intereses.
 
-Si el importe es superior al saldo pero la fecha NO es posterior al vencimiento, no debe clasificarse automáticamente la diferencia como interés por mora. La clasificación definitiva de otros excedentes queda pendiente de definición.
+Si el importe es superior al saldo pero la fecha NO es posterior al
+vencimiento, no debe clasificarse automáticamente la diferencia como
+interés por mora. La clasificación definitiva de otros excedentes queda
+pendiente de definición.
 
 Este flujo debe respetar la regla general del núcleo financiero:
 
-> Los intereses y costos financieros son económicamente reales, pero no aumentan el importe aplicado a la cancelación del Movimiento.
-```
+> Los intereses y costos financieros son económicamente reales, pero no
+> aumentan el importe aplicado a la cancelación del Movimiento.
 
 
-## FUENTE: Para no perder el tiempo cuando reinicio.txt
 
-```text
-============================================================
-ORDENACLICK 2.0 - DOCUMENTO DE INICIO / CONTEXTO DE PROYECTO
-============================================================
+    ## FUENTE: Para no perder el tiempo cuando reinicio.txt
 
-OBJETIVO DE ESTE ARCHIVO
-------------------------
-Este archivo debe leerse al comenzar un nuevo chat, incorporar una nueva persona al proyecto o retomar el desarrollo después de una pausa.
+    ```text
+    ============================================================
+    ORDENACLICK 2.0 - DOCUMENTO DE INICIO / CONTEXTO DE PROYECTO
+    ============================================================
 
-Su finalidad es evitar perder contexto, decisiones ya tomadas, reglas de arquitectura y prioridades del producto.
+    OBJETIVO DE ESTE ARCHIVO
+    ------------------------
+    Este archivo debe leerse al comenzar un nuevo chat, incorporar una nueva persona al proyecto o retomar el desarrollo después de una pausa.
 
-NO reemplaza los documentos técnicos existentes del proyecto. Los complementa.
-Antes de modificar código también deben revisarse, como mínimo:
+    Su finalidad es evitar perder contexto, decisiones ya tomadas, reglas de arquitectura y prioridades del producto.
 
-- Reglas_del_desarrollo.md
-- Arquitectura Panel_admin.txt
-- Arquitectura_Movimientos_Pagos_Vencimientos_Alertas.txt
-- Reglas_Exportacion_Empresa.txt
-- TODO.md
+    NO reemplaza los documentos técnicos existentes del proyecto. Los complementa.
+    Antes de modificar código también deben revisarse, como mínimo:
 
+    - Reglas_del_desarrollo.md
+    - Arquitectura Panel_admin.txt
+    - Arquitectura_Movimientos_Pagos_Vencimientos_Alertas.txt
+    - Reglas_Exportacion_Empresa.txt
+    - TODO.md
 
-============================================================
-1. QUE ES ORDENACLICK
-============================================================
 
-OrdenaClick es una aplicación web de gestión empresarial orientada a ordenar gastos, registros, pagos, vencimientos, alertas e información de gestión, conservando una arquitectura preparada para incorporar contabilidad, aspectos legales y otras funciones futuras.
+    ============================================================
+    1. QUE ES ORDENACLICK
+    ============================================================
 
-El sistema no debe limitarse a registrar lo que ya ocurrió. También debe ayudar al dueño de una empresa a anticipar obligaciones económicas y evitar olvidos o pérdidas de control.
+    OrdenaClick es una aplicación web de gestión empresarial orientada a ordenar gastos, registros, pagos, vencimientos, alertas e información de gestión, conservando una arquitectura preparada para incorporar contabilidad, aspectos legales y otras funciones futuras.
 
-La información histórica debe conservarse. El diseño debe permitir que una empresa crezca sin tener que migrar a otra estructura de datos.
+    El sistema no debe limitarse a registrar lo que ya ocurrió. También debe ayudar al dueño de una empresa a anticipar obligaciones económicas y evitar olvidos o pérdidas de control.
 
-Principio general:
+    La información histórica debe conservarse. El diseño debe permitir que una empresa crezca sin tener que migrar a otra estructura de datos.
 
-UNA SOLA ARQUITECTURA ESCALABLE
-+ funciones visibles/ocultas o automáticas según necesidad y plan
-+ sin migraciones destructivas cuando una empresa crece.
+    Principio general:
 
+    UNA SOLA ARQUITECTURA ESCALABLE
+    + funciones visibles/ocultas o automáticas según necesidad y plan
+    + sin migraciones destructivas cuando una empresa crece.
 
-============================================================
-2. VISION DE ESCALABILIDAD
-============================================================
 
-OrdenaClick debe asumir que:
+    ============================================================
+    2. VISION DE ESCALABILIDAD
+    ============================================================
 
-- Las empresas cambian y crecen.
-- Una empresa hoy simple puede necesitar mañana sucursales, depósitos, vehículos, más empleados, varias cuentas bancarias, tarjetas, contabilidad completa, etc.
-- Aparecen nuevos impuestos.
-- Aparecen nuevas formas de pago.
-- Formas de pago antiguas pueden digitalizarse.
-- Cambian necesidades regulatorias, contables y operativas.
+    OrdenaClick debe asumir que:
 
-Por eso NO deben existir arquitecturas separadas para "empresa simple" y "empresa compleja".
+    - Las empresas cambian y crecen.
+    - Una empresa hoy simple puede necesitar mañana sucursales, depósitos, vehículos, más empleados, varias cuentas bancarias, tarjetas, contabilidad completa, etc.
+    - Aparecen nuevos impuestos.
+    - Aparecen nuevas formas de pago.
+    - Formas de pago antiguas pueden digitalizarse.
+    - Cambian necesidades regulatorias, contables y operativas.
 
-La estructura de datos debe ser común y completa.
-Lo que cambia según empresa o plan es:
+    Por eso NO deben existir arquitecturas separadas para "empresa simple" y "empresa compleja".
 
-- qué módulos están habilitados;
-- qué configuraciones son manuales;
-- qué valores se resuelven automáticamente;
-- qué partes se muestran al usuario.
+    La estructura de datos debe ser común y completa.
+    Lo que cambia según empresa o plan es:
 
-Ejemplo:
-Una empresa simple puede no usar Sucursales explícitamente.
-Sin embargo, el sistema puede registrar internamente todas sus operaciones sobre una ubicación/base creada automáticamente con el domicilio real de la empresa.
-Si la empresa crece, se habilita la administración de sucursales sin migrar ni perder datos anteriores.
+    - qué módulos están habilitados;
+    - qué configuraciones son manuales;
+    - qué valores se resuelven automáticamente;
+    - qué partes se muestran al usuario.
 
-Regla de diseño:
+    Ejemplo:
+    Una empresa simple puede no usar Sucursales explícitamente.
+    Sin embargo, el sistema puede registrar internamente todas sus operaciones sobre una ubicación/base creada automáticamente con el domicilio real de la empresa.
+    Si la empresa crece, se habilita la administración de sucursales sin migrar ni perder datos anteriores.
 
-NO BORRAR ESTRUCTURA PARA SIMPLIFICAR LA EXPERIENCIA.
-SIMPLIFICAR LA INTERFAZ, NO LOS DATOS.
+    Regla de diseño:
 
+    NO BORRAR ESTRUCTURA PARA SIMPLIFICAR LA EXPERIENCIA.
+    SIMPLIFICAR LA INTERFAZ, NO LOS DATOS.
 
-============================================================
-3. PERFILES DE USUARIO PREVISTOS
-============================================================
 
-Un usuario de OrdenaClick puede actuar con cuatro perfiles:
+    ============================================================
+    3. PERFILES DE USUARIO PREVISTOS
+    ============================================================
 
-1. ADMINISTRADOR
-2. COLABORADOR
-3. CONTABLE / CONTADOR
-4. LEGAL / ABOGADO
+    Un usuario de OrdenaClick puede actuar con cuatro perfiles:
 
-Actualmente el desarrollo principal está centrado en ADMINISTRADOR.
-El siguiente perfil prioritario para la primera versión testeable es COLABORADOR.
+    1. ADMINISTRADOR
+    2. COLABORADOR
+    3. CONTABLE / CONTADOR
+    4. LEGAL / ABOGADO
 
+    Actualmente el desarrollo principal está centrado en ADMINISTRADOR.
+    El siguiente perfil prioritario para la primera versión testeable es COLABORADOR.
 
-ADMINISTRADOR
--------------
-Puede, entre otras funciones:
 
-- Crear empresas.
-- Administrar sus empresas.
-- Configurar estructura y ABMs.
-- Designar colaboradores.
-- Contratar/asignar contadores.
-- Contratar/asignar abogados.
-- Cargar registros y pagos.
-- Acceder a reportes, vencimientos, alertas y demás módulos habilitados.
-- Definir permisos o visibilidad de determinadas funciones para colaboradores y otros perfiles cuando corresponda.
-
-
-COLABORADOR
------------
-No toma decisiones estructurales sobre la empresa y no crea empresas.
-
-Su función principal es operativa.
-Puede:
-
-- Trabajar sobre empresas para las que fue aceptado/asignado.
-- Cargar registros.
-- Cargar pagos.
-- Usar los ABMs necesarios para esas cargas.
-
-El Administrador podrá definir permisos sobre módulos adicionales cuando esa parte del sistema esté desarrollada.
-
-
-CONTABLE / CONTADOR
--------------------
-Perfil futuro.
-Debe poder trabajar sobre empresas que lo hayan contratado/asignado.
-La arquitectura actual debe mantenerse compatible con:
+    ADMINISTRADOR
+    -------------
+    Puede, entre otras funciones:
 
-- Plan de Cuentas.
-- Estado de Resultados.
-- Balance.
-- Imputaciones contables.
-- Configuraciones contables realizadas por Administrador o Contador.
+    - Crear empresas.
+    - Administrar sus empresas.
+    - Configurar estructura y ABMs.
+    - Designar colaboradores.
+    - Contratar/asignar contadores.
+    - Contratar/asignar abogados.
+    - Cargar registros y pagos.
+    - Acceder a reportes, vencimientos, alertas y demás módulos habilitados.
+    - Definir permisos o visibilidad de determinadas funciones para colaboradores y otros perfiles cuando corresponda.
+
+
+    COLABORADOR
+    -----------
+    No toma decisiones estructurales sobre la empresa y no crea empresas.
+
+    Su función principal es operativa.
+    Puede:
+
+    - Trabajar sobre empresas para las que fue aceptado/asignado.
+    - Cargar registros.
+    - Cargar pagos.
+    - Usar los ABMs necesarios para esas cargas.
+
+    El Administrador podrá definir permisos sobre módulos adicionales cuando esa parte del sistema esté desarrollada.
+
+
+    CONTABLE / CONTADOR
+    -------------------
+    Perfil futuro.
+    Debe poder trabajar sobre empresas que lo hayan contratado/asignado.
+    La arquitectura actual debe mantenerse compatible con:
+
+    - Plan de Cuentas.
+    - Estado de Resultados.
+    - Balance.
+    - Imputaciones contables.
+    - Configuraciones contables realizadas por Administrador o Contador.
 
 
-LEGAL / ABOGADO
----------------
-Perfil futuro.
-Trabajará sobre empresas asignadas y funcionalidades legales que se desarrollen posteriormente.
+    LEGAL / ABOGADO
+    ---------------
+    Perfil futuro.
+    Trabajará sobre empresas asignadas y funcionalidades legales que se desarrollen posteriormente.
+
 
+    ============================================================
+    4. OBJETIVO PRIORITARIO: VERSION TESTEABLE EN SEPTIEMBRE
+    ============================================================
 
-============================================================
-4. OBJETIVO PRIORITARIO: VERSION TESTEABLE EN SEPTIEMBRE
-============================================================
+    Para septiembre se busca tener OrdenaClick en la nube, usable y preparado para pruebas reales.
 
-Para septiembre se busca tener OrdenaClick en la nube, usable y preparado para pruebas reales.
+    NO significa que OrdenaClick esté terminado.
+    Significa que debe existir un circuito funcional completo y estable para comenzar testing.
 
-NO significa que OrdenaClick esté terminado.
-Significa que debe existir un circuito funcional completo y estable para comenzar testing.
+    Alcance prioritario esperado:
 
-Alcance prioritario esperado:
+    - Login.
+    - Perfil Administrador.
+    - Perfil Colaborador.
+    - Creación y administración de empresas.
+    - Asignación/uso básico de colaboradores.
+    - Carga de Registros.
+    - Carga de Pagos.
+    - ABMs necesarios para Registros y Pagos.
+    - Posiblemente Plan de Pagos, si llega con estabilidad suficiente.
+    - Informes mediante filtros sobre la información cargada.
+    - Deudas pendientes.
+    - Próximos vencimientos.
+    - Alertas de pagos pendientes.
+    - Alertas/control de débitos pendientes.
 
-- Login.
-- Perfil Administrador.
-- Perfil Colaborador.
-- Creación y administración de empresas.
-- Asignación/uso básico de colaboradores.
-- Carga de Registros.
-- Carga de Pagos.
-- ABMs necesarios para Registros y Pagos.
-- Posiblemente Plan de Pagos, si llega con estabilidad suficiente.
-- Informes mediante filtros sobre la información cargada.
-- Deudas pendientes.
-- Próximos vencimientos.
-- Alertas de pagos pendientes.
-- Alertas/control de débitos pendientes.
+    Los informes deberían permitir responder, entre otras preguntas:
 
-Los informes deberían permitir responder, entre otras preguntas:
+    - ¿Quién realizó/cargó el gasto?
+    - ¿Qué empresa gastó?
+    - ¿Qué Centro/Recurso estuvo relacionado?
+    - ¿En qué se gastó?
+    - ¿Cómo se pagó?
+    - ¿Cuánto se pagó?
+    - ¿Cuánto queda pendiente?
+    - ¿Qué obligaciones vencen próximamente?
+    - ¿Qué débitos todavía no impactaron?
 
-- ¿Quién realizó/cargó el gasto?
-- ¿Qué empresa gastó?
-- ¿Qué Centro/Recurso estuvo relacionado?
-- ¿En qué se gastó?
-- ¿Cómo se pagó?
-- ¿Cuánto se pagó?
-- ¿Cuánto queda pendiente?
-- ¿Qué obligaciones vencen próximamente?
-- ¿Qué débitos todavía no impactaron?
+    CRITERIO DE PRIORIDAD HASTA SEPTIEMBRE:
 
-CRITERIO DE PRIORIDAD HASTA SEPTIEMBRE:
+    Primero cerrar flujos utilizables de punta a punta.
+    Después estabilizarlos y testearlos.
+    Las mejoras secundarias o refactors no bloqueantes quedan para más adelante.
 
-Primero cerrar flujos utilizables de punta a punta.
-Después estabilizarlos y testearlos.
-Las mejoras secundarias o refactors no bloqueantes quedan para más adelante.
+    Toda tarea nueva debe evaluarse con esta pregunta:
 
-Toda tarea nueva debe evaluarse con esta pregunta:
+    "¿Esto acerca la versión de septiembre a ser usable o nos desvía?"
 
-"¿Esto acerca la versión de septiembre a ser usable o nos desvía?"
 
+    ============================================================
+    5. FUTURO QUE LA ARQUITECTURA ACTUAL NO DEBE BLOQUEAR
+    ============================================================
 
-============================================================
-5. FUTURO QUE LA ARQUITECTURA ACTUAL NO DEBE BLOQUEAR
-============================================================
+    Aunque no sea prioridad para septiembre, lo trabajado hoy debe permitir incorporar sin rehacer la base:
 
-Aunque no sea prioridad para septiembre, lo trabajado hoy debe permitir incorporar sin rehacer la base:
+    - Estado de Resultados.
+    - Balance.
+    - Plan de Cuentas Contables.
+    - Perfil Contable.
+    - Perfil Legal.
+    - Calificación de colaboradores.
+    - Calificación de contadores.
+    - Calificación de abogados.
+    - Órdenes de Pago.
+    - Autorizaciones de operaciones.
+    - Agenda.
+    - Cheques en cartera.
+    - Nuevos medios de pago.
+    - Nuevos impuestos y retenciones.
+    - Nuevas formas digitales de instrumentos existentes.
+    - Diferentes niveles de permisos.
+    - Diferentes planes comerciales de OrdenaClick.
 
-- Estado de Resultados.
-- Balance.
-- Plan de Cuentas Contables.
-- Perfil Contable.
-- Perfil Legal.
-- Calificación de colaboradores.
-- Calificación de contadores.
-- Calificación de abogados.
-- Órdenes de Pago.
-- Autorizaciones de operaciones.
-- Agenda.
-- Cheques en cartera.
-- Nuevos medios de pago.
-- Nuevos impuestos y retenciones.
-- Nuevas formas digitales de instrumentos existentes.
-- Diferentes niveles de permisos.
-- Diferentes planes comerciales de OrdenaClick.
+    El desarrollo actual NO debe implementar estas funciones antes de tiempo si no son necesarias para septiembre, pero tampoco debe tomar decisiones que las vuelvan imposibles.
 
-El desarrollo actual NO debe implementar estas funciones antes de tiempo si no son necesarias para septiembre, pero tampoco debe tomar decisiones que las vuelvan imposibles.
 
+    ============================================================
+    6. MODELO COMERCIAL / HABILITACION DE USO
+    ============================================================
 
-============================================================
-6. MODELO COMERCIAL / HABILITACION DE USO
-============================================================
+    El acceso a OrdenaClick NO debe considerarse libre e ilimitado solamente porque un usuario consiguió registrarse.
 
-El acceso a OrdenaClick NO debe considerarse libre e ilimitado solamente porque un usuario consiguió registrarse.
+    Conceptualmente deben existir dos niveles diferentes:
 
-Conceptualmente deben existir dos niveles diferentes:
+    1. AUTENTICACION
+       El usuario crea su login e inicia sesión.
 
-1. AUTENTICACION
-   El usuario crea su login e inicia sesión.
+    2. HABILITACION COMERCIAL / DE USO
+       El propietario/administrador de la plataforma OrdenaClick debe poder decidir si ese usuario puede utilizar el sistema y bajo qué condiciones.
 
-2. HABILITACION COMERCIAL / DE USO
-   El propietario/administrador de la plataforma OrdenaClick debe poder decidir si ese usuario puede utilizar el sistema y bajo qué condiciones.
+    Debe quedar prevista la posibilidad de:
 
-Debe quedar prevista la posibilidad de:
+    - Usuario pendiente de aprobación.
+    - Usuario habilitado.
+    - Usuario bloqueado/suspendido.
+    - Usuario con suscripción activa.
+    - Usuario sin pago / suscripción vencida.
+    - Versión demo o período de prueba.
 
-- Usuario pendiente de aprobación.
-- Usuario habilitado.
-- Usuario bloqueado/suspendido.
-- Usuario con suscripción activa.
-- Usuario sin pago / suscripción vencida.
-- Versión demo o período de prueba.
+    La implementación exacta se definirá más adelante.
 
-La implementación exacta se definirá más adelante.
+    IMPORTANTE:
+    No confundir este nivel con los perfiles Administrador/Colaborador/Contable/Legal.
 
-IMPORTANTE:
-No confundir este nivel con los perfiles Administrador/Colaborador/Contable/Legal.
+    Una cosa es QUIÉN ES el usuario dentro de una empresa.
+    Otra cosa es SI PUEDE USAR OrdenaClick comercialmente.
 
-Una cosa es QUIÉN ES el usuario dentro de una empresa.
-Otra cosa es SI PUEDE USAR OrdenaClick comercialmente.
 
+    ============================================================
+    7. PLANES DE SUSCRIPCION Y CAPACIDADES
+    ============================================================
 
-============================================================
-7. PLANES DE SUSCRIPCION Y CAPACIDADES
-============================================================
+    OrdenaClick debe poder ofrecer distintos planes según complejidad y necesidad de cada empresa.
 
-OrdenaClick debe poder ofrecer distintos planes según complejidad y necesidad de cada empresa.
+    Ejemplos conceptuales:
 
-Ejemplos conceptuales:
+    - Empresa simple: menos módulos/configuración visibles.
+    - Empresa compleja: estructura completa habilitada.
 
-- Empresa simple: menos módulos/configuración visibles.
-- Empresa compleja: estructura completa habilitada.
+    Pero todos deben usar la misma base arquitectónica.
 
-Pero todos deben usar la misma base arquitectónica.
+    La suscripción debe habilitar o limitar CAPACIDADES, no obligar a migrar datos entre modelos distintos.
 
-La suscripción debe habilitar o limitar CAPACIDADES, no obligar a migrar datos entre modelos distintos.
+    Ejemplo:
+    Una empresa puede comenzar sin administrar Sucursales manualmente.
+    El sistema conserva de todos modos una estructura coherente.
+    Más adelante, al cambiar de plan o necesidad, se habilita el módulo y se continúa sobre los mismos datos.
 
-Ejemplo:
-Una empresa puede comenzar sin administrar Sucursales manualmente.
-El sistema conserva de todos modos una estructura coherente.
-Más adelante, al cambiar de plan o necesidad, se habilita el módulo y se continúa sobre los mismos datos.
+    Regla:
 
-Regla:
+    CRECIMIENTO = HABILITAR FUNCIONES
+    NO = MIGRAR O RECONSTRUIR HISTORIA
 
-CRECIMIENTO = HABILITAR FUNCIONES
-NO = MIGRAR O RECONSTRUIR HISTORIA
 
+    ============================================================
+    8. ALTA Y CONFIGURACION INICIAL DE EMPRESA
+    ============================================================
 
-============================================================
-8. ALTA Y CONFIGURACION INICIAL DE EMPRESA
-============================================================
+    La pantalla actual de Alta de Empresa debe conservarse como base funcional.
 
-La pantalla actual de Alta de Empresa debe conservarse como base funcional.
+    Para una versión futura orientada a usuarios reales, después de cargar los datos básicos de una empresa debería ofrecerse un recorrido opcional de configuración guiada.
 
-Para una versión futura orientada a usuarios reales, después de cargar los datos básicos de una empresa debería ofrecerse un recorrido opcional de configuración guiada.
+    Concepto de experiencia:
 
-Concepto de experiencia:
+    PASO 1
+    Datos básicos de la empresa.
 
-PASO 1
-Datos básicos de la empresa.
+    PASO 2
+    Mensaje similar a:
+    "¿Te ayudo a configurar tu empresa?"
 
-PASO 2
-Mensaje similar a:
-"¿Te ayudo a configurar tu empresa?"
+    El usuario puede:
 
-El usuario puede:
+    - Iniciar configuración guiada.
+    - Omitirla y configurar después.
 
-- Iniciar configuración guiada.
-- Omitirla y configurar después.
+    La configuración guiada puede presentarse por pasos, preguntas o modales.
 
-La configuración guiada puede presentarse por pasos, preguntas o modales.
+    Objetivo:
+    Dejar precargados los principales selects y estructuras que el usuario necesitará para comenzar a registrar movimientos sin tener que descubrir todos los ABMs uno por uno.
 
-Objetivo:
-Dejar precargados los principales selects y estructuras que el usuario necesitará para comenzar a registrar movimientos sin tener que descubrir todos los ABMs uno por uno.
+    Preguntas/configuraciones posibles:
 
-Preguntas/configuraciones posibles:
+    - ¿Tenés sucursales?
+    - ¿Tenés depósitos?
+    - ¿Tenés empleados/personas que quieras registrar como recursos?
+    - ¿Tenés vehículos?
+    - ¿Qué Cuentas Bancarias utilizás?
+    - ¿Qué Tarjetas están asociadas?
+    - Otros Recursos Operativos necesarios.
 
-- ¿Tenés sucursales?
-- ¿Tenés depósitos?
-- ¿Tenés empleados/personas que quieras registrar como recursos?
-- ¿Tenés vehículos?
-- ¿Qué Cuentas Bancarias utilizás?
-- ¿Qué Tarjetas están asociadas?
-- Otros Recursos Operativos necesarios.
+    La información obtenida también puede servir para sugerir qué plan comercial de OrdenaClick resulta más adecuado para esa empresa.
 
-La información obtenida también puede servir para sugerir qué plan comercial de OrdenaClick resulta más adecuado para esa empresa.
+    Esta configuración debe ser OPCIONAL.
 
-Esta configuración debe ser OPCIONAL.
+    El usuario debe poder omitirla y continuar.
 
-El usuario debe poder omitirla y continuar.
 
+    CONFIGURACION CONTABLE
+    ----------------------
+    También deberá existir una configuración contable inicial cuando el Plan Contable esté desarrollado.
 
-CONFIGURACION CONTABLE
-----------------------
-También deberá existir una configuración contable inicial cuando el Plan Contable esté desarrollado.
+    Podrá:
 
-Podrá:
+    - realizarla el Administrador;
+    - dejarla para después;
+    - asignarla al Contador contratado/asignado.
 
-- realizarla el Administrador;
-- dejarla para después;
-- asignarla al Contador contratado/asignado.
+    La experiencia inicial no debe obligar a una empresa pequeña a conocer o completar configuraciones que no necesita inmediatamente.
 
-La experiencia inicial no debe obligar a una empresa pequeña a conocer o completar configuraciones que no necesita inmediatamente.
 
+    ============================================================
+    9. PRINCIPIOS DE MOVIMIENTOS, PAGOS Y VENCIMIENTOS
+    ============================================================
 
-============================================================
-9. PRINCIPIOS DE MOVIMIENTOS, PAGOS Y VENCIMIENTOS
-============================================================
+    Según la arquitectura vigente:
 
-Según la arquitectura vigente:
+    - Registrar un Movimiento y registrar su Pago son hechos diferentes.
+    - Un Movimiento puede existir sin pago, con pago parcial, total o múltiples pagos.
+    - Los Pagos son entidades independientes.
+    - Un Movimiento puede tener múltiples Pagos.
+    - Un Pago puede componerse simultáneamente de diferentes medios de cancelación.
+    - La suma de importes APLICADOS determina cuánto cancela ese Pago.
+    - Costos financieros no deben confundirse con importe aplicado.
+    - Vencimiento y Alerta son entidades/conceptos diferentes.
+    - Los pagos y vencimientos deben conservar historia.
+    - Los registros con impacto histórico/financiero/contable no se borran físicamente en funcionamiento normal.
 
-- Registrar un Movimiento y registrar su Pago son hechos diferentes.
-- Un Movimiento puede existir sin pago, con pago parcial, total o múltiples pagos.
-- Los Pagos son entidades independientes.
-- Un Movimiento puede tener múltiples Pagos.
-- Un Pago puede componerse simultáneamente de diferentes medios de cancelación.
-- La suma de importes APLICADOS determina cuánto cancela ese Pago.
-- Costos financieros no deben confundirse con importe aplicado.
-- Vencimiento y Alerta son entidades/conceptos diferentes.
-- Los pagos y vencimientos deben conservar historia.
-- Los registros con impacto histórico/financiero/contable no se borran físicamente en funcionamiento normal.
+    Flujo conceptual central:
 
-Flujo conceptual central:
+    MOVIMIENTOS / PAGOS / PLANES / CHEQUES
+                     |
+                     v
+                VENCIMIENTOS
+                     |
+                     v
+                  ALERTAS
 
-MOVIMIENTOS / PAGOS / PLANES / CHEQUES
-                 |
-                 v
-            VENCIMIENTOS
-                 |
-                 v
-              ALERTAS
+    Próximos Vencimientos y Alertas son parte central del producto, no agregados decorativos posteriores.
 
-Próximos Vencimientos y Alertas son parte central del producto, no agregados decorativos posteriores.
 
+    ============================================================
+    10. INFORMACION HISTORICA Y CONTABILIDAD FUTURA
+    ============================================================
 
-============================================================
-10. INFORMACION HISTORICA Y CONTABILIDAD FUTURA
-============================================================
+    La información necesaria para reportes y contabilidad debe guardarse en el momento del hecho.
 
-La información necesaria para reportes y contabilidad debe guardarse en el momento del hecho.
+    No debe deducirse la historia desde el estado actual de tablas maestras.
 
-No debe deducirse la historia desde el estado actual de tablas maestras.
+    Ejemplo ya definido:
+    Si un vehículo estaba asignado a CASA CENTRAL cuando ocurrió un gasto y luego se mueve a SUCURSAL AZUL, el Movimiento histórico debe seguir indicando CASA CENTRAL.
 
-Ejemplo ya definido:
-Si un vehículo estaba asignado a CASA CENTRAL cuando ocurrió un gasto y luego se mueve a SUCURSAL AZUL, el Movimiento histórico debe seguir indicando CASA CENTRAL.
+    Esto aplica conceptualmente a toda información histórica relevante.
 
-Esto aplica conceptualmente a toda información histórica relevante.
+    El desarrollo de hoy debe permitir que mañana se pueda reconstruir:
 
-El desarrollo de hoy debe permitir que mañana se pueda reconstruir:
+    - qué se gastó;
+    - quién lo cargó;
+    - qué empresa lo hizo;
+    - qué centro/recurso estaba involucrado;
+    - a qué proveedor;
+    - cómo se pagó;
+    - con qué instrumento;
+    - qué importe canceló deuda;
+    - qué importe fue interés/costo financiero;
+    - qué saldo quedó pendiente;
+    - qué vencimientos se generaron.
 
-- qué se gastó;
-- quién lo cargó;
-- qué empresa lo hizo;
-- qué centro/recurso estaba involucrado;
-- a qué proveedor;
-- cómo se pagó;
-- con qué instrumento;
-- qué importe canceló deuda;
-- qué importe fue interés/costo financiero;
-- qué saldo quedó pendiente;
-- qué vencimientos se generaron.
 
+    ============================================================
+    11. ABMs - ESTANDAR OBLIGATORIO
+    ============================================================
 
-============================================================
-11. ABMs - ESTANDAR OBLIGATORIO
-============================================================
+    Todos los ABMs de OrdenaClick deben seguir el estándar documentado.
 
-Todos los ABMs de OrdenaClick deben seguir el estándar documentado.
+    APERTURA
+    - Desde menú lateral.
+    - Desde botón [+] de otro formulario.
 
-APERTURA
-- Desde menú lateral.
-- Desde botón [+] de otro formulario.
+    CIERRE
+    - Si se abrió desde menú: vuelve al menú.
+    - Si se abrió desde [+]: vuelve exactamente al formulario que lo llamó.
+    - Debe conservar el estado previo.
+    - El registro recién creado debe quedar seleccionado automáticamente cuando corresponda.
 
-CIERRE
-- Si se abrió desde menú: vuelve al menú.
-- Si se abrió desde [+]: vuelve exactamente al formulario que lo llamó.
-- Debe conservar el estado previo.
-- El registro recién creado debe quedar seleccionado automáticamente cuando corresponda.
+    EDICION
+    - Sin prompt().
+    - Carga datos en formulario.
+    - Guardar cambia a Actualizar.
+    - Aparece Cancelar.
+    - Cancelar limpia y vuelve a modo Alta.
 
-EDICION
-- Sin prompt().
-- Carga datos en formulario.
-- Guardar cambia a Actualizar.
-- Aparece Cancelar.
-- Cancelar limpia y vuelve a modo Alta.
+    ELIMINACION
+    - Confirmación.
+    - Baja lógica como regla general.
+    - PROTECT y no CASCADE para proteger historia, salvo excepciones explícitas.
+    - Validaciones de negocio.
+    - Refrescar listado sin salir del ABM.
 
-ELIMINACION
-- Confirmación.
-- Baja lógica como regla general.
-- PROTECT y no CASCADE para proteger historia, salvo excepciones explícitas.
-- Validaciones de negocio.
-- Refrescar listado sin salir del ABM.
+    REACTIVACION
+    - Si un registro equivalente está inactivo, no crear otro duplicado: reactivar.
 
-REACTIVACION
-- Si un registro equivalente está inactivo, no crear otro duplicado: reactivar.
+    VISUAL
+    - Mismo CSS.
+    - Mismos colores.
+    - Mismos radios.
+    - Mismos tamaños.
+    - Mismos botones.
+    - Mismos espaciados.
+    - Misma lógica visual que Bancos y Centros Operativos.
 
-VISUAL
-- Mismo CSS.
-- Mismos colores.
-- Mismos radios.
-- Mismos tamaños.
-- Mismos botones.
-- Mismos espaciados.
-- Misma lógica visual que Bancos y Centros Operativos.
 
+    ============================================================
+    12. REGLAS DE DESARROLLO QUE NO SE NEGOCIAN
+    ============================================================
 
-============================================================
-12. REGLAS DE DESARROLLO QUE NO SE NEGOCIAN
-============================================================
+    Reglas actuales del proyecto:
 
-Reglas actuales del proyecto:
+    - NO JavaScript inline nuevo.
+    - NO eliminar comentarios importantes.
+    - Cada función debe tener docstrings/documentación siguiendo el criterio vigente del proyecto.
+    - Respetar la arquitectura de navegación.
+    - Mantener el estilo de código del proyecto.
+    - Todo ABM abierto desde [+] debe volver al origen, conservar estado y seleccionar lo recién creado cuando corresponda.
+    - Mantener baja lógica en tablas maestras.
+    - Evitar cambios amplios/refactors innecesarios durante el cierre de la versión testeable.
 
-- NO JavaScript inline nuevo.
-- NO eliminar comentarios importantes.
-- Cada función debe tener docstrings/documentación siguiendo el criterio vigente del proyecto.
-- Respetar la arquitectura de navegación.
-- Mantener el estilo de código del proyecto.
-- Todo ABM abierto desde [+] debe volver al origen, conservar estado y seleccionar lo recién creado cuando corresponda.
-- Mantener baja lógica en tablas maestras.
-- Evitar cambios amplios/refactors innecesarios durante el cierre de la versión testeable.
+    IMPORTANTE SOBRE CODIGO HISTORICO:
+    panel_admin.html puede contener JavaScript inline heredado.
+    Eso NO debe tomarse como autorización para seguir agregando JavaScript inline.
+    El código NUEVO debe ubicarse en archivos .js externos.
+    No refactorizar de golpe todo el JavaScript antiguo solamente para cumplir esta regla, salvo que exista una necesidad concreta y controlada.
 
-IMPORTANTE SOBRE CODIGO HISTORICO:
-panel_admin.html puede contener JavaScript inline heredado.
-Eso NO debe tomarse como autorización para seguir agregando JavaScript inline.
-El código NUEVO debe ubicarse en archivos .js externos.
-No refactorizar de golpe todo el JavaScript antiguo solamente para cumplir esta regla, salvo que exista una necesidad concreta y controlada.
 
+    ============================================================
+    13. METODO DE TRABAJO ACORDADO PARA MODIFICACIONES
+    ============================================================
 
-============================================================
-13. METODO DE TRABAJO ACORDADO PARA MODIFICACIONES
-============================================================
+    No reemplazar archivos completos como práctica habitual.
+    Puede entregarse un archivo completo como respaldo, pero no como método principal.
 
-No reemplazar archivos completos como práctica habitual.
-Puede entregarse un archivo completo como respaldo, pero no como método principal.
+    Cuando se modifica código se debe indicar:
 
-Cuando se modifica código se debe indicar:
+    1. ARCHIVO exacto.
+    2. QUÉ BUSCAR.
+    3. QUÉ REEMPLAZAR o DÓNDE AGREGAR.
+    4. Si cambia una función: entregar la FUNCIÓN COMPLETA modificada.
+    5. Explicar brevemente qué hace el cambio y por qué.
 
-1. ARCHIVO exacto.
-2. QUÉ BUSCAR.
-3. QUÉ REEMPLAZAR o DÓNDE AGREGAR.
-4. Si cambia una función: entregar la FUNCIÓN COMPLETA modificada.
-5. Explicar brevemente qué hace el cambio y por qué.
+    Si se agrega una función nueva:
+    - indicar después de qué función debe colocarse;
+    - entregar la función completa.
 
-Si se agrega una función nueva:
-- indicar después de qué función debe colocarse;
-- entregar la función completa.
+    Antes de modificar:
+    - revisar reglas;
+    - revisar arquitectura;
+    - revisar el patrón existente equivalente;
+    - evitar inventar comportamientos nuevos si ya existe un patrón funcional en OrdenaClick.
 
-Antes de modificar:
-- revisar reglas;
-- revisar arquitectura;
-- revisar el patrón existente equivalente;
-- evitar inventar comportamientos nuevos si ya existe un patrón funcional en OrdenaClick.
+    Principio:
 
-Principio:
+    TOMAR PATRON QUE YA FUNCIONA
+    -> REPLICAR
+    -> TOCAR SOLO LO NECESARIO
+    -> VERIFICAR QUE NO SE ROMPA LO DEMAS
 
-TOMAR PATRON QUE YA FUNCIONA
--> REPLICAR
--> TOCAR SOLO LO NECESARIO
--> VERIFICAR QUE NO SE ROMPA LO DEMAS
 
+    ============================================================
+    14. EXPORTACION / IMPORTACION DE EMPRESA
+    ============================================================
 
-============================================================
-14. EXPORTACION / IMPORTACION DE EMPRESA
-============================================================
+    Toda entidad que pertenezca funcionalmente al entorno Empresa debe evaluarse respecto de Exportar/Importar Empresa.
 
-Toda entidad que pertenezca funcionalmente al entorno Empresa debe evaluarse respecto de Exportar/Importar Empresa.
+    Regla principal existente:
 
-Regla principal existente:
+    Si un dato se perdería al eliminar la empresa y volver a importarla,
+    debe formar parte del backup salvo exclusión explícita documentada.
 
-Si un dato se perdería al eliminar la empresa y volver a importarla,
-debe formar parte del backup salvo exclusión explícita documentada.
+    Debe preservarse:
 
-Debe preservarse:
+    - información activa e inactiva;
+    - movimientos históricos;
+    - pagos;
+    - planes;
+    - cuotas;
+    - vencimientos;
+    - alertas;
+    - cuentas bancarias;
+    - tarjetas;
+    - cheques/e-Cheqs;
+    - archivos relacionados;
+    - relaciones entre entidades.
 
-- información activa e inactiva;
-- movimientos históricos;
-- pagos;
-- planes;
-- cuotas;
-- vencimientos;
-- alertas;
-- cuentas bancarias;
-- tarjetas;
-- cheques/e-Cheqs;
-- archivos relacionados;
-- relaciones entre entidades.
+    Nunca depender de que los IDs originales coincidan con los IDs de una importación nueva.
 
-Nunca depender de que los IDs originales coincidan con los IDs de una importación nueva.
+    Cada nueva entidad relacionada con Empresa obliga a revisar las reglas de Exportación/Importación.
 
-Cada nueva entidad relacionada con Empresa obliga a revisar las reglas de Exportación/Importación.
 
+    ============================================================
+    15. DECISIONES FUNCIONALES YA CERRADAS PARA CARGA SIMPLE
+    ============================================================
 
-============================================================
-15. DECISIONES FUNCIONALES YA CERRADAS PARA CARGA SIMPLE
-============================================================
+    Según Reglas_del_desarrollo.md:
 
-Según Reglas_del_desarrollo.md:
+    - Tipo de Gasto reemplaza conceptualmente al Rubro simple.
+    - Tipo de Gasto y Proveedor tienen relación muchos a muchos.
+    - "Relacionado con" pasa a llamarse Recurso Operativo.
+    - Todo Recurso Operativo debe vincularse a un Centro Operativo mediante asignación.
+    - El Movimiento conserva históricamente Recurso y Centro imputados.
+    - Usuario y Recurso Operativo son entidades independientes, vinculables en el futuro.
+    - Los archivos de movimientos serán registros independientes y múltiples.
+    - Cuenta Contable quedará visible pero deshabilitada hasta desarrollar Plan Contable.
+    - No implementar todavía Giras/Rendiciones, pero el modelo no debe impedirlas.
 
-- Tipo de Gasto reemplaza conceptualmente al Rubro simple.
-- Tipo de Gasto y Proveedor tienen relación muchos a muchos.
-- "Relacionado con" pasa a llamarse Recurso Operativo.
-- Todo Recurso Operativo debe vincularse a un Centro Operativo mediante asignación.
-- El Movimiento conserva históricamente Recurso y Centro imputados.
-- Usuario y Recurso Operativo son entidades independientes, vinculables en el futuro.
-- Los archivos de movimientos serán registros independientes y múltiples.
-- Cuenta Contable quedará visible pero deshabilitada hasta desarrollar Plan Contable.
-- No implementar todavía Giras/Rendiciones, pero el modelo no debe impedirlas.
+    Jerarquía visual:
+    REGISTRO, PAGO y PLAN son etapas relacionadas, pero no deben confundirse visualmente.
 
-Jerarquía visual:
-REGISTRO, PAGO y PLAN son etapas relacionadas, pero no deben confundirse visualmente.
 
+    ============================================================
+    16. ESTADO ACTUAL DEL DESARROLLO AL CREAR ESTE DOCUMENTO
+    ============================================================
 
-============================================================
-16. ESTADO ACTUAL DEL DESARROLLO AL CREAR ESTE DOCUMENTO
-============================================================
+    Fecha de referencia: agosto de 2026.
 
-Fecha de referencia: agosto de 2026.
+    Se está desarrollando principalmente el perfil ADMINISTRADOR.
 
-Se está desarrollando principalmente el perfil ADMINISTRADOR.
+    El foco actual está en CARGA SIMPLE y especialmente en PAGOS.
 
-El foco actual está en CARGA SIMPLE y especialmente en PAGOS.
+    Se terminó/avanzó el ABM de TARJETAS y se comenzó a integrar TARJETAS como medio de pago dentro de una tarjeta de Pago.
 
-Se terminó/avanzó el ABM de TARJETAS y se comenzó a integrar TARJETAS como medio de pago dentro de una tarjeta de Pago.
+    IMPORTANTE PARA RETOMAR:
 
-IMPORTANTE PARA RETOMAR:
+    La versión actualmente colocada en VS Code proviene de una modificación reciente de panel_admin.html en la que se agregó lógica de Tarjeta dentro del propio panel.
+    Posteriormente se recordó/reforzó la regla:
 
-La versión actualmente colocada en VS Code proviene de una modificación reciente de panel_admin.html en la que se agregó lógica de Tarjeta dentro del propio panel.
-Posteriormente se recordó/reforzó la regla:
+    "NO JavaScript inline nuevo".
 
-"NO JavaScript inline nuevo".
+    Por lo tanto, NO DESCARTAR DE GOLPE lo ya hecho ni volver arbitrariamente a una versión anterior.
 
-Por lo tanto, NO DESCARTAR DE GOLPE lo ya hecho ni volver arbitrariamente a una versión anterior.
+    El próximo trabajo debe tomar el estado actual de VS Code y llevarlo de forma controlada a la arquitectura correcta:
 
-El próximo trabajo debe tomar el estado actual de VS Code y llevarlo de forma controlada a la arquitectura correcta:
+    - conservar el HTML útil del acordeón Tarjetas;
+    - ajustar su estética para que replique exactamente otros acordeones;
+    - mover la lógica nueva de Tarjetas de Pago a un archivo .js externo;
+    - no refactorizar JavaScript histórico que no sea necesario;
+    - verificar cada cambio de forma localizada.
 
-- conservar el HTML útil del acordeón Tarjetas;
-- ajustar su estética para que replique exactamente otros acordeones;
-- mover la lógica nueva de Tarjetas de Pago a un archivo .js externo;
-- no refactorizar JavaScript histórico que no sea necesario;
-- verificar cada cambio de forma localizada.
+    Ajustes pendientes ya conversados para el acordeón Tarjetas:
 
-Ajustes pendientes ya conversados para el acordeón Tarjetas:
+    - Debe respetar exactamente el formato visual de los otros acordeones.
+    - Debe tener botón "REGISTRAR PAGO CON TARJETA".
+    - Debe permitir registrar múltiples operaciones con tarjeta dentro de un mismo Pago si la arquitectura lo requiere.
+    - Debe permitir modificar la operación registrada.
+    - Debe permitir cancelar la modificación.
+    - "CANCELAR CAMBIOS" debe usar el mismo estilo rojo que los otros acordeones.
+    - Debe impedir eliminar la operación que se está editando y respetar las mismas protecciones de edición existentes en otros medios de pago.
+    - Debe evitar comenzar otra edición incompatible mientras exista una operación en edición, según el patrón existente.
+    - El orden del formulario debe ser lógico: primero campos de datos, luego comprobante/archivo, luego botones.
+    - Se decidió QUITAR "Observaciones" del bloque de Pago con Tarjeta.
+    - No dejar referencias JavaScript muertas a Observaciones luego de quitar el campo.
+    - La tarjeta maestra del ABM y la operación de Pago con Tarjeta son conceptos diferentes.
 
-- Debe respetar exactamente el formato visual de los otros acordeones.
-- Debe tener botón "REGISTRAR PAGO CON TARJETA".
-- Debe permitir registrar múltiples operaciones con tarjeta dentro de un mismo Pago si la arquitectura lo requiere.
-- Debe permitir modificar la operación registrada.
-- Debe permitir cancelar la modificación.
-- "CANCELAR CAMBIOS" debe usar el mismo estilo rojo que los otros acordeones.
-- Debe impedir eliminar la operación que se está editando y respetar las mismas protecciones de edición existentes en otros medios de pago.
-- Debe evitar comenzar otra edición incompatible mientras exista una operación en edición, según el patrón existente.
-- El orden del formulario debe ser lógico: primero campos de datos, luego comprobante/archivo, luego botones.
-- Se decidió QUITAR "Observaciones" del bloque de Pago con Tarjeta.
-- No dejar referencias JavaScript muertas a Observaciones luego de quitar el campo.
-- La tarjeta maestra del ABM y la operación de Pago con Tarjeta son conceptos diferentes.
+    El ABM Tarjetas debe seguir permitiendo alta, modificación, baja lógica/reactivación y regreso al origen según las reglas de los demás ABMs.
 
-El ABM Tarjetas debe seguir permitiendo alta, modificación, baja lógica/reactivación y regreso al origen según las reglas de los demás ABMs.
 
+    ============================================================
+    17. TARJETAS - CRITERIOS ARQUITECTONICOS EXISTENTES
+    ============================================================
 
-============================================================
-17. TARJETAS - CRITERIOS ARQUITECTONICOS EXISTENTES
-============================================================
+    El ABM Tarjetas pertenece a Empresa.
 
-El ABM Tarjetas pertenece a Empresa.
+    Las Tarjetas deben poder relacionarse con una Cuenta Bancaria propia.
 
-Las Tarjetas deben poder relacionarse con una Cuenta Bancaria propia.
+    Una operación de Pago con Tarjeta debe conservar, según corresponda:
 
-Una operación de Pago con Tarjeta debe conservar, según corresponda:
+    - Tarjeta utilizada.
+    - Fecha.
+    - Importe aplicado al Movimiento.
+    - Para crédito: cuotas e intereses de financiación.
+    - Referencia/comprobante cuando corresponda.
 
-- Tarjeta utilizada.
-- Fecha.
-- Importe aplicado al Movimiento.
-- Para crédito: cuotas e intereses de financiación.
-- Referencia/comprobante cuando corresponda.
+    Regla económica importante:
 
-Regla económica importante:
+    El importe aplicado con Tarjeta cancela deuda del Movimiento.
+    Los intereses de financiación son costo económico adicional y NO aumentan el importe aplicado al Movimiento.
 
-El importe aplicado con Tarjeta cancela deuda del Movimiento.
-Los intereses de financiación son costo económico adicional y NO aumentan el importe aplicado al Movimiento.
+    La relación Tarjeta -> Cuenta Bancaria debe permitir en el futuro:
 
-La relación Tarjeta -> Cuenta Bancaria debe permitir en el futuro:
+    - consultar movimientos por Tarjeta;
+    - comparar contra resumen;
+    - controlar gastos incluidos en resumen;
+    - conciliaciones y controles posteriores.
 
-- consultar movimientos por Tarjeta;
-- comparar contra resumen;
-- controlar gastos incluidos en resumen;
-- conciliaciones y controles posteriores.
+    Tarjetas y sus operaciones relacionadas con Pagos forman parte del entorno Empresa y deben contemplarse en Exportar/Importar Empresa.
 
-Tarjetas y sus operaciones relacionadas con Pagos forman parte del entorno Empresa y deben contemplarse en Exportar/Importar Empresa.
 
+    ============================================================
+    18. EXPERIENCIA DE USUARIO - PRINCIPIO GENERAL
+    ============================================================
 
-============================================================
-18. EXPERIENCIA DE USUARIO - PRINCIPIO GENERAL
-============================================================
+    OrdenaClick puede tener una arquitectura interna completa sin obligar al usuario inicial a configurarla toda manualmente.
 
-OrdenaClick puede tener una arquitectura interna completa sin obligar al usuario inicial a configurarla toda manualmente.
+    Objetivo UX:
 
-Objetivo UX:
+    - Entrada simple.
+    - Configuración progresiva.
+    - Defaults inteligentes.
+    - Posibilidad de omitir configuración avanzada.
+    - Poder comenzar a registrar movimientos rápidamente.
+    - No perder capacidad de crecimiento posterior.
 
-- Entrada simple.
-- Configuración progresiva.
-- Defaults inteligentes.
-- Posibilidad de omitir configuración avanzada.
-- Poder comenzar a registrar movimientos rápidamente.
-- No perder capacidad de crecimiento posterior.
+    La simplicidad debe resolverse mediante experiencia y automatización, no eliminando estructura de datos.
 
-La simplicidad debe resolverse mediante experiencia y automatización, no eliminando estructura de datos.
 
+    ============================================================
+    19. CRITERIO PARA NUEVAS FUNCIONALIDADES
+    ============================================================
 
-============================================================
-19. CRITERIO PARA NUEVAS FUNCIONALIDADES
-============================================================
+    Antes de agregar cualquier funcionalidad relevante, preguntar:
 
-Antes de agregar cualquier funcionalidad relevante, preguntar:
+    1. ¿Pertenece al entorno Empresa?
+    2. ¿Debe conservar historia?
+    3. ¿Puede generar un Vencimiento?
+    4. ¿Puede generar una Alerta?
+    5. ¿Tiene impacto contable futuro?
+    6. ¿Debe incluirse en Exportar/Importar Empresa?
+    7. ¿Debe usar baja lógica?
+    8. ¿Cómo se comporta si la empresa crece?
+    9. ¿Debe estar siempre visible o puede habilitarse según plan?
+    10. ¿Qué perfil puede verla/usarla/modificarla?
+    11. ¿Acerca o desvía la versión usable de septiembre?
 
-1. ¿Pertenece al entorno Empresa?
-2. ¿Debe conservar historia?
-3. ¿Puede generar un Vencimiento?
-4. ¿Puede generar una Alerta?
-5. ¿Tiene impacto contable futuro?
-6. ¿Debe incluirse en Exportar/Importar Empresa?
-7. ¿Debe usar baja lógica?
-8. ¿Cómo se comporta si la empresa crece?
-9. ¿Debe estar siempre visible o puede habilitarse según plan?
-10. ¿Qué perfil puede verla/usarla/modificarla?
-11. ¿Acerca o desvía la versión usable de septiembre?
 
+    ============================================================
+    20. PRINCIPIO FINAL
+    ============================================================
 
-============================================================
-20. PRINCIPIO FINAL
-============================================================
+    OrdenaClick debe ser fácil para una empresa pequeña sin quedar chico para una empresa que crece.
 
-OrdenaClick debe ser fácil para una empresa pequeña sin quedar chico para una empresa que crece.
+    El sistema debe permitir comenzar simple y habilitar complejidad gradualmente SIN PERDER DATOS, SIN MIGRAR HISTORIA y SIN CAMBIAR DE ARQUITECTURA.
 
-El sistema debe permitir comenzar simple y habilitar complejidad gradualmente SIN PERDER DATOS, SIN MIGRAR HISTORIA y SIN CAMBIAR DE ARQUITECTURA.
+    Hasta la versión testeable de septiembre, priorizar:
 
-Hasta la versión testeable de septiembre, priorizar:
+    FUNCIONAR -> CONSERVAR DATOS -> RESPETAR FLUJOS -> SER TESTEABLE -> LUEGO MEJORAR.
 
-FUNCIONAR -> CONSERVAR DATOS -> RESPETAR FLUJOS -> SER TESTEABLE -> LUEGO MEJORAR.
+    ============================================================
+    ESTO ES ESPECIALMENTE PARA LA IA: ACA TU RESPUESTA CUANDO TE PLENTEE ORDENACLICK
+    ============================================================
+    Ahora que tengo el panorama bastante más completo, creo que la idea de OrdenaClick es más ambiciosa que un sistema de carga de gastos, pero también tiene una lógica bastante coherente detrás. Lo importante va a ser no intentar construir toda esa ambición al mismo tiempo.
 
-============================================================
-ESTO ES ESPECIALMENTE PARA LA IA: ACA TU RESPUESTA CUANDO TE PLENTEE ORDENACLICK
-============================================================
-Ahora que tengo el panorama bastante más completo, creo que la idea de OrdenaClick es más ambiciosa que un sistema de carga de gastos, pero también tiene una lógica bastante coherente detrás. Lo importante va a ser no intentar construir toda esa ambición al mismo tiempo.
+    Lo que entiendo que realmente es OrdenaClick
 
-Lo que entiendo que realmente es OrdenaClick
+    OrdenaClick no apunta solamente a registrar facturas y decir cuánto se pagó.
 
-OrdenaClick no apunta solamente a registrar facturas y decir cuánto se pagó.
+    El núcleo que estás construyendo es una especie de historia operativa y económica estructurada de una empresa.
 
-El núcleo que estás construyendo es una especie de historia operativa y económica estructurada de una empresa.
+    Cuando alguien registra un movimiento, no querés guardar solamente:
 
-Cuando alguien registra un movimiento, no querés guardar solamente:
+    “Se gastaron $100.000.”
 
-“Se gastaron $100.000.”
+    Querés poder reconstruir:
 
-Querés poder reconstruir:
+    Qué empresa gastó → quién realizó/cargó el gasto → para qué → asociado a qué recurso/sector/sucursal → a qué proveedor → cuándo → cuándo vence → cómo se pagó → desde qué cuenta/tarjeta/cheque → cuánto quedó pendiente → qué ocurrió después.
 
-Qué empresa gastó → quién realizó/cargó el gasto → para qué → asociado a qué recurso/sector/sucursal → a qué proveedor → cuándo → cuándo vence → cómo se pagó → desde qué cuenta/tarjeta/cheque → cuánto quedó pendiente → qué ocurrió después.
+    Ese nivel de información es el que después permite que aparezcan naturalmente los informes, las alertas y, bastante más adelante, la contabilidad.
 
-Ese nivel de información es el que después permite que aparezcan naturalmente los informes, las alertas y, bastante más adelante, la contabilidad.
+    Y me parece una decisión acertada que la información operativa sea la fuente, en vez de pedirle al usuario que cargue después otra vez los mismos datos para obtener informes.
 
-Y me parece una decisión acertada que la información operativa sea la fuente, en vez de pedirle al usuario que cargue después otra vez los mismos datos para obtener informes.
+    La decisión arquitectónica que más me gusta
 
-La decisión arquitectónica que más me gusta
+    Hay una idea tuya que me parece especialmente importante:
 
-Hay una idea tuya que me parece especialmente importante:
+    una empresa simple y una empresa compleja no deberían vivir en arquitecturas diferentes.
 
-una empresa simple y una empresa compleja no deberían vivir en arquitecturas diferentes.
+    Eso evita un problema enorme a futuro.
 
-Eso evita un problema enorme a futuro.
+    Imaginemos:
 
-Imaginemos:
+    2026: un profesional tiene una empresa, una cuenta bancaria y ningún empleado.
 
-2026: un profesional tiene una empresa, una cuenta bancaria y ningún empleado.
+    OrdenaClick puede esconderle sucursales, depósitos, centros operativos, estructuras contables avanzadas, etc.
 
-OrdenaClick puede esconderle sucursales, depósitos, centros operativos, estructuras contables avanzadas, etc.
+    Pero internamente sus movimientos siguen entrando en una estructura compatible con esas cosas.
 
-Pero internamente sus movimientos siguen entrando en una estructura compatible con esas cosas.
+    Después:
 
-Después:
+    2028: tiene 3 sucursales, 25 empleados, vehículos, depósitos y varias cuentas.
 
-2028: tiene 3 sucursales, 25 empleados, vehículos, depósitos y varias cuentas.
+    No debería escuchar:
 
-No debería escuchar:
+    “Ahora tenés que pasar al sistema empresarial y migrar tus datos.”
 
-“Ahora tenés que pasar al sistema empresarial y migrar tus datos.”
+    Simplemente se habilitan nuevas capacidades y empieza a clasificar con mayor profundidad sin destruir los años anteriores.
 
-Simplemente se habilitan nuevas capacidades y empieza a clasificar con mayor profundidad sin destruir los años anteriores.
+    Eso es muy valioso.
 
-Eso es muy valioso.
+    La frase que usamos antes lo resume bien:
 
-La frase que usamos antes lo resume bien:
+    simplificar la interfaz, no simplificar los datos.
 
-simplificar la interfaz, no simplificar los datos.
+    Y esto encaja muy bien con los planes
 
-Y esto encaja muy bien con los planes
+    También veo coherencia entre arquitectura y modelo comercial.
 
-También veo coherencia entre arquitectura y modelo comercial.
+    No necesariamente necesitás fabricar:
 
-No necesariamente necesitás fabricar:
+    OrdenaClick Simple
+    OrdenaClick PyME
+    OrdenaClick Enterprise
 
-OrdenaClick Simple
-OrdenaClick PyME
-OrdenaClick Enterprise
+    como tres productos técnicamente diferentes.
 
-como tres productos técnicamente diferentes.
+    Puede existir un OrdenaClick y habilitar capacidades.
 
-Puede existir un OrdenaClick y habilitar capacidades.
+    Una empresa chica podría tener muchas cosas resueltas automáticamente. Una más compleja puede empezar a configurarlas manualmente.
 
-Una empresa chica podría tener muchas cosas resueltas automáticamente. Una más compleja puede empezar a configurarlas manualmente.
+    Eso permite incluso que el sistema recomiende:
 
-Eso permite incluso que el sistema recomiende:
+    “Por cómo está organizada tu empresa, probablemente te convenga este plan.”
 
-“Por cómo está organizada tu empresa, probablemente te convenga este plan.”
+    En lugar de obligar al usuario nuevo a entender una tabla de 40 características antes de haber utilizado el producto.
 
-En lugar de obligar al usuario nuevo a entender una tabla de 40 características antes de haber utilizado el producto.
+    La configuración inicial que planteaste me parece especialmente importante
 
-La configuración inicial que planteaste me parece especialmente importante
+    Porque hay un problema típico en los sistemas administrativos: para poder usarlos primero hay que configurarlos durante horas.
 
-Porque hay un problema típico en los sistemas administrativos: para poder usarlos primero hay que configurarlos durante horas.
+    Y eso mata la experiencia inicial.
 
-Y eso mata la experiencia inicial.
+    Vos ya construiste muchos ABM porque son necesarios para que después los selects tengan información. Pero imaginemos un usuario nuevo.
 
-Vos ya construiste muchos ABM porque son necesarios para que después los selects tengan información. Pero imaginemos un usuario nuevo.
+    Crea su empresa.
 
-Crea su empresa.
+    Entra a Carga Simple.
 
-Entra a Carga Simple.
+    Y encuentra:
 
-Y encuentra:
+    Cuenta bancaria: vacío
+    Tarjeta: vacío
+    Empleado: vacío
+    Vehículo: vacío
+    Sucursal: vacío
 
-Cuenta bancaria: vacío
-Tarjeta: vacío
-Empleado: vacío
-Vehículo: vacío
-Sucursal: vacío
+    Técnicamente el sistema funciona.
 
-Técnicamente el sistema funciona.
+    Para el usuario, no funciona.
 
-Para el usuario, no funciona.
+    Tu idea del asistente inicial soluciona justamente eso.
 
-Tu idea del asistente inicial soluciona justamente eso.
+    Podría ser algo como:
 
-Podría ser algo como:
+    1. Datos de tu empresa
 
-1. Datos de tu empresa
+    Ya tenemos buena parte de esto.
 
-Ya tenemos buena parte de esto.
+    2. ¿Querés que te ayudemos a configurarla?
 
-2. ¿Querés que te ayudemos a configurarla?
+    Configurar ahora / Lo haré después
 
-Configurar ahora / Lo haré después
+    Y recién ahí empieza un recorrido amigable.
 
-Y recién ahí empieza un recorrido amigable.
+    ¿Tu empresa tiene sucursales?
 
-¿Tu empresa tiene sucursales?
+    No → OrdenaClick utiliza automáticamente la estructura base.
 
-No → OrdenaClick utiliza automáticamente la estructura base.
+    Sí → carguemos las sucursales.
 
-Sí → carguemos las sucursales.
+    Después:
 
-Después:
+    ¿Tenés empleados?
 
-¿Tenés empleados?
+    ¿Utilizan vehículos?
 
-¿Utilizan vehículos?
+    ¿Con qué bancos trabajás?
 
-¿Con qué bancos trabajás?
+    ¿Qué cuentas bancarias utilizás?
 
-¿Qué cuentas bancarias utilizás?
+    ¿Utilizás tarjetas de débito o crédito?
 
-¿Utilizás tarjetas de débito o crédito?
+    Y cuando termina, la persona entra a Carga Simple y los selects ya tienen sentido.
 
-Y cuando termina, la persona entra a Carga Simple y los selects ya tienen sentido.
+    Eso convierte todos los ABM que estamos haciendo ahora en algo más interesante: no solamente sirven desde Administración; también pueden reutilizarse dentro del onboarding.
 
-Eso convierte todos los ABM que estamos haciendo ahora en algo más interesante: no solamente sirven desde Administración; también pueden reutilizarse dentro del onboarding.
+    Incluso veo una segunda utilidad
 
-Incluso veo una segunda utilidad
+    Ese recorrido puede funcionar simultáneamente como configurador y diagnóstico.
 
-Ese recorrido puede funcionar simultáneamente como configurador y diagnóstico.
+    Por ejemplo, si responde:
 
-Por ejemplo, si responde:
+    5 sucursales
+    3 depósitos
+    40 empleados
+    12 vehículos
+    6 cuentas bancarias
+    varias tarjetas
+    necesita permisos diferenciados
+    quiere contabilidad
 
-5 sucursales
-3 depósitos
-40 empleados
-12 vehículos
-6 cuentas bancarias
-varias tarjetas
-necesita permisos diferenciados
-quiere contabilidad
+    OrdenaClick ya sabe que probablemente no estamos frente a una empresa “simple”.
 
-OrdenaClick ya sabe que probablemente no estamos frente a una empresa “simple”.
+    Por eso tu onboarding podría terminar diciendo algo como:
 
-Por eso tu onboarding podría terminar diciendo algo como:
+    Tu empresa ya está configurada para comenzar.
 
-Tu empresa ya está configurada para comenzar.
+    Por la estructura que cargaste, estas son las funcionalidades que podrían resultarte útiles.
 
-Por la estructura que cargaste, estas son las funcionalidades que podrían resultarte útiles.
+    Ahí aparece la recomendación comercial después de aportar valor, no antes.
 
-Ahí aparece la recomendación comercial después de aportar valor, no antes.
+    Me parece mucho mejor que diseñar el sistema alrededor de planes rígidos desde el comienzo.
 
-Me parece mucho mejor que diseñar el sistema alrededor de planes rígidos desde el comienzo.
+    Contabilidad
 
-Contabilidad
+    También me parece correcta tu idea de no forzarla ahora pero preparar el terreno.
 
-También me parece correcta tu idea de no forzarla ahora pero preparar el terreno.
+    El Administrador podría eventualmente elegir:
 
-El Administrador podría eventualmente elegir:
+    Configurar contabilidad ahora.
 
-Configurar contabilidad ahora.
+    o:
 
-o:
+    Dejar configuración contable al contador.
 
-Dejar configuración contable al contador.
+    Eso encaja perfectamente con que posteriormente exista el perfil Contable.
 
-Eso encaja perfectamente con que posteriormente exista el perfil Contable.
+    Y hay una consecuencia arquitectónica importante: cuando desarrollemos el plan de cuentas, no deberíamos obligar a reconstruir todos los movimientos anteriores.
 
-Y hay una consecuencia arquitectónica importante: cuando desarrollemos el plan de cuentas, no deberíamos obligar a reconstruir todos los movimientos anteriores.
+    Por eso tenemos que seguir teniendo cuidado ahora con cosas aparentemente pequeñas como:
 
-Por eso tenemos que seguir teniendo cuidado ahora con cosas aparentemente pequeñas como:
+    capital vs. intereses, fechas, medios de pago, categorías, proveedores, recursos, empresas, usuarios que realizaron acciones, etc.
 
-capital vs. intereses, fechas, medios de pago, categorías, proveedores, recursos, empresas, usuarios que realizaron acciones, etc.
+    Hoy parecen detalles de Carga Simple.
 
-Hoy parecen detalles de Carga Simple.
+    Mañana son materia prima para:
 
-Mañana son materia prima para:
+    Estado de Resultados y Balance.
 
-Estado de Resultados y Balance.
+    Administrador y Colaborador
 
-Administrador y Colaborador
+    También me queda mucho más claro el límite.
 
-También me queda mucho más claro el límite.
+    El Administrador administra la organización.
 
-El Administrador administra la organización.
+    El Colaborador opera dentro de la organización que le fue habilitada.
 
-El Colaborador opera dentro de la organización que le fue habilitada.
+    Eso significa que Colaborador no es simplemente “Administrador con botones ocultos”.
 
-Eso significa que Colaborador no es simplemente “Administrador con botones ocultos”.
+    Conceptualmente tiene otra responsabilidad.
 
-Conceptualmente tiene otra responsabilidad.
+    Puede:
 
-Puede:
+    registrar movimientos, cargar pagos y utilizar los maestros necesarios para completar esas operaciones.
 
-registrar movimientos, cargar pagos y utilizar los maestros necesarios para completar esas operaciones.
+    Pero no debería poder decidir unilateralmente cuestiones estructurales como crear empresas o administrar quién tiene acceso a ellas.
 
-Pero no debería poder decidir unilateralmente cuestiones estructurales como crear empresas o administrar quién tiene acceso a ellas.
+    Más adelante tendremos que convertir esto en permisos concretos, pero el concepto está bien definido.
 
-Más adelante tendremos que convertir esto en permisos concretos, pero el concepto está bien definido.
+    Hay otro sistema por encima de las empresas
 
-Hay otro sistema por encima de las empresas
+    Lo que mencionaste sobre el acceso me parece muy importante y hasta ahora no lo teníamos suficientemente presente.
 
-Lo que mencionaste sobre el acceso me parece muy importante y hasta ahora no lo teníamos suficientemente presente.
+    Hay realmente dos niveles administrativos.
 
-Hay realmente dos niveles administrativos.
+    Uno es:
 
-Uno es:
+    Administrador de una empresa dentro de OrdenaClick.
 
-Administrador de una empresa dentro de OrdenaClick.
+    Y otro completamente diferente:
 
-Y otro completamente diferente:
+    Administrador/propietario de OrdenaClick.
 
-Administrador/propietario de OrdenaClick.
+    Este último necesita eventualmente poder controlar:
 
-Este último necesita eventualmente poder controlar:
+    usuarios;
+    estado de suscripción;
+    demos;
+    habilitación;
+    suspensión/bloqueo;
+    posiblemente planes;
+    posiblemente límites y capacidades.
 
-usuarios;
-estado de suscripción;
-demos;
-habilitación;
-suspensión/bloqueo;
-posiblemente planes;
-posiblemente límites y capacidades.
+    Eso significa que:
 
-Eso significa que:
+    Tener login válido ≠ tener derecho indefinido a utilizar OrdenaClick.
 
-Tener login válido ≠ tener derecho indefinido a utilizar OrdenaClick.
+    La autenticación responde:
 
-La autenticación responde:
+    “¿Quién sos?”
 
-“¿Quién sos?”
+    La autorización empresarial responde:
 
-La autorización empresarial responde:
+    “¿Qué podés hacer?”
 
-“¿Qué podés hacer?”
+    Y la habilitación comercial de OrdenaClick responde:
 
-Y la habilitación comercial de OrdenaClick responde:
+    “¿Tu cuenta puede utilizar actualmente el servicio y con qué capacidades?”
 
-“¿Tu cuenta puede utilizar actualmente el servicio y con qué capacidades?”
+    Conviene mantener esas tres cosas separadas conceptualmente desde el principio.
 
-Conviene mantener esas tres cosas separadas conceptualmente desde el principio.
+    Donde sí pondría muchísimo cuidado
 
-Donde sí pondría muchísimo cuidado
+    La escalabilidad que estás pensando es buena, pero tiene un riesgo: sobrearquitectura.
 
-La escalabilidad que estás pensando es buena, pero tiene un riesgo: sobrearquitectura.
+    Es muy fácil empezar a pensar:
 
-Es muy fácil empezar a pensar:
+    “Esto algún día podría necesitar…”
 
-“Esto algún día podría necesitar…”
+    y terminar desarrollando durante meses infraestructura para casos que todavía no existen.
 
-y terminar desarrollando durante meses infraestructura para casos que todavía no existen.
+    Por eso el objetivo de septiembre que marcaste es fundamental.
 
-Por eso el objetivo de septiembre que marcaste es fundamental.
+    Yo usaría una regla:
 
-Yo usaría una regla:
+    Preparar para el futuro no significa desarrollar hoy el futuro.
 
-Preparar para el futuro no significa desarrollar hoy el futuro.
+    Ejemplo.
 
-Ejemplo.
+    Necesitamos que un Pago tenga información suficientemente estructurada para que mañana pueda contabilizarse.
 
-Necesitamos que un Pago tenga información suficientemente estructurada para que mañana pueda contabilizarse.
+    Sí.
 
-Sí.
+    Necesitamos desarrollar ahora el motor completo de asientos contables porque algún día tendremos Balance.
 
-Necesitamos desarrollar ahora el motor completo de asientos contables porque algún día tendremos Balance.
+    No.
 
-No.
+    Necesitamos que los permisos Admin/Colaborador estén bien pensados.
 
-Necesitamos que los permisos Admin/Colaborador estén bien pensados.
+    Sí.
 
-Sí.
+    Necesitamos desarrollar ahora Legal, Contable, calificaciones y marketplace de profesionales.
 
-Necesitamos desarrollar ahora Legal, Contable, calificaciones y marketplace de profesionales.
+    No.
 
-No.
+    Necesitamos pensar el concepto de planes y capacidades.
 
-Necesitamos pensar el concepto de planes y capacidades.
+    Sí.
 
-Sí.
+    Necesitamos ahora construir todo el sistema de billing y cinco niveles comerciales.
 
-Necesitamos ahora construir todo el sistema de billing y cinco niveles comerciales.
+    Probablemente no para septiembre.
 
-Probablemente no para septiembre.
+    Esa separación nos puede ahorrar muchísimo tiempo.
 
-Esa separación nos puede ahorrar muchísimo tiempo.
+    Y septiembre me parece un objetivo muy bueno
 
-Y septiembre me parece un objetivo muy bueno
+    Porque obliga a dejar de medir progreso por cantidad de código o cantidad de ABM.
 
-Porque obliga a dejar de medir progreso por cantidad de código o cantidad de ABM.
+    El verdadero examen debería ser que una persona que nunca vio OrdenaClick pueda:
 
-El verdadero examen debería ser que una persona que nunca vio OrdenaClick pueda:
+    crear su usuario → obtener acceso → crear/configurar una empresa → invitar/asignar un colaborador → cargar operaciones reales durante varios días → registrar cómo se pagaron → consultar pendientes → recibir alertas → obtener información útil de lo que cargó.
 
-crear su usuario → obtener acceso → crear/configurar una empresa → invitar/asignar un colaborador → cargar operaciones reales durante varios días → registrar cómo se pagaron → consultar pendientes → recibir alertas → obtener información útil de lo que cargó.
+    Y que el Colaborador pueda entrar y hacer su trabajo sin tener acceso a decisiones que corresponden al Administrador.
 
-Y que el Colaborador pueda entrar y hacer su trabajo sin tener acceso a decisiones que corresponden al Administrador.
+    Si conseguimos eso funcionando en la nube, aunque todavía no haya Balance, perfil Legal, calificaciones ni diez planes comerciales, ya existe un producto testeable.
 
-Si conseguimos eso funcionando en la nube, aunque todavía no haya Balance, perfil Legal, calificaciones ni diez planes comerciales, ya existe un producto testeable.
+    Y ahí las personas reales nos van a empezar a mostrar qué cosas que hoy creemos importantes realmente lo son.
 
-Y ahí las personas reales nos van a empezar a mostrar qué cosas que hoy creemos importantes realmente lo son.
+    Finalmente, algo que ahora entiendo mejor de cómo venís construyendo
 
-Finalmente, algo que ahora entiendo mejor de cómo venís construyendo
+    Al principio podía parecer que estábamos haciendo muchos ABM independientes: Bancos, Cuentas Bancarias, Tarjetas, Recursos, etc.
 
-Al principio podía parecer que estábamos haciendo muchos ABM independientes: Bancos, Cuentas Bancarias, Tarjetas, Recursos, etc.
+    Ahora entiendo por qué estás siendo tan insistente con cosas como los [+], volver exactamente al lugar anterior y no perder lo cargado.
 
-Ahora entiendo por qué estás siendo tan insistente con cosas como los [+], volver exactamente al lugar anterior y no perder lo cargado.
+    No es solamente estética.
 
-No es solamente estética.
+    Estás intentando que la carga administrativa no obligue al usuario a pensar en la estructura interna del sistema.
 
-Estás intentando que la carga administrativa no obligue al usuario a pensar en la estructura interna del sistema.
+    Si estoy registrando un pago y descubro que falta una tarjeta:
 
-Si estoy registrando un pago y descubro que falta una tarjeta:
+    [+] Tarjeta → la creo → vuelvo → continúa mi pago.
 
-[+] Tarjeta → la creo → vuelvo → continúa mi pago.
+    No:
 
-No:
+    salir → Administración → ABM → Tarjetas → crear → volver a Carga Simple → encontrar nuevamente el registro → volver al pago → completar.
 
-salir → Administración → ABM → Tarjetas → crear → volver a Carga Simple → encontrar nuevamente el registro → volver al pago → completar.
+    Ese principio debería mantenerse en todo OrdenaClick.
 
-Ese principio debería mantenerse en todo OrdenaClick.
+    Y ahora que conozco el objetivo de septiembre y el horizonte posterior, entiendo mucho mejor por qué varias decisiones que pueden parecer pequeñas son en realidad reglas de producto.
 
-Y ahora que conozco el objetivo de septiembre y el horizonte posterior, entiendo mucho mejor por qué varias decisiones que pueden parecer pequeñas son en realidad reglas de producto.
+    Tenemos una dirección bastante definida. Lo que necesitamos ahora es volver a lo concreto y avanzar con disciplina: terminar bien Tarjetas en Pago, sin romper lo anterior, y seguir cerrando el circuito operativo que necesitamos probar en septiembre.
+    ============================================================
+    FIN DEL DOCUMENTO
+    ============================================================
 
-Tenemos una dirección bastante definida. Lo que necesitamos ahora es volver a lo concreto y avanzar con disciplina: terminar bien Tarjetas en Pago, sin romper lo anterior, y seguir cerrando el circuito operativo que necesitamos probar en septiembre.
-============================================================
-FIN DEL DOCUMENTO
-============================================================
+## FUENTE: Definiciones de Caja / Cartera --- conversación 17/09/2026
+
+``` text
+Se definió conceptualmente:
+- ABM mínimo de Clientes ligado a Centro Operativo.
+- Regla universal de botón [+] para selectores con ABM.
+- Ingreso de cheques/e-Cheqs de terceros sin modelar venta/cobranza externa.
+- Cartera separada entre Cheques de terceros y e-Cheqs de terceros.
+- Condición A la orden / No a la orden.
+- Cheque físico No a la orden: sólo depósito en cuenta propia.
+- e-Cheq No a la orden: puede utilizarse mediante cesión, no endoso.
+- Alertas desde acreditación y ventana de 30 días corridos; luego Vencidos.
+- Salida de Cartera por Pago/Orden de Pago o depósito en cuenta propia.
+- Orden de Pago con efectivo, retenciones, cheques/e-Cheqs de terceros y
+  cheques/e-Cheqs propios emitidos.
+- e-Cheqs de terceros separados operativamente entre Endosados y Cedidos.
+- Rechazados: diseño posterior, preservando historia y evaluando nueva deuda,
+  gastos y documentación relacionada.
 ```

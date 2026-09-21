@@ -1811,6 +1811,125 @@ class RecursoOperativoCentro(models.Model):
         )
 
 # =========================================
+# CLIENTES
+# =========================================
+
+class Cliente(models.Model):
+    """
+    Representa un cliente identificado dentro de un Centro Operativo.
+
+    El número de cliente es una identificación operativa proveniente del
+    sistema de gestión de cada Centro Operativo, por lo que no se exige
+    unicidad a nivel global de Empresa.
+
+    El CUIT permitirá posteriormente consultar ARCA para asistir el alta
+    mediante autocompletado de los datos fiscales disponibles.
+    """
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="clientes"
+    )
+
+    centro_operativo = models.ForeignKey(
+        CentroOperativo,
+        on_delete=models.PROTECT,
+        related_name="clientes"
+    )
+
+    numero_cliente = models.CharField(
+        max_length=50
+    )
+
+    cuit = models.CharField(
+        max_length=11,
+        blank=True
+    )
+
+    razon_social = models.CharField(
+        max_length=200
+    )
+
+    direccion = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    celular = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    telefono = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = [
+            "centro_operativo__nombre",
+            "numero_cliente"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "centro_operativo",
+                    "numero_cliente"
+                ],
+                name="cliente_numero_unico_por_centro"
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "centro_operativo",
+                    "cuit"
+                ],
+                condition=~models.Q(cuit=""),
+                name="cliente_cuit_unico_por_centro"
+            )
+        ]
+
+    def clean(self):
+        """
+        Valida que el Centro Operativo pertenezca a la misma Empresa.
+        """
+        from django.core.exceptions import ValidationError
+
+        if (
+            self.empresa_id and
+            self.centro_operativo_id and
+            self.centro_operativo.empresa_id != self.empresa_id
+        ):
+            raise ValidationError({
+                "centro_operativo":
+                    "El Centro Operativo debe pertenecer a la misma empresa que el cliente."
+            })
+
+    def __str__(self):
+        """
+        Devuelve la identificación operativa y el nombre del cliente.
+        """
+        return (
+            f"{self.numero_cliente} - "
+            f"{self.razon_social}"
+        )
+
+# =========================================
 # BANCOS
 # =========================================
 

@@ -169,6 +169,132 @@
     padding:0 12px;
 }
 
+/* =========================================
+   ESTRUCTURA OPERATIVA
+========================================= */
+
+.abms-navegacion{
+
+    width:min(820px, 100%);
+
+    margin:0 auto 8px;
+
+    gap:8px;
+}
+
+
+#botoneraEstructuraOperativa{
+
+    /*
+     * Replica la navegación de Registros:
+     * la ventana muestra exactamente cuatro
+     * opciones completas.
+     *
+     * Las opciones restantes se recorren
+     * mediante las flechas laterales.
+     */
+    width:min(680px, calc(100% - 88px));
+
+    margin:0;
+
+    flex:0 1 680px;
+}
+
+
+#botoneraEstructuraOperativa
+.vencimientos-segmento{
+
+    /*
+     * Cuatro segmentos visibles dentro de
+     * la ventana de navegación.
+     */
+    flex:0 0 calc(
+        (100% - 12px) / 4
+    );
+
+    min-width:calc(
+        (100% - 12px) / 4
+    );
+
+    padding:0 12px;
+}
+
+
+.abms-navegacion
+.vencimientos-flecha{
+
+    width:38px;
+    height:38px;
+
+    flex:0 0 38px;
+
+    padding:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    line-height:1;
+
+    border-radius:11px;
+
+    color:#98a2b3;
+
+    background:#171d29;
+
+    border:1px solid #2b3447;
+
+    box-shadow:none;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+
+.abms-navegacion
+.vencimientos-flecha:hover:not(:disabled){
+
+    color:#ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(59,130,246,.18),
+            rgba(37,99,235,.08)
+        );
+
+    border-color:
+        rgba(59,130,246,.38);
+
+    box-shadow:
+        0 0 0 1px
+            rgba(59,130,246,.08),
+        0 6px 18px
+            rgba(37,99,235,.16);
+
+    transform:translateY(-1px);
+}
+
+
+.abms-navegacion
+.vencimientos-flecha:disabled{
+
+    color:#475569;
+
+    background:#121722;
+
+    border-color:#202838;
+
+    box-shadow:none;
+
+    cursor:default;
+
+    opacity:.55;
+}
 
 .registros-navegacion
 .vencimientos-flecha{

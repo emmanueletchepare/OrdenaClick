@@ -27,7 +27,7 @@ from datetime import (
 
 from io import BytesIO
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.validators import validate_email
 
 import os
@@ -58,12 +58,34 @@ from .models import (
     RecursoOperativo,
     RecursoOperativoCentro,
     Proveedor,
+    Cliente,
     PerfilUsuario
 )
 
 from .seguridad_claves import (
     cifrar_clave,
     descifrar_clave
+)
+
+from usuarios.services.configuracion_instalacion import (
+    obtener_valor_privado,
+)
+
+from usuarios.services.seguridad_instalacion import (
+    reemplazar_secret_key_privada,
+    secret_key_tiene_reinicio_pendiente,
+)
+
+from usuarios.services.arca import (
+    AMBIENTE_HOMOLOGACION,
+    AMBIENTE_PRODUCCION,
+    consultar_persona_arca,
+    guardar_configuracion_general_arca,
+    guardar_credenciales_arca,
+    obtener_ambiente_operativo_arca,
+    obtener_configuracion_arca,
+    obtener_cuit_representada_arca,
+    validar_credenciales_arca,
 )
 
 # =========================================
@@ -323,6 +345,359 @@ def panel_legal(request):
         "usuarios/panel_legal.html"
     )
 
+def _credenciales_arca_configuradas(
+    ambiente,
+):
+    """
+    Indica si un ambiente ARCA tiene certificado y clave disponibles.
+
+    No expone ni lee el contenido de las credenciales.
+    """
+    try:
+        configuracion = obtener_configuracion_arca(
+            ambiente
+        )
+
+        validar_credenciales_arca(
+            configuracion
+        )
+
+    except RuntimeError:
+        return False
+
+    return True
+
+@login_required
+def panel_desarrollador(request):
+    """
+    Muestra la administración técnica de la instalación de OrdenaClick.
+
+    El acceso está reservado exclusivamente a superusuarios. Informa el
+    estado de secretos y credenciales sin exponer su contenido.
+    """
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            "No tiene permisos para acceder al Perfil Desarrollador."
+        )
+
+    secret_key_entorno = bool(
+        os.environ.get(
+            "ORDENACLICK_SECRET_KEY",
+            "",
+        ).strip()
+    )
+
+    secret_key_privada = bool(
+        obtener_valor_privado(
+            "ordenaclick_secret_key",
+            "",
+        )
+    )
+
+    secret_key_reinicio_pendiente = False
+
+    if not secret_key_entorno and secret_key_privada:
+        secret_key_reinicio_pendiente = (
+            secret_key_tiene_reinicio_pendiente()
+        )
+
+    if secret_key_entorno:
+        secret_key_origen = "Variable de entorno"
+    elif secret_key_privada:
+        secret_key_origen = "Configuración privada"
+    else:
+        secret_key_origen = "No configurada"
+
+    try:
+        arca_ambiente = (
+            obtener_ambiente_operativo_arca()
+        )
+    except RuntimeError:
+        arca_ambiente = AMBIENTE_HOMOLOGACION
+
+    try:
+        arca_cuit_representada = (
+            str(
+                obtener_cuit_representada_arca()
+            )
+        )
+    except RuntimeError:
+        arca_cuit_representada = ""
+
+    return render(
+        request,
+        "usuarios/desarrollador/panel_desarrollador.html",
+        {
+            "secret_key_configurada": (
+                secret_key_entorno
+                or secret_key_privada
+            ),
+            "secret_key_origen": secret_key_origen,
+            "secret_key_administrada_externamente":
+                secret_key_entorno,
+            "secret_key_permite_configuracion_privada": (
+                not secret_key_entorno
+                and not secret_key_reinicio_pendiente
+            ),
+            "secret_key_reinicio_pendiente":
+                secret_key_reinicio_pendiente,
+
+            "arca_ambiente":
+                arca_ambiente,
+
+            "arca_cuit_representada":
+                arca_cuit_representada,
+
+            "arca_homologacion_configurada":
+                _credenciales_arca_configuradas(
+                    AMBIENTE_HOMOLOGACION
+                ),
+
+            "arca_produccion_configurada":
+                _credenciales_arca_configuradas(
+                    AMBIENTE_PRODUCCION
+                ),
+        },
+    )
+
+@login_required
+def reemplazar_secret_key_desarrollador(request):
+    """
+    Prepara una nueva SECRET_KEY privada para la instalación.
+
+    La operación está reservada a superusuarios, requiere POST y no
+    devuelve nunca el secreto generado al navegador.
+
+    La nueva clave queda almacenada para el próximo arranque de Django;
+    el proceso actual continúa utilizando su SECRET_KEY hasta reiniciarse.
+    """
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            "No tiene permisos para modificar "
+            "la configuración de seguridad."
+        )
+
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Método no permitido."
+                ),
+            },
+            status=405,
+        )
+
+    secret_key_entorno = bool(
+        os.environ.get(
+            "ORDENACLICK_SECRET_KEY",
+            "",
+        ).strip()
+    )
+
+    if secret_key_entorno:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "La SECRET_KEY está administrada mediante "
+                    "una variable de entorno y no puede "
+                    "reemplazarse desde OrdenaClick."
+                ),
+            },
+            status=409,
+        )
+
+    try:
+        reemplazar_secret_key_privada()
+
+    except RuntimeError as error:
+        if str(error) == (
+            "Ya existe una SECRET_KEY pendiente de reinicio."
+        ):
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "error": (
+                        "Ya existe una nueva SECRET_KEY preparada. "
+                        "Reinicie OrdenaClick antes de intentar "
+                        "otro reemplazo."
+                    ),
+                    "requiere_reinicio": True,
+                },
+                status=409,
+            )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "No se pudo preparar la nueva SECRET_KEY."
+                ),
+            },
+            status=500,
+        )
+
+    except (OSError, ValueError):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "No se pudo preparar la nueva SECRET_KEY."
+                ),
+            },
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "mensaje": (
+                "La nueva SECRET_KEY quedó preparada. "
+                "Reinicie OrdenaClick para aplicarla."
+            ),
+            "requiere_reinicio": True,
+        }
+    )
+
+@login_required
+def guardar_configuracion_arca_desarrollador(request):
+    """
+    Administra la configuración global de ARCA desde Perfil Desarrollador.
+
+    Permite seleccionar el ambiente operativo y CUIT representado, además
+    de reemplazar opcionalmente certificado y clave de cada ambiente.
+    Las credenciales nunca son devueltas al navegador.
+    """
+    if not request.user.is_superuser:
+        raise PermissionDenied(
+            "No tiene permisos para modificar "
+            "la configuración de ARCA."
+        )
+
+    if request.method != "POST":
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Método no permitido.",
+            },
+            status=405,
+        )
+
+    ambiente = (
+        request.POST.get("arca_ambiente")
+        or ""
+    ).strip()
+
+    cuit_representada = re.sub(
+        r"\D",
+        "",
+        request.POST.get(
+            "arca_cuit_representada"
+        ) or "",
+    )
+
+    certificado_homologacion = (
+        request.FILES.get(
+            "arca_homologacion_certificado"
+        )
+    )
+
+    clave_homologacion = (
+        request.FILES.get(
+            "arca_homologacion_clave"
+        )
+    )
+
+    certificado_produccion = (
+        request.FILES.get(
+            "arca_produccion_certificado"
+        )
+    )
+
+    clave_produccion = (
+        request.FILES.get(
+            "arca_produccion_clave"
+        )
+    )
+
+    if bool(certificado_homologacion) != bool(
+        clave_homologacion
+    ):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Para actualizar Homologación debe seleccionar "
+                    "el certificado y su clave privada."
+                ),
+            },
+            status=400,
+        )
+
+    if bool(certificado_produccion) != bool(
+        clave_produccion
+    ):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Para actualizar Producción debe seleccionar "
+                    "el certificado y su clave privada."
+                ),
+            },
+            status=400,
+        )
+
+    try:
+        if certificado_homologacion:
+            guardar_credenciales_arca(
+                AMBIENTE_HOMOLOGACION,
+                certificado_homologacion.read(),
+                clave_homologacion.read(),
+            )
+
+        if certificado_produccion:
+            guardar_credenciales_arca(
+                AMBIENTE_PRODUCCION,
+                certificado_produccion.read(),
+                clave_produccion.read(),
+            )
+
+        guardar_configuracion_general_arca(
+            ambiente,
+            cuit_representada,
+        )
+
+    except ValueError as error:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": str(error),
+            },
+            status=400,
+        )
+
+    except RuntimeError:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "No se pudo guardar la configuración "
+                    "privada de ARCA."
+                ),
+            },
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "mensaje": (
+                "La configuración de ARCA se guardó correctamente."
+            ),
+        }
+    )
 
 @login_required
 def panel_admin(request):
@@ -4445,6 +4820,736 @@ def reactivar_proveedor(request):
     })
 
 # =========================================
+# CLIENTES
+# =========================================
+
+def normalizar_cuit_cliente(valor):
+    """
+    Normaliza el CUIT de Cliente al formato canónico de 11 dígitos.
+
+    El formulario puede enviar guiones o espacios, pero la base conserva
+    únicamente los dígitos para mantener una representación compatible
+    con la futura consulta a ARCA y con las restricciones de unicidad.
+    """
+    valor = (valor or "").strip()
+
+    if not valor:
+        return ""
+
+    return re.sub(r"\D", "", valor)
+
+
+def validar_cuit_cliente(cuit):
+    """
+    Valida estructura y dígito verificador de un CUIT argentino.
+
+    El CUIT debe recibirse previamente normalizado a 11 dígitos.
+    El CUIT vacío es válido porque el campo es opcional.
+    """
+    if not cuit:
+        return None
+
+    if not re.fullmatch(r"\d{11}", cuit):
+        return "El CUIT debe contener exactamente 11 dígitos."
+
+    multiplicadores = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+
+    suma = sum(
+        int(digito) * multiplicador
+        for digito, multiplicador
+        in zip(cuit[:10], multiplicadores)
+    )
+
+    digito_verificador = 11 - (suma % 11)
+
+    if digito_verificador == 11:
+        digito_verificador = 0
+    elif digito_verificador == 10:
+        digito_verificador = 9
+
+    if digito_verificador != int(cuit[-1]):
+        return "El CUIT ingresado no es válido."
+
+    return None
+
+
+def datos_cliente_request(request):
+    """
+    Obtiene y normaliza los campos editables del ABM de Clientes.
+    """
+    return {
+        "centro_operativo_id": (
+            request.POST.get("centro_operativo") or ""
+        ).strip(),
+
+        "numero_cliente": (
+            request.POST.get("numero_cliente") or ""
+        ).strip(),
+
+        "cuit": normalizar_cuit_cliente(
+            request.POST.get("cuit")
+        ),
+
+        "razon_social": (
+            request.POST.get("razon_social") or ""
+        ).strip(),
+
+        "direccion": (
+            request.POST.get("direccion") or ""
+        ).strip(),
+
+        "celular": (
+            request.POST.get("celular") or ""
+        ).strip(),
+
+        "telefono": (
+            request.POST.get("telefono") or ""
+        ).strip(),
+    }
+
+
+def validar_datos_cliente(empresa, datos):
+    """
+    Valida los datos del Cliente y que su Centro pertenezca a la Empresa.
+
+    Devuelve una tupla (centro_operativo, error). Si la validación es
+    correcta, error es None.
+    """
+    if not datos["centro_operativo_id"]:
+        return None, "Seleccioná un Centro Operativo."
+
+    try:
+        centro_operativo = CentroOperativo.objects.get(
+            id=datos["centro_operativo_id"],
+            empresa=empresa,
+            activo=True,
+        )
+    except (CentroOperativo.DoesNotExist, ValueError, TypeError):
+        return (
+            None,
+            "El Centro Operativo no existe o no pertenece a la empresa.",
+        )
+
+    if not datos["numero_cliente"]:
+        return None, "Ingresá el N.º Cliente."
+
+    if not datos["razon_social"]:
+        return None, "Ingresá el Nombre / Razón social."
+
+    error_cuit = validar_cuit_cliente(
+        datos["cuit"]
+    )
+
+    if error_cuit:
+        return None, error_cuit
+
+    return centro_operativo, None
+
+
+@login_required
+def listar_clientes(request):
+    """
+    Devuelve el ABM de Clientes activos pertenecientes
+    a una Empresa autorizada.
+
+    Incluye los Centros Operativos activos de la misma Empresa
+    para permitir el alta y la edición del Cliente.
+    """
+    empresa_id = request.GET.get("empresa")
+
+    try:
+        from usuarios.services.seguridad import (
+            obtener_empresa_autorizada,
+        )
+
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "No tiene permiso para operar sobre esta empresa."
+            ),
+        }, status=403)
+
+    clientes = (
+        Cliente.objects
+        .filter(
+            empresa=empresa,
+            activo=True,
+        )
+        .select_related(
+            "centro_operativo"
+        )
+        .order_by(
+            "centro_operativo__nombre",
+            "numero_cliente",
+        )
+    )
+
+    centros_operativos = (
+        CentroOperativo.objects
+        .filter(
+            empresa=empresa,
+            activo=True,
+        )
+        .order_by(
+            "nombre"
+        )
+    )
+
+    html = render_to_string(
+        "usuarios/clientes.html",
+        {
+            "empresa": empresa,
+            "clientes": clientes,
+            "centros_operativos": centros_operativos,
+        },
+        request=request,
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "html": html,
+        "clientes": [
+            {
+                "id": cliente.id,
+                "centro_operativo_id":
+                    cliente.centro_operativo_id,
+                "centro_operativo":
+                    cliente.centro_operativo.nombre,
+                "numero_cliente":
+                    cliente.numero_cliente,
+                "cuit":
+                    cliente.cuit,
+                "razon_social":
+                    cliente.razon_social,
+                "direccion":
+                    cliente.direccion,
+                "celular":
+                    cliente.celular,
+                "telefono":
+                    cliente.telefono,
+            }
+            for cliente in clientes
+        ],
+    })
+
+@login_required
+def autocompletar_cliente_arca(request):
+    """
+    Consulta ARCA por CUIT para asistir la carga manual de un Cliente.
+
+    Devuelve únicamente razón social y dirección. No crea ni modifica
+    Clientes y nunca expone las credenciales utilizadas ante ARCA.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido.",
+        }, status=405)
+
+    cuit = re.sub(
+        r"\D",
+        "",
+        request.POST.get("cuit") or "",
+    )
+
+    if len(cuit) != 11:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ingresá un CUIT válido de 11 dígitos."
+            ),
+        }, status=400)
+
+    try:
+        datos = consultar_persona_arca(
+            cuit
+        )
+
+    except ValueError:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ingresá un CUIT válido de 11 dígitos."
+            ),
+        }, status=400)
+
+    except LookupError:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "ARCA no encontró una persona para ese CUIT."
+            ),
+        }, status=404)
+
+    except RuntimeError:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "No se pudo consultar ARCA en este momento. "
+                "Podés continuar cargando el cliente manualmente."
+            ),
+        }, status=503)
+
+    return JsonResponse({
+        "ok": True,
+        "razon_social": datos["razon_social"],
+        "direccion": datos["direccion"],
+    })
+
+@login_required
+def guardar_cliente(request):
+    """
+    Crea un Cliente dentro de una Empresa autorizada.
+
+    Si encuentra un registro inactivo con la misma identificación
+    operativa o fiscal, informa que debe reactivarse en lugar de crear
+    un duplicado.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido.",
+        }, status=405)
+
+    empresa_id = request.POST.get("empresa")
+
+    try:
+        from usuarios.services.seguridad import (
+            obtener_empresa_autorizada,
+        )
+
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "No tiene permiso para operar sobre esta empresa.",
+        }, status=403)
+
+    datos = datos_cliente_request(request)
+
+    centro_operativo, error = validar_datos_cliente(
+        empresa,
+        datos,
+    )
+
+    if error:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": error,
+        })
+
+    numero_existente = (
+        Cliente.objects
+        .filter(
+            empresa=empresa,
+            centro_operativo=centro_operativo,
+            numero_cliente=datos["numero_cliente"],
+        )
+        .first()
+    )
+
+    if numero_existente:
+        if numero_existente.activo:
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "Ya existe un cliente activo con ese "
+                    "N.º Cliente en el Centro Operativo."
+                ),
+            })
+
+        return JsonResponse({
+            "ok": False,
+            "requiere_reactivacion": True,
+            "mensaje": (
+                "Ese N.º Cliente pertenece a un cliente inactivo "
+                "del mismo Centro Operativo. Puede reactivarlo."
+            ),
+            "cliente": {
+                "id": numero_existente.id,
+                "numero_cliente":
+                    numero_existente.numero_cliente,
+                "razon_social":
+                    numero_existente.razon_social,
+            },
+        })
+
+    if datos["cuit"]:
+        cuit_existente = (
+            Cliente.objects
+            .filter(
+                empresa=empresa,
+                centro_operativo=centro_operativo,
+                cuit=datos["cuit"],
+            )
+            .first()
+        )
+
+        if cuit_existente:
+            if cuit_existente.activo:
+                return JsonResponse({
+                    "ok": False,
+                    "mensaje": (
+                        "Ya existe un cliente activo con ese CUIT "
+                        "en el Centro Operativo."
+                    ),
+                })
+
+            return JsonResponse({
+                "ok": False,
+                "requiere_reactivacion": True,
+                "mensaje": (
+                    "Ese CUIT pertenece a un cliente inactivo "
+                    "del mismo Centro Operativo. Puede reactivarlo."
+                ),
+                "cliente": {
+                    "id": cuit_existente.id,
+                    "numero_cliente":
+                        cuit_existente.numero_cliente,
+                    "razon_social":
+                        cuit_existente.razon_social,
+                },
+            })
+
+    cliente = Cliente.objects.create(
+        empresa=empresa,
+        centro_operativo=centro_operativo,
+        numero_cliente=datos["numero_cliente"],
+        cuit=datos["cuit"],
+        razon_social=datos["razon_social"],
+        direccion=datos["direccion"],
+        celular=datos["celular"],
+        telefono=datos["telefono"],
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "cliente": {
+            "id": cliente.id,
+            "centro_operativo_id":
+                cliente.centro_operativo_id,
+            "numero_cliente":
+                cliente.numero_cliente,
+            "cuit":
+                cliente.cuit,
+            "razon_social":
+                cliente.razon_social,
+        },
+    })
+
+
+@login_required
+def modificar_cliente(request):
+    """
+    Modifica un Cliente activo de una Empresa autorizada.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido.",
+        }, status=405)
+
+    empresa_id = request.POST.get("empresa")
+    cliente_id = request.POST.get("cliente")
+
+    try:
+        from usuarios.services.seguridad import (
+            obtener_empresa_autorizada,
+        )
+
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "No tiene permiso para operar sobre esta empresa.",
+        }, status=403)
+
+    try:
+        cliente = Cliente.objects.get(
+            id=cliente_id,
+            empresa=empresa,
+            activo=True,
+        )
+    except (Cliente.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "El cliente no existe.",
+        }, status=404)
+
+    datos = datos_cliente_request(request)
+
+    centro_operativo, error = validar_datos_cliente(
+        empresa,
+        datos,
+    )
+
+    if error:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": error,
+        })
+
+    numero_duplicado = (
+        Cliente.objects
+        .filter(
+            empresa=empresa,
+            centro_operativo=centro_operativo,
+            numero_cliente=datos["numero_cliente"],
+        )
+        .exclude(
+            id=cliente.id
+        )
+        .exists()
+    )
+
+    if numero_duplicado:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "Ya existe otro cliente, activo o inactivo, "
+                "con ese N.º Cliente en el Centro Operativo."
+            ),
+        })
+
+    if datos["cuit"]:
+        cuit_duplicado = (
+            Cliente.objects
+            .filter(
+                empresa=empresa,
+                centro_operativo=centro_operativo,
+                cuit=datos["cuit"],
+            )
+            .exclude(
+                id=cliente.id
+            )
+            .exists()
+        )
+
+        if cuit_duplicado:
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "Ya existe otro cliente, activo o inactivo, "
+                    "con ese CUIT en el Centro Operativo."
+                ),
+            })
+
+    cliente.centro_operativo = centro_operativo
+    cliente.numero_cliente = datos["numero_cliente"]
+    cliente.cuit = datos["cuit"]
+    cliente.razon_social = datos["razon_social"]
+    cliente.direccion = datos["direccion"]
+    cliente.celular = datos["celular"]
+    cliente.telefono = datos["telefono"]
+
+    cliente.save(update_fields=[
+        "centro_operativo",
+        "numero_cliente",
+        "cuit",
+        "razon_social",
+        "direccion",
+        "celular",
+        "telefono",
+        "modificado",
+    ])
+
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+def eliminar_cliente(request):
+    """
+    Da de baja lógica a un Cliente de una Empresa autorizada.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido.",
+        }, status=405)
+
+    empresa_id = request.POST.get("empresa")
+    cliente_id = request.POST.get("cliente")
+
+    try:
+        from usuarios.services.seguridad import (
+            obtener_empresa_autorizada,
+        )
+
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "No tiene permiso para operar sobre esta empresa.",
+        }, status=403)
+
+    try:
+        cliente = Cliente.objects.get(
+            id=cliente_id,
+            empresa=empresa,
+            activo=True,
+        )
+    except (Cliente.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "El cliente no existe.",
+        }, status=404)
+
+    cliente.activo = False
+
+    cliente.save(update_fields=[
+        "activo",
+        "modificado",
+    ])
+
+    return JsonResponse({
+        "ok": True,
+    })
+
+
+@login_required
+def reactivar_cliente(request):
+    """
+    Reactiva un Cliente inactivo de una Empresa autorizada.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "Método no permitido.",
+        }, status=405)
+
+    empresa_id = request.POST.get("empresa")
+    cliente_id = request.POST.get("cliente")
+
+    try:
+        from usuarios.services.seguridad import (
+            obtener_empresa_autorizada,
+        )
+
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "No tiene permiso para operar sobre esta empresa.",
+        }, status=403)
+
+    try:
+        cliente = Cliente.objects.select_related(
+            "centro_operativo"
+        ).get(
+            id=cliente_id,
+            empresa=empresa,
+            activo=False,
+        )
+    except (Cliente.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "El cliente inactivo no existe "
+                "o ya fue reactivado."
+            ),
+        }, status=404)
+
+    if not cliente.centro_operativo.activo:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "No se puede reactivar el cliente porque su "
+                "Centro Operativo está inactivo."
+            ),
+        })
+
+    numero_duplicado = (
+        Cliente.objects
+        .filter(
+            empresa=empresa,
+            centro_operativo=cliente.centro_operativo,
+            numero_cliente=cliente.numero_cliente,
+            activo=True,
+        )
+        .exclude(
+            id=cliente.id
+        )
+        .exists()
+    )
+
+    if numero_duplicado:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": (
+                "No se puede reactivar porque ya existe un "
+                "cliente activo con ese N.º Cliente en el "
+                "Centro Operativo."
+            ),
+        })
+
+    if cliente.cuit:
+        cuit_duplicado = (
+            Cliente.objects
+            .filter(
+                empresa=empresa,
+                centro_operativo=cliente.centro_operativo,
+                cuit=cliente.cuit,
+                activo=True,
+            )
+            .exclude(
+                id=cliente.id
+            )
+            .exists()
+        )
+
+        if cuit_duplicado:
+            return JsonResponse({
+                "ok": False,
+                "mensaje": (
+                    "No se puede reactivar porque ya existe un "
+                    "cliente activo con ese CUIT en el "
+                    "Centro Operativo."
+                ),
+            })
+
+    cliente.activo = True
+
+    cliente.save(update_fields=[
+        "activo",
+        "modificado",
+    ])
+
+    return JsonResponse({
+        "ok": True,
+        "cliente": {
+            "id": cliente.id,
+            "centro_operativo_id":
+                cliente.centro_operativo_id,
+            "numero_cliente":
+                cliente.numero_cliente,
+            "cuit":
+                cliente.cuit,
+            "razon_social":
+                cliente.razon_social,
+        },
+    })
+
+# =========================================
 # GESTIÓN DE CLAVES
 # =========================================
 
@@ -5724,6 +6829,7 @@ def guardar_movimiento(request):
     from usuarios.services.financiero import (
         crear_pago_validado_movimiento,
         validar_importe_aplicable,
+        validar_pago_movimiento,
     )
 
     if request.method != "POST":
@@ -6267,7 +7373,6 @@ def guardar_movimiento(request):
                 pagos_raw
             )
 
-
         except json.JSONDecodeError:
 
             return JsonResponse(
@@ -6310,1554 +7415,38 @@ def guardar_movimiento(request):
 
         for pago_datos in pagos:
 
-            if not isinstance(
-                pago_datos,
-                dict
-            ):
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Existe un Pago con formato inválido."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            # =====================================
-            # FECHA DEL PAGO
-            # =====================================
-
-            fecha_pago = (
-                pago_datos.get(
-                    "fecha"
-                )
-                or ""
-            ).strip()
-
-
-            if not fecha_pago:
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Todos los Pagos deben tener una fecha."
-                        ),
-                    },
-                    status=400,
-                )
-
-
             try:
 
-                fecha_pago_validada = (
-                    datetime.strptime(
-                        fecha_pago,
-                        "%Y-%m-%d"
-                    ).date()
-                )
-
-
-            except ValueError:
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Existe un Pago con una fecha inválida."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            # =====================================
-            # EFECTIVO
-            # =====================================
-
-            try:
-
-                importe_efectivo = Decimal(
-                    str(
-                        pago_datos.get(
-                            "importe_efectivo",
-                            0
-                        )
-                    )
-                )
-
-
-            except (
-                InvalidOperation,
-                TypeError,
-                ValueError
-            ):
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Existe un Pago con un importe "
-                            "en efectivo inválido."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            if importe_efectivo < 0:
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "El efectivo no puede ser negativo."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            # =====================================
-            # OPERACIONES BANCARIAS
-            # =====================================
-
-            operaciones_raw = (
-                pago_datos.get(
-                    "operaciones_bancarias"
-                )
-                or []
-            )
-
-
-            if not isinstance(
-                operaciones_raw,
-                list
-            ):
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Las operaciones bancarias "
-                            "del Pago no son válidas."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            operaciones_validadas = []
-
-            total_operaciones = Decimal(
-                "0.00"
-            )
-
-
-            for operacion_datos in operaciones_raw:
-
-                if not isinstance(
-                    operacion_datos,
-                    dict
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación bancaria "
-                                "con formato inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                tipo_operacion = (
-                    operacion_datos.get(
-                        "tipo_operacion"
-                    )
-                    or ""
-                ).strip()
-
-
-                if tipo_operacion not in [
-                    "Transferencia",
-                    "Deposito",
-                ]:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de operación bancaria "
-                                "no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # MONEDA
-                # =================================
-
-                moneda = (
-                    operacion_datos.get(
-                        "moneda"
-                    )
-                    or ""
-                ).strip()
-
-
-                if moneda != "ARS":
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La versión Beta de OrdenaClick "
-                                "admite pagos únicamente en Pesos."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # FECHA
-                # =================================
-
-                fecha_operacion = (
-                    operacion_datos.get(
-                        "fecha"
-                    )
-                    or ""
-                ).strip()
-
-
-                if not fecha_operacion:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La operación bancaria "
-                                "debe tener una fecha."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                try:
-
-                    fecha_operacion_validada = (
-                        datetime.strptime(
-                            fecha_operacion,
-                            "%Y-%m-%d"
-                        ).date()
-                    )
-
-
-                except ValueError:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación bancaria "
-                                "con una fecha inválida."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # IMPORTE
-                # =================================
-
-                try:
-
-                    importe_operacion = Decimal(
-                        str(
-                            operacion_datos.get(
-                                "importe",
-                                0
-                            )
-                        )
-                    )
-
-
-                except (
-                    InvalidOperation,
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación bancaria "
-                                "con un importe inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if importe_operacion <= 0:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El importe de una operación bancaria "
-                                "debe ser mayor a cero."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # BANCO DESTINO
-                # =================================
-
-                banco_destino_id = (
-                    operacion_datos.get(
-                        "banco_destino_id"
-                    )
-                )
-
-
-                banco_destino = (
-                    Banco.objects.filter(
-                        id=banco_destino_id,
+                pago_validado = (
+                    validar_pago_movimiento(
                         empresa=empresa,
-                        activo=True,
-                    ).first()
-                )
-
-
-                if not banco_destino:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El banco de destino "
-                                "no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # CUENTA ORIGEN
-                # =================================
-
-                cuenta_origen = None
-
-                cuenta_origen_id = (
-                    operacion_datos.get(
-                        "cuenta_origen_id"
+                        pago_datos=pago_datos,
+                        archivos=request.FILES,
                     )
                 )
 
-
-                if (
-                    tipo_operacion ==
-                    "Transferencia"
-                ):
-
-                    if not cuenta_origen_id:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "Una transferencia debe tener "
-                                    "una cuenta bancaria de origen."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                    cuenta_origen = (
-                        CuentaBancaria.objects.filter(
-                            id=cuenta_origen_id,
-                            empresa=empresa,
-                            activo=True,
-                            moneda="ARS",
-                        ).first()
-                    )
-
-
-                    if not cuenta_origen:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "La cuenta bancaria de origen "
-                                    "no es válida para este Pago."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                if (
-                    tipo_operacion ==
-                    "Deposito" and
-                    cuenta_origen_id
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Un depósito no debe tener "
-                                "cuenta bancaria de origen."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # REFERENCIA
-                # =================================
-
-                referencia_destino = (
-                    operacion_datos.get(
-                        "referencia_destino"
-                    )
-                    or ""
-                ).strip()
-
-
-                # =================================
-                # COMPROBANTE
-                # =================================
-
-                comprobante_clave = (
-                    operacion_datos.get(
-                        "comprobante_clave"
-                    )
-                    or ""
-                ).strip()
-
-
-                comprobante = None
-
-
-                if comprobante_clave:
-
-                    comprobante = (
-                        request.FILES.get(
-                            comprobante_clave
-                        )
-                    )
-
-
-                operaciones_validadas.append(
-                    {
-                        "tipo_operacion":
-                            tipo_operacion,
-
-                        "cuenta_origen":
-                            cuenta_origen,
-
-                        "banco_destino":
-                            banco_destino,
-
-                        "referencia_destino":
-                            referencia_destino,
-
-                        "moneda":
-                            "ARS",
-
-                        "importe":
-                            importe_operacion,
-
-                        "fecha":
-                            fecha_operacion_validada,
-
-                        "comprobante":
-                            comprobante,
-                    }
-                )
-
-
-                total_operaciones += (
-                    importe_operacion
-                )
-
-
-            # =====================================
-            # TARJETAS
-            # =====================================
-
-            tarjetas_raw = (
-                pago_datos.get(
-                    "tarjetas"
-                )
-                or []
-            )
-
-
-            if not isinstance(
-                tarjetas_raw,
-                list
-            ):
+            except ValueError as error:
 
                 return JsonResponse(
                     {
                         "ok": False,
-                        "mensaje": (
-                            "Las operaciones con tarjeta "
-                            "del Pago no son válidas."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            tarjetas_validadas = []
-
-            total_tarjetas = Decimal(
-                "0.00"
-            )
-
-
-            for tarjeta_datos in tarjetas_raw:
-
-                if not isinstance(
-                    tarjeta_datos,
-                    dict
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación con tarjeta "
-                                "con formato inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # TARJETA
-                # =================================
-
-                tarjeta_id = (
-                    tarjeta_datos.get(
-                        "tarjeta_id"
-                    )
-                )
-
-
-                tarjeta = Tarjeta.objects.filter(
-                    id=tarjeta_id,
-                    empresa=empresa,
-                    activo=True,
-                ).first()
-
-
-                if not tarjeta:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La tarjeta seleccionada "
-                                "no es válida para este Pago."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # TIPO DE TARJETA
-                # =================================
-
-                tipo_tarjeta = (
-                    tarjeta_datos.get(
-                        "tipo_tarjeta"
-                    )
-                    or ""
-                ).strip()
-
-
-                if tipo_tarjeta not in [
-                    "Credito",
-                    "Debito",
-                ]:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de tarjeta "
-                                "no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if (
-                    tipo_tarjeta !=
-                    tarjeta.tipo_tarjeta
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de tarjeta recibido "
-                                "no coincide con la tarjeta seleccionada."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # FECHA
-                # =================================
-
-                fecha_tarjeta = (
-                    tarjeta_datos.get(
-                        "fecha"
-                    )
-                    or ""
-                ).strip()
-
-
-                if not fecha_tarjeta:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La operación con tarjeta "
-                                "debe tener una fecha."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                try:
-
-                    fecha_tarjeta_validada = (
-                        datetime.strptime(
-                            fecha_tarjeta,
-                            "%Y-%m-%d"
-                        ).date()
-                    )
-
-
-                except ValueError:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación con tarjeta "
-                                "con una fecha inválida."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # IMPORTE
-                # =================================
-
-                try:
-
-                    importe_tarjeta = Decimal(
-                        str(
-                            tarjeta_datos.get(
-                                "importe",
-                                0
-                            )
-                        )
-                    )
-
-
-                except (
-                    InvalidOperation,
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una operación con tarjeta "
-                                "con un importe inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if importe_tarjeta <= 0:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El importe aplicado de una operación "
-                                "con tarjeta debe ser mayor a cero."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # CUOTAS
-                # =================================
-
-                try:
-
-                    cuotas = int(
-                        tarjeta_datos.get(
-                            "cuotas",
-                            1
-                        )
-                    )
-
-
-                except (
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La cantidad de cuotas "
-                                "no es válida."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if cuotas < 1:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La cantidad de cuotas "
-                                "debe ser mayor a cero."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                # =================================
-                # INTERESES DE FINANCIACIÓN
-                # =================================
-
-                try:
-
-                    intereses_financiacion = Decimal(
-                        str(
-                            tarjeta_datos.get(
-                                "intereses_financiacion",
-                                0
-                            )
-                        )
-                    )
-
-
-                except (
-                    InvalidOperation,
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Los intereses de financiación "
-                                "de la tarjeta no son válidos."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if intereses_financiacion < 0:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Los intereses de financiación "
-                                "no pueden ser negativos."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if (
-                    tarjeta.tipo_tarjeta ==
-                    "Debito"
-                ):
-
-                    if cuotas != 1:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "Una operación con tarjeta de débito "
-                                    "debe registrarse en una sola cuota."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                    if (
-                        intereses_financiacion !=
-                        Decimal("0.00")
-                    ):
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "Una operación con tarjeta de débito "
-                                    "no puede tener intereses de financiación."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                # =================================
-                # REFERENCIA
-                # =================================
-
-                referencia = (
-                    tarjeta_datos.get(
-                        "referencia"
-                    )
-                    or ""
-                ).strip()
-
-
-                # =================================
-                # COMPROBANTE
-                # =================================
-
-                comprobante_clave = (
-                    tarjeta_datos.get(
-                        "comprobante_clave"
-                    )
-                    or ""
-                ).strip()
-
-
-                comprobante = None
-
-
-                if comprobante_clave:
-
-                    comprobante = (
-                        request.FILES.get(
-                            comprobante_clave
-                        )
-                    )
-
-
-                tarjetas_validadas.append(
-                    {
-                        "tarjeta":
-                            tarjeta,
-
-                        "fecha":
-                            fecha_tarjeta_validada,
-
-                        "importe":
-                            importe_tarjeta,
-
-                        "cuotas":
-                            cuotas,
-
-                        "intereses_financiacion":
-                            intereses_financiacion,
-
-                        "referencia":
-                            referencia,
-
-                        "comprobante":
-                            comprobante,
-                    }
-                )
-
-
-                total_tarjetas += (
-                    importe_tarjeta
-                )
-
-
-            # =====================================
-            # CHEQUES / E-CHEQS
-            # =====================================
-
-            cheques_raw = (
-                pago_datos.get(
-                    "cheques"
-                )
-                or []
-            )
-
-
-            if not isinstance(
-                cheques_raw,
-                list
-            ):
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Los cheques del Pago "
-                            "no son válidos."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            cheques_validados = []
-
-            total_cheques = Decimal(
-                "0.00"
-            )
-
-
-            for cheque_datos in cheques_raw:
-
-                if not isinstance(
-                    cheque_datos,
-                    dict
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe un cheque "
-                                "con formato inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                tipo_instrumento = (
-                    cheque_datos.get(
-                        "tipo_instrumento"
-                    )
-                    or ""
-                ).strip()
-
-                origen = (
-                    cheque_datos.get(
-                        "origen"
-                    )
-                    or ""
-                ).strip()
-
-                tipo_cheque = (
-                    cheque_datos.get(
-                        "tipo_cheque"
-                    )
-                    or ""
-                ).strip()
-
-
-                if tipo_instrumento not in [
-                    "Cheque",
-                    "ECheq",
-                ]:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de instrumento "
-                                "del cheque no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if origen not in [
-                    "Propio",
-                    "Tercero",
-                ]:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El origen del cheque "
-                                "no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if tipo_cheque not in [
-                    "Comun",
-                    "Diferido",
-                ]:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de cheque "
-                                "no es válido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                entidad_id = (
-                    cheque_datos.get(
-                        "entidad_id"
-                    )
-                )
-
-                banco = None
-                cuenta_bancaria = None
-
-
-                if origen == "Propio":
-
-                    cuenta_bancaria = (
-                        CuentaBancaria.objects.filter(
-                            id=entidad_id,
-                            empresa=empresa,
-                            activo=True,
-                            moneda="ARS",
-                        ).first()
-                    )
-
-                    if not cuenta_bancaria:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "El cheque propio debe usar "
-                                    "una cuenta bancaria ARS activa "
-                                    "de la empresa."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                else:
-
-                    banco = Banco.objects.filter(
-                        id=entidad_id,
-                        empresa=empresa,
-                        activo=True,
-                    ).first()
-
-                    if not banco:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "El cheque de tercero debe tener "
-                                    "un banco válido de la empresa."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                numero = (
-                    cheque_datos.get(
-                        "numero"
-                    )
-                    or ""
-                ).strip()
-
-                if not numero:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Ingrese el número del cheque."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                try:
-
-                    importe_cheque = Decimal(
-                        str(
-                            cheque_datos.get(
-                                "importe",
-                                0
-                            )
-                        )
-                    )
-
-                except (
-                    InvalidOperation,
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe un cheque "
-                                "con un importe inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if importe_cheque <= 0:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El importe del cheque "
-                                "debe ser mayor a cero."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                fecha_emision = (
-                    cheque_datos.get(
-                        "fecha_emision"
-                    )
-                    or ""
-                ).strip()
-
-                if not fecha_emision:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Ingrese la fecha de emisión "
-                                "del cheque."
-                            ),
-                        },
-                        status=400,
-                    )
-
-                try:
-
-                    fecha_emision_validada = (
-                        datetime.strptime(
-                            fecha_emision,
-                            "%Y-%m-%d"
-                        ).date()
-                    )
-
-                except ValueError:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La fecha de emisión "
-                                "del cheque no es válida."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                fecha_acreditacion = (
-                    cheque_datos.get(
-                        "fecha_acreditacion"
-                    )
-                    or ""
-                ).strip()
-
-                fecha_acreditacion_validada = None
-
-                if fecha_acreditacion:
-
-                    try:
-
-                        fecha_acreditacion_validada = (
-                            datetime.strptime(
-                                fecha_acreditacion,
-                                "%Y-%m-%d"
-                            ).date()
-                        )
-
-                    except ValueError:
-
-                        return JsonResponse(
-                            {
-                                "ok": False,
-                                "mensaje": (
-                                    "La fecha de acreditación "
-                                    "del cheque no es válida."
-                                ),
-                            },
-                            status=400,
-                        )
-
-
-                quien_entrega = (
-                    cheque_datos.get(
-                        "quien_entrega"
-                    )
-                    or ""
-                ).strip()
-
-
-                cheques_validados.append(
-                    {
-                        "tipo_instrumento":
-                            tipo_instrumento,
-
-                        "origen":
-                            origen,
-
-                        "tipo_cheque":
-                            tipo_cheque,
-
-                        "banco":
-                            banco,
-
-                        "cuenta_bancaria":
-                            cuenta_bancaria,
-
-                        "numero":
-                            numero,
-
-                        "importe":
-                            importe_cheque,
-
-                        "fecha_emision":
-                            fecha_emision_validada,
-
-                        "fecha_acreditacion":
-                            fecha_acreditacion_validada,
-
-                        "quien_entrega":
-                            quien_entrega,
-                    }
-                )
-
-                total_cheques += (
-                    importe_cheque
-                )
-
-
-            # =====================================
-            # RETENCIONES
-            # =====================================
-
-            retenciones_raw = (
-                pago_datos.get(
-                    "retenciones"
-                )
-                or []
-            )
-
-
-            if not isinstance(
-                retenciones_raw,
-                list
-            ):
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "Las retenciones del Pago "
-                            "no son válidas."
-                        ),
-                    },
-                    status=400,
-                )
-
-
-            retenciones_validadas = []
-
-            total_retenciones = Decimal(
-                "0.00"
-            )
-
-
-            for retencion_datos in retenciones_raw:
-
-                if not isinstance(
-                    retencion_datos,
-                    dict
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una retención "
-                                "con formato inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                retencion_id = (
-                    retencion_datos.get(
-                        "retencion_id"
-                    )
-                )
-
-
-                retencion = Retencion.objects.filter(
-                    id=retencion_id,
-                    empresa=empresa,
-                    activo=True,
-                ).first()
-
-
-                if not retencion:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "La retención seleccionada "
-                                "no es válida para este Pago."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                retencion_tipo = (
-                    retencion_datos.get(
-                        "retencion_tipo"
-                    )
-                    or ""
-                ).strip()
-
-
-                if not retencion_tipo:
-
-                    retencion_tipo = (
-                        retencion.tipo
-                    )
-
-
-                if (
-                    retencion_tipo.upper() !=
-                    retencion.tipo.upper()
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El tipo de retención recibido "
-                                "no coincide con la retención seleccionada."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                try:
-
-                    importe_retencion = Decimal(
-                        str(
-                            retencion_datos.get(
-                                "importe",
-                                0
-                            )
-                        )
-                    )
-
-
-                except (
-                    InvalidOperation,
-                    TypeError,
-                    ValueError
-                ):
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "Existe una retención "
-                                "con un importe inválido."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                if importe_retencion <= 0:
-
-                    return JsonResponse(
-                        {
-                            "ok": False,
-                            "mensaje": (
-                                "El importe de una retención "
-                                "debe ser mayor a cero."
-                            ),
-                        },
-                        status=400,
-                    )
-
-
-                comprobante_clave = (
-                    retencion_datos.get(
-                        "comprobante_clave"
-                    )
-                    or ""
-                ).strip()
-
-
-                comprobante = None
-
-
-                if comprobante_clave:
-
-                    comprobante = (
-                        request.FILES.get(
-                            comprobante_clave
-                        )
-                    )
-
-
-                retenciones_validadas.append(
-                    {
-                        "tipo":
-                            retencion.tipo,
-
-                        "importe":
-                            importe_retencion,
-
-                        "comprobante":
-                            comprobante,
-                    }
-                )
-
-
-                total_retenciones += (
-                    importe_retencion
-                )
-
-
-            # =====================================
-            # TOTAL DEL PAGO
-            # =====================================
-
-            importe_pago = (
-                importe_efectivo +
-                total_operaciones +
-                total_tarjetas +
-                total_cheques +
-                total_retenciones
-            )
-
-
-            if importe_pago <= 0:
-
-                return JsonResponse(
-                    {
-                        "ok": False,
-                        "mensaje": (
-                            "El importe total de cada Pago "
-                            "debe ser mayor a cero."
-                        ),
+                        "mensaje": str(error),
                     },
                     status=400,
                 )
 
 
             total_aplicado += (
-                importe_pago
+                pago_validado[
+                    "importe_pago"
+                ]
             )
 
 
             pagos_validados.append(
-                {
-                    "fecha":
-                        fecha_pago_validada,
-
-                    "importe_efectivo":
-                        importe_efectivo,
-
-                    "importe_pago":
-                        importe_pago,
-
-                    "operaciones_bancarias":
-                        operaciones_validadas,
-
-                    "tarjetas":
-                        tarjetas_validadas,
-
-                    "cheques":
-                        cheques_validados,
-
-                    "retenciones":
-                        retenciones_validadas,
-                }
+                pago_validado
             )
-
+            
         # =========================================
         # DÉBITO AUTOMÁTICO REAL
         # =========================================
@@ -8850,29 +8439,35 @@ def obtener_movimiento_edicion(request):
 @login_required
 def actualizar_movimiento(request):
     """
-    Actualiza los datos documentales de un Movimiento existente.
+    Actualiza un Movimiento existente y puede registrar nuevos Pagos.
 
-    La edición preserva todos los Pagos y AplicacionPago
-    históricos ya registrados.
+    Si el Movimiento todavía no tiene AplicacionPago histórica,
+    sus datos pueden modificarse normalmente.
 
-    Si cambia el total documental, el nuevo total nunca puede
-    quedar por debajo del importe históricamente aplicado.
+    Una vez aplicado al menos un Pago, los datos estructurales del
+    Movimiento quedan bloqueados. Sólo pueden modificarse la forma
+    prevista de pago y su cuenta de débito asociada, adjuntarse una
+    factura y registrarse nuevos Pagos.
 
-    Un comprobante histórico con formato legado puede conservarse
-    exactamente como está. Si el usuario modifica su identificación
-    documental, el nuevo comprobante debe cumplir el formato vigente.
+    Para modificar otros datos de un Movimiento con Pagos aplicados,
+    primero deben eliminarse o revertirse esos Pagos.
 
-    Esta vista no registra Pagos nuevos. La incorporación de un
-    nuevo Pago se realiza mediante su circuito financiero
-    específico.
+    La actualización y los nuevos Pagos se procesan dentro de una
+    única transacción.
     """
+
+    import json
+    import logging
 
     from decimal import Decimal, InvalidOperation
 
     from usuarios.services.financiero import (
+        crear_pago_validado_movimiento,
         total_aplicado_movimiento,
         validar_importe_aplicable,
+        validar_pago_movimiento,
     )
+
     from usuarios.services.seguridad import (
         obtener_empresa_autorizada,
     )
@@ -8899,6 +8494,50 @@ def actualizar_movimiento(request):
         or ""
     ).strip()
 
+    pagos_raw = (
+        request.POST.get("pagos")
+        or ""
+    ).strip()
+
+
+    pagos = []
+
+
+    if pagos_raw:
+
+        try:
+
+            pagos = json.loads(
+                pagos_raw
+            )
+
+        except json.JSONDecodeError:
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "Los datos de los Pagos no son válidos."
+                    ),
+                },
+                status=400,
+            )
+
+
+        if not isinstance(
+            pagos,
+            list
+        ):
+
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": (
+                        "El formato de los Pagos no es válido."
+                    ),
+                },
+                status=400,
+            )
 
     if not empresa_id:
 
@@ -9448,6 +9087,138 @@ def actualizar_movimiento(request):
                 )
             )
 
+            # =========================================
+            # PROTECCIÓN DEL MOVIMIENTO CON PAGOS
+            # =========================================
+            #
+            # Una vez que existe al menos una
+            # AplicacionPago histórica, el hecho
+            # económico/documental queda cerrado.
+            #
+            # Sólo pueden modificarse:
+            #
+            # - la forma prevista de pago;
+            # - la cuenta prevista de débito asociada;
+            # - el archivo de factura;
+            # - y pueden incorporarse nuevos Pagos.
+            #
+            # Para modificar cualquier otro dato,
+            # primero deben eliminarse/revertirse
+            # todos los Pagos aplicados.
+            #
+            if (
+                total_aplicado_existente >
+                Decimal("0.00")
+            ):
+
+                fecha_registro_actual = (
+                    str(
+                        movimiento.fecha_registro
+                    )
+                    if movimiento.fecha_registro
+                    else ""
+                )
+
+                fecha_vencimiento_actual = (
+                    str(
+                        movimiento.fecha_vencimiento
+                    )
+                    if movimiento.fecha_vencimiento
+                    else ""
+                )
+
+
+                estructura_modificada = any(
+                    [
+                        str(
+                            movimiento.tipo_gasto_id
+                            or ""
+                        ) != tipo_gasto_id,
+
+                        str(
+                            movimiento.proveedor_id
+                            or ""
+                        ) != proveedor_id,
+
+                        str(
+                            movimiento.centro_operativo_id
+                            or ""
+                        ) != centro_operativo_id,
+
+                        str(
+                            movimiento.recurso_operativo_id
+                            or ""
+                        ) != recurso_operativo_id,
+
+                        fecha_registro_actual !=
+                            fecha_registro,
+
+                        fecha_vencimiento_actual !=
+                            fecha_vencimiento,
+
+                        (
+                            movimiento.tipo_comprobante
+                            or ""
+                        ) != tipo_comprobante,
+
+                        (
+                            movimiento.numero_comprobante
+                            or ""
+                        ) != numero_comprobante,
+
+                        movimiento.neto_gravado !=
+                            neto_gravado,
+
+                        movimiento.no_gravado_exento !=
+                            no_gravado_exento,
+
+                        movimiento.iva_21 !=
+                            iva_21,
+
+                        movimiento.iva_27 !=
+                            iva_27,
+
+                        movimiento.iva_105 !=
+                            iva_105,
+
+                        movimiento.recargos_intereses !=
+                            recargos_intereses,
+
+                        movimiento.ajuste_redondeo !=
+                            ajuste_redondeo,
+
+                        movimiento.percepcion_iibb !=
+                            percepcion_iibb,
+
+                        movimiento.percepcion_iva !=
+                            percepcion_iva,
+
+                        movimiento.percepcion_ganancias !=
+                            percepcion_ganancias,
+
+                        movimiento.percepcion_tasas_municipales !=
+                            percepcion_tasas_municipales,
+
+                        movimiento.total !=
+                            total,
+                    ]
+                )
+
+
+                if estructura_modificada:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "El Movimiento ya tiene Pagos "
+                                "aplicados. Para modificar sus "
+                                "datos primero debe eliminar "
+                                "los Pagos realizados."
+                            ),
+                        },
+                        status=400,
+                    )
 
             try:
 
@@ -9473,14 +9244,103 @@ def actualizar_movimiento(request):
                 )
 
 
-            saldo_nuevo = (
+            saldo_disponible_pagos = (
                 total -
                 total_aplicado_existente
             )
 
 
+            pagos_validados = []
+
+            importe_total_nuevo = Decimal(
+                "0.00"
+            )
+
+
+            if pagos:
+
+                if modalidad_pago != "Manual":
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": (
+                                "Los Pagos manuales sólo pueden "
+                                "registrarse cuando la forma prevista "
+                                "de pago es Manual."
+                            ),
+                        },
+                        status=400,
+                    )
+
+
+                for pago_datos in pagos:
+
+                    try:
+
+                        pago_validado = (
+                            validar_pago_movimiento(
+                                empresa=empresa,
+                                pago_datos=pago_datos,
+                                archivos=request.FILES,
+                            )
+                        )
+
+                    except ValueError as error:
+
+                        return JsonResponse(
+                            {
+                                "ok": False,
+                                "mensaje": str(error),
+                            },
+                            status=400,
+                        )
+
+
+                    pagos_validados.append(
+                        pago_validado
+                    )
+
+                    importe_total_nuevo += (
+                        pago_validado[
+                            "importe_pago"
+                        ]
+                    )
+
+
+                try:
+
+                    validar_importe_aplicable(
+                        saldo_pendiente=
+                            saldo_disponible_pagos,
+                        importe_aplicar=
+                            importe_total_nuevo,
+                    )
+
+                except ValueError as error:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": str(error),
+                        },
+                        status=400,
+                    )
+
+
+            total_aplicado_nuevo = (
+                total_aplicado_existente +
+                importe_total_nuevo
+            )
+
+
+            saldo_nuevo = (
+                total -
+                total_aplicado_nuevo
+            )
+
             if (
-                total_aplicado_existente <=
+                total_aplicado_nuevo <=
                 Decimal("0.00")
             ):
 
@@ -9650,6 +9510,22 @@ def actualizar_movimiento(request):
                     campos_actualizados
             )
 
+            resultados_pagos = []
+
+
+            for pago_validado in pagos_validados:
+
+                resultado_pago = (
+                    crear_pago_validado_movimiento(
+                        empresa=empresa,
+                        movimiento=movimiento,
+                        pago_datos=pago_validado,
+                    )
+                )
+
+                resultados_pagos.append(
+                    resultado_pago
+                )
 
         return JsonResponse(
             {
@@ -9663,8 +9539,13 @@ def actualizar_movimiento(request):
                     str(total),
                 "total_aplicado":
                     str(
-                        total_aplicado_existente
+                        total_aplicado_nuevo
                     ),
+                "pagos_ids": [
+                    resultado["pago_id"]
+                    for resultado
+                    in resultados_pagos
+                ],
                 "saldo_pendiente":
                     str(saldo_nuevo),
                 "estado":
@@ -9687,6 +9568,679 @@ def actualizar_movimiento(request):
                 "mensaje": (
                     "Ocurrió un error al actualizar "
                     "el Movimiento."
+                ),
+            },
+            status=500,
+        )
+
+@login_required
+def eliminar_pago_movimiento(request):
+    """
+    Elimina un Pago cargado por error y recalcula el estado
+    financiero del Movimiento al que estaba aplicado.
+
+    La operación exige que Empresa, Movimiento y Pago pertenezcan
+    al mismo contexto autorizado. Los registros principales se
+    bloquean durante la transacción para evitar modificaciones
+    financieras concurrentes.
+    """
+
+    import logging
+
+    from django.db import transaction
+    from django.http import JsonResponse
+
+    from usuarios.models import (
+        AplicacionPago,
+        Movimiento,
+        Pago,
+    )
+    from usuarios.services.financiero import (
+        eliminar_pago_movimiento as eliminar_pago_servicio,
+    )
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+
+    logger = logging.getLogger(__name__)
+
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Método no permitido."
+                ),
+            },
+            status=405,
+        )
+
+
+    empresa_id = request.POST.get(
+        "empresa"
+    )
+
+    movimiento_id = request.POST.get(
+        "movimiento"
+    )
+
+    pago_id = request.POST.get(
+        "pago"
+    )
+
+
+    if (
+        not empresa_id or
+        not movimiento_id or
+        not pago_id
+    ):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Faltan datos para eliminar el Pago."
+                ),
+            },
+            status=400,
+        )
+
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+
+    if not empresa:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "La Empresa seleccionada no es válida."
+                ),
+            },
+            status=403,
+        )
+
+
+    try:
+
+        with transaction.atomic():
+
+            movimiento = (
+                Movimiento.objects
+                .select_for_update()
+                .filter(
+                    id=movimiento_id,
+                    empresa=empresa,
+                )
+                .first()
+            )
+
+
+            if not movimiento:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento no es válido."
+                        ),
+                    },
+                    status=404,
+                )
+
+
+            pago = (
+                Pago.objects
+                .select_for_update()
+                .filter(
+                    id=pago_id,
+                    empresa=empresa,
+                )
+                .first()
+            )
+
+
+            if not pago:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Pago no es válido."
+                        ),
+                    },
+                    status=404,
+                )
+
+
+            aplicaciones = list(
+                AplicacionPago.objects
+                .select_for_update()
+                .filter(
+                    pago=pago,
+                )
+            )
+
+
+            if not aplicaciones:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Pago no posee una aplicación "
+                            "financiera."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if (
+                len(aplicaciones) != 1 or
+                aplicaciones[0].movimiento_id !=
+                    movimiento.id
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Pago no corresponde "
+                            "exclusivamente a este Movimiento."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            resumen = eliminar_pago_servicio(
+                empresa=empresa,
+                movimiento=movimiento,
+                pago=pago,
+            )
+
+
+            return JsonResponse(
+                {
+                    "ok": True,
+                    "mensaje": (
+                        "El Pago fue eliminado correctamente."
+                    ),
+                    "movimiento": movimiento.id,
+                    "total_aplicado": str(
+                        resumen[
+                            "total_aplicado"
+                        ]
+                    ),
+                    "saldo_pendiente": str(
+                        resumen[
+                            "saldo_pendiente"
+                        ]
+                    ),
+                    "estado": resumen[
+                        "estado_financiero"
+                    ],
+                }
+            )
+
+
+    except ValueError as error:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": str(error),
+            },
+            status=400,
+        )
+
+
+    except Exception:
+
+        logger.exception(
+            "Error inesperado al eliminar Pago "
+            "del Movimiento %s.",
+            movimiento_id,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "No fue posible eliminar el Pago."
+                ),
+            },
+            status=500,
+        )
+
+@login_required
+def registrar_pago_manual_movimiento(request):
+    """
+    Registra uno o varios Pagos manuales sobre un Movimiento existente.
+
+    La operación exige un usuario autenticado y una Empresa autorizada.
+    El Movimiento se bloquea dentro de una transacción para recalcular
+    su saldo real antes de crear cualquier Pago.
+
+    Todas las formas de pago se validan nuevamente en backend aunque
+    hayan sido validadas previamente por la interfaz.
+
+    Si la suma de los nuevos Pagos supera el saldo pendiente real,
+    no se crea ningún registro financiero.
+    """
+
+    import json
+    import logging
+
+    from decimal import Decimal
+
+    from django.db import transaction
+
+    from usuarios.services.financiero import (
+        crear_pago_validado_movimiento,
+        total_aplicado_movimiento,
+        validar_importe_aplicable,
+        validar_pago_movimiento,
+    )
+
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Método no permitido.",
+            },
+            status=405,
+        )
+
+
+    empresa_id = (
+        request.POST.get("empresa")
+        or ""
+    ).strip()
+
+    movimiento_id = (
+        request.POST.get("movimiento")
+        or ""
+    ).strip()
+
+    pagos_raw = (
+        request.POST.get("pagos")
+        or ""
+    ).strip()
+
+
+    if not empresa_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": "Seleccione una empresa.",
+            },
+            status=400,
+        )
+
+
+    if not movimiento_id:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "No se indicó el Movimiento."
+                ),
+            },
+            status=400,
+        )
+
+
+    if not pagos_raw:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "No se recibieron Pagos para registrar."
+                ),
+            },
+            status=400,
+        )
+
+
+    try:
+
+        pagos = json.loads(
+            pagos_raw
+        )
+
+    except json.JSONDecodeError:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Los datos de los Pagos no son válidos."
+                ),
+            },
+            status=400,
+        )
+
+
+    if not isinstance(
+        pagos,
+        list
+    ):
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "El formato de los Pagos no es válido."
+                ),
+            },
+            status=400,
+        )
+
+
+    if not pagos:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Debe registrar al menos un Pago."
+                ),
+            },
+            status=400,
+        )
+
+
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
+
+
+    try:
+
+        with transaction.atomic():
+
+            movimiento = (
+                Movimiento.objects
+                .select_for_update()
+                .filter(
+                    id=movimiento_id,
+                    empresa=empresa,
+                )
+                .first()
+            )
+
+
+            if not movimiento:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento no existe "
+                            "o no pertenece a la empresa."
+                        ),
+                    },
+                    status=404,
+                )
+
+
+            if movimiento.estado == "Cancelado":
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Un Movimiento cancelado "
+                            "no puede recibir Pagos."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            if (
+                movimiento.modalidad_pago ==
+                "DebitoAutomatico"
+            ):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "Este Movimiento está configurado "
+                            "para débito automático. Utilice "
+                            "el registro específico de débito."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            total_aplicado_existente = (
+                total_aplicado_movimiento(
+                    movimiento
+                )
+            )
+
+
+            saldo_pendiente = (
+                movimiento.total -
+                total_aplicado_existente
+            )
+
+
+            if saldo_pendiente <= Decimal("0.00"):
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": (
+                            "El Movimiento ya no posee "
+                            "saldo pendiente."
+                        ),
+                    },
+                    status=400,
+                )
+
+
+            pagos_validados = []
+
+            importe_total_nuevo = Decimal(
+                "0.00"
+            )
+
+
+            for pago_datos in pagos:
+
+                try:
+
+                    pago_validado = (
+                        validar_pago_movimiento(
+                            empresa=empresa,
+                            pago_datos=pago_datos,
+                            archivos=request.FILES,
+                        )
+                    )
+
+                except ValueError as error:
+
+                    return JsonResponse(
+                        {
+                            "ok": False,
+                            "mensaje": str(error),
+                        },
+                        status=400,
+                    )
+
+
+                pagos_validados.append(
+                    pago_validado
+                )
+
+                importe_total_nuevo += (
+                    pago_validado[
+                        "importe_pago"
+                    ]
+                )
+
+
+            try:
+
+                validar_importe_aplicable(
+                    saldo_pendiente=
+                        saldo_pendiente,
+                    importe_aplicar=
+                        importe_total_nuevo,
+                )
+
+            except ValueError as error:
+
+                return JsonResponse(
+                    {
+                        "ok": False,
+                        "mensaje": str(error),
+                    },
+                    status=400,
+                )
+
+
+            resultados_pagos = []
+
+
+            for pago_validado in pagos_validados:
+
+                resultado_pago = (
+                    crear_pago_validado_movimiento(
+                        empresa=empresa,
+                        movimiento=movimiento,
+                        pago_datos=pago_validado,
+                    )
+                )
+
+                resultados_pagos.append(
+                    resultado_pago
+                )
+
+
+            total_aplicado_nuevo = (
+                total_aplicado_existente +
+                importe_total_nuevo
+            )
+
+
+            saldo_nuevo = (
+                movimiento.total -
+                total_aplicado_nuevo
+            )
+
+
+            if saldo_nuevo <= Decimal("0.00"):
+
+                estado_movimiento = (
+                    "Pagado"
+                )
+
+                saldo_nuevo = Decimal(
+                    "0.00"
+                )
+
+            else:
+
+                estado_movimiento = (
+                    "Parcial"
+                )
+
+
+            movimiento.estado = (
+                estado_movimiento
+            )
+
+            movimiento.save(
+                update_fields=[
+                    "estado",
+                ]
+            )
+
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "mensaje": (
+                    "Pago registrado correctamente."
+                    if len(resultados_pagos) == 1
+                    else
+                    "Pagos registrados correctamente."
+                ),
+                "movimiento_id":
+                    movimiento.id,
+                "pagos_ids": [
+                    resultado[
+                        "pago_id"
+                    ]
+                    for resultado
+                    in resultados_pagos
+                ],
+                "aplicaciones_ids": [
+                    resultado[
+                        "aplicacion_id"
+                    ]
+                    for resultado
+                    in resultados_pagos
+                ],
+                "importe_aplicado":
+                    str(
+                        importe_total_nuevo
+                    ),
+                "total_aplicado":
+                    str(
+                        total_aplicado_nuevo
+                    ),
+                "saldo_pendiente":
+                    str(
+                        saldo_nuevo
+                    ),
+                "estado":
+                    estado_movimiento,
+            }
+        )
+
+
+    except Exception:
+
+        logger = logging.getLogger(
+            __name__
+        )
+
+        logger.exception(
+            "Error registrando Pago manual "
+            "sobre Movimiento existente."
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    "Ocurrió un error al registrar "
+                    "el Pago."
                 ),
             },
             status=500,
