@@ -1129,53 +1129,81 @@ class RetencionPago(models.Model):
 # =========================================
 
 class Cheque(models.Model):
+    """
+    Representa un cheque físico o e-Cheq, propio o de terceros.
+
+    Los cheques de terceros pueden ingresar a OrdenaClick mediante una
+    Cobranza y formar parte de la cartera disponible. Los cheques físicos
+    registran además la Caja que mantiene su custodia.
+
+    La relación con Cliente es opcional y funciona únicamente como
+    información de procedencia; no determina la ubicación ni la custodia
+    del instrumento.
+    """
 
     TIPOS_INSTRUMENTO = [
-
-        ('Cheque', 'Cheque físico'),
-        ('ECheq', 'e-Cheq'),
-
+        ("Cheque", "Cheque físico"),
+        ("ECheq", "e-Cheq"),
     ]
 
     ORIGENES = [
-
-        ('Propio', 'Propio'),
-        ('Tercero', 'Tercero'),
-
+        ("Propio", "Propio"),
+        ("Tercero", "Tercero"),
     ]
 
     TIPOS_CHEQUE = [
-
-        ('Comun', 'Cheque Común'),
-        ('Diferido', 'Cheque Diferido'),
-
+        ("Comun", "Cheque común"),
+        ("Diferido", "Cheque diferido"),
     ]
 
     ESTADOS = [
-
-        ('Pendiente', 'Pendiente'),
-        ('EnCartera', 'En cartera'),
-        ('Entregado', 'Entregado'),
-        ('Depositado', 'Depositado'),
-        ('Cobrado', 'Cobrado'),
-        ('Debitado', 'Debitado'),
-        ('Vencido', 'Vencido'),
-        ('Rechazado', 'Rechazado'),
-        ('Devuelto', 'Devuelto'),
-        ('Anulado', 'Anulado'),
-
+        ("Pendiente", "Pendiente"),
+        ("Disponible", "Disponible"),
+        ("Reservado", "Reservado"),
+        ("Entregado", "Entregado"),
+        ("Depositado", "Depositado"),
+        ("Cobrado", "Cobrado"),
+        ("Debitado", "Debitado"),
+        ("Vencido", "Vencido"),
+        ("Rechazado", "Rechazado"),
+        ("Devuelto", "Devuelto"),
+        ("Anulado", "Anulado"),
     ]
 
     empresa = models.ForeignKey(
         Empresa,
         on_delete=models.PROTECT,
-        related_name='cheques'
+        related_name="cheques"
+    )
+
+    cobranza = models.ForeignKey(
+        "Cobranza",
+        on_delete=models.PROTECT,
+        related_name="cheques",
+        blank=True,
+        null=True
+    )
+
+    caja = models.ForeignKey(
+        "Caja",
+        on_delete=models.PROTECT,
+        related_name="cheques",
+        blank=True,
+        null=True
+    )
+
+    cliente = models.ForeignKey(
+        "Cliente",
+        on_delete=models.PROTECT,
+        related_name="cheques",
+        blank=True,
+        null=True
     )
 
     pago = models.ForeignKey(
         Pago,
         on_delete=models.PROTECT,
-        related_name='cheques',
+        related_name="cheques",
         blank=True,
         null=True
     )
@@ -1196,17 +1224,17 @@ class Cheque(models.Model):
     )
 
     banco = models.ForeignKey(
-        'Banco',
+        "Banco",
         on_delete=models.PROTECT,
-        related_name='cheques',
+        related_name="cheques",
         blank=True,
         null=True
     )
 
     cuenta_bancaria = models.ForeignKey(
-        'CuentaBancaria',
+        "CuentaBancaria",
         on_delete=models.PROTECT,
-        related_name='cheques',
+        related_name="cheques",
         blank=True,
         null=True
     )
@@ -1216,13 +1244,21 @@ class Cheque(models.Model):
     )
 
     importe = models.DecimalField(
-        max_digits=12,
+        max_digits=14,
         decimal_places=2
     )
 
-    fecha_emision = models.DateField()
+    fecha_emision = models.DateField(
+        blank=True,
+        null=True
+    )
 
     fecha_acreditacion = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    fecha_vencimiento = models.DateField(
         blank=True,
         null=True
     )
@@ -1235,11 +1271,11 @@ class Cheque(models.Model):
     estado = models.CharField(
         max_length=20,
         choices=ESTADOS,
-        default='Pendiente'
+        default="Pendiente"
     )
 
     comprobante = models.FileField(
-        upload_to='pagos/cheques/',
+        upload_to="pagos/cheques/",
         blank=True,
         null=True
     )
@@ -1252,8 +1288,102 @@ class Cheque(models.Model):
         auto_now_add=True
     )
 
-    def __str__(self):
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
 
+    class Meta:
+        ordering = [
+            "fecha_acreditacion",
+            "fecha_vencimiento",
+            "numero"
+        ]
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(importe__gt=0),
+                name="cheque_importe_positivo"
+            )
+        ]
+
+    def clean(self):
+        """
+        Valida la coherencia empresarial y de custodia del instrumento.
+
+        Las reglas completas de circulación y transición de estados se
+        aplicarán desde los servicios del dominio financiero.
+        """
+        from django.core.exceptions import ValidationError
+
+        errores = {}
+
+        if (
+            self.cobranza_id and
+            self.cobranza.empresa_id != self.empresa_id
+        ):
+            errores["cobranza"] = (
+                "La Cobranza debe pertenecer a la misma empresa que el cheque."
+            )
+
+        if (
+            self.caja_id and
+            self.caja.empresa_id != self.empresa_id
+        ):
+            errores["caja"] = (
+                "La Caja debe pertenecer a la misma empresa que el cheque."
+            )
+
+        if (
+            self.cliente_id and
+            self.cliente.empresa_id != self.empresa_id
+        ):
+            errores["cliente"] = (
+                "El Cliente debe pertenecer a la misma empresa que el cheque."
+            )
+
+        if (
+            self.pago_id and
+            self.pago.empresa_id != self.empresa_id
+        ):
+            errores["pago"] = (
+                "El Pago debe pertenecer a la misma empresa que el cheque."
+            )
+
+        if self.cobranza_id:
+            if self.origen != "Tercero":
+                errores["origen"] = (
+                    "Un cheque recibido mediante una Cobranza debe ser de terceros."
+                )
+
+            if (
+                self.tipo_instrumento == "Cheque" and
+                not self.caja_id
+            ):
+                errores["caja"] = (
+                    "Un cheque físico recibido mediante una Cobranza debe tener Caja de custodia."
+                )
+
+            if (
+                self.caja_id and
+                self.cobranza.caja_id != self.caja_id
+            ):
+                errores["caja"] = (
+                    "La Caja del cheque debe coincidir con la Caja de la Cobranza."
+                )
+
+        if (
+            self.tipo_instrumento == "ECheq" and
+            self.caja_id
+        ):
+            errores["caja"] = (
+                "Un e-Cheq no debe tener una Caja de custodia física."
+            )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def __str__(self):
+        """Devuelve una identificación legible del instrumento."""
         return (
             f"{self.get_tipo_instrumento_display()} "
             f"{self.numero} - "
@@ -1718,6 +1848,345 @@ class CentroOperativo(models.Model):
     def __str__(self):
 
         return self.nombre
+
+# =========================================
+# CAJAS
+# =========================================
+
+class Caja(models.Model):
+    """
+    Representa una custodia física de dinero y valores dentro de un
+    Centro Operativo.
+
+    La Caja pertenece explícitamente a una Empresa y a un Centro
+    Operativo para permitir validar el aislamiento de datos en backend.
+
+    Un Centro Operativo puede tener más de una Caja, aunque la primera
+    etapa de OrdenaClick utilice normalmente una sola.
+    """
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="cajas"
+    )
+
+    centro_operativo = models.ForeignKey(
+        CentroOperativo,
+        on_delete=models.PROTECT,
+        related_name="cajas"
+    )
+
+    nombre = models.CharField(
+        max_length=100
+    )
+
+    activo = models.BooleanField(
+        default=True
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = [
+            "centro_operativo__nombre",
+            "nombre"
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "centro_operativo",
+                    "nombre"
+                ],
+                name="caja_nombre_unico_por_centro"
+            )
+        ]
+
+    def clean(self):
+        """
+        Valida que la Caja pertenezca a un Centro Operativo válido.
+
+        Una Caja solo puede existir en Centros Operativos de tipo
+        Casa Central o Sucursal, y el Centro debe pertenecer a la
+        misma Empresa que la Caja.
+        """
+        from django.core.exceptions import ValidationError
+
+        if not self.centro_operativo_id:
+            return
+
+        if (
+            self.empresa_id and
+            self.centro_operativo.empresa_id != self.empresa_id
+        ):
+            raise ValidationError({
+                "centro_operativo":
+                    "El Centro Operativo debe pertenecer a la misma empresa que la Caja."
+            })
+
+        tipos_permitidos = {
+            "Casa Central",
+            "Sucursal",
+        }
+
+        if self.centro_operativo.tipo not in tipos_permitidos:
+            raise ValidationError({
+                "centro_operativo":
+                    "Una Caja solo puede pertenecer a una Casa Central o Sucursal."
+            })
+
+    def __str__(self):
+        """Devuelve la identificación visible de la Caja."""
+        return f"{self.nombre} - {self.centro_operativo}"
+
+# =========================================
+# COBRANZAS
+# =========================================
+
+class Cobranza(models.Model):
+    """
+    Representa un ingreso de fondos y/o valores recibido en una Caja.
+
+    La Cobranza funciona como cabecera del ingreso. Sus componentes
+    concretos —efectivo y valores recibidos— se registrarán por separado
+    y determinarán la disponibilidad financiera correspondiente.
+
+    No representa la venta, factura ni cuenta corriente externa que
+    originó el cobro.
+    """
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="cobranzas"
+    )
+
+    caja = models.ForeignKey(
+        Caja,
+        on_delete=models.PROTECT,
+        related_name="cobranzas"
+    )
+
+    fecha = models.DateField()
+
+    referencia = models.CharField(
+        max_length=200
+    )
+
+    vendedor_referencia = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    total_declarado = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    observaciones = models.TextField(
+        blank=True
+    )
+
+    creado_por = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="cobranzas_creadas"
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    modificado = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = [
+            "-fecha",
+            "-creado"
+        ]
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(total_declarado__gt=0),
+                name="cobranza_total_declarado_positivo"
+            )
+        ]
+
+    def clean(self):
+        """
+        Valida que la Caja seleccionada pertenezca a la misma Empresa
+        que la Cobranza.
+        """
+        from django.core.exceptions import ValidationError
+
+        if (
+            self.empresa_id and
+            self.caja_id and
+            self.caja.empresa_id != self.empresa_id
+        ):
+            raise ValidationError({
+                "caja":
+                    "La Caja debe pertenecer a la misma empresa que la cobranza."
+            })
+
+    def __str__(self):
+        """Devuelve una identificación legible de la Cobranza."""
+        return (
+            f"Cobranza {self.pk or 'nueva'} - "
+            f"{self.fecha} - "
+            f"{self.referencia}"
+        )
+
+# =========================================
+# MOVIMIENTOS DE CAJA
+# =========================================
+
+class MovimientoCaja(models.Model):
+    """
+    Registra una entrada o salida de efectivo de una Caja.
+
+    Los movimientos constituyen el historial auditable del efectivo.
+    El saldo de una Caja no se almacena como un valor editable: se obtiene
+    a partir de sus movimientos por moneda.
+
+    Una Cobranza puede originar movimientos de entrada. Otros orígenes,
+    como órdenes de pago, traslados o ajustes, se relacionarán cuando sus
+    respectivos circuitos sean implementados.
+    """
+
+    TIPOS_MOVIMIENTO = [
+        ("Ingreso", "Ingreso"),
+        ("Egreso", "Egreso"),
+    ]
+
+    MONEDAS = [
+        ("ARS", "Pesos"),
+        ("USD", "Dólares"),
+    ]
+
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        related_name="movimientos_caja"
+    )
+
+    caja = models.ForeignKey(
+        Caja,
+        on_delete=models.PROTECT,
+        related_name="movimientos"
+    )
+
+    cobranza = models.ForeignKey(
+        Cobranza,
+        on_delete=models.PROTECT,
+        related_name="movimientos_efectivo",
+        blank=True,
+        null=True
+    )
+
+    fecha = models.DateField()
+
+    tipo = models.CharField(
+        max_length=10,
+        choices=TIPOS_MOVIMIENTO
+    )
+
+    moneda = models.CharField(
+        max_length=3,
+        choices=MONEDAS
+    )
+
+    importe = models.DecimalField(
+        max_digits=14,
+        decimal_places=2
+    )
+
+    concepto = models.CharField(
+        max_length=200
+    )
+
+    creado_por = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="movimientos_caja_creados"
+    )
+
+    creado = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = [
+            "-fecha",
+            "-creado"
+        ]
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(importe__gt=0),
+                name="movimiento_caja_importe_positivo"
+            )
+        ]
+
+    def clean(self):
+        """
+        Valida la coherencia de Empresa, Caja y Cobranza relacionadas.
+        """
+        from django.core.exceptions import ValidationError
+
+        errores = {}
+
+        if (
+            self.empresa_id and
+            self.caja_id and
+            self.caja.empresa_id != self.empresa_id
+        ):
+            errores["caja"] = (
+                "La Caja debe pertenecer a la misma empresa que el movimiento."
+            )
+
+        if self.cobranza_id:
+            if (
+                self.empresa_id and
+                self.cobranza.empresa_id != self.empresa_id
+            ):
+                errores["cobranza"] = (
+                    "La Cobranza debe pertenecer a la misma empresa que el movimiento."
+                )
+
+            if (
+                self.caja_id and
+                self.cobranza.caja_id != self.caja_id
+            ):
+                errores["cobranza"] = (
+                    "La Cobranza debe corresponder a la misma Caja que el movimiento."
+                )
+
+            if self.tipo != "Ingreso":
+                errores["tipo"] = (
+                    "Un movimiento originado por una Cobranza debe ser un ingreso."
+                )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def __str__(self):
+        """Devuelve una identificación legible del movimiento de Caja."""
+        return (
+            f"{self.tipo} - "
+            f"{self.moneda} {self.importe} - "
+            f"{self.caja}"
+        )
 
 # =========================================
 # RECURSOS OPERATIVOS

@@ -63,17 +63,18 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 ### Seguridad de instalación ya implementada
 
 -   [x] Perfil Desarrollador reservado a superusuarios.
--   [x] Configuración privada global fuera del repositorio para secretos de
-    instalación.
--   [x] Prioridad `ORDENACLICK_SECRET_KEY` del entorno sobre configuración
-    privada.
+-   [x] Configuración privada global fuera del repositorio para secretos
+    de instalación.
+-   [x] Prioridad `ORDENACLICK_SECRET_KEY` del entorno sobre
+    configuración privada.
 -   [x] Arranque bloqueado si no existe una `SECRET_KEY` válida.
--   [x] Rotación controlada de `SECRET_KEY` con confirmación, `POST`, CSRF,
-    estado de reinicio pendiente y bloqueo de una segunda rotación.
+-   [x] Rotación controlada de `SECRET_KEY` con confirmación, `POST`,
+    CSRF, estado de reinicio pendiente y bloqueo de una segunda
+    rotación.
 -   [x] No exposición de `SECRET_KEY` al navegador ni a logs.
 -   [x] `LOGIN_URL` configurado al login real de OrdenaClick.
--   [x] Tests específicos de seguridad del Perfil Desarrollador y servicio
-    de rotación.
+-   [x] Tests específicos de seguridad del Perfil Desarrollador y
+    servicio de rotación.
 -   [ ] Definir almacenamiento privado definitivo y ACL/permisos de la
     cuenta de servicio para producción.
 -   [x] Configurar credenciales ARCA de Homologación desde el Perfil
@@ -109,6 +110,13 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 -   [ ] Extraer JavaScript inline existente cuando se toque cada
     pantalla.
 -   [ ] Extraer CSS inline existente cuando se toque cada pantalla.
+-   [ ] No incorporar JavaScript inline nuevo. Todo comportamiento nuevo
+    debe vivir en archivos `.js` externos.
+-   [ ] No incorporar CSS inline nuevo salvo excepción mínima,
+    justificada y documentada. Todo estilo nuevo debe reutilizar las
+    clases globales o vivir en archivos `.css` externos.
+-   [ ] Mantener las pantallas nuevas dentro del lenguaje visual oscuro
+    de OrdenaClick, reutilizando componentes y patrones existentes.
 -   [ ] Reducir templates monolíticos.
 -   [ ] Separar `views.py` por dominio cuando sea conveniente.
 -   [ ] Mover reglas reutilizables a `services/`.
@@ -206,151 +214,218 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 -   [ ] Implementar Llamador de OrdenaClick después de estabilizar la
     vista Alertas.
 
-## Caja --- Cheques y e-Cheqs
+## Caja --- Cartera --- Gestión Administrativa --- Órdenes de Pago
 
--   [x] Diseñar e implementar ABM mínimo de Clientes:
+### Principios de esta etapa
 
-    -   [x] Empresa.
-    -   [x] Centro Operativo.
-    -   [x] N.º de cliente manual.
-    -   [x] Nombre / Razón social.
-    -   [x] Dirección.
-    -   [x] Celular.
-    -   [x] Teléfono.
-    -   [x] Activo.
-    -   Considerar Cliente en exportación/importación por Empresa.
+-   [ ] Implementar en este orden funcional: **Ingreso → Caja/Cartera →
+    Disponibilidad → Gestión Administrativa → Traslados internos → Orden
+    de Pago**.
+-   [ ] No comenzar Orden de Pago antes de que OrdenaClick conozca qué
+    dinero/valores ingresaron, dónde están, quién puede utilizarlos y
+    cuáles están disponibles.
+-   [ ] Mantener la complejidad en backend y una interfaz simple para el
+    usuario.
+-   [ ] Conservar la composición de las pantallas financieras aprobadas
+    y adaptarlas al tema oscuro, colores y componentes de OrdenaClick.
+-   [ ] No duplicar contabilidad ni cuentas corrientes del sistema de
+    gestión externo.
+-   [ ] Toda operación financiera sensible debe validarse en backend. El
+    frontend nunca constituye una barrera de seguridad.
+-   [ ] Diseñar el circuito para servidor y acceso multiusuario seguro.
+-   [ ] Aplicar aislamiento por Empresa y, cuando corresponda, por
+    Centro Operativo/Caja. Cambiar un ID o URL nunca debe permitir
+    acceso cruzado.
+-   [ ] Usar POST/CSRF para escrituras y contemplar transacciones,
+    concurrencia, doble clic/reintentos e idempotencia.
+-   [ ] Registrar auditoría suficiente de operaciones y transiciones
+    financieras.
+-   [ ] No borrar ni reescribir silenciosamente historia financiera.
 
--   [x] Aplicar al selector de Cliente el flujo contextual estándar:
-    formulario → \[+\] → ABM → crear → volver → conservar formulario →
-    seleccionar nuevo elemento.
+### Clientes relacionados con Caja
 
--   [ ] Normalizar la presentación del N.º Cliente a cuatro cifras:
-    `1 → 0001`, `25 → 0025`, manteniendo la identidad por Empresa +
-    Centro Operativo + N.º Cliente.
+-   [x] ABM mínimo de Clientes implementado.
+-   [x] Flujo contextual `[+]` implementado.
+-   [ ] Normalizar presentación del N.º Cliente a cuatro cifras:
+    `1 → 0001`, `25 → 0025`.
+-   [ ] Revisar reactivación: validar CUIT, no sobrescribir historia
+    automáticamente y permitir elegir recuperación histórica o datos
+    actuales.
+-   [ ] ARCA puede asistir, pero no decidir ni sobrescribir
+    automáticamente.
+-   [ ] Cliente será opcional como procedencia de valores recibidos.
+-   [ ] La ubicación/custodia de un cheque no se deduce del Cliente.
+-   [ ] Todo selector asociado a ABM debe conservar el patrón `[+]`.
 
--   [ ] Revisar el flujo de reactivación de Clientes:
+### 1. Entrada de recursos / Cobranza
 
-    -   comprobar la correspondencia del CUIT antes de reactivar;
-    -   si los datos actuales no corresponden con el registro histórico,
-        no sobrescribir automáticamente;
-    -   solicitar al usuario si desea recuperar los datos históricos o
-        reemplazarlos con los datos actuales;
-    -   definir expresamente qué campos se conservan o reemplazan;
-    -   ARCA puede asistir en la consulta del CUIT, pero no debe decidir ni
-        sobrescribir automáticamente información histórica.
+-   [ ] Crear base de Caja vinculada a Empresa y Centro Operativo,
+    preparada para múltiples Cajas futuras sin sobrediseñar la Beta.
+-   [ ] Implementar Nueva Cobranza como ingreso único de recursos.
+-   [ ] Registrar fecha, referencia, vendedor opcional, total declarado,
+    efectivo y detalle de cheques físicos.
+-   [ ] Admitir efectivo ARS y USD como saldos separados.
+-   [ ] Carga rápida por cheque: número, banco, acreditación,
+    vencimiento e importe.
+-   [ ] Mostrar conciliación: total declarado vs. efectivo + cheques y
+    diferencia.
+-   [ ] Definir si una cobranza con diferencia puede guardarse pendiente
+    o debe bloquearse.
+-   [ ] El cheque cargado en la cobranza debe crear su valor de Cartera
+    en la misma operación.
+-   [ ] Cartera es consecuencia del ingreso; no una segunda carga.
+-   [ ] Cliente opcional en el cheque recibido.
+-   [ ] No modelar la venta/cuenta corriente externa que originó la
+    cobranza.
 
--   [ ] Mantener como regla general que todo selector asociado a un ABM
-    tenga su botón \[+\] con el estilo y flujo contextual definidos para
-    OrdenaClick.
+### 2. Caja y disponibilidad
 
--   [ ] Diseñar e implementar Caja → Cheques de terceros.
+-   [ ] Caja representa custodia y movimiento financiero físico.
+-   [ ] Mostrar efectivo disponible por Caja/Centro y moneda.
+-   [ ] Mantener cheques físicos individualizados y asociados a su
+    custodia real.
+-   [ ] Implementar Cartera física con estados y filtros.
+-   [ ] Definir estados definitivos de valores físicos antes de
+    implementar salidas.
+-   [ ] Un valor reservado no puede ofrecerse a otra OP ni traslado.
+-   [ ] Mantener historial del destino del valor.
+-   [ ] Diseñar salida por depósito en Cuenta Bancaria propia.
+-   [ ] Incorporar condición de circulación: A la orden / No a la orden.
+-   [ ] Determinar disponibilidad en backend según Empresa, Caja/Centro,
+    origen, estado, instrumento y condición.
 
--   [ ] Diseñar e implementar Caja → e-Cheqs de terceros.
+### 3. Cartera electrónica y Gestión Administrativa
 
--   [ ] Registrar el ingreso del valor sin intentar modelar la venta,
-    cobranza u operación externa que le dio origen.
+-   [ ] Implementar e-Cheqs de terceros separados de la custodia física.
+-   [ ] Permitir estado financiero disponible y Gestión Administrativa
+    pendiente simultáneamente.
+-   [ ] Implementar Gestión Administrativa separada de Caja.
+-   [ ] e-Cheq recibido: Gestión Pendiente → Gestionada.
+-   [ ] Permitir devolver e-Cheq y excluirlo de disponibilidad,
+    resolviendo reservas previas.
+-   [ ] Registrar usuario y fecha de confirmación de gestión.
+-   [ ] Registrar transferencias recibidas con Gestión Administrativa
+    pendiente sin convertirlas en Caja física.
+-   [ ] Incorporar alertas de gestiones pendientes.
+-   [ ] Integrar Cartera con Vencimientos/Alertas según política
+    definitiva.
+-   [ ] Testear límites de la ventana temporal de alertas.
 
--   [ ] Relacionar cada cheque/e-Cheq de tercero con el Cliente del que
-    fue recibido y, mediante éste, con su Centro Operativo.
+### 4. Traslados internos entre Cajas
 
--   [ ] Al ingresar un cheque/e-Cheq de tercero, incorporarlo a Cartera
-    como valor disponible y sin Pago asociado.
+-   [ ] Implementar Traslado Interno con Caja origen y destino.
+-   [ ] Permitir efectivo y cheques físicos seleccionados
+    individualmente.
+-   [ ] Reservar recursos al preparar traslado.
+-   [ ] Despacho: Disponible origen → Reservado → En tránsito.
+-   [ ] Destino debe revisar antes de incorporar a disponibilidad.
+-   [ ] Permitir aceptación total o parcial.
+-   [ ] Permitir rechazo individual de cheques con motivo.
+-   [ ] Definir diferencias/rechazo parcial de efectivo.
+-   [ ] Un rechazo permanece ligado al traslado hasta
+    devolución/resolución.
+-   [ ] Preservar cadena de custodia.
+-   [ ] e-Cheqs no se trasladan físicamente entre Cajas.
 
--   [ ] Integrar cheques/e-Cheqs de terceros con Vencimientos y Alertas.
+### 5. Disponibilidad bancaria informada
 
--   [ ] Para valores de terceros en Cartera, iniciar la atención desde
-    la fecha de acreditación/disponibilidad y mantener la ventana de
-    alerta correspondiente hasta antes de los 30 días corridos.
+-   [ ] Implementar disponible bancario informado como apoyo, no
+    conciliación exacta.
+-   [ ] Registrar importe, usuario y fecha/hora de actualización.
+-   [ ] No bloquear automáticamente transferencias por saldo informado
+    insuficiente.
+-   [ ] Mantenerlo separado de Caja física y Cartera.
 
--   [ ] Si el cheque permanece pendiente y alcanza su vencimiento,
-    reflejarlo en Próximos Vencimientos → Vencidos.
+### 6. Orden de Pago
 
--   [ ] Diseñar salida de Cartera por utilización en Pago / Orden de
-    Pago.
+-   [ ] Implementar OP después de estabilizar ingreso, disponibilidad,
+    cartera y traslados.
+-   [ ] Una OP preparada no es todavía un evento financiero definitivo.
+-   [ ] Medios: Efectivo; Cheques de terceros; e-Cheqs de terceros;
+    Transferencia; Depósito; Cheques propios a emitir; e-Cheqs propios a
+    emitir.
+-   [ ] Terceros ya existen y se reservan; propios nacen como
+    instrumentos pendientes de emisión.
+-   [ ] Instrumento propio pendiente: importe + acreditación prevista;
+    completar número/datos al emitir.
+-   [ ] No generar obligación/alerta de instrumento propio en etapa de
+    propuesta.
+-   [ ] Al confirmar emisión real, crear obligación/reminder.
+-   [ ] Preparación colaborativa: las OP pendientes pertenecen al flujo
+    de la Empresa, no a una persona.
+-   [ ] Usuario autorizado puede confirmar componentes dentro de su
+    alcance.
+-   [ ] Guardar quién confirmó cada componente y cuándo.
+-   [ ] Confirmar significa ejecución/preparación real, no sólo
+    visualización.
+-   [ ] Valores de terceros seleccionados: Disponible → Reservado.
+-   [ ] Liberar reserva al cancelar/reemplazar antes de ejecución.
+-   [ ] Definir estados definitivos de OP y componentes.
+-   [ ] Con todos los componentes confirmados, marcar lista para
+    revisión/cierre y notificar al creador.
+-   [ ] Definir alternativa si el creador está ausente, desactivado o
+    sin permisos.
+-   [ ] Cierre definitivo actualiza movimientos, documentos, carteras,
+    alertas y auditoría.
+-   [ ] Diseñar reversión/cancelación parcial sin destruir historia.
+-   [ ] Proteger reservas, confirmaciones y cierre con transacciones y
+    validación de estado.
 
--   [ ] Diferenciar visual y operativamente Cheque de e-Cheq al elegir
-    valores para una Orden de Pago:
+### 7. Jerarquía y permisos
 
-    -   cheque físico: retirar/buscar el valor;
-    -   e-Cheq: realizar endoso mediante el banco.
+-   [ ] Jerarquía: **Administrador general de la empresa / Administrador
+    de sucursal / Colaborador en general**.
+-   [ ] La jerarquía define alcance máximo; los permisos definen
+    acciones dentro del alcance.
+-   [ ] Administrador general: alcance Empresa y vista consolidada.
+-   [ ] Administrador de sucursal: alcance Centro/sucursal habilitado y
+    sus Cajas/operaciones.
+-   [ ] Colaborador: acciones sólo por permisos funcionales explícitos.
+-   [ ] Un colaborador administrativo no necesita ver saldos globales.
+-   [ ] No confiar en botones ocultos para autorización.
+-   [ ] No rigidizar `Usuario = Centro`; permitir ampliar alcance en el
+    futuro.
 
--   [ ] Diseñar salida de Cartera por depósito en Cuenta Bancaria
-    propia.
+### 8. Seguridad, integridad y servidor
 
--   [ ] Registrar históricamente el destino del valor:
+-   [ ] Secretos, certificados, claves y credenciales fuera de frontend,
+    `static`, `media` y Git.
+-   [ ] Producción exclusivamente bajo HTTPS.
+-   [ ] Cookies seguras (`Secure`, `HttpOnly`, `SameSite` apropiado),
+    CSRF y hosts/orígenes permitidos.
+-   [ ] Autorizar cada objeto por usuario, Empresa, Centro/Caja, permiso
+    y estado.
+-   [ ] Evitar IDOR y acceso cruzado mediante IDs manipulados.
+-   [ ] Usar transacciones/bloqueo o validación de concurrencia en
+    reservas, traslados, confirmaciones y cierres.
+-   [ ] Una pantalla desactualizada no puede sobrescribir verdad del
+    servidor.
+-   [ ] Proteger contra duplicación por doble clic, retry o reenvío.
+-   [ ] Documentos/descargas finales bajo autorización backend.
+-   [ ] Logs sin secretos ni datos sensibles innecesarios.
+-   [ ] Tests de aislamiento Empresa/Centro/Caja, permisos, concurrencia
+    y transiciones inválidas.
+-   [ ] Considerar cada nuevo modelo relacionado con Empresa para
+    exportación/importación.
 
-    -   utilizado en Pago;
-    -   depositado en banco;
-    -   otros destinos futuros que correspondan.
+### 9. Pendientes de definición antes de cada bloque
 
--   [ ] Diseñar seguimiento separado de Cheques y e-Cheqs propios
-    emitidos desde Pagos.
-
--   [ ] Diseñar posteriormente el circuito completo de cheque/e-Cheq
-    rechazado. No implementar todavía una solución provisoria.
-
--   [ ] Evaluar para cheque rechazado la creación de un nuevo registro
-    que preserve intacta la historia del cheque original.
-
--   [ ] Analizar los distintos casos de rechazo antes de definir modelo
-    definitivo, incluyendo:
-
-    -   reaparición de deuda con proveedor;
-    -   importe original del cheque;
-    -   gastos derivados del rechazo;
-    -   relación con el Pago original;
-    -   relación con el cheque original;
-    -   eventual Nota de Débito;
-    -   punto de venta y número de comprobante;
-    -   impacto en Vencimientos y Alertas.
-
--   [ ] Una vez implementada Cartera, retomar eliminar_pago_movimiento()
-    y definir correctamente la devolución a Cartera de un cheque/e-Cheq
-    de tercero cuando se elimina o revierte el Pago que lo utilizó.
-
--   [ ] Incorporar condición de circulación en cheque/e-Cheq:
-
-    -   A la orden.
-    -   No a la orden.
-
--   [ ] Aplicar disponibilidad para Pago según instrumento y condición:
-
-    -   Cheque a la orden: Pago/endoso o depósito.
-    -   Cheque no a la orden: sólo depósito en cuenta propia; excluir de
-        Pago.
-    -   e-Cheq a la orden: Pago mediante endoso o depósito.
-    -   e-Cheq no a la orden: Pago mediante cesión o depósito.
-
--   [ ] Determinar en backend la disponibilidad de Cartera para Pago
-    usando Empresa, origen Tercero, estado EnCartera, instrumento y
-    condición de circulación.
-
--   [ ] No pedir Endoso/Cesión al usuario cuando la condición del e-Cheq
-    ya determina automáticamente el procedimiento.
-
--   [ ] Aplicar las mismas reglas de disponibilidad tanto en Orden de
-    Pago como al generar un Pago directamente desde una
-    factura/Movimiento.
-
--   [ ] Diseñar Orden de Pago con agrupación operativa:
-
-    -   Efectivo.
-    -   Retenciones.
-    -   Total Cheques de terceros + detalle.
-    -   Total e-Cheqs de terceros + detalle separado en Endosados y
-        Cedidos.
-    -   Cheques propios emitidos.
-    -   e-Cheqs propios emitidos.
-    -   Total general de la Orden de Pago.
-
--   [ ] Mantener separados conceptualmente los valores de terceros y
-    propios:
-
-    -   terceros: ya existen en Cartera y se seleccionan;
-    -   propios: se emiten para la Orden de Pago/Pago.
-
--   [ ] Diseñar registro histórico y consulta de Cheques propios
-    emitidos.
-
--   [ ] Diseñar registro histórico y consulta de e-Cheqs propios
-    emitidos.
+-   [ ] Estados exactos de cheques físicos de terceros.
+-   [ ] Estados exactos de e-Cheqs de terceros.
+-   [ ] Estados exactos de instrumentos propios.
+-   [ ] Estados exactos de OP y componentes.
+-   [ ] Estados exactos de Traslado Interno, rechazo parcial y
+    devolución.
+-   [ ] Momento exacto en que cada medio afecta Caja/Cartera.
+-   [ ] Reglas de cancelación/reversión.
+-   [ ] Datos obligatorios de cada instrumento.
+-   [ ] Tratamiento definitivo de cheque/e-Cheq rechazado.
+-   [ ] Tratamiento de depósitos físicos.
+-   [ ] Actualización del disponible bancario informado.
+-   [ ] Granularidad de permisos Beta bajo las tres jerarquías.
+-   [ ] Cierre de OP cuando el creador no esté disponible.
+-   [ ] Contenido del documento final de OP.
+-   [ ] Política de alertas por estado.
+-   [ ] Regla de cobranza con diferencia.
+-   [ ] Filtros de OP pendientes y Gestión Administrativa.
+-   [ ] Una Caja por Centro en Beta vs. múltiples Cajas futuras.
