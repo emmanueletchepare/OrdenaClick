@@ -4079,3 +4079,461 @@ class CobranzaCajaTests(TestCase):
             Cheque.objects.count(),
             0,
         )
+
+class DisponibilidadCajaTests(TestCase):
+    """
+    Prueba la fuente central de disponibilidad de Caja y Cartera.
+
+    Verifica saldos derivados de MovimientoCaja, separación por moneda
+    y Caja, aislamiento empresarial y disponibilidad efectiva de los
+    cheques físicos de terceros.
+    """
+
+    def setUp(self):
+        """
+        Crea dos Empresas y varias Cajas para comprobar que la
+        disponibilidad nunca mezcle recursos entre ámbitos distintos.
+        """
+        from usuarios.models import Banco, Caja
+
+        self.usuario = User.objects.create_user(
+            username="usuario_disponibilidad",
+            password="clave-prueba-123",
+        )
+
+        self.otro_usuario = User.objects.create_user(
+            username="otro_usuario_disponibilidad",
+            password="clave-prueba-123",
+        )
+
+        self.empresa = Empresa.objects.create(
+            razon_social="Empresa Disponibilidad",
+            propietario=self.usuario,
+        )
+
+        self.empresa_ajena = Empresa.objects.create(
+            razon_social="Empresa Ajena Disponibilidad",
+            propietario=self.otro_usuario,
+        )
+
+        self.centro = CentroOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="Casa Central Disponibilidad",
+            tipo="Casa Central",
+            activo=True,
+        )
+
+        self.otro_centro = CentroOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="Sucursal Disponibilidad",
+            tipo="Sucursal",
+            activo=True,
+        )
+
+        self.centro_ajeno = CentroOperativo.objects.create(
+            empresa=self.empresa_ajena,
+            nombre="Sucursal Ajena Disponibilidad",
+            tipo="Sucursal",
+            activo=True,
+        )
+
+        self.caja = Caja.objects.create(
+            empresa=self.empresa,
+            centro_operativo=self.centro,
+            nombre="Caja Principal",
+            activo=True,
+        )
+
+        self.otra_caja = Caja.objects.create(
+            empresa=self.empresa,
+            centro_operativo=self.otro_centro,
+            nombre="Caja Sucursal",
+            activo=True,
+        )
+
+        self.caja_ajena = Caja.objects.create(
+            empresa=self.empresa_ajena,
+            centro_operativo=self.centro_ajeno,
+            nombre="Caja Ajena",
+            activo=True,
+        )
+
+        self.banco = Banco.objects.create(
+            empresa=self.empresa,
+            nombre="Banco Disponibilidad",
+            activo=True,
+        )
+
+    def crear_movimiento_caja(
+        self,
+        *,
+        caja=None,
+        tipo="Ingreso",
+        moneda="ARS",
+        importe="1000.00",
+    ):
+        """
+        Crea un MovimientoCaja aislado para preparar saldos
+        controlados de efectivo.
+        """
+        from usuarios.models import MovimientoCaja
+
+        if caja is None:
+            caja = self.caja
+
+        return MovimientoCaja.objects.create(
+            empresa=caja.empresa,
+            caja=caja,
+            fecha=date(2026, 9, 23),
+            tipo=tipo,
+            moneda=moneda,
+            importe=Decimal(importe),
+            concepto="Movimiento de prueba",
+            creado_por=(
+                self.usuario
+                if caja.empresa_id == self.empresa.id
+                else self.otro_usuario
+            ),
+        )
+
+    def crear_cheque(
+        self,
+        *,
+        caja=None,
+        numero="CHEQUE-DISP-001",
+        estado="Disponible",
+        fecha_vencimiento=None,
+        tipo_instrumento="Cheque",
+        origen="Tercero",
+        importe="10000.00",
+    ):
+        """
+        Crea un cheque controlado para probar las reglas de
+        disponibilidad de la Cartera física.
+        """
+        from usuarios.models import Cheque
+
+        if caja is None:
+            caja = self.caja
+
+        return Cheque.objects.create(
+            empresa=caja.empresa,
+            caja=caja,
+            tipo_instrumento=tipo_instrumento,
+            origen=origen,
+            tipo_cheque="Diferido",
+            banco=(
+                self.banco
+                if caja.empresa_id == self.empresa.id
+                else None
+            ),
+            numero=numero,
+            importe=Decimal(importe),
+            fecha_acreditacion=date(2026, 9, 25),
+            fecha_vencimiento=fecha_vencimiento,
+            estado=estado,
+        )
+
+    def test_saldo_efectivo_resta_egresos_de_ingresos(self):
+        """
+        El saldo de una moneda surge de ingresos menos egresos
+        y no de un campo de saldo persistido.
+        """
+        from usuarios.services.financiero import saldo_efectivo_caja
+
+        self.crear_movimiento_caja(
+            tipo="Ingreso",
+            moneda="ARS",
+            importe="100000.00",
+        )
+
+        self.crear_movimiento_caja(
+            tipo="Ingreso",
+            moneda="ARS",
+            importe="25000.00",
+        )
+
+        self.crear_movimiento_caja(
+            tipo="Egreso",
+            moneda="ARS",
+            importe="40000.00",
+        )
+
+        saldo = saldo_efectivo_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            moneda="ARS",
+        )
+
+        self.assertEqual(
+            saldo,
+            Decimal("85000.00"),
+        )
+
+    def test_saldo_separa_ars_y_usd(self):
+        """
+        Cada moneda conserva un saldo independiente sin realizar
+        conversiones ni aplicar un tipo de cambio implícito.
+        """
+        from usuarios.services.financiero import saldo_efectivo_caja
+
+        self.crear_movimiento_caja(
+            moneda="ARS",
+            importe="50000.00",
+        )
+
+        self.crear_movimiento_caja(
+            moneda="USD",
+            importe="750.00",
+        )
+
+        self.assertEqual(
+            saldo_efectivo_caja(
+                empresa=self.empresa,
+                caja=self.caja,
+                moneda="ARS",
+            ),
+            Decimal("50000.00"),
+        )
+
+        self.assertEqual(
+            saldo_efectivo_caja(
+                empresa=self.empresa,
+                caja=self.caja,
+                moneda="USD",
+            ),
+            Decimal("750.00"),
+        )
+
+    def test_saldo_no_mezcla_otra_caja(self):
+        """
+        Los movimientos de otra Caja de la misma Empresa no deben
+        modificar la disponibilidad de la Caja consultada.
+        """
+        from usuarios.services.financiero import saldo_efectivo_caja
+
+        self.crear_movimiento_caja(
+            caja=self.caja,
+            importe="10000.00",
+        )
+
+        self.crear_movimiento_caja(
+            caja=self.otra_caja,
+            importe="90000.00",
+        )
+
+        saldo = saldo_efectivo_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            moneda="ARS",
+        )
+
+        self.assertEqual(
+            saldo,
+            Decimal("10000.00"),
+        )
+
+    def test_rechaza_caja_de_otra_empresa(self):
+        """
+        Una Caja ajena no puede utilizarse para consultar
+        disponibilidad bajo otra Empresa.
+        """
+        from usuarios.services.financiero import saldo_efectivo_caja
+
+        with self.assertRaisesMessage(
+            ValueError,
+            "La Caja no pertenece a la Empresa seleccionada.",
+        ):
+            saldo_efectivo_caja(
+                empresa=self.empresa,
+                caja=self.caja_ajena,
+                moneda="ARS",
+            )
+
+    def test_cheque_disponible_y_vigente_aparece_en_cartera(self):
+        """
+        Un cheque físico de tercero, disponible y todavía vigente
+        debe formar parte de la disponibilidad de su Caja.
+        """
+        from usuarios.services.financiero import (
+            cheques_fisicos_disponibles_caja,
+        )
+
+        cheque = self.crear_cheque(
+            fecha_vencimiento=date(2026, 10, 30),
+        )
+
+        disponibles = cheques_fisicos_disponibles_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertIn(
+            cheque,
+            disponibles,
+        )
+
+    def test_cheque_disponible_pero_vencido_no_aparece(self):
+        """
+        La fecha efectiva prevalece para la disponibilidad.
+
+        Aunque el registro conserve estado Disponible, un cheque
+        cuya fecha de vencimiento ya pasó no puede ofrecerse como
+        medio de Pago u Orden de Pago.
+        """
+        from usuarios.services.financiero import (
+            cheques_fisicos_disponibles_caja,
+        )
+
+        cheque = self.crear_cheque(
+            numero="CHEQUE-VENCIDO",
+            estado="Disponible",
+            fecha_vencimiento=date(2026, 9, 22),
+        )
+
+        disponibles = cheques_fisicos_disponibles_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertNotIn(
+            cheque,
+            disponibles,
+        )
+
+    def test_cheque_que_vence_hoy_sigue_disponible(self):
+        """
+        El cheque deja de estar disponible después de su fecha
+        de vencimiento, no durante el propio día de vencimiento.
+        """
+        from usuarios.services.financiero import (
+            cheques_fisicos_disponibles_caja,
+        )
+
+        cheque = self.crear_cheque(
+            numero="CHEQUE-VENCE-HOY",
+            fecha_vencimiento=date(2026, 9, 23),
+        )
+
+        disponibles = cheques_fisicos_disponibles_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertIn(
+            cheque,
+            disponibles,
+        )
+
+    def test_cheque_reservado_no_aparece_disponible(self):
+        """
+        Un cheque reservado continúa existiendo en Cartera pero
+        deja de estar disponible para otra operación.
+        """
+        from usuarios.services.financiero import (
+            cheques_fisicos_disponibles_caja,
+        )
+
+        cheque = self.crear_cheque(
+            numero="CHEQUE-RESERVADO",
+            estado="Reservado",
+            fecha_vencimiento=date(2026, 10, 30),
+        )
+
+        disponibles = cheques_fisicos_disponibles_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertNotIn(
+            cheque,
+            disponibles,
+        )
+
+    def test_cheque_de_otra_caja_no_aparece(self):
+        """
+        La Cartera física respeta la custodia real: un cheque ubicado
+        en otra Caja no puede utilizarse desde la Caja consultada.
+        """
+        from usuarios.services.financiero import (
+            cheques_fisicos_disponibles_caja,
+        )
+
+        cheque = self.crear_cheque(
+            caja=self.otra_caja,
+            numero="CHEQUE-OTRA-CAJA",
+            fecha_vencimiento=date(2026, 10, 30),
+        )
+
+        disponibles = cheques_fisicos_disponibles_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertNotIn(
+            cheque,
+            disponibles,
+        )
+
+    def test_resumen_reune_efectivo_y_cheques_disponibles(self):
+        """
+        El resumen central expone los saldos por moneda y solamente
+        el valor de los cheques realmente utilizables.
+        """
+        from usuarios.services.financiero import (
+            resumen_disponibilidad_caja,
+        )
+
+        self.crear_movimiento_caja(
+            moneda="ARS",
+            importe="40000.00",
+        )
+
+        self.crear_movimiento_caja(
+            moneda="USD",
+            importe="500.00",
+        )
+
+        cheque_disponible = self.crear_cheque(
+            numero="CHEQUE-RESUMEN",
+            importe="60000.00",
+            fecha_vencimiento=date(2026, 10, 30),
+        )
+
+        self.crear_cheque(
+            numero="CHEQUE-RESUMEN-VENCIDO",
+            importe="20000.00",
+            estado="Disponible",
+            fecha_vencimiento=date(2026, 9, 22),
+        )
+
+        resumen = resumen_disponibilidad_caja(
+            empresa=self.empresa,
+            caja=self.caja,
+            fecha_referencia=date(2026, 9, 23),
+        )
+
+        self.assertEqual(
+            resumen["efectivo"]["ARS"],
+            Decimal("40000.00"),
+        )
+
+        self.assertEqual(
+            resumen["efectivo"]["USD"],
+            Decimal("500.00"),
+        )
+
+        self.assertEqual(
+            resumen["total_cheques"],
+            Decimal("60000.00"),
+        )
+
+        self.assertIn(
+            cheque_disponible,
+            resumen["cheques"],
+        )
