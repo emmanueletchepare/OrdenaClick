@@ -3,6 +3,10 @@ from django.shortcuts import (
     redirect
 )
 
+from usuarios.services.financiero import (
+    resumen_disponibilidad_caja,
+)
+
 from django.contrib.auth import (
     authenticate,
     login,
@@ -59,6 +63,7 @@ from .models import (
     RecursoOperativoCentro,
     Proveedor,
     Cliente,
+    Caja,
     PerfilUsuario
 )
 
@@ -11080,5 +11085,160 @@ def listar_proximos_vencimientos(request):
                 else None
             ),
             "movimientos": datos,
+        }
+    )
+
+@login_required
+def panel_caja(request):
+    """
+    Devuelve la portada operativa de Caja para la Empresa autorizada.
+
+    La disponibilidad se calcula individualmente por cada Caja activa
+    correspondiente a Casa Central, Sucursal o Mostrador. No mezcla la
+    custodia física de distintos Centros Operativos.
+    """
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
+    )
+
+    empresa_id = (
+        request.GET.get("empresa")
+        or request.POST.get("empresa")
+    )
+
+    try:
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
+    except PermissionDenied as error:
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": str(error),
+            },
+            status=403,
+        )
+
+    cajas = (
+        Caja.objects
+        .filter(
+            empresa=empresa,
+            activo=True,
+            centro_operativo__activo=True,
+            centro_operativo__tipo__in=[
+                "Casa Central",
+                "Sucursal",
+                "Mostrador",
+            ],
+        )
+        .select_related(
+            "centro_operativo",
+        )
+        .order_by(
+            "centro_operativo__nombre",
+            "nombre",
+        )
+    )
+
+    resumenes = [
+        resumen_disponibilidad_caja(
+            empresa,
+            caja,
+        )
+        for caja in cajas
+    ]
+
+    html = render_to_string(
+        "usuarios/caja/dashboard.html",
+        {
+            "empresa": empresa,
+            "resumenes": resumenes,
+        },
+        request=request,
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "html": html,
+        }
+    )
+
+@login_required
+def nueva_cobranza(request):
+    """
+    Muestra el formulario de una nueva Cobranza para una Caja autorizada.
+
+    La Empresa y la Caja recibidas desde el navegador se consideran datos
+    no confiables. La autorización se resuelve en el servidor y la Caja
+    debe pertenecer a la Empresa autorizada, estar activa y corresponder
+    a una Casa Central, Sucursal o Mostrador.
+    """
+    from django.core.exceptions import PermissionDenied
+
+    from usuarios.services.seguridad import (
+        obtener_caja_autorizada,
+    )
+
+    empresa_id = request.GET.get("empresa")
+    caja_id = request.GET.get("caja")
+
+    try:
+        empresa, caja = obtener_caja_autorizada(
+            request.user,
+            empresa_id,
+            caja_id,
+        )
+    except PermissionDenied as error:
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": str(error),
+            },
+            status=403,
+        )
+
+    bancos = (
+        Banco.objects
+        .filter(
+            empresa=empresa,
+            activo=True,
+        )
+        .order_by(
+            "nombre",
+        )
+    )
+
+    clientes = (
+        Cliente.objects
+        .filter(
+            empresa=empresa,
+            activo=True,
+        )
+        .select_related(
+            "centro_operativo",
+        )
+        .order_by(
+            "razon_social",
+            "numero_cliente",
+        )
+    )
+
+    html = render_to_string(
+        "usuarios/caja/nueva_cobranza.html",
+        {
+            "empresa": empresa,
+            "caja": caja,
+            "bancos": bancos,
+            "clientes": clientes,
+        },
+        request=request,
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "html": html,
         }
     )

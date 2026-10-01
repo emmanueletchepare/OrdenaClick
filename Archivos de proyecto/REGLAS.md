@@ -49,24 +49,48 @@ y espaciados. - Bancos y Centros Operativos son referencias de
 comportamiento consistente. - Buscador dinámico en listados de tarjetas
 queda como mejora general.
 
-## 3. Flujo `[+]`
+## 3. Flujo `[+]` y navegación contextual apilable
 
 Regla invariable para toda la aplicación: siempre que un formulario
 permita elegir una entidad que posea ABM, el selector debe tener su
-botón `[+]` con el mismo estilo y comportamiento contextual. No es una
-excepción de un módulo particular.
+botón `[+]` con el mismo estilo y comportamiento contextual.
 
-Regla invariable:
+La navegación contextual debe ser **apilable**. Un ABM abierto desde un
+`[+]` puede abrir otro ABM mediante otro `[+]`, y así sucesivamente.
+Cada salto conserva un nivel independiente de contexto y cada retorno
+restaura exactamente el nivel inmediatamente anterior (LIFO).
+
+Cada nivel conserva como mínimo: pantalla/origen, valores y estado del
+formulario, posición de scroll/ubicación visual, elemento que originó el
+salto, información necesaria para reconstruir la pantalla y registro
+creado/reactivado que deba seleccionarse al regresar.
 
 ``` text
-formulario
+formulario A
 → [+]
-→ ABM
-→ crear
-→ volver
-→ conservar formulario
-→ seleccionar nuevo elemento
+→ ABM B
+→ [+]
+→ ABM C
+→ [+]
+→ ABM D
+
+volver → ABM C intacto y en la misma posición visual
+volver → ABM B intacto y en la misma posición visual
+volver → formulario A intacto y en la misma posición visual
 ```
+
+Cuando un alta o reactivación nace de un selector, el registro
+resultante debe quedar seleccionado automáticamente al volver.
+
+Los ABM no deben codificar manualmente todos sus posibles orígenes. La
+infraestructura común de navegación es responsable de apilar y restaurar
+contexto. Las variables y funciones especiales de retorno por pantalla
+son mecanismo heredado y deben migrarse progresivamente; sólo se
+eliminan después de comprobar que ya no tienen consumidores.
+
+Un botón de navegación normal de módulo no equivale a un retorno
+contextual. Si una pantalla fue abierta mediante `[+]`, el retorno lo
+determina la pila contextual.
 
 ## 4. Seguridad
 
@@ -74,15 +98,15 @@ formulario
 -   Nunca confiar en parámetros del cliente para pertenencia.
 -   Secretos y credenciales fuera del repositorio, `static/`, `media/`,
     JavaScript y backups de Empresa.
--   Los secretos globales de instalación pueden provenir del entorno o de
-    configuración privada protegida fuera del repositorio; nunca debe
+-   Los secretos globales de instalación pueden provenir del entorno o
+    de configuración privada protegida fuera del repositorio; nunca debe
     existir un fallback inseguro incorporado al código.
 -   Un secreto ya almacenado no se vuelve a mostrar en el frontend; se
     informa estado/origen y se permite reemplazo controlado cuando
     corresponda.
 -   Las operaciones sensibles del Perfil Desarrollador requieren
-    autenticación, superusuario validado en backend, `POST`, CSRF y errores
-    controlados.
+    autenticación, superusuario validado en backend, `POST`, CSRF y
+    errores controlados.
 -   Contraseñas nunca en texto plano.
 -   Backups tratados como información sensible.
 -   Toda nueva entidad sensible debe evaluar cifrado, exposición,

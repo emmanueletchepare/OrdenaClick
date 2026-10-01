@@ -25,6 +25,10 @@ creado al regresar. - Pagos, saldo pendiente, vencimientos y alertas que
 correspondan al circuito. - Pruebas del flujo completo, no solamente
 pantallas aisladas.
 
+La Beta también exige navegación contextual `[+]` anidable en cascada,
+con retorno LIFO, conservación de datos y restauración de la posición
+visual en cada nivel.
+
 Primero se cierran flujos utilizables de punta a punta; después se
 estabilizan y testean. Los refactors o mejoras secundarias no deben
 bloquear la Beta, salvo que afecten seguridad, integridad de datos o

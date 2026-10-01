@@ -21,6 +21,24 @@ Al tocar código viejo, se debe aprovechar para extraer progresivamente
 JS/CSS inline y responsabilidades excesivas, sin iniciar refactors
 masivos que desvíen la Beta.
 
+### Navegación contextual como infraestructura común
+
+Los saltos realizados mediante `[+]` deben utilizar una pila común de
+contextos de navegación. Cada entrada guarda el estado necesario para
+reconstruir el nivel llamador, incluida su posición visual, y cada
+retorno desapila un solo nivel.
+
+El mecanismo admite encadenamientos
+`formulario → [+] → ABM → [+] → ABM ...` sin pérdida de datos. La
+pantalla destino no necesita conocer quién la llamó. Los retornos
+especiales heredados se migran gradualmente y se eliminan únicamente
+cuando sus flujos estén cubiertos por la infraestructura común y sus
+pruebas.
+
+Para la salida Beta, el JavaScript inline heredado deja de considerarse
+solamente una limpieza oportunista: debe eliminarse de los flujos
+publicados de la Beta.
+
 ## 3. Núcleo financiero
 
 Estructura conceptual:
@@ -245,11 +263,11 @@ El Perfil Desarrollador es una función técnica de instalación:
 -   los secretos no se almacenan en `static/`, `media/`, el repositorio,
     backups de Empresa ni JavaScript.
 
-La configuración privada de instalación se almacena fuera del repositorio
-y de los directorios públicos de la aplicación. En desarrollo puede
-utilizar un directorio privado del usuario; en producción deberá ubicarse
-en almacenamiento protegido para la cuenta del servicio y con permisos
-del sistema operativo adecuados.
+La configuración privada de instalación se almacena fuera del
+repositorio y de los directorios públicos de la aplicación. En
+desarrollo puede utilizar un directorio privado del usuario; en
+producción deberá ubicarse en almacenamiento protegido para la cuenta
+del servicio y con permisos del sistema operativo adecuados.
 
 Para `SECRET_KEY`, el orden de resolución es:
 
@@ -263,21 +281,21 @@ error de arranque
 
 No existe una clave insegura de fallback incorporada al código.
 
-Si `ORDENACLICK_SECRET_KEY` está definida en el entorno, la aplicación la
-considera administrada externamente y no permite reemplazarla desde el
-Perfil Desarrollador.
+Si `ORDENACLICK_SECRET_KEY` está definida en el entorno, la aplicación
+la considera administrada externamente y no permite reemplazarla desde
+el Perfil Desarrollador.
 
 La rotación desde OrdenaClick genera la nueva clave exclusivamente en el
-servidor y la persiste sin devolverla al navegador. La clave efectiva del
-proceso no cambia hasta reiniciar Django.
+servidor y la persiste sin devolverla al navegador. La clave efectiva
+del proceso no cambia hasta reiniciar Django.
 
-Mientras la clave privada persistida sea distinta de `settings.SECRET_KEY`,
-el sistema considera que existe un reinicio pendiente y bloquea una segunda
-rotación.
+Mientras la clave privada persistida sea distinta de
+`settings.SECRET_KEY`, el sistema considera que existe un reinicio
+pendiente y bloquea una segunda rotación.
 
-Una rotación de `SECRET_KEY` puede invalidar sesiones y otros datos firmados
-con la clave anterior. El Perfil Desarrollador debe advertirlo antes de
-preparar el reemplazo.
+Una rotación de `SECRET_KEY` puede invalidar sesiones y otros datos
+firmados con la clave anterior. El Perfil Desarrollador debe advertirlo
+antes de preparar el reemplazo.
 
 Las operaciones sensibles del Perfil Desarrollador requieren, según
 corresponda:
@@ -287,15 +305,16 @@ corresponda:
 -   `POST`;
 -   CSRF;
 -   errores controlados sin exposición de secretos;
--   estado explícito cuando una modificación requiere reiniciar el servidor.
+-   estado explícito cuando una modificación requiere reiniciar el
+    servidor.
 
 Las rutas protegidas utilizan el login propio de OrdenaClick como
 `LOGIN_URL`; una sesión ausente o inválida no debe redirigir al login
 predeterminado `/accounts/login/`.
 
-Las futuras credenciales globales de integraciones, incluida ARCA, siguen
-esta misma frontera arquitectónica: pertenecen a la instalación y no a una
-Empresa.
+Las futuras credenciales globales de integraciones, incluida ARCA,
+siguen esta misma frontera arquitectónica: pertenecen a la instalación y
+no a una Empresa.
 
 ## 14. Auditoría
 

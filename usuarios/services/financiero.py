@@ -791,6 +791,136 @@ def eliminar_pago_movimiento(
         movimiento
     )
 
+def normalizar_numero_cheque(valor):
+    """
+    Normaliza un número de cheque al formato canónico de OrdenaClick.
+
+    Acepta entre 1 y 8 dígitos numéricos y devuelve siempre una cadena
+    de exactamente 8 posiciones, completando con ceros a la izquierda.
+
+    Ejemplo:
+        1698 -> "00001698"
+
+    No elimina caracteres arbitrarios: si el valor recibido contiene
+    letras, espacios internos, signos u otros caracteres, se rechaza.
+    """
+    numero = str(
+        valor or ""
+    ).strip()
+
+    if not numero:
+        raise ValueError(
+            "Ingrese el número del cheque."
+        )
+
+    if not numero.isdigit():
+        raise ValueError(
+            "El número del cheque debe contener sólo dígitos."
+        )
+
+    if len(numero) > 8:
+        raise ValueError(
+            "El número del cheque no puede superar los 8 dígitos."
+        )
+
+    return numero.zfill(8)
+
+
+def validar_fechas_cheque(
+    tipo_cheque,
+    fecha_emision,
+    fecha_acreditacion=None,
+):
+    """
+    Valida y normaliza las fechas comunes de un cheque.
+
+    Para cheque Común, la fecha de acreditación coincide con la fecha
+    de emisión.
+
+    Para cheque Diferido, la fecha de acreditación es obligatoria,
+    debe ser posterior a la emisión y no puede superar los 360 días
+    desde esa fecha.
+    """
+    from datetime import datetime
+
+    tipo_cheque = str(
+        tipo_cheque or ""
+    ).strip()
+
+    if tipo_cheque not in {
+        "Comun",
+        "Diferido",
+    }:
+        raise ValueError(
+            "El tipo de cheque no es válido."
+        )
+
+    fecha_emision_raw = str(
+        fecha_emision or ""
+    ).strip()
+
+    if not fecha_emision_raw:
+        raise ValueError(
+            "Ingrese la fecha de emisión del cheque."
+        )
+
+    try:
+        fecha_emision_validada = datetime.strptime(
+            fecha_emision_raw,
+            "%Y-%m-%d",
+        ).date()
+    except ValueError as error:
+        raise ValueError(
+            "La fecha de emisión del cheque no es válida."
+        ) from error
+
+    if tipo_cheque == "Comun":
+        return (
+            fecha_emision_validada,
+            fecha_emision_validada,
+        )
+
+    fecha_acreditacion_raw = str(
+        fecha_acreditacion or ""
+    ).strip()
+
+    if not fecha_acreditacion_raw:
+        raise ValueError(
+            "Ingrese la fecha de acreditación del cheque diferido."
+        )
+
+    try:
+        fecha_acreditacion_validada = datetime.strptime(
+            fecha_acreditacion_raw,
+            "%Y-%m-%d",
+        ).date()
+    except ValueError as error:
+        raise ValueError(
+            "La fecha de acreditación del cheque no es válida."
+        ) from error
+
+    if fecha_acreditacion_validada <= fecha_emision_validada:
+        raise ValueError(
+            "La fecha de acreditación del cheque diferido "
+            "debe ser posterior a la fecha de emisión."
+        )
+
+    dias_diferencia = (
+        fecha_acreditacion_validada
+        - fecha_emision_validada
+    ).days
+
+    if dias_diferencia > 360:
+        raise ValueError(
+            "La fecha de acreditación del cheque diferido "
+            "no puede superar los 360 días desde la emisión."
+        )
+
+    return (
+        fecha_emision_validada,
+        fecha_acreditacion_validada,
+    )
+
 def validar_pago_movimiento(
     empresa,
     pago_datos,
@@ -1660,20 +1790,12 @@ def validar_pago_movimiento(
                 )
 
 
-        numero = str(
+        numero = normalizar_numero_cheque(
             cheque_datos.get(
                 "numero",
                 "",
             )
-            or ""
-        ).strip()
-
-
-        if not numero:
-
-            raise ValueError(
-                "Ingrese el número del cheque."
-            )
+        )
 
 
         try:
@@ -1709,69 +1831,20 @@ def validar_pago_movimiento(
             )
 
 
-        fecha_emision = str(
+        (
+            fecha_emision_validada,
+            fecha_acreditacion_validada,
+        ) = validar_fechas_cheque(
+            tipo_cheque,
             cheque_datos.get(
                 "fecha_emision",
                 "",
-            )
-            or ""
-        ).strip()
-
-
-        if not fecha_emision:
-
-            raise ValueError(
-                "Ingrese la fecha de emisión "
-                "del cheque."
-            )
-
-
-        try:
-
-            fecha_emision_validada = (
-                datetime.strptime(
-                    fecha_emision,
-                    "%Y-%m-%d",
-                ).date()
-            )
-
-        except ValueError as error:
-
-            raise ValueError(
-                "La fecha de emisión "
-                "del cheque no es válida."
-            ) from error
-
-
-        fecha_acreditacion = str(
+            ),
             cheque_datos.get(
                 "fecha_acreditacion",
                 "",
-            )
-            or ""
-        ).strip()
-
-
-        fecha_acreditacion_validada = None
-
-
-        if fecha_acreditacion:
-
-            try:
-
-                fecha_acreditacion_validada = (
-                    datetime.strptime(
-                        fecha_acreditacion,
-                        "%Y-%m-%d",
-                    ).date()
-                )
-
-            except ValueError as error:
-
-                raise ValueError(
-                    "La fecha de acreditación "
-                    "del cheque no es válida."
-                ) from error
+            ),
+        )
 
 
         quien_entrega = str(
@@ -2097,10 +2170,11 @@ def validar_cobranza(
     if caja.centro_operativo.tipo not in {
         "Casa Central",
         "Sucursal",
+        "Mostrador",
     }:
         raise ValueError(
             "La Caja seleccionada no pertenece a una "
-            "Casa Central o Sucursal."
+            "Casa Central, Sucursal o Mostrador."
         )
 
     # =========================================
@@ -2164,29 +2238,41 @@ def validar_cobranza(
     # =========================================
     # TOTAL DECLARADO
     # =========================================
+    #
+    # El total declarado es un dato opcional de control.
+    # Su ausencia no representa cero: se conserva como None.
+    # Cuando se informa, debe ser positivo y posteriormente
+    # se utiliza para conciliar Efectivo ARS + Cheques.
+    #
 
-    try:
-        total_declarado = Decimal(
-            str(
-                cobranza_datos.get(
-                    "total_declarado",
-                    "0.00",
-                )
+    total_declarado_raw = cobranza_datos.get(
+        "total_declarado"
+    )
+
+    if (
+        total_declarado_raw is None
+        or str(total_declarado_raw).strip() == ""
+    ):
+        total_declarado = None
+
+    else:
+        try:
+            total_declarado = Decimal(
+                str(total_declarado_raw)
             )
-        )
-    except (
-        InvalidOperation,
-        TypeError,
-        ValueError,
-    ) as error:
-        raise ValueError(
-            "El total declarado de la Cobranza no es válido."
-        ) from error
+        except (
+            InvalidOperation,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise ValueError(
+                "El total declarado de la Cobranza no es válido."
+            ) from error
 
-    if total_declarado <= Decimal("0.00"):
-        raise ValueError(
-            "El total declarado debe ser mayor que cero."
-        )
+        if total_declarado <= Decimal("0.00"):
+            raise ValueError(
+                "El total declarado debe ser mayor que cero."
+            )
 
     # =========================================
     # EFECTIVO
@@ -2257,19 +2343,17 @@ def validar_cobranza(
                 f"El cheque {indice} tiene un formato inválido."
             )
 
-        numero = str(
-            cheque_raw.get("numero", "") or ""
-        ).strip()
-
-        if not numero:
-            raise ValueError(
-                f"El cheque {indice} debe tener número."
+        try:
+            numero = normalizar_numero_cheque(
+                cheque_raw.get(
+                    "numero",
+                    "",
+                )
             )
-
-        if len(numero) > 30:
+        except ValueError as error:
             raise ValueError(
-                f"El número del cheque {indice} es demasiado extenso."
-            )
+                f"Cheque {indice}: {error}"
+            ) from error
 
         try:
             importe = Decimal(
@@ -2337,11 +2421,6 @@ def validar_cobranza(
             f"fecha de acreditación del cheque {indice}",
         )
 
-        fecha_vencimiento = _validar_fecha_opcional_cobranza(
-            cheque_raw.get("fecha_vencimiento"),
-            f"fecha de vencimiento del cheque {indice}",
-        )
-
         tipo_cheque = str(
             cheque_raw.get(
                 "tipo_cheque",
@@ -2350,13 +2429,32 @@ def validar_cobranza(
             or ""
         ).strip()
 
-        if tipo_cheque not in {
-            "Comun",
-            "Diferido",
-        }:
-            raise ValueError(
-                f"El tipo del cheque {indice} no es válido."
+        try:
+            (
+                fecha_emision,
+                fecha_acreditacion,
+            ) = validar_fechas_cheque(
+                tipo_cheque,
+                cheque_raw.get(
+                    "fecha_emision",
+                    "",
+                ),
+                cheque_raw.get(
+                    "fecha_acreditacion",
+                    "",
+                ),
             )
+        except ValueError as error:
+            raise ValueError(
+                f"Cheque {indice}: {error}"
+            ) from error
+
+        fecha_vencimiento = _validar_fecha_opcional_cobranza(
+            cheque_raw.get(
+                "fecha_vencimiento"
+            ),
+            f"fecha de vencimiento del cheque {indice}",
+        )
 
         quien_entrega = str(
             cheque_raw.get(
@@ -2377,6 +2475,7 @@ def validar_cobranza(
             "banco": banco,
             "cliente": cliente,
             "tipo_cheque": tipo_cheque,
+            "fecha_emision": fecha_emision,
             "fecha_acreditacion": fecha_acreditacion,
             "fecha_vencimiento": fecha_vencimiento,
             "quien_entrega": quien_entrega,
@@ -2388,9 +2487,12 @@ def validar_cobranza(
     # CONCILIACIÓN
     # =========================================
     #
-    # En esta primera versión, USD no se convierte a ARS.
-    # Por lo tanto no puede formar parte de una conciliación
-    # monetaria única con el total declarado en ARS.
+    # El Total declarado es opcional y funciona exclusivamente
+    # como control. Si fue informado, debe coincidir con los
+    # componentes recibidos expresados en ARS.
+    #
+    # En esta primera versión, USD no se convierte a ARS y por
+    # lo tanto no participa de esta conciliación.
     #
 
     total_efectivo_ars = efectivo.get(
@@ -2403,10 +2505,13 @@ def validar_cobranza(
         + total_cheques
     )
 
-    if total_componentes_ars != total_declarado:
+    if (
+        total_declarado is not None
+        and total_componentes_ars != total_declarado
+    ):
         diferencia = (
-            total_declarado
-            - total_componentes_ars
+            total_componentes_ars
+            - total_declarado
         )
 
         raise ValueError(
@@ -2572,7 +2677,9 @@ def crear_cobranza_validada(
                 importe=cheque_datos[
                     "importe"
                 ],
-                fecha_emision=None,
+                fecha_emision=cheque_datos[
+                    "fecha_emision"
+                ],
                 fecha_acreditacion=cheque_datos[
                     "fecha_acreditacion"
                 ],

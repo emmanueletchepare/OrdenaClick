@@ -16,6 +16,11 @@ from .views import (
     listar_bancos,
     listar_centros_operativos,
     panel_admin,
+    listar_centros_operativos,
+    panel_admin,
+    panel_caja,
+    nueva_cobranza,
+    exportar_empresa,
     exportar_empresa,
     eliminar_empresa,
     importar_empresa,
@@ -571,6 +576,23 @@ urlpatterns = [
         "alertas/llamador/",
         estado_llamador_alertas,
         name="estado_llamador_alertas",
+    ),
+
+
+    # =========================================
+    # CAJA / COBRANZAS
+    # =========================================
+
+    path(
+        "caja/",
+        panel_caja,
+        name="panel_caja",
+    ),
+
+    path(
+        "caja/cobranzas/nueva/",
+        nueva_cobranza,
+        name="nueva_cobranza",
     ),
 
     # =========================================

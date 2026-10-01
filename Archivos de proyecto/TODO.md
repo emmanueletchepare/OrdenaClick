@@ -42,7 +42,27 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 -   [ ] Completar ABM necesarios para medios de pago (cuentas, tarjetas,
     bancos, etc.).
 
-### 1.3 Seguridad antes de servidor/Beta
+### 1.3 Estabilización obligatoria antes de publicar Beta
+
+La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
+
+-   [ ] Eliminar todo JavaScript inline de los flujos publicados en
+    Beta.
+-   [ ] Implementar la pila común de navegación contextual `[+]`.
+-   [ ] Migrar los retornos especiales heredados y probar navegación
+    multinivel.
+-   [ ] Normalizar reglas reutilizables ya pactadas para evitar
+    validaciones distintas del mismo concepto según formulario.
+-   [ ] Eliminar código muerto y restos de caminos descartados sólo
+    después de comprobar que no tengan consumidores.
+-   [ ] Resolver y revalidar
+    `Auditoria_Seguridad_OrdenaClick_2026-09-24`.
+-   [ ] Ejecutar auditoría final de seguridad sobre el commit candidato
+    a Beta.
+-   [ ] Ejecutar regresión completa y recorridos manuales de los
+    circuitos Beta.
+
+### 1.4 Seguridad antes de servidor/Beta
 
 -   [ ] Revisar configuración de producción.
 -   [ ] HTTPS.
@@ -85,7 +105,7 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 -   [x] Implementar autocompletado de Cliente por CUIT usando ARCA, sin
     bloquear la carga manual cuando ARCA no esté disponible.
 
-### 1.4 Suscripciones
+### 1.5 Suscripciones
 
 -   [ ] Definir matriz Persona / Intermedio / Empresas.
 -   [ ] Implementar capacidades habilitables sin cambiar el modelo de
@@ -95,7 +115,7 @@ Objetivo: circuito completo y estable de **REGISTROS**.
     datos.
 -   [ ] Separar autenticación de habilitación comercial.
 
-### 1.5 Testing Beta
+### 1.6 Testing Beta
 
 -   [ ] Tests de servicios financieros.
 -   [ ] Tests de permisos y aislamiento por Empresa.
@@ -107,8 +127,8 @@ Objetivo: circuito completo y estable de **REGISTROS**.
 
 ## 2. DEUDA TÉCNICA QUE SE CORRIGE PROGRESIVAMENTE
 
--   [ ] Extraer JavaScript inline existente cuando se toque cada
-    pantalla.
+-   [ ] Extraer JavaScript inline existente. Para los flujos Beta es
+    bloqueante; al tocar cada pantalla.
 -   [ ] Extraer CSS inline existente cuando se toque cada pantalla.
 -   [ ] No incorporar JavaScript inline nuevo. Todo comportamiento nuevo
     debe vivir en archivos `.js` externos.

@@ -1,0 +1,476 @@
+<section class="caja-modulo" id="cajaNuevaCobranza">
+
+    <header class="caja-encabezado">
+        <div>
+            <h2>Nueva cobranza</h2>
+            <p>
+                Registrá el ingreso de efectivo y cheques físicos.
+            </p>
+        </div>
+    </header>
+
+
+    <form id="formNuevaCobranza" class="cobranza-form">
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="empresa"
+            value="{{ empresa.id }}"
+        >
+
+        <input
+            id="cobranzaCajaId"
+            type="hidden"
+            name="caja"
+            value="{{ caja.id }}"
+        >
+
+        <div class="cobranza-resumen-grid">
+
+            <section class="cobranza-card">
+
+                <div class="cobranza-card-titulo">
+                    Total declarado
+                </div>
+
+                <div class="field">
+
+                    <label
+                        class="label"
+                        for="cobranzaTotalDeclarado"
+                    >
+                        Importe entregado
+                    </label>
+
+                    <input
+                        id="cobranzaTotalDeclarado"
+                        type="text"
+                        name="total_declarado"
+                        class="input-box cobranza-importe caja-input-importe"
+                        inputmode="decimal"
+                        autocomplete="off"
+                        placeholder="0,00"
+                    >
+
+                </div>
+
+            </section>
+
+
+            <section class="cobranza-card">
+
+                <div class="cobranza-card-titulo">
+                    Efectivo recibido
+                </div>
+
+                <div class="cobranza-grid cobranza-grid-efectivo">
+
+                    <div class="field">
+
+                        <label
+                            class="label"
+                            for="cobranzaEfectivoArs"
+                        >
+                            Pesos argentinos
+                        </label>
+
+                        <input
+                            id="cobranzaEfectivoArs"
+                            type="text"
+                            name="efectivo_ars"
+                            class="input-box cobranza-importe caja-input-importe"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            placeholder="0,00"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label
+                            class="label"
+                            for="cobranzaEfectivoUsd"
+                        >
+                            Dólares
+                        </label>
+
+                        <input
+                            id="cobranzaEfectivoUsd"
+                            type="text"
+                            name="efectivo_usd"
+                            class="input-box cobranza-importe caja-input-importe"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            placeholder="0,00"
+                        >
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <section class="cobranza-card">
+
+            <div class="cobranza-card-cabecera">
+
+                <div>
+                    <div class="cobranza-card-titulo">
+                        Cheques recibidos
+                    </div>
+
+                    <div class="cobranza-card-ayuda">
+                        Cada cheque se incorporará individualmente
+                        a la cartera física de la Caja.
+                    </div>
+                </div>
+
+                <button
+                    id="btnAbrirChequeCobranza"
+                    type="button"
+                    class="caja-btn-secundario"
+                >
+                    + Agregar cheque
+                </button>
+
+            </div>
+
+
+            <div
+                id="cobranzaChequeFormulario"
+                class="cobranza-cheque-formulario"
+                hidden
+            >
+
+                <div class="cobranza-cheque-grid">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Cliente
+                        </label>
+
+                        <div class="caja-selector-con-alta">
+
+                            <select
+                                id="cobranzaChequeCliente"
+                                class="input-box cheque-cliente"
+                            >
+                                <option value="">
+                                    Sin cliente asociado
+                                </option>
+
+                                {% for cliente in clientes %}
+                                    <option value="{{ cliente.id }}">
+                                        {{ cliente.numero }} - {{ cliente.razon_social }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                            <button
+                                type="button"
+                                class="caja-btn-alta-contextual"
+                                data-caja-alta="cliente"
+                                title="Agregar cliente"
+                                aria-label="Agregar cliente"
+                            >
+                                +
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label class="label">
+                            Número
+                        </label>
+
+                        <input
+                            id="cobranzaChequeNumero"
+                            type="text"
+                            class="input-box cheque-numero"
+                            inputmode="numeric"
+                            maxlength="8"
+                            autocomplete="off"
+                            placeholder="00000000"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label class="label">
+                            Banco
+                        </label>
+
+                        <div class="caja-selector-con-alta">
+
+                            <select
+                                id="cobranzaChequeBanco"
+                                class="input-box cheque-banco"
+                            >
+                                <option value="">
+                                    Seleccione...
+                                </option>
+
+                                {% for banco in bancos %}
+                                    <option value="{{ banco.id }}">
+                                        {{ banco.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                            <button
+                                type="button"
+                                class="caja-btn-alta-contextual"
+                                data-caja-alta="banco"
+                                title="Agregar banco"
+                                aria-label="Agregar banco"
+                            >
+                                +
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label class="label">
+                            Tipo
+                        </label>
+
+                        <select
+                            id="cobranzaChequeTipo"
+                            class="input-box cheque-tipo"
+                        >
+                            <option value="Comun">
+                                Simple
+                            </option>
+
+                            <option value="Diferido">
+                                Diferido
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label class="label">
+                            Fecha de emisión
+                        </label>
+
+                        <input
+                            id="cobranzaChequeFechaEmision"
+                            type="date"
+                            class="input-box cheque-fecha-emision"
+                        >
+
+                    </div>
+
+
+                    <div
+                        id="cobranzaChequeCampoAcreditacion"
+                        class="field cheque-campo-acreditacion"
+                    >
+
+                        <label class="label">
+                            Fecha de acreditación
+                        </label>
+
+                        <input
+                            id="cobranzaChequeFechaAcreditacion"
+                            type="date"
+                            class="input-box cheque-fecha-acreditacion"
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label class="label">
+                            Importe
+                        </label>
+
+                        <input
+                            id="cobranzaChequeImporte"
+                            type="text"
+                            class="input-box cheque-importe caja-input-importe"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            placeholder="0,00"
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="cobranza-cheque-espacio"
+                        aria-hidden="true"
+                    ></div>
+
+
+                    <div class="cobranza-cheque-accion">
+
+                        <button
+                            id="btnGuardarChequeCobranza"
+                            type="button"
+                            class="guardar"
+                        >
+                            Agregar cheque
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="btnCancelarEdicionChequeCobranza"
+                    type="button"
+                    class="caja-btn-secundario cobranza-cancelar-edicion-cheque"
+                    hidden
+                >
+                    Cancelar edición
+                </button>
+
+            </div>
+
+
+            <div
+                id="cobranzaChequesVacio"
+                class="cobranza-vacio"
+            >
+                No hay cheques cargados.
+            </div>
+
+
+            <div
+                id="cobranzaListadoCheques"
+                class="cobranza-listado-cheques"
+                hidden
+            >
+
+                <div class="cobranza-cheques-tabla">
+
+                    <div class="cobranza-cheques-cabecera">
+                        <div>Cliente</div>
+                        <div>Banco</div>
+                        <div>N.º cheque</div>
+                        <div>Tipo</div>
+                        <div>Emisión</div>
+                        <div>Acreditación</div>
+                        <div>Importe</div>
+                        <div aria-label="Acciones"></div>
+                    </div>
+
+                    <div
+                        id="cobranzaChequesContenedor"
+                        class="cobranza-cheques-cuerpo"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="cobranza-card cobranza-conciliacion">
+
+            <div
+                id="cobranzaConciliacionDeclarado"
+                class="cobranza-conciliacion-item"
+                hidden
+            >
+                <span>Total declarado</span>
+
+                <strong id="cobranzaResumenDeclarado">
+                    $ 0,00
+                </strong>
+            </div>
+
+
+            <div class="cobranza-conciliacion-item">
+                <span>Efectivo ARS</span>
+
+                <strong id="cobranzaResumenEfectivo">
+                    $ 0,00
+                </strong>
+            </div>
+
+
+            <div class="cobranza-conciliacion-item">
+                <span>Cheques</span>
+
+                <strong id="cobranzaResumenCheques">
+                    $ 0,00
+                </strong>
+            </div>
+
+
+            <div
+                id="cobranzaConciliacionDiferencia"
+                class="cobranza-conciliacion-item
+                    cobranza-conciliacion-diferencia"
+                hidden
+            >
+                <span>Diferencia</span>
+
+                <strong id="cobranzaResumenDiferencia">
+                    $ 0,00
+                </strong>
+            </div>
+
+
+            <p class="cobranza-aclaracion">
+                El efectivo en USD se registra por separado y no se
+                convierte automáticamente a pesos para la conciliación.
+            </p>
+
+        </section>
+
+
+        <div
+            id="cobranzaMensaje"
+            class="cobranza-mensaje"
+            hidden
+        ></div>
+
+
+        <div class="cobranza-acciones-finales">
+
+            <button
+                type="submit"
+                class="guardar"
+            >
+                Guardar cobranza
+            </button>
+
+            <button
+                type="button"
+                class="caja-btn-secundario"
+                data-caja-accion="volver-caja"
+            >
+                ← Volver
+            </button>
+
+        </div>
+
+    </form>
+
+</section>

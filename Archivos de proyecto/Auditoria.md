@@ -1282,3 +1282,41 @@ Riesgos a cubrir con reglas backend y tests:
 Estas condiciones deben resolverse con autorización por Empresa,
 `transaction.atomic()`, bloqueos adecuados (`select_for_update()` cuando
 corresponda) y validación de negocio en backend.
+
+------------------------------------------------------------------------
+
+# ADENDA 27/09/2026 --- Navegación contextual y cierre pre-Beta
+
+## Navegación contextual
+
+Se eleva a regla arquitectónica el flujo `[+]` apilable. La solución
+objetivo es una pila común de contextos con retorno LIFO. Cada nivel
+restaura formulario, estado, selector, datos y posición visual. Los
+retornos específicos heredados por pantalla son deuda a migrar y no se
+eliminan hasta verificar que sus consumidores fueron reemplazados y
+probados.
+
+## Criterio de publicación Beta
+
+`PRE_BETA.md` concentra la checklist bloqueante de publicación.
+`TODO.md` continúa registrando desarrollo funcional y esta auditoría
+continúa registrando riesgos/evidencia.
+
+La auditoría de seguridad del 24/09/2026 se incorpora como fuente
+obligatoria de contraste. Sus hallazgos deben revalidarse contra el
+código actual y cumplir sus criterios de aceptación antes de marcarse
+como cerrados.
+
+Deben revalidarse: autorización de endpoints y aislamiento entre
+Empresas; exportación/eliminación; Gestión de claves; antecedente de
+SECRET_KEY; runtime/importaciones en Git; endurecimiento de importar
+Empresa; configuración de producción; contraseñas y limitación de
+intentos; permisos reales por rol; archivos privados; ciclo de vida de
+claves maestras; dependencias reproducibles/escaneo; backups,
+restauración, logs y auditoría.
+
+## JavaScript inline y limpieza
+
+Para la Beta publicada, eliminar JavaScript inline pasa a ser requisito
+de estabilización. La limpieza también retira código muerto y caminos
+descartados, pero sólo con evidencia de que no tienen consumidores.

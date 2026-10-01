@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.conf import settings
+from django.core.exceptions import ValidationError
 
 # =========================================
 # EMPRESAS
@@ -1849,6 +1850,163 @@ class CentroOperativo(models.Model):
 
         return self.nombre
 
+class AsignacionUsuarioEmpresa(models.Model):
+    """
+    Vincula un usuario con una Empresa y define su jerarquía operativa.
+
+    La asignación establece pertenencia y alcance potencial dentro de la
+    Empresa. Los permisos funcionales y los alcances específicos por
+    Centro Operativo o Caja se mantienen como conceptos separados.
+
+    El propietario de la Empresa conserva su relación estructural mediante
+    Empresa.propietario y no necesita una asignación para acreditar esa
+    propiedad.
+    """
+
+    JERARQUIA_ADMIN_GENERAL = "admin_general"
+    JERARQUIA_ADMIN_CENTRO = "admin_centro"
+    JERARQUIA_COLABORADOR = "colaborador"
+
+    JERARQUIAS = [
+        (
+            JERARQUIA_ADMIN_GENERAL,
+            "Administrador general",
+        ),
+        (
+            JERARQUIA_ADMIN_CENTRO,
+            "Administrador",
+        ),
+        (
+            JERARQUIA_COLABORADOR,
+            "Colaborador",
+        ),
+    ]
+
+    empresa = models.ForeignKey(
+        "Empresa",
+        on_delete=models.PROTECT,
+        related_name="asignaciones_usuarios",
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="asignaciones_empresas",
+    )
+    jerarquia = models.CharField(
+        max_length=20,
+        choices=JERARQUIAS,
+        default=JERARQUIA_COLABORADOR,
+    )
+    centro_operativo = models.ForeignKey(
+        "CentroOperativo",
+        on_delete=models.PROTECT,
+        related_name="asignaciones_usuarios",
+        blank=True,
+        null=True,
+    )
+    activo = models.BooleanField(   
+        default=True,
+    )
+    creado = models.DateTimeField(
+        auto_now_add=True,
+    )
+    actualizado = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "usuario",
+                ],
+                name="uniq_asignacion_usuario_empresa",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        jerarquia="admin_centro",
+                        centro_operativo__isnull=False,
+                    )
+                    | models.Q(
+                        jerarquia__in=[
+                            "admin_general",
+                            "colaborador",
+                        ],
+                        centro_operativo__isnull=True,
+                    )
+                ),
+                name="asignacion_jerarquia_centro_coherente",
+            ),
+        ]
+        ordering = [
+            "usuario__username",
+        ]
+
+    def clean(self):
+        """
+        Valida la coherencia entre Empresa, jerarquía y alcance operativo.
+
+        Un Administrador debe estar asignado a un Centro Operativo de la
+        misma Empresa. Los Administradores generales y Colaboradores no
+        quedan vinculados a un Centro mediante esta asignación.
+        """
+        super().clean()
+
+        if self.jerarquia == self.JERARQUIA_ADMIN_CENTRO:
+            if not self.centro_operativo_id:
+                raise ValidationError(
+                    {
+                        "centro_operativo": (
+                            "Un Administrador debe tener un Centro Operativo asignado."
+                        ),
+                    }
+                )
+
+            if (
+                self.empresa_id
+                and self.centro_operativo.empresa_id != self.empresa_id
+            ):
+                raise ValidationError(
+                    {
+                        "centro_operativo": (
+                            "El Centro Operativo debe pertenecer a la misma Empresa."
+                        ),
+                    }
+                )
+
+        elif self.centro_operativo_id:
+            raise ValidationError(
+                {
+                    "centro_operativo": (
+                        "Sólo un Administrador puede tener un Centro Operativo "
+                        "asignado."
+                    ),
+                }
+            )
+
+        if (
+            self.empresa_id
+            and self.usuario_id
+            and self.empresa.propietario_id == self.usuario_id
+        ):
+            raise ValidationError(
+                {
+                    "usuario": (
+                        "El Administrador fundador ya está vinculado a la Empresa "
+                        "como propietario y no debe tener una asignación adicional."
+                    ),
+                }
+            )
+
+    def __str__(self):
+        return (
+            f"{self.usuario} - "
+            f"{self.empresa} - "
+            f"{self.get_jerarquia_display()}"
+        )
+
 # =========================================
 # CAJAS
 # =========================================
@@ -1914,9 +2072,9 @@ class Caja(models.Model):
         """
         Valida que la Caja pertenezca a un Centro Operativo válido.
 
-        Una Caja solo puede existir en Centros Operativos de tipo
-        Casa Central o Sucursal, y el Centro debe pertenecer a la
-        misma Empresa que la Caja.
+        Una Caja puede existir en Centros Operativos de tipo
+        Casa Central, Sucursal o Mostrador, y el Centro debe
+        pertenecer a la misma Empresa que la Caja.
         """
         from django.core.exceptions import ValidationError
 
@@ -1929,18 +2087,21 @@ class Caja(models.Model):
         ):
             raise ValidationError({
                 "centro_operativo":
-                    "El Centro Operativo debe pertenecer a la misma empresa que la Caja."
+                    "El Centro Operativo debe pertenecer "
+                    "a la misma empresa que la Caja."
             })
 
         tipos_permitidos = {
             "Casa Central",
             "Sucursal",
+            "Mostrador",
         }
 
         if self.centro_operativo.tipo not in tipos_permitidos:
             raise ValidationError({
                 "centro_operativo":
-                    "Una Caja solo puede pertenecer a una Casa Central o Sucursal."
+                    "Una Caja solo puede pertenecer a una "
+                    "Casa Central, Sucursal o Mostrador."
             })
 
     def __str__(self):
@@ -1988,7 +2149,9 @@ class Cobranza(models.Model):
 
     total_declarado = models.DecimalField(
         max_digits=14,
-        decimal_places=2
+        decimal_places=2,
+        blank=True,
+        null=True
     )
 
     observaciones = models.TextField(
@@ -2017,7 +2180,11 @@ class Cobranza(models.Model):
 
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(total_declarado__gt=0),
+                condition=(
+                    models.Q(total_declarado__isnull=True)
+                    |
+                    models.Q(total_declarado__gt=0)
+                ),
                 name="cobranza_total_declarado_positivo"
             )
         ]

@@ -138,22 +138,38 @@ Por el momento permanecerá visible como módulo **En desarrollo**.
 
 ## 10. ABM invocado desde `[+]`
 
+La navegación contextual se implementa como una **pila de contextos**.
+No existe un límite funcional de un único salto: desde un ABM abierto
+por `[+]` puede abrirse otro `[+]` y repetirse el proceso las veces que
+el flujo requiera.
+
 ``` text
-Carga en curso
-→ [+] junto a un selector
-→ ABM correspondiente
-→ alta/edición
-→ volver al origen exacto
-→ restaurar valores ya cargados
-→ refrescar selector
-→ seleccionar registro recién creado
+Carga A
+→ [+]
+→ ABM B
+→ [+]
+→ ABM C
+→ [+]
+→ ABM D
+
+[Volver] → restaura ABM C
+[Volver] → restaura ABM B
+[Volver] → restaura Carga A
 ```
 
-No debe confundirse con abrir el mismo ABM desde el menú.
+Cada retorno es LIFO y restaura exactamente valores ya cargados, modo
+del formulario, controles visibles, selector que originó la navegación,
+listas/refrescos necesarios, registro recién creado/reactivado cuando
+corresponda y posición de scroll/ubicación visual previa.
 
-Esta regla es universal: todo selector que represente una entidad con
-ABM debe ofrecer su botón `[+]` con el mismo estilo y conservar
-exactamente este flujo contextual.
+No debe confundirse con abrir el mismo ABM desde el menú. Esta regla es
+universal y el ABM destino no debe contener lógica específica para cada
+posible pantalla llamadora.
+
+La infraestructura común debe reemplazar progresivamente los retornos
+especiales heredados (`origenABM`, `contenidoAnterior...` y
+equivalentes). No se elimina un mecanismo heredado hasta migrar y probar
+todos sus consumidores.
 
 ## 11. Pago
 

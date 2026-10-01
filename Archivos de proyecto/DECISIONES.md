@@ -43,6 +43,16 @@
 21. Si existe equivalente inactivo, se reactiva en lugar de duplicar.
 22. Baja física sólo en excepciones explícitas.
 23. El lenguaje visual debe mantenerse uniforme.
+24. La navegación contextual `[+]` es apilable: cada salto conserva su
+    propio contexto y cada retorno restaura el nivel anterior en orden
+    LIFO.
+25. Cada contexto conserva formulario, estado, origen y posición visual;
+    un alta/reactivación contextual selecciona automáticamente el
+    registro resultante al regresar.
+26. Los ABM no implementan retornos particulares para cada llamador. Se
+    adopta una infraestructura común de pila contextual y los mecanismos
+    heredados se retiran sólo después de migrar y probar sus
+    consumidores.
 
 ## 5. Comprobantes y Obligaciones
 
@@ -297,30 +307,31 @@ reutilizarse inicialmente en:
 
 ## Decisiones cerradas --- Perfil Desarrollador y seguridad de instalación
 
--   El Perfil Desarrollador pertenece a la instalación de OrdenaClick y no
-    a una Empresa.
+-   El Perfil Desarrollador pertenece a la instalación de OrdenaClick y
+    no a una Empresa.
 -   Su acceso queda reservado a superusuarios y cada operación sensible
     vuelve a validar esa condición en backend.
 -   La configuración técnica sensible global se mantiene fuera del
     repositorio, `static/`, `media/`, JavaScript y backups de Empresa.
 -   `SECRET_KEY` se resuelve primero desde `ORDENACLICK_SECRET_KEY` del
     entorno y, si no existe, desde la configuración privada de la
-    instalación. Si ninguna fuente existe, OrdenaClick no debe arrancar con
-    una clave insegura incorporada al código.
--   Una `SECRET_KEY` administrada por variable de entorno tiene prioridad y
-    no puede reemplazarse desde el Perfil Desarrollador.
--   La rotación privada de `SECRET_KEY` se genera exclusivamente en servidor,
-    nunca devuelve el secreto al navegador y requiere reiniciar Django para
-    entrar en vigencia.
+    instalación. Si ninguna fuente existe, OrdenaClick no debe arrancar
+    con una clave insegura incorporada al código.
+-   Una `SECRET_KEY` administrada por variable de entorno tiene
+    prioridad y no puede reemplazarse desde el Perfil Desarrollador.
+-   La rotación privada de `SECRET_KEY` se genera exclusivamente en
+    servidor, nunca devuelve el secreto al navegador y requiere
+    reiniciar Django para entrar en vigencia.
 -   Mientras la clave privada persistida difiera de la clave activa del
-    proceso existe un reinicio pendiente y se bloquea una segunda rotación.
--   La interfaz debe advertir que una rotación puede invalidar sesiones y
-    otros datos firmados con la clave anterior.
+    proceso existe un reinicio pendiente y se bloquea una segunda
+    rotación.
+-   La interfaz debe advertir que una rotación puede invalidar sesiones
+    y otros datos firmados con la clave anterior.
 -   Las operaciones sensibles del Perfil Desarrollador utilizan
-    autenticación, superusuario validado en backend, `POST`, CSRF y errores
-    controlados sin exposición de secretos.
--   `LOGIN_URL` apunta al login propio de OrdenaClick para que una sesión
-    ausente o invalidada no termine en `/accounts/login/`.
+    autenticación, superusuario validado en backend, `POST`, CSRF y
+    errores controlados sin exposición de secretos.
+-   `LOGIN_URL` apunta al login propio de OrdenaClick para que una
+    sesión ausente o invalidada no termine en `/accounts/login/`.
 -   Las credenciales globales de integraciones futuras, incluida ARCA,
     pertenecen a esta misma configuración de instalación y no a Empresa.
 -   La organización nueva específica por perfil comienza separando

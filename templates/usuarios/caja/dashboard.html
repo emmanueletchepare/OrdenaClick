@@ -1,0 +1,241 @@
+{% load l10n %}
+<div class="caja-modulo">
+
+    {% if resumenes %}
+
+        {% if resumenes|length > 1 %}
+
+            <div class="caja-filtro-disponibilidad">
+
+                <label for="cajaFiltroDisponibilidad">
+                    Ver Caja
+                </label>
+
+                <select
+                    id="cajaFiltroDisponibilidad"
+                    class="input-box"
+                >
+                    <option value="todas">
+                        Todas
+                    </option>
+
+                    {% for resumen in resumenes %}
+                        <option
+                            value="{{ resumen.caja.id }}"
+                            {% if forloop.first %}selected{% endif %}
+                        >
+                            {{ resumen.caja.centro_operativo.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </div>
+
+        {% endif %}
+
+
+        {% for resumen in resumenes %}
+
+            <section
+                class="caja-dashboard-seccion"
+                data-caja-resumen="{{ resumen.caja.id }}"
+                {% if resumenes|length > 1 and not forloop.first %}
+                    hidden
+                {% endif %}
+            >
+
+                <div class="caja-dashboard-titulo">
+                    <div>
+                        <h3>
+                            {{ resumen.caja.nombre }}
+                        </h3>
+
+                        <span>
+                            {{ resumen.caja.centro_operativo.nombre }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="caja-disponibilidad-grid">
+
+                    <article
+                        class="caja-disponibilidad-card caja-card-ars"
+                    >
+                        <span class="caja-disponibilidad-label">
+                            Efectivo ARS
+                        </span>
+
+                        <strong>
+                            $ <span
+                                data-caja-importe
+                                data-valor="{{ resumen.efectivo.ARS|unlocalize }}"
+                            ></span>
+                        </strong>
+                    </article>
+
+                    <article
+                        class="caja-disponibilidad-card caja-card-usd"
+                    >
+                        <span class="caja-disponibilidad-label">
+                            Efectivo USD
+                        </span>
+
+                        <strong>
+                            USD <span
+                                data-caja-importe
+                                data-valor="{{ resumen.efectivo.USD|unlocalize }}"
+                            ></span>
+                        </strong>
+                    </article>
+
+                    <article
+                        class="caja-disponibilidad-card caja-card-cheques"
+                    >
+                        <span class="caja-disponibilidad-label">
+                            Cheques físicos
+                        </span>
+
+                        <strong>
+                            $ <span
+                                data-caja-importe
+                                data-valor="{{ resumen.total_cheques|unlocalize }}"
+                            ></span>
+                        </strong>
+
+                        <small>
+                            {{ resumen.cheques|length }}
+                            valor{{ resumen.cheques|length|pluralize:"es" }}
+                            disponible{{ resumen.cheques|length|pluralize:"s" }}
+                        </small>
+                    </article>
+
+                </div>
+
+            </section>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-state">
+            No hay Cajas activas configuradas para esta Empresa.
+        </div>
+
+    {% endif %}
+
+
+    <section class="caja-dashboard-seccion">
+
+        <div class="caja-dashboard-titulo">
+            <div>
+                <h3>Otras disponibilidades</h3>
+            </div>
+        </div>
+
+        <div class="caja-disponibilidad-grid">
+
+            <article
+                class="caja-disponibilidad-card caja-card-echeq"
+            >
+                <span class="caja-disponibilidad-label">
+                    e-Cheqs en cartera
+                </span>
+
+                <strong>—</strong>
+
+                <small>
+                    Disponibilidad electrónica pendiente de integrar
+                </small>
+            </article>
+
+            <article
+                class="caja-disponibilidad-card caja-card-bancos"
+            >
+                <span class="caja-disponibilidad-label">
+                    Bancos
+                </span>
+
+                <strong>—</strong>
+
+                <small>
+                    Disponible informado pendiente de integrar
+                </small>
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <section class="caja-dashboard-seccion">
+
+        <div class="caja-dashboard-titulo">
+            <div>
+                <h3>Accesos rápidos</h3>
+            </div>
+        </div>
+
+        <div class="caja-accesos-rapidos">
+
+            <button
+                type="button"
+                class="sidebar-nav-btn"
+                data-caja-accion="registrar-cobranza"
+            >
+                Registrar cobranza
+            </button>
+
+            <button
+                type="button"
+                class="sidebar-nav-btn"
+                data-caja-accion="registrar-pago"
+                disabled
+            >
+                Registrar pago
+            </button>
+
+            <button
+                type="button"
+                class="sidebar-nav-btn"
+                data-caja-accion="orden-pago"
+                disabled
+            >
+                Orden de pago
+            </button>
+
+            <button
+                type="button"
+                class="sidebar-nav-btn"
+                data-caja-accion="actualizar-bancos"
+                disabled
+            >
+                Actualizar Bancos
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section class="caja-dashboard-seccion">
+
+        <div class="caja-dashboard-titulo">
+            <div>
+                <h3>Movimientos del día</h3>
+
+                <span>
+                    Actividad financiera de hoy
+                </span>
+            </div>
+        </div>
+
+        <div class="caja-movimientos-dia">
+            <div class="empty-state">
+                La integración del historial financiero se incorporará
+                en el siguiente bloque.
+            </div>
+        </div>
+
+    </section>
+
+</div>

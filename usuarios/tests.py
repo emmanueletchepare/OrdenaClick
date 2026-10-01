@@ -3821,17 +3821,18 @@ class CobranzaCajaTests(TestCase):
             },
             "cheques": [
                 {
-                    "numero": "CHEQUE-PRUEBA-001",
+                    "numero": "1698",
                     "importe": importe_cheque,
                     "banco_id": banco.id,
                     "cliente_id": cliente_id,
                     "tipo_cheque": "Diferido",
+                    "fecha_emision": "2026-09-23",
                     "fecha_acreditacion": "2026-09-30",
                     "fecha_vencimiento": "2026-10-30",
                     "quien_entrega": "Cliente prueba",
                 }
             ],
-        }
+                    }
 
     def test_crea_cobranza_efectivo_y_cheque_atomicos(self):
         """
@@ -3890,6 +3891,11 @@ class CobranzaCajaTests(TestCase):
 
         cheque = Cheque.objects.get(
             cobranza=cobranza
+        )
+
+        self.assertEqual(
+            cheque.numero,
+            "00001698",
         )
 
         self.assertEqual(

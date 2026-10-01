@@ -42,6 +42,61 @@ def obtener_empresa_autorizada(
         "No tiene permisos para operar sobre esta Empresa."
     )
 
+def obtener_caja_autorizada(
+    usuario,
+    empresa_id,
+    caja_id,
+):
+    """
+    Devuelve una Caja operativa únicamente cuando el usuario puede operar
+    sobre su Empresa y la Caja pertenece a esa misma Empresa.
+
+    La autorización de usuario se resuelve primero mediante
+    obtener_empresa_autorizada(). Además, la Caja debe estar activa,
+    pertenecer a un Centro Operativo activo y dicho Centro debe ser una
+    Casa Casa Central, Sucursal o Mostrador.
+
+    Esta función constituye el punto común de autorización para las
+    operaciones financieras sobre Caja. Los futuros alcances explícitos
+    por Centro Operativo o Caja deberán incorporarse aquí, sin delegar
+    esa decisión al navegador.
+    """
+    from usuarios.models import Caja
+
+    empresa = obtener_empresa_autorizada(
+        usuario,
+        empresa_id,
+    )
+
+    try:
+        caja = (
+            Caja.objects
+            .select_related(
+                "centro_operativo",
+            )
+            .get(
+                id=caja_id,
+                empresa=empresa,
+                activo=True,
+                centro_operativo__activo=True,
+                centro_operativo__tipo__in=[
+                    "Casa Central",
+                    "Sucursal",
+                    "Mostrador",
+                ],
+            )
+        )
+    except (
+        Caja.DoesNotExist,
+        TypeError,
+        ValueError,
+    ) as error:
+        raise PermissionDenied(
+            "No tiene autorización para operar sobre esta Caja."
+        ) from error
+
+    return empresa, caja
+
 def empresas_autorizadas(usuario):
     """
     Devuelve las Empresas que el usuario puede consultar.

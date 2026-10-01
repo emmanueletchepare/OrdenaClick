@@ -1,0 +1,827 @@
+.caja-modulo {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.caja-encabezado {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.caja-etiqueta {
+    margin-bottom: 6px;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em;
+}
+
+.caja-encabezado h2 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.caja-encabezado p {
+    max-width: 760px;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.cobranza-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.cobranza-card {
+    padding: 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+
+/* Total declarado:
+   dato informado manualmente por el usuario. */
+
+.cobranza-resumen-grid > .cobranza-card:first-child {
+    border-color: rgba(245, 158, 11, 0.42);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(133, 84, 17, 0.18),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.cobranza-resumen-grid > .cobranza-card:first-child
+.cobranza-card-titulo,
+.cobranza-resumen-grid > .cobranza-card:first-child
+.label {
+    color: #f6b94a;
+}
+
+.cobranza-card-titulo {
+    margin-bottom: 18px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.cobranza-card-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.cobranza-card-ayuda {
+    margin-top: -10px;
+    margin-bottom: 18px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.cobranza-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.cobranza-resumen-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 18px;
+}
+
+.cobranza-grid-efectivo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cobranza-importe {
+    font-variant-numeric: tabular-nums;
+}
+
+.caja-btn-secundario {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.caja-btn-secundario:hover {
+    border-color: var(--primary);
+}
+
+.cobranza-vacio {
+    padding: 24px;
+    border: 1px dashed var(--border-2);
+    border-radius: 14px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.cobranza-conciliacion {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cobranza-conciliacion-item {
+    min-width: 0;
+    padding: 16px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-2);
+    border-radius: 14px;
+    box-sizing: border-box;
+}
+
+.cobranza-conciliacion-item span,
+.cobranza-conciliacion-item strong {
+    display: block;
+}
+
+.cobranza-conciliacion-item span {
+    margin-bottom: 7px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.cobranza-conciliacion-item strong {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Total declarado: dato informado manualmente por el usuario. */
+.cobranza-conciliacion-item:first-child {
+    border-color: rgba(245, 158, 11, 0.42);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(133, 84, 17, 0.18),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.cobranza-conciliacion-item:first-child span,
+.cobranza-conciliacion-item:first-child strong {
+    color: #f6b94a;
+}
+
+/* Diferencia: control de conciliación. */
+.cobranza-conciliacion-diferencia {
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease;
+}
+
+.cobranza-conciliacion-diferencia.es-cero {
+    border-color: rgba(38, 190, 156, 0.55);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15, 91, 77, 0.20),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.cobranza-conciliacion-diferencia.es-cero span,
+.cobranza-conciliacion-diferencia.es-cero strong {
+    color: #45dfbd;
+}
+
+.cobranza-conciliacion-diferencia.tiene-diferencia {
+    border-color: rgba(248, 113, 113, 0.58);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(127, 29, 29, 0.20),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.cobranza-conciliacion-diferencia.tiene-diferencia span,
+.cobranza-conciliacion-diferencia.tiene-diferencia strong {
+    color: #f87171;
+}
+
+.cobranza-aclaracion {
+    grid-column: 1 / -1;
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.cobranza-cheque-formulario {
+    margin-top: 14px;
+    padding: 18px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-2);
+    border-radius: 16px;
+}
+
+.cobranza-cheque-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+
+.cobranza-cheque-grid .field {
+    min-width: 0;
+}
+
+.cobranza-cheque-grid .input-box {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cobranza-cheque-espacio {
+    min-height: 1px;
+}
+
+.cobranza-cheque-accion {
+    display: flex;
+    align-items: end;
+}
+
+.cobranza-cheque-accion .guardar {
+    width: 100%;
+    min-height: 50px;
+}
+
+.cobranza-cancelar-edicion-cheque {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.caja-selector-con-alta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.caja-btn-alta-contextual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+    min-height: 42px;
+
+    padding: 0;
+
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+
+    background: var(--panel-2);
+    color: var(--primary);
+
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.caja-btn-alta-contextual:hover {
+    border-color: var(--primary);
+}
+
+
+/* Listado de cheques: mismo lenguaje tabular
+   utilizado por los listados financieros. */
+
+.cobranza-listado-cheques {
+    margin-top: 14px;
+    overflow-x: auto;
+
+    border: 1px solid var(--border-2);
+    border-radius: 14px;
+
+    background: var(--panel-2);
+}
+
+.cobranza-cheques-tabla {
+    min-width: 980px;
+}
+
+.cobranza-cheques-cabecera,
+.cobranza-cheques-fila {
+    display: grid;
+
+    grid-template-columns:
+        minmax(150px, 1.4fr)
+        minmax(130px, 1.2fr)
+        minmax(105px, .9fr)
+        minmax(80px, .75fr)
+        minmax(100px, .9fr)
+        minmax(110px, 1fr)
+        minmax(110px, 1fr)
+        88px;
+
+    align-items: center;
+}
+
+.cobranza-cheques-cabecera {
+    min-height: 44px;
+
+    border-bottom: 1px solid var(--border-2);
+
+    color: #9fb7d8;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.cobranza-cheques-cabecera > div,
+.cobranza-cheques-fila > div {
+    min-width: 0;
+    padding: 10px 12px;
+}
+
+.cobranza-cheques-fila {
+    min-height: 52px;
+
+    border-bottom: 1px solid var(--border-2);
+
+    color: var(--text);
+
+    font-size: 13px;
+}
+
+.cobranza-cheques-fila:last-child {
+    border-bottom: 0;
+}
+
+.cobranza-cheques-fila:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.cobranza-cheque-numero-listado,
+.cobranza-cheque-importe-listado {
+    font-variant-numeric: tabular-nums;
+}
+
+.cobranza-cheque-importe-listado {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cobranza-cheques-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.cobranza-cheque-btn-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+
+    background: var(--panel);
+    color: #9fb7d8;
+
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.cobranza-cheque-btn-icono:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+
+/* Acciones finales */
+
+.cobranza-acciones-finales {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 4fr)
+        minmax(140px, 1fr);
+
+    gap: 12px;
+
+    width: 100%;
+}
+
+.cobranza-acciones-finales > button {
+    width: 100%;
+    height: 52px;
+    min-height: 52px;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+@media (max-width: 1000px) {
+    .cobranza-grid,
+    .cobranza-resumen-grid,
+    .cobranza-grid-efectivo,
+    .cobranza-cheque-grid,
+    .cobranza-conciliacion {
+        grid-template-columns: 1fr;
+    }
+
+    .cobranza-acciones-finales {
+        grid-template-columns: 1fr;
+    }
+
+    .cobranza-card-cabecera {
+        flex-direction: column;
+    }
+
+    .cobranza-cheque-fila {
+        grid-template-columns: 1fr;
+    }
+
+    .cobranza-cheque-fila-acciones {
+        justify-content: flex-start;
+    }
+}
+
+/* =========================================
+   FILTRO DE CAJAS
+========================================= */
+
+.caja-filtro-disponibilidad {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.caja-filtro-disponibilidad label {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.caja-filtro-disponibilidad select {
+    width: min(320px, 100%);
+}
+
+/* =========================================
+   DASHBOARD DE CAJA
+========================================= */
+
+.caja-dashboard-seccion {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.caja-dashboard-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    margin-bottom: 12px;
+}
+
+.caja-dashboard-titulo h3 {
+    margin: 0;
+
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.caja-dashboard-titulo span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* =========================================
+   DISPONIBILIDAD
+========================================= */
+
+.caja-disponibilidad-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+.caja-disponibilidad-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 128px;
+
+    padding: 18px 20px;
+
+    border: 1px solid #2b3447;
+    border-radius: 14px;
+
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(23, 29, 41, 0.88),
+            rgba(23, 29, 41, 0.62)
+        );
+}
+
+.caja-disponibilidad-label {
+    margin-bottom: 10px;
+
+    color: #98a2b3;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.caja-disponibilidad-card strong {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #f3f4f6;
+
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.caja-disponibilidad-card small {
+    color: #98a2b3;
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+
+/* ARS */
+
+.caja-card-ars {
+    border-color:
+        rgba(38, 190, 156, 0.48);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15, 91, 77, 0.20),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.caja-card-ars
+.caja-disponibilidad-label,
+.caja-card-ars strong {
+    color: #45dfbd;
+}
+
+
+/* USD */
+
+.caja-card-usd {
+    border-color:
+        rgba(59, 130, 246, 0.46);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(30, 73, 130, 0.20),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.caja-card-usd
+.caja-disponibilidad-label,
+.caja-card-usd strong {
+    color: #67b7ff;
+}
+
+
+/* CHEQUES FÍSICOS */
+
+.caja-card-cheques {
+    border-color:
+        rgba(168, 139, 250, 0.44);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(91, 68, 145, 0.19),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.caja-card-cheques
+.caja-disponibilidad-label,
+.caja-card-cheques strong {
+    color: #b9a2ff;
+}
+
+
+/* e-CHEQS */
+
+.caja-card-echeq {
+    border-color:
+        rgba(245, 158, 11, 0.42);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(133, 84, 17, 0.18),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.caja-card-echeq
+.caja-disponibilidad-label,
+.caja-card-echeq strong {
+    color: #f6b94a;
+}
+
+
+/* BANCOS */
+
+.caja-card-bancos {
+    border-color:
+        rgba(56, 189, 248, 0.42);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(25, 94, 122, 0.18),
+            rgba(23, 29, 41, 0.32)
+        );
+}
+
+.caja-card-bancos
+.caja-disponibilidad-label,
+.caja-card-bancos strong {
+    color: #67d4f7;
+}
+
+
+/* =========================================
+   ACCESOS RÁPIDOS
+========================================= */
+
+.caja-accesos-rapidos {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 12px;
+
+    width: 100%;
+}
+
+.caja-accesos-rapidos
+.sidebar-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 48px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #2b3447;
+    border-radius: 12px;
+
+    background: #171d29;
+    color: #dbe5f4;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.caja-accesos-rapidos
+.sidebar-nav-btn:hover:not(:disabled) {
+    background: #202a3b;
+    border-color: #3b4a63;
+
+    transform: translateY(-1px);
+}
+
+.caja-accesos-rapidos
+.sidebar-nav-btn:disabled {
+    opacity: 0.42;
+    cursor: default;
+}
+
+
+/* =========================================
+   MOVIMIENTOS DEL DÍA
+========================================= */
+
+.caja-movimientos-dia {
+    width: 100%;
+
+    min-height: 150px;
+
+    padding: 18px;
+
+    background: #171d29;
+
+    border: 1px solid #2b3447;
+    border-radius: 14px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   NAVEGACIÓN INTERNA DE CAJA
+========================================= */
+
+.caja-navegacion-interna {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+
+/* =========================================
+   RESPONSIVE DASHBOARD
+========================================= */
+
+@media (max-width: 1000px) {
+
+    .caja-disponibilidad-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .caja-accesos-rapidos {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .caja-disponibilidad-grid,
+    .caja-accesos-rapidos {
+        grid-template-columns: 1fr;
+    }
+
+    .caja-disponibilidad-card {
+        min-height: 112px;
+    }
+
+    .caja-disponibilidad-card strong {
+        font-size: 21px;
+    }
+
+    .caja-encabezado {
+        flex-direction: column;
+    }
+
+    .caja-navegacion-interna {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

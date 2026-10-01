@@ -730,6 +730,11 @@ body{
     href="{% static 'css/llamador_alertas.css' %}?v=1"
 >
 
+<link
+    rel="stylesheet"
+    href="{% static 'css/caja.css' %}?v=10"
+>
+
 </head>
 
 <body>
@@ -926,6 +931,34 @@ Registros
 
 </button>
 
+<button
+    id="btnSidebarCaja"
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+>
+
+    <span class="sidebar-nav-icon">
+
+        <svg viewBox="0 0 24 24">
+            <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+            ></rect>
+            <path d="M3 10h18"></path>
+            <path d="M7 15h4"></path>
+        </svg>
+
+    </span>
+
+    <span class="sidebar-nav-text">
+        Caja
+    </span>
+
+</button>
 
 <button
     class="sidebar-nav-btn"
@@ -19779,7 +19812,9 @@ Sí
 
 <script src="{% static 'js/llamador_alertas.js' %}?v=2"></script>
 
-<script src="{% static 'js/clientes.js' %}?v=5"></script>
+<script src="{% static 'js/caja.js' %}?v=9"></script>
+
+<script src="{% static 'js/clientes.js' %}?v=6"></script>
 
 </body>
 </html>
