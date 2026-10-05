@@ -87,6 +87,18 @@ trazabilidad y despliegue seguro.
 -   **Desarrollador:** entorno interno y aislado; no debe mezclarse con
     información ni permisos de clientes.
 
+### Usuarios de plataforma y relaciones con Empresas
+
+-   [x] La cuenta de usuario pertenece a OrdenaClick, no a una Empresa.
+-   [x] Un usuario puede existir sin crear ni integrar ninguna Empresa.
+-   [x] Un mismo usuario puede relacionarse con múltiples Empresas y asumir funciones distintas en cada una.
+-   [x] La jerarquía administrativa/operativa y los roles profesionales son dimensiones separadas: un usuario puede, por ejemplo, ser Colaborador y Contable en la misma Empresa.
+-   [x] Los perfiles visibles de plataforma son Administrador, Colaborador, Contable, Legal y Relaciones; Desarrollador es un perfil global reservado a superusuario.
+-   [x] Relaciones concentra solicitudes recibidas, vínculos vigentes y, a futuro, disponibilidad, postulaciones, contratación y reputación.
+-   [x] Colaboradores, Contables y Legales podrán ser internos o externos. Su origen contractual no concede permisos: el acceso nace de una relación aceptada y autorizada con una Empresa.
+-   [x] A futuro, usuarios sin Empresa podrán declararse disponibles y postularse o ser encontrados por Empresas que busquen Colaboradores/Contables/Legales.
+-   [x] Ranking, contratación, tiempo de actividad y pagos pertenecen a una capa futura de marketplace y no sustituyen la autorización por Empresa.
+
 ## 7. Principios de producto
 
 -   Conservar historia.

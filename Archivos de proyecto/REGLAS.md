@@ -154,7 +154,7 @@ modelo a que una pantalla esté visible en un plan.
 Cada modelo nuevo/modificado relacionado con Empresa debe responder: 1.
 ¿Se exporta? 2. ¿Se importa? 3. ¿Tiene archivos? 4. ¿Qué relaciones se
 reconstruyen? 5. ¿Contiene información sensible? 6. ¿Se conservan
-inactivos? 7. ¿Afecta compatibilidad con backups anteriores?
+inactivos? 7. ¿Afecta la versión o compatibilidad del formato de backup desde v1 en adelante?
 
 ## 8. Checklist para funcionalidad nueva
 

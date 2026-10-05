@@ -149,6 +149,30 @@
     exportación/importación.
 51. El formato de backup debe estar versionado.
 
+Decisiones cerradas para el primer formato estable:
+
+-   El nuevo subsistema comienza directamente en **Backup Empresa v1**; no se
+    soportarán ZIP legacy generados durante esta etapa de desarrollo previa a
+    Beta.
+-   Importar Empresa será un proceso guiado de restauración y puesta en marcha,
+    no una restauración ciega.
+-   El backup conserva historia, pero los datos operativos que puedan haber
+    cambiado se confirman o ajustan durante el flujo de importación.
+-   Los usuarios históricos no se eliminan por una importación. Se conserva su
+    trazabilidad y se decide explícitamente quién continúa activo, quién queda
+    inactivo y qué jerarquía vigente corresponde.
+-   Los privilegios escritos en el ZIP son información histórica/de origen; no
+    otorgan autorización automáticamente en destino.
+-   El propietario de la Empresa restaurada no lo decide el backup.
+-   Si ya existe una Empresa con el mismo CUIT, no se elimina antes de validar
+    y planificar la restauración. La operación debe evitar estados parciales y
+    permitir rollback ante fallas críticas.
+-   La futura precarga de datos estándar de inicio es independiente del backup
+    empresarial.
+-   Queda como dirección futura evaluar un wizard similar para el alta inicial
+    de Empresa, de modo que el usuario avance por pasos sin necesitar conocer
+    de antemano toda la configuración requerida.
+
 ## 8. Arquitectura de código
 
 52. No JavaScript inline nuevo.
@@ -161,6 +185,23 @@
     seguridad/integridad.
 58. Funciones relevantes deben tener docstrings y comentarios
     importantes no se eliminan sin entenderlos.
+
+## 9. Usuarios, relaciones y roles multiempresa
+
+59. La cuenta de usuario pertenece a OrdenaClick y puede existir sin Empresa.
+60. Crear una Empresa convierte a ese usuario en fundador mediante `Empresa.propietario`; no se crea una asignación jerárquica duplicada para acreditar propiedad.
+61. Un usuario puede vincularse con múltiples Empresas y tener roles distintos en cada una.
+62. La jerarquía administrativa/operativa actual sigue siendo excluyente por Empresa: Administrador general, Administrador de Centro o Colaborador.
+63. Contable y Legal son roles funcionales acumulables y pueden coexistir con una jerarquía; por ejemplo, Colaborador + Contable en la misma Empresa.
+64. Administradores, Colaboradores, Contables y Legales se designan mediante solicitudes dirigidas a usuarios existentes.
+65. Una solicitud pendiente no concede acceso. La relación nace únicamente cuando el destinatario la acepta.
+66. El usuario resuelve solicitudes desde el perfil Relaciones.
+67. Fundador y Administrador general pueden enviar solicitudes de relación para la Empresa; Administrador de Centro y Colaborador no obtienen esa capacidad por defecto.
+68. El perfil Relaciones pertenece al usuario, no a una Empresa, y concentra solicitudes y vínculos.
+69. Colaborador/Contable/Legal pueden ser internos o externos; esa condición no define permisos.
+70. El futuro marketplace de disponibilidad, postulaciones, búsqueda, ranking, contratación, actividad y pagos estará separado del sistema de autorización.
+71. Desarrollador sigue siendo un perfil global de instalación reservado a superusuario.
+72. Las solicitudes pendientes son estado transitorio de la instalación y no forman parte del Backup Empresa ordinario; las relaciones activas sí deben tener política de export/import.
 
 ## 9. Futuro preservado
 

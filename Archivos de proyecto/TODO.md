@@ -157,7 +157,23 @@ La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
 -   [ ] Perfil Contable.
 -   [ ] Perfil Legal.
 -   [ ] Conciliaciones bancarias/tarjetas.
--   [ ] Configuración guiada inicial de Empresa.
+-   [ ] Configuración guiada inicial de Empresa mediante wizard por etapas (futuro).
+
+### Relaciones y marketplace de perfiles
+
+-   [x] Cuenta de usuario global separada de Empresa.
+-   [x] Perfil Relaciones incorporado como punto de solicitudes/vínculos.
+-   [x] Modelo de solicitudes de relación con aceptación/rechazo explícitos.
+-   [x] Rol funcional Contable acumulable con jerarquía.
+-   [x] Rol funcional Legal acumulable con jerarquía.
+-   [x] Solicitudes de Administrador general / Administrador / Colaborador / Contable / Legal dirigidas a usuarios existentes.
+-   [ ] Diseñar disponibilidad para contratación como Colaborador/Contable/Legal.
+-   [ ] Diseñar búsqueda de perfiles disponibles por Empresas.
+-   [ ] Diseñar postulaciones de usuarios hacia Empresas que publiquen necesidades.
+-   [ ] Diseñar ranking/reputación basado sólo en relaciones/trabajos reales.
+-   [ ] Diseñar contratación, registro de actividad/tiempo y liquidación/pagos sin mezclarlo con autorización.
+-   [ ] Definir origen interno/externo del vínculo cuando se implemente la capa contractual.
+-   [ ] Definir capacidades concretas de Contable y Legal por módulo.
 
 ## 4. FUNCIONES FUTURAS YA DEFINIDAS
 
@@ -181,14 +197,26 @@ La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
 
 ## 5. EXPORTAR / IMPORTAR EMPRESA
 
--   [ ] Mantener cobertura completa a medida que aparecen modelos.
--   [ ] Versionar formato.
--   [ ] Mapear IDs al importar.
--   [ ] Incluir inactivos e históricos.
+-   [ ] Inventariar todas las entidades, archivos y dependencias del entorno
+    Empresa antes de implementar el formato definitivo.
+-   [ ] Definir y documentar Backup Empresa v1 + `manifest`.
+-   [x] No mantener compatibilidad con ZIP legacy previos a v1 durante esta
+    etapa de desarrollo sin clientes productivos.
+-   [ ] Mapear identidades portables al importar; no confiar en PK físicas.
+-   [ ] Incluir inactivos e históricos según contrato.
 -   [ ] Incluir archivos.
 -   [ ] Resolver traslado seguro de información cifrada sin exportar la
     clave maestra.
--   [ ] Compatibilidad con backups anteriores.
+-   [ ] Diseñar wizard de importación para confirmar/actualizar datos vigentes
+    antes de restaurar.
+-   [ ] Separar identidad histórica de autorización actual de usuarios.
+-   [ ] Permitir decidir usuarios activos/inactivos y jerarquías vigentes sin
+    que el ZIP otorgue privilegios automáticamente.
+-   [ ] Si el CUIT ya existe, restaurar de forma controlada sin borrar primero
+    la Empresa válida.
+-   [ ] Plan de restauración + resumen + confirmación antes de persistir.
+-   [ ] Atomicidad/rollback ante fallas intermedias.
+-   [ ] Mantener futura precarga de datos estándar separada de Backup/Restore.
 
 ## 6. DECISIONES PENDIENTES
 
@@ -393,8 +421,7 @@ La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
 
 ### 7. Jerarquía y permisos
 
--   [ ] Jerarquía: **Administrador general de la empresa / Administrador
-    de sucursal / Colaborador en general**.
+-   [x] Jerarquía administrativa: **Administrador general / Administrador de Centro / Colaborador**; Contable y Legal son roles funcionales separados y acumulables.
 -   [ ] La jerarquía define alcance máximo; los permisos definen
     acciones dentro del alcance.
 -   [ ] Administrador general: alcance Empresa y vista consolidada.
@@ -403,8 +430,7 @@ La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
 -   [ ] Colaborador: acciones sólo por permisos funcionales explícitos.
 -   [ ] Un colaborador administrativo no necesita ver saldos globales.
 -   [ ] No confiar en botones ocultos para autorización.
--   [ ] No rigidizar `Usuario = Centro`; permitir ampliar alcance en el
-    futuro.
+-   [x] No rigidizar `Usuario = Centro`; el usuario es global de plataforma y sus relaciones con Empresas/Centros son independientes.
 
 ### 8. Seguridad, integridad y servidor
 
@@ -449,3 +475,18 @@ La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
 -   [ ] Regla de cobranza con diferencia.
 -   [ ] Filtros de OP pendientes y Gestión Administrativa.
 -   [ ] Una Caja por Centro en Beta vs. múltiples Cajas futuras.
+
+### Backup Empresa v1 — implementación en validación (04/10/2026)
+
+- [x] Contrato v1 con manifest versionado.
+- [x] Exportador dedicado fuera de `views.py`.
+- [x] Inspector de ZIP con límites, hashes y validación estructural.
+- [x] Restaurador por mapas de identidades portables y transacción.
+- [x] Wizard guiado de importación.
+- [x] Usuarios históricos separados de privilegios actuales.
+- [x] Gestión de Claves excluye el secreto cifrado del backup.
+- [x] Tests específicos de Backup v1 agregados.
+- [ ] Verificación completa en entorno local de Emanuel.
+- [ ] Prueba manual del wizard y revisión estética.
+- [ ] Commit selectivo del bloque.
+- [ ] Retomar integración completa de jerarquías en autorización Empresa/Centro/Caja.

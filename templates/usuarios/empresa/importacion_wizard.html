@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Empresa | OrdenaClick</title>
+    <link rel="stylesheet" href="{% static 'css/empresa/importacion_wizard.css' %}?v=3">
+</head>
+<body>
+<main class="wizard-shell">
+    <header class="wizard-header">
+        <div>
+            <p class="eyebrow">Backup Empresa v1</p>
+            <h1>Importar <span>Empresa</span></h1>
+            <p class="subtitle">Revisá la información antes de restaurarla. El backup nunca concede permisos por sí solo.</p>
+        </div>
+        <form method="post" action="{% url 'cancelar_importacion_empresa' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary">Cancelar</button>
+        </form>
+    </header>
+
+    <nav class="steps" aria-label="Pasos de importación">
+        <a href="{% url 'importar_empresa_wizard' 'empresa' %}" class="step {% if paso == 'empresa' %}active{% endif %}"><span>1</span> Empresa</a>
+        <a href="{% url 'importar_empresa_wizard' 'usuarios' %}" class="step {% if paso == 'usuarios' %}active{% endif %}"><span>2</span> Usuarios</a>
+        <a href="{% url 'importar_empresa_wizard' 'resumen' %}" class="step {% if paso == 'resumen' %}active{% endif %}"><span>3</span> Resumen</a>
+    </nav>
+
+    {% if messages %}
+        <section class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if paso == 'empresa' %}
+    <section class="card">
+        <div class="card-title-row">
+            <div>
+                <p class="section-kicker">Paso 1</p>
+                <h2>Confirmar datos actuales</h2>
+            </div>
+            {% if inspection.empresa_existente_id %}<span class="badge warning">CUIT existente · restauración controlada</span>{% else %}<span class="badge">Nueva Empresa</span>{% endif %}
+        </div>
+        <p class="helper">Estos datos parten del backup, pero podés actualizarlos porque describen la realidad actual de la Empresa.</p>
+
+        <form method="post" enctype="multipart/form-data" class="wizard-form">
+            {% csrf_token %}
+            <div class="grid two">
+                <label>Razón social<input name="razon_social" required value="{{ empresa.razon_social|default:'' }}"></label>
+                <label>Nombre de fantasía<input name="nombre_fantasia" value="{{ empresa.nombre_fantasia|default:'' }}"></label>
+                <label>Condición fiscal
+                    <select name="condicion_fiscal">
+                        <option value="">Sin definir</option>
+                        <option value="Responsable inscripto" {% if empresa.condicion_fiscal == 'Responsable inscripto' %}selected{% endif %}>Responsable inscripto</option>
+                        <option value="Monotributo" {% if empresa.condicion_fiscal == 'Monotributo' %}selected{% endif %}>Monotributo</option>
+                        <option value="Exento" {% if empresa.condicion_fiscal == 'Exento' %}selected{% endif %}>Exento</option>
+                        <option value="Consumidor final" {% if empresa.condicion_fiscal == 'Consumidor final' %}selected{% endif %}>Consumidor final</option>
+                    </select>
+                </label>
+                <label>CUIT<input name="cuit" value="{{ empresa.cuit|default:'' }}"></label>
+                <label>Inicio de actividades<input type="date" name="inicio_actividades" value="{{ empresa.inicio_actividades|default:'' }}"></label>
+                <label>Inicio contable<input type="date" name="inicio_contable" value="{{ empresa.inicio_contable|default:'' }}"></label>
+                <label>Dirección fiscal<input name="direccion_fiscal" value="{{ empresa.direccion_fiscal|default:'' }}"></label>
+                <label>Dirección real<input name="direccion_real" value="{{ empresa.direccion_real|default:'' }}"></label>
+                <label>Teléfono 1<input name="telefono1" value="{{ empresa.telefono1|default:'' }}"></label>
+                <label>Teléfono 2<input name="telefono2" value="{{ empresa.telefono2|default:'' }}"></label>
+                <label>Email<input type="email" name="email" value="{{ empresa.email|default:'' }}"></label>
+                <label>Presidente<input name="presidente" value="{{ empresa.presidente|default:'' }}"></label>
+                <label>Vicepresidente<input name="vicepresidente" value="{{ empresa.vicepresidente|default:'' }}"></label>
+            </div>
+
+            <div class="documents">
+                <div class="card-title-row compact"><div><p class="section-kicker">Documentación</p><h3>Actualizar sólo si corresponde</h3></div></div>
+                <p class="helper">Si no elegís un archivo nuevo, se conserva el documento incluido en el backup.</p>
+                <div class="grid three">
+                    <div class="file-field">
+                        <label class="file-field-label" for="archivo-estatuto">Estatuto</label>
+                        <label class="file-btn" for="archivo-estatuto"><span id="texto-estatuto-wizard">📄 Adjuntar archivo</span><input type="file" id="archivo-estatuto" name="estatuto" hidden data-file-label="texto-estatuto-wizard"></label>
+                        {% if documentos_reemplazados.estatuto %}<small>Nuevo: {{ documentos_reemplazados.estatuto }}</small>{% endif %}
+                    </div>
+                    <div class="file-field">
+                        <label class="file-field-label" for="archivo-acta">Acta</label>
+                        <label class="file-btn" for="archivo-acta"><span id="texto-acta-wizard">📄 Adjuntar archivo</span><input type="file" id="archivo-acta" name="acta" hidden data-file-label="texto-acta-wizard"></label>
+                        {% if documentos_reemplazados.acta %}<small>Nueva: {{ documentos_reemplazados.acta }}</small>{% endif %}
+                    </div>
+                    <div class="file-field">
+                        <label class="file-field-label" for="archivo-designacion">Designación</label>
+                        <label class="file-btn" for="archivo-designacion"><span id="texto-designacion-wizard">📄 Adjuntar archivo</span><input type="file" id="archivo-designacion" name="designacion" hidden data-file-label="texto-designacion-wizard"></label>
+                        {% if documentos_reemplazados.designacion %}<small>Nueva: {{ documentos_reemplazados.designacion }}</small>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions"><span></span><button type="submit" class="btn btn-primary">Continuar con usuarios</button></div>
+        </form>
+    </section>
+    {% endif %}
+
+    {% if paso == 'usuarios' %}
+    <section class="card">
+        <div class="card-title-row">
+            <div><p class="section-kicker">Paso 2</p><h2>Usuarios y jerarquías actuales</h2></div>
+            <span class="badge">La historia no se elimina</span>
+        </div>
+        <p class="helper">Las identidades históricas se restauran siempre. Sólo se crea una asignación activa cuando existe una cuenta coincidente en esta instalación y la confirmás expresamente.</p>
+        <form method="post" class="wizard-form" id="form-usuarios-importacion">
+            {% csrf_token %}
+            <div class="user-list">
+                {% for item in usuarios %}
+                <article class="user-row" data-user-row>
+                    <div class="user-identity">
+                        <strong>{{ item.username|default:item.email|default:'Usuario histórico' }}</strong>
+                        <span>{{ item.email|default:'Sin email' }}</span>
+                        {% if item.candidate %}<small>Cuenta encontrada: {{ item.candidate.username }}</small>{% else %}<small class="warning-text">Sin cuenta coincidente: queda sólo como identidad histórica.</small>{% endif %}
+                    </div>
+                    {% if item.is_owner %}
+                        <div class="owner-pill">Propietario actual · acceso total</div>
+                    {% else %}
+                        <label class="toggle-label">
+                            <input type="checkbox" name="usuario_{{ item.actor_id }}_activo" value="1" {% if item.selected_active and item.candidate %}checked{% endif %} {% if not item.candidate %}disabled{% endif %} data-active-toggle>
+                            <span>Activo</span>
+                        </label>
+                        <label>Jerarquía
+                            <select name="usuario_{{ item.actor_id }}_jerarquia" data-role-select {% if not item.candidate %}disabled{% endif %}>
+                                {% for value,label in roles %}<option value="{{ value }}" {% if item.selected_role == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                            </select>
+                        </label>
+                        <label class="center-field">Centro Operativo
+                            <select name="usuario_{{ item.actor_id }}_centro" data-center-select {% if not item.candidate %}disabled{% endif %}>
+                                <option value="">Seleccionar...</option>
+                                {% for centro in centros %}<option value="{{ centro.backup_id }}" {% if item.selected_center == centro.backup_id %}selected{% endif %}>{{ centro.nombre }} · {{ centro.tipo }}</option>{% endfor %}
+                            </select>
+                        </label>
+                    {% endif %}
+                    <div class="functional-roles">
+                        <span>Roles funcionales</span>
+                        <label class="toggle-label">
+                            <input type="checkbox" name="usuario_{{ item.actor_id }}_funcional_contable" value="1" {% if item.selected_contable and item.candidate %}checked{% endif %} {% if not item.candidate %}disabled{% endif %}>
+                            <span>Contable</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" name="usuario_{{ item.actor_id }}_funcional_legal" value="1" {% if item.selected_legal and item.candidate %}checked{% endif %} {% if not item.candidate %}disabled{% endif %}>
+                            <span>Legal</span>
+                        </label>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="empty">El backup no contiene usuarios asignados.</div>
+                {% endfor %}
+            </div>
+            <div class="notice">Por seguridad, Backup v1 no crea contraseñas, no importa permisos Django y no inventa cuentas nuevas. Las altas nuevas podrán hacerse luego mediante el flujo de usuarios de OrdenaClick.</div>
+            <div class="actions"><a class="btn btn-secondary" href="{% url 'importar_empresa_wizard' 'empresa' %}">Volver</a><button type="submit" class="btn btn-primary">Revisar resumen</button></div>
+        </form>
+    </section>
+    {% endif %}
+
+    {% if paso == 'resumen' %}
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Paso 3</p><h2>Confirmar restauración</h2></div><span class="badge success">Backup validado</span></div>
+        <div class="summary-grid">
+            <div class="summary-box"><span>Empresa</span><strong>{{ empresa.nombre_fantasia|default:empresa.razon_social }}</strong><small>CUIT {{ empresa.cuit|default:'sin informar' }}</small></div>
+            <div class="summary-box"><span>Componentes</span><strong>{{ inspection.componentes|length }}</strong><small>grupos de datos versionados</small></div>
+            <div class="summary-box"><span>Usuarios del backup</span><strong>{{ usuarios|length }}</strong><small>identidad histórica preservada</small></div>
+            <div class="summary-box"><span>Modo</span><strong>{% if inspection.empresa_existente_id %}Restaurar existente{% else %}Crear desde backup{% endif %}</strong><small>sin borrar antes de validar</small></div>
+        </div>
+
+        <div class="component-list">
+            {% for nombre,cantidad in inspection.componentes.items %}<div><span>{{ nombre|capfirst }}</span><strong>{{ cantidad }}</strong></div>{% endfor %}
+        </div>
+
+        {% if inspection.gestion_claves_requiere_reconfiguracion %}
+        <div class="notice warning-notice"><strong>Gestión de Claves:</strong> se restaurarán sus metadatos, pero no las contraseñas cifradas. Deberán cargarse nuevamente en esta instalación.</div>
+        {% endif %}
+
+        <div class="notice">Al confirmar, OrdenaClick reconstruirá las relaciones con nuevas identidades internas. Si el CUIT ya existe y ocurre una falla crítica, la Empresa vigente no debe quedar reemplazada parcialmente.</div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="confirmar_importacion" value="1">
+            <div class="actions"><a class="btn btn-secondary" href="{% url 'importar_empresa_wizard' 'usuarios' %}">Volver</a><button type="submit" class="btn btn-primary danger-confirm">Confirmar e importar</button></div>
+        </form>
+    </section>
+    {% endif %}
+</main>
+<script src="{% static 'js/empresa/importacion_wizard.js' %}?v=3"></script>
+</body>
+</html>

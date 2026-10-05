@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designar perfiles | OrdenaClick</title>
+    <link rel="stylesheet" href="{% static 'css/relaciones/relaciones.css' %}?v=1">
+</head>
+<body>
+<main class="relations-shell">
+    <header class="relations-header">
+        <div>
+            <p class="eyebrow">Configuración de Empresa</p>
+            <h1>Designar perfiles</h1>
+            <p class="subtitle">{{ empresa.nombre_fantasia|default:empresa.razon_social }} · las solicitudes sólo pueden dirigirse a usuarios existentes de OrdenaClick.</p>
+        </div>
+        <a class="btn btn-secondary" href="{% url 'panel_admin' %}?empresa={{ empresa.id }}">Volver a Empresa</a>
+    </header>
+
+    {% if messages %}<section class="messages">{% for message in messages %}<div class="message {{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Nueva relación</p><h2>Enviar solicitud</h2></div></div>
+        <p class="subtitle">La relación se activa recién cuando el usuario la acepta desde su perfil Relaciones.</p>
+        <form method="post" class="relation-form" id="form-solicitud-relacion">
+            {% csrf_token %}
+            <label>Usuario o email
+                <input name="usuario" required autocomplete="off" placeholder="pedrito o pedrito@email.com">
+            </label>
+            <label>Perfil solicitado
+                <select name="rol" id="rol-relacion" required>
+                    {% for value,label in roles %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+            <label id="campo-centro-relacion" class="hidden">Centro Operativo
+                <select name="centro_operativo" id="centro-relacion">
+                    <option value="">Seleccionar...</option>
+                    {% for centro in centros %}<option value="{{ centro.id }}">{{ centro.nombre }} · {{ centro.tipo }}</option>{% endfor %}
+                </select>
+            </label>
+            <label class="full">Mensaje opcional
+                <textarea name="mensaje" maxlength="500" rows="3" placeholder="Ej.: Te invitamos a colaborar con la carga de comprobantes."></textarea>
+            </label>
+            <div class="form-actions full"><button type="submit" class="btn btn-primary">Enviar solicitud</button></div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Pendientes</p><h2>Solicitudes enviadas</h2></div><span class="badge">{{ pendientes|length }}</span></div>
+        <div class="compact-list">
+            {% for solicitud in pendientes %}<div><span>{{ solicitud.usuario_destino.username }} · {{ solicitud.get_rol_display }}{% if solicitud.centro_operativo %} · {{ solicitud.centro_operativo.nombre }}{% endif %}</span><small>{{ solicitud.creada|date:"d/m/Y H:i" }}</small></div>{% empty %}<div class="empty">No hay solicitudes pendientes.</div>{% endfor %}
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Activos</p><h2>Personas vinculadas</h2></div></div>
+        <div class="relation-grid">
+            <article class="relation-card"><span>Administrador</span><strong>{{ empresa.propietario.username }}</strong><small>Fundador · no requiere asignación</small></article>
+            {% for relacion in jerarquias %}<article class="relation-card"><span>{{ relacion.get_jerarquia_display }}</span><strong>{{ relacion.usuario.username }}</strong>{% if relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}</article>{% endfor %}
+            {% for relacion in roles_funcionales %}<article class="relation-card"><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
+        </div>
+    </section>
+</main>
+<script src="{% static 'js/relaciones/relaciones.js' %}?v=1"></script>
+</body>
+</html>

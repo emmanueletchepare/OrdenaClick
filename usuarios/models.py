@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -1850,6 +1852,69 @@ class CentroOperativo(models.Model):
 
         return self.nombre
 
+class IdentidadUsuarioEmpresa(models.Model):
+    """
+    Conserva la identidad histórica de una persona que actuó dentro de una
+    Empresa, separada de su cuenta de autenticación y de sus permisos actuales.
+
+    ``usuario`` puede quedar vacío al restaurar un backup en otra instalación.
+    Los campos históricos permiten mantener trazabilidad aunque la cuenta no
+    exista, esté inactiva o cambie posteriormente sus datos personales.
+    """
+
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+    )
+    empresa = models.ForeignKey(
+        "Empresa",
+        on_delete=models.PROTECT,
+        related_name="identidades_usuarios",
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="identidades_empresas",
+        blank=True,
+        null=True,
+    )
+    username_historico = models.CharField(
+        max_length=150,
+    )
+    nombre_historico = models.CharField(
+        max_length=300,
+        blank=True,
+    )
+    email_historico = models.EmailField(
+        blank=True,
+    )
+    creado = models.DateTimeField(
+        auto_now_add=True,
+    )
+    actualizado = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "empresa",
+                    "usuario",
+                ],
+                condition=models.Q(usuario__isnull=False),
+                name="uniq_identidad_usuario_empresa_vinculado",
+            ),
+        ]
+        ordering = [
+            "username_historico",
+        ]
+
+    def __str__(self):
+        return self.nombre_historico or self.username_historico
+
+
 class AsignacionUsuarioEmpresa(models.Model):
     """
     Vincula un usuario con una Empresa y define su jerarquía operativa.
@@ -2007,6 +2072,188 @@ class AsignacionUsuarioEmpresa(models.Model):
             f"{self.get_jerarquia_display()}"
         )
 
+class RolFuncionalUsuarioEmpresa(models.Model):
+    """
+    Rol funcional acumulable de un usuario dentro de una Empresa.
+
+    A diferencia de ``AsignacionUsuarioEmpresa``, este modelo no representa
+    jerarquía administrativa ni alcance de Caja. Permite que un mismo usuario
+    sea, por ejemplo, Colaborador y Contable en la misma Empresa sin duplicar
+    su cuenta ni mezclar responsabilidades.
+    """
+
+    ROL_CONTABLE = "contable"
+    ROL_LEGAL = "legal"
+
+    ROLES = [
+        (ROL_CONTABLE, "Contable"),
+        (ROL_LEGAL, "Legal"),
+    ]
+
+    empresa = models.ForeignKey(
+        "Empresa",
+        on_delete=models.PROTECT,
+        related_name="roles_funcionales_usuarios",
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="roles_funcionales_empresas",
+    )
+    rol = models.CharField(
+        max_length=20,
+        choices=ROLES,
+    )
+    activo = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["empresa", "usuario", "rol"],
+                name="uniq_rol_funcional_usuario_empresa",
+            ),
+        ]
+        ordering = ["usuario__username", "rol"]
+
+    def __str__(self):
+        return f"{self.usuario} - {self.empresa} - {self.get_rol_display()}"
+
+
+class SolicitudRelacionEmpresa(models.Model):
+    """
+    Solicitud explícita para vincular un usuario existente con una Empresa.
+
+    La solicitud no concede acceso por sí sola. Sólo una aceptación del
+    usuario destinatario puede crear o actualizar la relación correspondiente.
+    """
+
+    ROL_ADMIN_GENERAL = AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_GENERAL
+    ROL_ADMIN_CENTRO = AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO
+    ROL_COLABORADOR = AsignacionUsuarioEmpresa.JERARQUIA_COLABORADOR
+    ROL_CONTABLE = RolFuncionalUsuarioEmpresa.ROL_CONTABLE
+    ROL_LEGAL = RolFuncionalUsuarioEmpresa.ROL_LEGAL
+
+    ROLES = [
+        (ROL_ADMIN_GENERAL, "Administrador general"),
+        (ROL_ADMIN_CENTRO, "Administrador"),
+        (ROL_COLABORADOR, "Colaborador"),
+        (ROL_CONTABLE, "Contable"),
+        (ROL_LEGAL, "Legal"),
+    ]
+
+    ESTADO_PENDIENTE = "pendiente"
+    ESTADO_ACEPTADA = "aceptada"
+    ESTADO_RECHAZADA = "rechazada"
+    ESTADO_CANCELADA = "cancelada"
+
+    ESTADOS = [
+        (ESTADO_PENDIENTE, "Pendiente"),
+        (ESTADO_ACEPTADA, "Aceptada"),
+        (ESTADO_RECHAZADA, "Rechazada"),
+        (ESTADO_CANCELADA, "Cancelada"),
+    ]
+
+    empresa = models.ForeignKey(
+        "Empresa",
+        on_delete=models.PROTECT,
+        related_name="solicitudes_relaciones",
+    )
+    usuario_destino = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="solicitudes_relaciones_recibidas",
+    )
+    solicitada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="solicitudes_relaciones_enviadas",
+    )
+    rol = models.CharField(max_length=20, choices=ROLES)
+    centro_operativo = models.ForeignKey(
+        "CentroOperativo",
+        on_delete=models.PROTECT,
+        related_name="solicitudes_relaciones",
+        blank=True,
+        null=True,
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default=ESTADO_PENDIENTE,
+    )
+    mensaje = models.CharField(max_length=500, blank=True)
+    creada = models.DateTimeField(auto_now_add=True)
+    actualizada = models.DateTimeField(auto_now=True)
+    resuelta = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        rol="admin_centro",
+                        centro_operativo__isnull=False,
+                    )
+                    | models.Q(
+                        rol__in=[
+                            "admin_general",
+                            "colaborador",
+                            "contable",
+                            "legal",
+                        ],
+                        centro_operativo__isnull=True,
+                    )
+                ),
+                name="solicitud_rol_centro_coherente",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa", "usuario_destino", "rol"],
+                condition=models.Q(
+                    estado="pendiente",
+                    centro_operativo__isnull=True,
+                ),
+                name="uniq_solicitud_pendiente_sin_centro",
+            ),
+            models.UniqueConstraint(
+                fields=["empresa", "usuario_destino", "rol", "centro_operativo"],
+                condition=models.Q(
+                    estado="pendiente",
+                    centro_operativo__isnull=False,
+                ),
+                name="uniq_solicitud_pendiente_con_centro",
+            ),
+        ]
+        ordering = ["-creada"]
+
+    def clean(self):
+        super().clean()
+
+        if self.rol == self.ROL_ADMIN_CENTRO:
+            if not self.centro_operativo_id:
+                raise ValidationError({
+                    "centro_operativo": "Un Administrador requiere un Centro Operativo.",
+                })
+            if (
+                self.empresa_id
+                and self.centro_operativo.empresa_id != self.empresa_id
+            ):
+                raise ValidationError({
+                    "centro_operativo": "El Centro Operativo debe pertenecer a la misma Empresa.",
+                })
+        elif self.centro_operativo_id:
+            raise ValidationError({
+                "centro_operativo": "Este rol no utiliza Centro Operativo.",
+            })
+
+    def __str__(self):
+        return (
+            f"{self.usuario_destino} - {self.empresa} - "
+            f"{self.get_rol_display()} - {self.get_estado_display()}"
+        )
+
+
 # =========================================
 # CAJAS
 # =========================================
@@ -2159,7 +2406,7 @@ class Cobranza(models.Model):
     )
 
     creado_por = models.ForeignKey(
-        "auth.User",
+        IdentidadUsuarioEmpresa,
         on_delete=models.PROTECT,
         related_name="cobranzas_creadas"
     )
@@ -2283,7 +2530,7 @@ class MovimientoCaja(models.Model):
     )
 
     creado_por = models.ForeignKey(
-        "auth.User",
+        IdentidadUsuarioEmpresa,
         on_delete=models.PROTECT,
         related_name="movimientos_caja_creados"
     )

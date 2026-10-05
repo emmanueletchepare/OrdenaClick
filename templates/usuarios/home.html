@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,6 +7,7 @@
 
     <!-- GOOGLE FONT -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/perfiles/home_relaciones.css' %}?v=1">
 
     <style>
 
@@ -292,6 +294,13 @@
                 Seleccioná el rol con el que querés operar dentro del sistema.
             </div>
 
+            {% if solicitudes_pendientes_count %}
+                <a class="pending-relations" href="{% url 'panel_relaciones' %}">
+                    <span>Solicitudes pendientes</span>
+                    <strong>{{ solicitudes_pendientes_count }}</strong>
+                </a>
+            {% endif %}
+
             <!-- ROLES -->
 
             <div class="roles">
@@ -310,6 +319,10 @@
 
                 <a href="{% url 'seleccionar_perfil' 'legal' %}" class="btn">
                     Legal
+                </a>
+
+                <a href="{% url 'seleccionar_perfil' 'relaciones' %}" class="btn relations-role">
+                    Relaciones
                 </a>
 
             </div>

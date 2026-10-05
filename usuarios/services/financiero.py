@@ -2605,7 +2605,13 @@ def crear_cobranza_validada(
             "Se requiere un usuario autenticado para registrar la Cobranza."
         )
 
+    from usuarios.services.identidades import obtener_identidad_usuario_empresa
+
     with transaction.atomic():
+        identidad_usuario = obtener_identidad_usuario_empresa(
+            empresa=empresa,
+            usuario=usuario,
+        )
 
         cobranza = Cobranza.objects.create(
             empresa=empresa,
@@ -2621,7 +2627,7 @@ def crear_cobranza_validada(
             observaciones=datos[
                 "observaciones"
             ],
-            creado_por=usuario,
+            creado_por=identidad_usuario,
         )
 
         movimientos_efectivo = []
@@ -2641,7 +2647,7 @@ def crear_cobranza_validada(
                 concepto=(
                     f"Cobranza: {datos['referencia']}"
                 ),
-                creado_por=usuario,
+                creado_por=identidad_usuario,
             )
 
             movimientos_efectivo.append(

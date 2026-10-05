@@ -156,6 +156,30 @@ Tablas maestras usan baja lógica por defecto. Los inactivos se conservan
 porque pueden participar en historia. No duplicar un equivalente
 inactivo: reactivar cuando corresponda.
 
+## 20. Usuario, Empresa, jerarquía y roles funcionales
+
+`auth.User` representa la cuenta global de la persona en OrdenaClick. No pertenece a una Empresa y puede existir sin vínculos empresariales.
+
+`Empresa.propietario` representa al fundador. La propiedad no se duplica mediante `AsignacionUsuarioEmpresa`.
+
+`AsignacionUsuarioEmpresa` representa la jerarquía administrativa/operativa vigente de un usuario dentro de una Empresa. En la etapa actual admite una relación jerárquica por usuario+Empresa: Administrador general, Administrador de Centro o Colaborador.
+
+`RolFuncionalUsuarioEmpresa` representa roles profesionales acumulables y separados de la jerarquía. Primera versión: Contable y Legal. Un usuario puede combinar, por ejemplo, `AsignacionUsuarioEmpresa=Colaborador` + `RolFuncionalUsuarioEmpresa=Contable` para la misma Empresa.
+
+`SolicitudRelacionEmpresa` es el workflow previo a crear/modificar esos vínculos. Tiene Empresa, usuario destino, solicitante, rol solicitado, Centro cuando corresponde y estado Pendiente/Aceptada/Rechazada/Cancelada. Una solicitud no concede permisos.
+
+`IdentidadUsuarioEmpresa` continúa siendo la identidad histórica portable para auditoría y no equivale a permisos actuales.
+
+Invariantes:
+
+- usuario global ≠ Empresa;
+- identidad histórica ≠ cuenta actual ≠ autorización;
+- jerarquía administrativa ≠ rol profesional;
+- origen interno/externo ≠ permiso;
+- ranking/contratación futura ≠ autorización;
+- aceptar solicitud es requisito para crear la relación;
+- Administrador de Centro conserva alcance por Centro; roles Contable/Legal no obtienen Caja por el solo rol.
+
 ## 20. Exportación
 
 La importación reconstruye relaciones mediante mapas de IDs

@@ -26,6 +26,65 @@
             value="{{ caja.id }}"
         >
 
+        <section class="cobranza-card">
+
+            <div class="cobranza-card-titulo">
+                Datos de la cobranza
+            </div>
+
+            <div class="cobranza-grid">
+
+                <div class="field">
+                    <label class="label" for="cobranzaFecha">Fecha</label>
+                    <input
+                        id="cobranzaFecha"
+                        type="date"
+                        class="input-box"
+                        value="{{ fecha_hoy|date:'Y-m-d' }}"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label class="label" for="cobranzaReferencia">Referencia</label>
+                    <input
+                        id="cobranzaReferencia"
+                        type="text"
+                        class="input-box"
+                        maxlength="200"
+                        autocomplete="off"
+                        placeholder="Factura, recibo o referencia del cobro"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label class="label" for="cobranzaVendedorReferencia">Vendedor / referencia interna</label>
+                    <input
+                        id="cobranzaVendedorReferencia"
+                        type="text"
+                        class="input-box"
+                        maxlength="150"
+                        autocomplete="off"
+                        placeholder="Opcional"
+                    >
+                </div>
+
+                <div class="field">
+                    <label class="label" for="cobranzaObservaciones">Observaciones</label>
+                    <input
+                        id="cobranzaObservaciones"
+                        type="text"
+                        class="input-box"
+                        autocomplete="off"
+                        placeholder="Opcional"
+                    >
+                </div>
+
+            </div>
+
+        </section>
+
         <div class="cobranza-resumen-grid">
 
             <section class="cobranza-card">

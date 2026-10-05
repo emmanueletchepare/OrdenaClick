@@ -86,6 +86,19 @@ from .views import (
     
 )
 
+
+from .relaciones_views import (
+    gestionar_relaciones_empresa,
+    panel_relaciones,
+    resolver_solicitud,
+)
+from .empresa_backup_views import (
+    cancelar_importacion_empresa,
+    exportar_empresa_v1,
+    importar_empresa_v1,
+    importar_empresa_wizard,
+)
+
 urlpatterns = [
 
     # =========================================
@@ -120,6 +133,24 @@ urlpatterns = [
         'perfil/<str:perfil>/',
         seleccionar_perfil,
         name='seleccionar_perfil'
+    ),
+
+    path(
+        'relaciones/',
+        panel_relaciones,
+        name='panel_relaciones'
+    ),
+
+    path(
+        'relaciones/solicitud/<int:solicitud_id>/<str:accion>/',
+        resolver_solicitud,
+        name='resolver_solicitud_relacion'
+    ),
+
+    path(
+        'empresa/<int:empresa_id>/relaciones/',
+        gestionar_relaciones_empresa,
+        name='gestionar_relaciones_empresa'
     ),
 
     path(
@@ -178,7 +209,7 @@ urlpatterns = [
 
     path(
         'exportar-empresa/<int:empresa_id>/',
-        exportar_empresa,
+        exportar_empresa_v1,
         name='exportar_empresa'
     ),
 
@@ -190,14 +221,20 @@ urlpatterns = [
 
     path(
         'importar-empresa/',
-        importar_empresa,
+        importar_empresa_v1,
         name='importar_empresa'
     ),
 
     path(
-        "confirmar-reemplazo/",
-        confirmar_reemplazo,
-        name="confirmar_reemplazo"
+        'importar-empresa/wizard/<str:paso>/',
+        importar_empresa_wizard,
+        name='importar_empresa_wizard'
+    ),
+
+    path(
+        'importar-empresa/cancelar/',
+        cancelar_importacion_empresa,
+        name='cancelar_importacion_empresa'
     ),
 
     path(

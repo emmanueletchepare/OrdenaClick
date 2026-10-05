@@ -64,6 +64,7 @@ from .models import (
     Proveedor,
     Cliente,
     Caja,
+    AsignacionUsuarioEmpresa,
     PerfilUsuario
 )
 
@@ -207,10 +208,20 @@ def logout_view(request):
 
 @login_required
 def home(request):
-    """Muestra los cuatro perfiles desde los que puede operar el usuario."""
+    """Muestra los perfiles de plataforma y avisa relaciones pendientes."""
+    from usuarios.models import SolicitudRelacionEmpresa
+
+    solicitudes_pendientes_count = SolicitudRelacionEmpresa.objects.filter(
+        usuario_destino=request.user,
+        estado=SolicitudRelacionEmpresa.ESTADO_PENDIENTE,
+    ).count()
+
     return render(
         request,
-        "usuarios/home.html"
+        "usuarios/home.html",
+        {
+            "solicitudes_pendientes_count": solicitudes_pendientes_count,
+        },
     )
 
 
@@ -222,6 +233,7 @@ def seleccionar_perfil(request, perfil):
         "colaborador": "panel_colaborador",
         "contable": "panel_contable",
         "legal": "panel_legal",
+        "relaciones": "panel_relaciones",
     }
 
     destino = destinos.get(perfil)
@@ -1038,6 +1050,11 @@ def panel_admin(request):
             None
         )
 
+    asignaciones_importadas = request.session.get(
+        "asignaciones_importadas",
+        []
+    )
+
     empresa_existente = request.session.get(
         "empresa_existente"
     )
@@ -1167,6 +1184,62 @@ def exportar_empresa(request, empresa_id):
                 indent=4,
                 ensure_ascii=False
             )
+        )
+
+        # ==========================
+        # ASIGNACIONES DE USUARIOS
+        # ==========================
+
+        asignaciones = (
+            AsignacionUsuarioEmpresa.objects
+            .filter(
+                empresa=empresa,
+            )
+            .select_related(
+                "usuario",
+                "centro_operativo",
+            )
+            .order_by(
+                "id",
+            )
+        )
+
+        datos_asignaciones = []
+
+        for asignacion in asignaciones:
+
+            datos_asignaciones.append(
+                {
+                    "usuario": {
+                        "username":
+                            asignacion.usuario.username,
+                        "email":
+                            asignacion.usuario.email,
+                    },
+                    "jerarquia":
+                        asignacion.jerarquia,
+                    "centro_operativo": (
+                        {
+                            "id":
+                                asignacion.centro_operativo_id,
+                            "nombre":
+                                asignacion.centro_operativo.nombre,
+                        }
+                        if asignacion.centro_operativo_id
+                        else None
+                    ),
+                    "activo":
+                        asignacion.activo,
+                }
+            )
+
+        zip_file.writestr(
+            "asignaciones_usuarios.json",
+            json.dumps(
+                datos_asignaciones,
+                indent=4,
+                ensure_ascii=False,
+            ),
         )
 
         # ==========================
@@ -1382,6 +1455,18 @@ def importar_empresa(request):
                 archivo_json
             )
 
+        datos_asignaciones = []
+
+        if "asignaciones_usuarios.json" in zip_ref.namelist():
+
+            with zip_ref.open(
+                "asignaciones_usuarios.json"
+            ) as archivo_asignaciones:
+
+                datos_asignaciones = json.load(
+                    archivo_asignaciones
+                )
+
     cuit = datos_empresa.get(
         "cuit"
     )
@@ -1411,6 +1496,8 @@ def importar_empresa(request):
     request.session["zip_importacion"] = nombre_zip
 
     request.session["empresa_importada"] = datos_empresa
+
+    request.session["asignaciones_importadas"] = datos_asignaciones
 
     if empresa_existente:
 
@@ -11098,7 +11185,7 @@ def panel_caja(request):
     custodia física de distintos Centros Operativos.
     """
     from usuarios.services.seguridad import (
-        obtener_empresa_autorizada,
+        cajas_autorizadas,
     )
 
     empresa_id = (
@@ -11107,7 +11194,7 @@ def panel_caja(request):
     )
 
     try:
-        empresa = obtener_empresa_autorizada(
+        empresa, cajas = cajas_autorizadas(
             request.user,
             empresa_id,
         )
@@ -11119,27 +11206,6 @@ def panel_caja(request):
             },
             status=403,
         )
-
-    cajas = (
-        Caja.objects
-        .filter(
-            empresa=empresa,
-            activo=True,
-            centro_operativo__activo=True,
-            centro_operativo__tipo__in=[
-                "Casa Central",
-                "Sucursal",
-                "Mostrador",
-            ],
-        )
-        .select_related(
-            "centro_operativo",
-        )
-        .order_by(
-            "centro_operativo__nombre",
-            "nombre",
-        )
-    )
 
     resumenes = [
         resumen_disponibilidad_caja(
@@ -11168,18 +11234,91 @@ def panel_caja(request):
 @login_required
 def nueva_cobranza(request):
     """
-    Muestra el formulario de una nueva Cobranza para una Caja autorizada.
+    Muestra o registra una nueva Cobranza para una Caja autorizada.
 
-    La Empresa y la Caja recibidas desde el navegador se consideran datos
-    no confiables. La autorización se resuelve en el servidor y la Caja
-    debe pertenecer a la Empresa autorizada, estar activa y corresponder
-    a una Casa Central, Sucursal o Mostrador.
+    Empresa, Caja y componentes recibidos desde el navegador se consideran
+    datos no confiables. La autorización de alcance se resuelve siempre en
+    backend antes de validar y persistir la operación financiera.
     """
     from django.core.exceptions import PermissionDenied
 
-    from usuarios.services.seguridad import (
-        obtener_caja_autorizada,
-    )
+    from usuarios.services.financiero import crear_cobranza_validada
+    from usuarios.services.seguridad import obtener_caja_autorizada
+
+    if request.method == "POST":
+        try:
+            datos = json.loads(
+                request.body.decode("utf-8") or "{}"
+            )
+        except (
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+        ):
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "La Cobranza enviada tiene un formato inválido.",
+                },
+                status=400,
+            )
+
+        empresa_id = datos.get("empresa_id")
+        caja_id = datos.get("caja_id")
+
+        try:
+            empresa, caja = obtener_caja_autorizada(
+                request.user,
+                empresa_id,
+                caja_id,
+            )
+        except PermissionDenied as error:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": str(error),
+                },
+                status=403,
+            )
+
+        cobranza_datos = datos.get("cobranza")
+
+        if not isinstance(cobranza_datos, dict):
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": "La Cobranza enviada tiene un formato inválido.",
+                },
+                status=400,
+            )
+
+        cobranza_datos = dict(cobranza_datos)
+        cobranza_datos["caja_id"] = caja.id
+
+        try:
+            resultado = crear_cobranza_validada(
+                empresa=empresa,
+                usuario=request.user,
+                cobranza_datos=cobranza_datos,
+            )
+        except ValueError as error:
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "mensaje": str(error),
+                },
+                status=400,
+            )
+
+        cobranza = resultado["cobranza"]
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "mensaje": "Cobranza registrada correctamente.",
+                "cobranza_id": cobranza.id,
+            },
+            status=201,
+        )
 
     empresa_id = request.GET.get("empresa")
     caja_id = request.GET.get("caja")
@@ -11205,9 +11344,7 @@ def nueva_cobranza(request):
             empresa=empresa,
             activo=True,
         )
-        .order_by(
-            "nombre",
-        )
+        .order_by("nombre")
     )
 
     clientes = (
@@ -11216,9 +11353,7 @@ def nueva_cobranza(request):
             empresa=empresa,
             activo=True,
         )
-        .select_related(
-            "centro_operativo",
-        )
+        .select_related("centro_operativo")
         .order_by(
             "razon_social",
             "numero_cliente",
@@ -11232,6 +11367,7 @@ def nueva_cobranza(request):
             "caja": caja,
             "bancos": bancos,
             "clientes": clientes,
+            "fecha_hoy": timezone.localdate(),
         },
         request=request,
     )

@@ -240,6 +240,34 @@ Nunca exportar SECRET_KEY, claves maestras, variables de entorno,
 credenciales de infraestructura ni contraseñas en texto plano. La clave
 de cifrado no viaja dentro del backup.
 
+El primer formato estable será **Backup Empresa v1**. Antes de Beta no se
+mantendrá compatibilidad con los ZIP legacy generados durante desarrollo:
+pueden descartarse porque no existen todavía clientes ni backups productivos
+que deban preservarse.
+
+Importar Empresa no es una restauración ciega. El ZIP es entrada no confiable
+y describe el estado de origen, pero no decide por sí solo el estado operativo
+o los privilegios actuales. El flujo debe ser guiado: inspeccionar y validar
+completamente el backup, permitir que un usuario autorizado confirme o ajuste
+los datos que pueden haber cambiado (por ejemplo categoría fiscal,
+documentación, usuarios activos/inactivos y jerarquías), mostrar un resumen y
+recién entonces ejecutar la restauración.
+
+Los usuarios vinculados a historia no se eliminan físicamente por una
+importación. Debe preservarse la trazabilidad de quién generó o modificó
+operaciones, separando identidad histórica de autorización actual. Una
+jerarquía contenida en el backup no concede privilegios automáticamente en el
+destino.
+
+Si el CUIT ya existe, nunca se elimina primero la Empresa válida para luego
+intentar recrearla. La restauración debe planificarse y validarse antes de
+modificar estado persistente, y ejecutarse con atomicidad/rollback suficiente
+para no dejar una Empresa borrada o parcialmente restaurada ante una falla.
+
+La futura precarga de catálogos o datos iniciales (por ejemplo bancos comunes)
+es infraestructura distinta del backup empresarial y no debe mezclarse con
+Exportar/Importar Empresa.
+
 ## 13. Seguridad de arquitectura
 
 Cada endpoint debe validar usuario, empresa activa, rol/permisos y

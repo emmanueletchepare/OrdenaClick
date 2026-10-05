@@ -1032,6 +1032,254 @@
     }
 
 
+    function importeCobranzaParaBackend(valor) {
+
+        const texto =
+            String(valor || "").trim();
+
+        if (!texto) {
+            return "0.00";
+        }
+
+        return texto
+            .replace(/\./g, "")
+            .replace(",", ".");
+    }
+
+
+    function obtenerPayloadNuevaCobranza(formulario) {
+
+        const empresa =
+            formulario.querySelector(
+                '[name="empresa"]'
+            );
+
+        const caja =
+            document.getElementById(
+                "cobranzaCajaId"
+            );
+
+        const fecha =
+            document.getElementById(
+                "cobranzaFecha"
+            );
+
+        const referencia =
+            document.getElementById(
+                "cobranzaReferencia"
+            );
+
+        const vendedor =
+            document.getElementById(
+                "cobranzaVendedorReferencia"
+            );
+
+        const observaciones =
+            document.getElementById(
+                "cobranzaObservaciones"
+            );
+
+        const totalDeclarado =
+            document.getElementById(
+                "cobranzaTotalDeclarado"
+            );
+
+        const efectivoArs =
+            document.getElementById(
+                "cobranzaEfectivoArs"
+            );
+
+        const efectivoUsd =
+            document.getElementById(
+                "cobranzaEfectivoUsd"
+            );
+
+        if (
+            !empresa ||
+            !caja ||
+            !fecha ||
+            !referencia ||
+            !totalDeclarado ||
+            !efectivoArs ||
+            !efectivoUsd
+        ) {
+            return null;
+        }
+
+        return {
+            empresa_id: empresa.value,
+            caja_id: caja.value,
+            cobranza: {
+                fecha: fecha.value,
+                referencia: referencia.value.trim(),
+                vendedor_referencia:
+                    vendedor
+                        ? vendedor.value.trim()
+                        : "",
+                observaciones:
+                    observaciones
+                        ? observaciones.value.trim()
+                        : "",
+                total_declarado:
+                    String(
+                        totalDeclarado.value || ""
+                    ).trim()
+                        ? importeCobranzaParaBackend(
+                            totalDeclarado.value
+                        )
+                        : "",
+                efectivo: {
+                    ARS: importeCobranzaParaBackend(
+                        efectivoArs.value
+                    ),
+                    USD: importeCobranzaParaBackend(
+                        efectivoUsd.value
+                    )
+                },
+                cheques: chequesCobranza.map(
+                    function (cheque) {
+                        return {
+                            numero: cheque.numero,
+                            importe: Number(
+                                cheque.importe || 0
+                            ).toFixed(2),
+                            banco_id: cheque.banco_id,
+                            cliente_id:
+                                cheque.cliente_id || "",
+                            tipo_cheque:
+                                cheque.tipo_cheque,
+                            fecha_emision:
+                                cheque.fecha_emision,
+                            fecha_acreditacion:
+                                cheque.fecha_acreditacion || "",
+                            fecha_vencimiento: "",
+                            quien_entrega: ""
+                        };
+                    }
+                )
+            }
+        };
+    }
+
+
+    async function guardarNuevaCobranza(formulario) {
+
+        const mensaje =
+            document.getElementById(
+                "cobranzaMensaje"
+            );
+
+        const boton =
+            formulario.querySelector(
+                'button[type="submit"]'
+            );
+
+        const payload =
+            obtenerPayloadNuevaCobranza(
+                formulario
+            );
+
+        if (!payload) {
+            return;
+        }
+
+        if (!payload.cobranza.fecha) {
+            alert("Ingresá la fecha de la Cobranza.");
+            return;
+        }
+
+        if (!payload.cobranza.referencia) {
+            alert("Ingresá una referencia para la Cobranza.");
+            return;
+        }
+
+        const csrf =
+            formulario.querySelector(
+                '[name="csrfmiddlewaretoken"]'
+            );
+
+        const textoOriginal =
+            boton ? boton.textContent : "";
+
+        if (boton) {
+            boton.disabled = true;
+            boton.textContent = "Guardando...";
+        }
+
+        if (mensaje) {
+            mensaje.hidden = true;
+            mensaje.textContent = "";
+            mensaje.classList.remove(
+                "es-error",
+                "es-exito"
+            );
+        }
+
+        try {
+            const respuesta =
+                await fetch(
+                    "/caja/cobranzas/nueva/",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                            "X-Requested-With":
+                                "XMLHttpRequest",
+                            "X-CSRFToken":
+                                csrf ? csrf.value : ""
+                        },
+                        body: JSON.stringify(
+                            payload
+                        )
+                    }
+                );
+
+            const datos =
+                await respuesta.json();
+
+            if (!respuesta.ok || !datos.ok) {
+                throw new Error(
+                    datos.mensaje ||
+                    "No se pudo registrar la Cobranza."
+                );
+            }
+
+            if (mensaje) {
+                mensaje.hidden = false;
+                mensaje.classList.add(
+                    "es-exito"
+                );
+                mensaje.textContent =
+                    datos.mensaje ||
+                    "Cobranza registrada correctamente.";
+            }
+
+            setTimeout(
+                mostrarCaja,
+                700
+            );
+
+        } catch (error) {
+            if (mensaje) {
+                mensaje.hidden = false;
+                mensaje.classList.add(
+                    "es-error"
+                );
+                mensaje.textContent =
+                    error.message;
+            }
+
+            if (boton) {
+                boton.disabled = false;
+                boton.textContent =
+                    textoOriginal;
+            }
+        }
+    }
+
+
     function prepararNuevaCobranza() {
 
         chequesCobranza = [];
@@ -1199,20 +1447,9 @@
 
                 evento.preventDefault();
 
-                const mensaje =
-                    document.getElementById(
-                        "cobranzaMensaje"
-                    );
-
-                if (mensaje) {
-
-                    mensaje.hidden = false;
-
-                    mensaje.textContent =
-                        "La pantalla está lista. " +
-                        "El guardado se conectará al backend " +
-                        "en el siguiente bloque.";
-                }
+                guardarNuevaCobranza(
+                    formulario
+                );
             }
         );
 

@@ -732,7 +732,12 @@ body{
 
 <link
     rel="stylesheet"
-    href="{% static 'css/caja.css' %}?v=10"
+    href="{% static 'css/caja.css' %}?v=11"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/empresa/configuracion_empresa.css' %}?v=3"
 >
 
 </head>
@@ -1367,7 +1372,13 @@ Volver
 
 <div class="topbar">
 
-<div class="title" id="titulo-panel">
+<div
+class="title"
+id="titulo-panel"
+{% if empresa_actual %}
+data-titulo-empresa="{{ empresa_actual.nombre_fantasia|default:empresa_actual.razon_social|escape }}"
+{% endif %}
+>
 
 {% if empresa_actual %}
 
@@ -1385,7 +1396,7 @@ Panel <span>administrativo</span>
 
 <div id="panel-empresa">
 
-<div class="exercise-info">
+<div class="exercise-info" id="ejercicio-panel">
 
 {% with ejercicio=empresa_actual.ejercicios.first %}
 
@@ -1455,27 +1466,9 @@ o creá una nueva empresa para comenzar.
 <form
 id="form-importacion"
 method="post"
-action="/importar-empresa/"
+action="{% url 'importar_empresa' %}"
 enctype="multipart/form-data"
-style="display:none;">
-
-{% csrf_token %}
-
-<input
-type="hidden"
-name="confirmar_reemplazo"
-id="confirmar_reemplazo"
-value="0">
-
-<input
-type="file"
-id="archivo-importacion"
-name="archivo_zip"
-accept=".zip"
-hidden
-onchange="document.getElementById('form-importacion').submit()">
-
-</form>
+hidden>
 
 {% csrf_token %}
 
@@ -1484,8 +1477,7 @@ type="file"
 id="archivo-importacion"
 name="archivo_zip"
 accept=".zip"
-hidden
-onchange="document.getElementById('form-importacion').submit()">
+hidden>
 
 </form>
 
@@ -2008,9 +2000,9 @@ margin-top:24px;
 ">
 
 <button
+id="btn-importar-empresa"
 type="button"
-class="action-btn"
-onclick="document.getElementById('archivo-importacion').click()">
+class="action-btn">
 
 📦 Importar Empresa
 
@@ -2042,6 +2034,19 @@ margin-top:24px;
 ">
 
 <button
+type="button"
+id="btn-volver-configuracion-empresa"
+class="action-btn"
+style="
+height:52px;
+display:flex;
+align-items:center;
+justify-content:center;
+">
+← Volver a Configuración
+</button>
+
+<button
 type="submit"
 name="guardar_cambios_empresa"
 value="1"
@@ -2051,8 +2056,10 @@ Guardar Cambios
 
 </button>
 
+{% if empresa_actual %}
+
 <a
-href="/exportar-empresa/{{ empresa_actual.id }}/"
+href="{% url 'exportar_empresa' empresa_actual.id %}"
 class="action-btn"
 style="
 height:52px;
@@ -2065,6 +2072,8 @@ text-decoration:none;
 Exportar Empresa
 
 </a>
+
+{% endif %}
 
 <button
 id="btnEliminarEmpresa"
@@ -2533,6 +2542,15 @@ function mostrarSubmenu(tipo){
 
     }
 
+    /*
+     * Cada entrada desde el menú lateral vuelve al estado base
+     * de la Empresa. Las subpantallas pueden ocultar/modificar
+     * esta cabecera después, pero nunca dejan residuos al salir.
+     */
+    if(typeof window.restaurarCabeceraEmpresa === "function"){
+        window.restaurarCabeceraEmpresa();
+    }
+
 
     let html =
         "";
@@ -2897,9 +2915,12 @@ function mostrarSubmenu(tipo){
 
 
             <button
+                type="button"
                 class="module-card"
+                id="btn-designar-perfiles"
+                data-designar-perfiles-url="{% if empresa_actual %}{% url 'gestionar_relaciones_empresa' empresa_actual.id %}{% endif %}"
             >
-                Designar Colaboradores
+                Designar perfiles
             </button>
 
         `;
@@ -19812,9 +19833,12 @@ Sí
 
 <script src="{% static 'js/llamador_alertas.js' %}?v=2"></script>
 
-<script src="{% static 'js/caja.js' %}?v=9"></script>
+<script src="{% static 'js/caja.js' %}?v=10"></script>
 
 <script src="{% static 'js/clientes.js' %}?v=6"></script>
 
+<script src="{% static 'js/empresa/panel_importacion.js' %}?v=1"></script>
+
+<script src="{% static 'js/empresa/configuracion_empresa.js' %}?v=4"></script>
 </body>
 </html>

@@ -64,8 +64,20 @@ externo/privado.
 
 -   [ ] Autenticación y rol autorizado.
 -   [ ] Límites de upload, entradas y tamaño descomprimido.
--   [ ] Validación ZIP, rutas permitidas y esquema de `empresa.json`.
--   [ ] Impedir reemplazo de Empresa ajena.
+-   [ ] Validación ZIP, rutas permitidas, `manifest` versionado y esquema de
+    todos los componentes del Backup Empresa v1.
+-   [ ] No soportar como contrato los ZIP legacy previos a v1.
+-   [ ] Impedir restaurar/modificar una Empresa ajena.
+-   [ ] Si el CUIT ya existe, validar y planificar antes de modificar la Empresa
+    vigente; no borrar primero para intentar recrear después.
+-   [ ] Wizard de importación: permitir confirmar/actualizar los datos que
+    pueden haber cambiado antes de ejecutar la restauración.
+-   [ ] Usuarios: conservar trazabilidad histórica, resolver activo/inactivo y
+    jerarquía actual mediante decisión explícita de un usuario autorizado.
+-   [ ] Ningún rol o privilegio contenido en el ZIP se aplica automáticamente.
+-   [ ] Resumen y confirmación explícita antes de persistir la restauración.
+-   [ ] Atomicidad/rollback suficiente para no dejar una Empresa parcial ante
+    una falla crítica.
 -   [ ] Temporales privados y limpieza garantizada.
 -   [ ] Pruebas adversariales.
 

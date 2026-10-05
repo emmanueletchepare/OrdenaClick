@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relaciones | OrdenaClick</title>
+    <link rel="stylesheet" href="{% static 'css/relaciones/relaciones.css' %}?v=1">
+</head>
+<body>
+<main class="relations-shell">
+    <header class="relations-header">
+        <div>
+            <p class="eyebrow">Perfil personal</p>
+            <h1>Relaciones</h1>
+            <p class="subtitle">Tus vínculos con Empresas se crean cuando aceptás una solicitud. Una solicitud pendiente nunca concede acceso por sí sola.</p>
+        </div>
+        <a class="btn btn-secondary" href="{% url 'home' %}">Volver al inicio</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages">
+            {% for message in messages %}<div class="message {{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="card">
+        <div class="card-title-row">
+            <div>
+                <p class="section-kicker">Solicitudes</p>
+                <h2>Solicitudes pendientes</h2>
+            </div>
+            <span class="badge">{{ pendientes|length }}</span>
+        </div>
+
+        <div class="request-list">
+            {% for solicitud in pendientes %}
+                <article class="request-row">
+                    <div>
+                        <strong>{{ solicitud.get_rol_display }}</strong>
+                        <span>{{ solicitud.empresa.nombre_fantasia|default:solicitud.empresa.razon_social }}</span>
+                        {% if solicitud.centro_operativo %}<small>Centro: {{ solicitud.centro_operativo.nombre }}</small>{% endif %}
+                        <small>Solicita: {{ solicitud.solicitada_por.username }} · {{ solicitud.creada|date:"d/m/Y H:i" }}</small>
+                        {% if solicitud.mensaje %}<p>{{ solicitud.mensaje }}</p>{% endif %}
+                    </div>
+                    <div class="request-actions">
+                        <form method="post" action="{% url 'resolver_solicitud_relacion' solicitud.id 'rechazar' %}">
+                            {% csrf_token %}
+                            <button class="btn btn-secondary" type="submit">Rechazar</button>
+                        </form>
+                        <form method="post" action="{% url 'resolver_solicitud_relacion' solicitud.id 'aceptar' %}">
+                            {% csrf_token %}
+                            <button class="btn btn-primary" type="submit">Aceptar</button>
+                        </form>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty">No tenés solicitudes pendientes.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Vínculos</p><h2>Relaciones vigentes</h2></div></div>
+        <div class="relation-grid">
+            {% for empresa in empresas_fundadas %}
+                <article class="relation-card"><span>Administrador</span><strong>{{ empresa.nombre_fantasia|default:empresa.razon_social }}</strong><small>Fundador · acceso total</small><a class="relation-link" href="{% url 'gestionar_relaciones_empresa' empresa.id %}">Gestionar relaciones</a></article>
+            {% endfor %}
+            {% for relacion in jerarquias %}
+                <article class="relation-card"><span>{{ relacion.get_jerarquia_display }}</span><strong>{{ relacion.empresa.nombre_fantasia|default:relacion.empresa.razon_social }}</strong>{% if relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}{% if relacion.jerarquia == 'admin_general' %}<a class="relation-link" href="{% url 'gestionar_relaciones_empresa' relacion.empresa.id %}">Gestionar relaciones</a>{% endif %}</article>
+            {% endfor %}
+            {% for relacion in roles_funcionales %}
+                <article class="relation-card"><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.empresa.nombre_fantasia|default:relacion.empresa.razon_social }}</strong><small>Rol funcional</small></article>
+            {% endfor %}
+            {% if not empresas_fundadas and not jerarquias and not roles_funcionales %}<div class="empty">Todavía no tenés vínculos activos con Empresas.</div>{% endif %}
+        </div>
+    </section>
+
+    <section class="card future-card">
+        <p class="section-kicker">Futuro marketplace</p>
+        <h2>Disponibilidad profesional</h2>
+        <p class="subtitle">Desde este perfil se incorporarán más adelante disponibilidad, postulaciones, búsqueda de Empresas, reputación y contratación para Colaboradores, Contables y Legales. Esa capa será independiente de los permisos de cada Empresa.</p>
+    </section>
+</main>
+</body>
+</html>

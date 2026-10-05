@@ -1,0 +1,43 @@
+<section class="config-relaciones" data-designar-relaciones>
+    <header class="config-relaciones__header config-relaciones__header--contexto">
+        <p class="config-relaciones__subtitulo config-relaciones__subtitulo--contexto">
+            {{ empresa.nombre_fantasia|default:empresa.razon_social }} · las solicitudes sólo pueden dirigirse a usuarios existentes de OrdenaClick.
+        </p>
+        <button type="button" class="config-relaciones__volver" data-volver-configuracion>← Volver a Configuración</button>
+    </header>
+
+    {% if messages %}
+    <div class="config-relaciones__mensajes">
+        {% for message in messages %}<div class="config-relaciones__mensaje config-relaciones__mensaje--{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <section class="config-relaciones__card">
+        <div class="config-relaciones__titulo"><div><p>Nueva relación</p><h3>Enviar solicitud</h3></div></div>
+        <p class="config-relaciones__subtitulo">La relación se activa recién cuando el usuario la acepta desde su perfil Relaciones.</p>
+        <form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" class="config-relaciones__form" data-form-solicitud-relacion>
+            {% csrf_token %}
+            <label>Usuario o email<input name="usuario" required autocomplete="off" placeholder="pedrito o pedrito@email.com"></label>
+            <label>Perfil solicitado<select name="rol" data-rol-relacion required>{% for value,label in roles %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+            <label class="config-relaciones__centro is-hidden" data-campo-centro-relacion>Centro Operativo<select name="centro_operativo" data-centro-relacion><option value="">Seleccionar...</option>{% for centro in centros %}<option value="{{ centro.id }}">{{ centro.nombre }} · {{ centro.tipo }}</option>{% endfor %}</select></label>
+            <label class="config-relaciones__full">Mensaje opcional<textarea name="mensaje" maxlength="500" rows="3" placeholder="Ej.: Te invitamos a colaborar con la carga de comprobantes."></textarea></label>
+            <div class="config-relaciones__acciones config-relaciones__full"><button type="submit">Enviar solicitud</button></div>
+        </form>
+    </section>
+
+    <section class="config-relaciones__card">
+        <div class="config-relaciones__titulo"><div><p>Pendientes</p><h3>Solicitudes enviadas</h3></div><span class="config-relaciones__badge">{{ pendientes|length }}</span></div>
+        <div class="config-relaciones__lista">
+            {% for solicitud in pendientes %}<div><span>{{ solicitud.usuario_destino.username }} · {{ solicitud.get_rol_display }}{% if solicitud.centro_operativo %} · {{ solicitud.centro_operativo.nombre }}{% endif %}</span><small>{{ solicitud.creada|date:"d/m/Y H:i" }}</small></div>{% empty %}<div class="config-relaciones__vacio">No hay solicitudes pendientes.</div>{% endfor %}
+        </div>
+    </section>
+
+    <section class="config-relaciones__card">
+        <div class="config-relaciones__titulo"><div><p>Activos</p><h3>Personas vinculadas</h3></div></div>
+        <div class="config-relaciones__grid">
+            <article><span>Administrador</span><strong>{{ empresa.propietario.username }}</strong><small>Fundador · no requiere asignación</small></article>
+            {% for relacion in jerarquias %}<article><span>{{ relacion.get_jerarquia_display }}</span><strong>{{ relacion.usuario.username }}</strong>{% if relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}</article>{% endfor %}
+            {% for relacion in roles_funcionales %}<article><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
+        </div>
+    </section>
+</section>

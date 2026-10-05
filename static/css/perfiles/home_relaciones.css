@@ -1,0 +1,2 @@
+.pending-relations{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;padding:14px 16px;border:1px solid rgba(59,130,246,.45);border-radius:14px;background:rgba(37,99,235,.10);color:#dbeafe;text-decoration:none;transition:.2s}.pending-relations:hover{border-color:#60a5fa;background:rgba(37,99,235,.16)}.pending-relations strong{min-width:30px;height:30px;border-radius:999px;display:grid;place-items:center;background:#2563eb;color:#fff}.relations-role{grid-column:1/-1}
+@media(max-width:600px){.relations-role{grid-column:auto}}
