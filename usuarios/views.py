@@ -137,7 +137,7 @@ def login_view(request):
 
     return render(
         request,
-        "usuarios/login.html",
+        "usuarios/auth/login.html",
         {"error": error}
     )
 
@@ -194,7 +194,7 @@ def registro_view(request):
 
     return render(
         request,
-        "usuarios/register.html",
+        "usuarios/auth/register.html",
         {"error": error}
     )
 
@@ -341,7 +341,7 @@ def panel_colaborador(request):
     """Muestra la entrada al perfil Colaborador."""
     return render(
         request,
-        "usuarios/panel_colaborador.html"
+        "usuarios/perfiles/colaborador/panel.html"
     )
 
 
@@ -350,7 +350,7 @@ def panel_contable(request):
     """Muestra la entrada al perfil Contable."""
     return render(
         request,
-        "usuarios/panel_contable.html"
+        "usuarios/perfiles/contable/panel.html"
     )
 
 
@@ -359,7 +359,7 @@ def panel_legal(request):
     """Muestra la entrada al perfil Legal."""
     return render(
         request,
-        "usuarios/panel_legal.html"
+        "usuarios/perfiles/legal/panel.html"
     )
 
 def _credenciales_arca_configuradas(
@@ -443,7 +443,7 @@ def panel_desarrollador(request):
 
     return render(
         request,
-        "usuarios/desarrollador/panel_desarrollador.html",
+        "usuarios/perfiles/desarrollador/panel.html",
         {
             "secret_key_configurada": (
                 secret_key_entorno
@@ -1094,7 +1094,7 @@ def panel_admin(request):
 
     request,
 
-    'usuarios/panel_admin.html',
+    'usuarios/perfiles/administrador/panel.html',
 
     {
 
@@ -1602,7 +1602,7 @@ def listar_bancos(request):
 
     html = render_to_string(
 
-        "usuarios/bancos.html",
+        "usuarios/maestros/bancos.html",
 
         {
 
@@ -1764,7 +1764,7 @@ def listar_cuentas_bancarias(request):
     )
 
     html = render_to_string(
-        "usuarios/cuentas_bancarias.html",
+        "usuarios/maestros/cuentas_bancarias.html",
         {
             "empresa": empresa,
             "cuentas": cuentas,
@@ -2376,7 +2376,7 @@ def listar_tarjetas(request):
 
 
     html = render_to_string(
-        "usuarios/tarjetas.html",
+        "usuarios/maestros/tarjetas.html",
         {
             "empresa":
                 empresa,
@@ -2474,7 +2474,7 @@ def listar_retenciones(request):
 
 
     html = render_to_string(
-        "usuarios/retenciones.html",
+        "usuarios/maestros/retenciones.html",
         {
             "empresa":
                 empresa,
@@ -3462,7 +3462,7 @@ def listar_centros_operativos(request):
     ).order_by("nombre")
 
     html = render_to_string(
-        "usuarios/centros_operativos.html",
+        "usuarios/maestros/centros_operativos.html",
         {
             "empresa": empresa,
             "centros": centros
@@ -3811,7 +3811,7 @@ def listar_recursos_operativos(request):
 
 
     html = render_to_string(
-        "usuarios/recursos_operativos.html",
+        "usuarios/maestros/recursos_operativos.html",
         {
             "empresa": empresa,
             "recursos": recursos,
@@ -4578,7 +4578,7 @@ def listar_proveedores(request):
     )
 
     html = render_to_string(
-        "usuarios/proveedores.html",
+        "usuarios/maestros/proveedores.html",
         {
             "empresa": empresa,
             "proveedores": proveedores
@@ -5094,7 +5094,7 @@ def listar_clientes(request):
     )
 
     html = render_to_string(
-        "usuarios/clientes.html",
+        "usuarios/maestros/clientes.html",
         {
             "empresa": empresa,
             "clientes": clientes,
@@ -6354,7 +6354,7 @@ def listar_tipos_gasto(request):
     )
 
     html = render_to_string(
-        "usuarios/tipos_gasto.html",
+        "usuarios/maestros/tipos_gasto.html",
         {
             "empresa": empresa,
             "tipos_gasto": tipos_gasto,
