@@ -13,23 +13,13 @@ from .views import (
     panel_legal,
     panel_desarrollador,
     reemplazar_secret_key_desarrollador,
-    listar_centros_operativos,
     panel_admin,
-    listar_centros_operativos,
     panel_admin,
     exportar_empresa,
     exportar_empresa,
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    guardar_centro_operativo,
-    modificar_centro_operativo,
-    eliminar_centro_operativo,
-    listar_recursos_operativos,
-    guardar_recurso_operativo,
-    modificar_recurso_operativo,
-    eliminar_recurso_operativo,
-    reactivar_recurso_operativo,
     guardar_movimiento,
     verificar_comprobante_duplicado,
     listar_proximos_vencimientos,
@@ -118,6 +108,21 @@ from .http.retenciones import (
     modificar_retencion,
     eliminar_retencion,
     reactivar_retencion,
+)
+
+from .http.centros_operativos import (
+    listar_centros_operativos,
+    guardar_centro_operativo,
+    modificar_centro_operativo,
+    eliminar_centro_operativo,
+)
+
+from .http.recursos_operativos import (
+    listar_recursos_operativos,
+    guardar_recurso_operativo,
+    modificar_recurso_operativo,
+    eliminar_recurso_operativo,
+    reactivar_recurso_operativo,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
