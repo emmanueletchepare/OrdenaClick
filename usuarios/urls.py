@@ -13,7 +13,6 @@ from .views import (
     panel_legal,
     panel_desarrollador,
     reemplazar_secret_key_desarrollador,
-    listar_bancos,
     listar_centros_operativos,
     panel_admin,
     listar_centros_operativos,
@@ -23,10 +22,7 @@ from .views import (
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    guardar_banco,
     guardar_centro_operativo,
-    modificar_banco,
-    eliminar_banco,
     modificar_centro_operativo,
     eliminar_centro_operativo,
     listar_recursos_operativos,
@@ -106,6 +102,13 @@ from .http.proveedores import (
     modificar_proveedor,
     eliminar_proveedor,
     reactivar_proveedor,
+)
+
+from .http.bancos import (
+    guardar_banco,
+    listar_bancos,
+    modificar_banco,
+    eliminar_banco,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
