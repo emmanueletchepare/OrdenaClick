@@ -21,8 +21,6 @@ from .views import (
     importar_empresa,
     confirmar_reemplazo,
     guardar_movimiento,
-    verificar_comprobante_duplicado,
-    obtener_movimiento_edicion,
     actualizar_movimiento,
     registrar_pago_manual_movimiento,
     eliminar_pago_movimiento,
@@ -126,6 +124,11 @@ from .http.recursos_operativos import (
 from .http.vencimientos_alertas import (
     estado_llamador_alertas,
     listar_proximos_vencimientos,
+)
+
+from .http.movimientos_consultas import (
+    verificar_comprobante_duplicado,
+    obtener_movimiento_edicion,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
