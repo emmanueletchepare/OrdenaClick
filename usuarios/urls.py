@@ -45,11 +45,6 @@ from .views import (
     modificar_cliente,
     eliminar_cliente,
     reactivar_cliente,
-    listar_tipos_gasto,
-    guardar_tipo_gasto,
-    modificar_tipo_gasto,
-    eliminar_tipo_gasto,
-    reactivar_tipo_gasto,
     listar_cuentas_bancarias,
     guardar_cuenta_bancaria,
     modificar_cuenta_bancaria,
@@ -97,6 +92,14 @@ from .http.empresa_claves import (
     modificar_gestion_clave,
     eliminar_gestion_clave,
     reactivar_gestion_clave,
+)
+
+from .http.tipos_gasto import (
+    listar_tipos_gasto,
+    guardar_tipo_gasto,
+    modificar_tipo_gasto,
+    eliminar_tipo_gasto,
+    reactivar_tipo_gasto,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
