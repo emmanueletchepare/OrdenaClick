@@ -20,8 +20,6 @@ from .views import (
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    guardar_movimiento,
-    actualizar_movimiento,
     guardar_configuracion_arca_desarrollador,
     
 )
@@ -132,6 +130,11 @@ from .http.movimientos_pagos import (
     eliminar_pago_movimiento,
     registrar_pago_manual_movimiento,
     registrar_debito_automatico_movimiento,
+)
+
+from .http.movimientos import (
+    guardar_movimiento,
+    actualizar_movimiento,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
