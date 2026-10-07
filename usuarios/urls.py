@@ -18,8 +18,6 @@ from .views import (
     panel_admin,
     listar_centros_operativos,
     panel_admin,
-    panel_caja,
-    nueva_cobranza,
     exportar_empresa,
     exportar_empresa,
     eliminar_empresa,
@@ -91,6 +89,11 @@ from .http.relaciones import (
     gestionar_relaciones_empresa,
     panel_relaciones,
     resolver_solicitud,
+)
+
+from .http.caja import (
+    panel_caja,
+    nueva_cobranza,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
