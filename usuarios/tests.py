@@ -3845,7 +3845,7 @@ class CobranzaCajaTests(TestCase):
         y el cheque físico disponible dentro de la misma Caja.
         """
         from usuarios.models import Cobranza, MovimientoCaja, Cheque
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         resultado = crear_cobranza_validada(
             empresa=self.empresa,
@@ -3951,7 +3951,7 @@ class CobranzaCajaTests(TestCase):
         cheques recibidos antes de persistir la Cobranza.
         """
         from usuarios.models import Cobranza, MovimientoCaja, Cheque
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         with self.assertRaisesMessage(
             ValueError,
@@ -3986,7 +3986,7 @@ class CobranzaCajaTests(TestCase):
         registrar una Cobranza de otra Empresa.
         """
         from usuarios.models import Cobranza
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         with self.assertRaises(ValueError):
             crear_cobranza_validada(
@@ -4008,7 +4008,7 @@ class CobranzaCajaTests(TestCase):
         a otra Empresa.
         """
         from usuarios.models import Cobranza, Cheque
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         with self.assertRaises(ValueError):
             crear_cobranza_validada(
@@ -4035,7 +4035,7 @@ class CobranzaCajaTests(TestCase):
         a otra Empresa.
         """
         from usuarios.models import Cobranza, Cheque
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         cliente_ajeno = Cliente.objects.create(
             empresa=self.empresa_ajena,
@@ -4081,7 +4081,7 @@ class CobranzaCajaTests(TestCase):
         y el movimiento de efectivo ya creados.
         """
         from usuarios.models import Cobranza, MovimientoCaja, Cheque
-        from usuarios.services.financiero import crear_cobranza_validada
+        from usuarios.services.caja import crear_cobranza_validada
 
         with self.assertRaisesMessage(
             RuntimeError,
@@ -4275,7 +4275,7 @@ class DisponibilidadCajaTests(TestCase):
         El saldo de una moneda surge de ingresos menos egresos
         y no de un campo de saldo persistido.
         """
-        from usuarios.services.financiero import saldo_efectivo_caja
+        from usuarios.services.caja import saldo_efectivo_caja
 
         self.crear_movimiento_caja(
             tipo="Ingreso",
@@ -4311,7 +4311,7 @@ class DisponibilidadCajaTests(TestCase):
         Cada moneda conserva un saldo independiente sin realizar
         conversiones ni aplicar un tipo de cambio implícito.
         """
-        from usuarios.services.financiero import saldo_efectivo_caja
+        from usuarios.services.caja import saldo_efectivo_caja
 
         self.crear_movimiento_caja(
             moneda="ARS",
@@ -4346,7 +4346,7 @@ class DisponibilidadCajaTests(TestCase):
         Los movimientos de otra Caja de la misma Empresa no deben
         modificar la disponibilidad de la Caja consultada.
         """
-        from usuarios.services.financiero import saldo_efectivo_caja
+        from usuarios.services.caja import saldo_efectivo_caja
 
         self.crear_movimiento_caja(
             caja=self.caja,
@@ -4374,7 +4374,7 @@ class DisponibilidadCajaTests(TestCase):
         Una Caja ajena no puede utilizarse para consultar
         disponibilidad bajo otra Empresa.
         """
-        from usuarios.services.financiero import saldo_efectivo_caja
+        from usuarios.services.caja import saldo_efectivo_caja
 
         with self.assertRaisesMessage(
             ValueError,
@@ -4391,7 +4391,7 @@ class DisponibilidadCajaTests(TestCase):
         Un cheque físico de tercero, disponible y todavía vigente
         debe formar parte de la disponibilidad de su Caja.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             cheques_fisicos_disponibles_caja,
         )
 
@@ -4418,7 +4418,7 @@ class DisponibilidadCajaTests(TestCase):
         cuya fecha de vencimiento ya pasó no puede ofrecerse como
         medio de Pago u Orden de Pago.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             cheques_fisicos_disponibles_caja,
         )
 
@@ -4444,7 +4444,7 @@ class DisponibilidadCajaTests(TestCase):
         El cheque deja de estar disponible después de su fecha
         de vencimiento, no durante el propio día de vencimiento.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             cheques_fisicos_disponibles_caja,
         )
 
@@ -4469,7 +4469,7 @@ class DisponibilidadCajaTests(TestCase):
         Un cheque reservado continúa existiendo en Cartera pero
         deja de estar disponible para otra operación.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             cheques_fisicos_disponibles_caja,
         )
 
@@ -4495,7 +4495,7 @@ class DisponibilidadCajaTests(TestCase):
         La Cartera física respeta la custodia real: un cheque ubicado
         en otra Caja no puede utilizarse desde la Caja consultada.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             cheques_fisicos_disponibles_caja,
         )
 
@@ -4521,7 +4521,7 @@ class DisponibilidadCajaTests(TestCase):
         El resumen central expone los saldos por moneda y solamente
         el valor de los cheques realmente utilizables.
         """
-        from usuarios.services.financiero import (
+        from usuarios.services.caja import (
             resumen_disponibilidad_caja,
         )
 

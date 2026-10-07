@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from usuarios.models import Banco, Cliente
-from usuarios.services.financiero import resumen_disponibilidad_caja
+from usuarios.services.caja import resumen_disponibilidad_caja
 
 
 @login_required
@@ -77,7 +77,7 @@ def nueva_cobranza(request):
     """
     from django.core.exceptions import PermissionDenied
 
-    from usuarios.services.financiero import crear_cobranza_validada
+    from usuarios.services.caja import crear_cobranza_validada
     from usuarios.services.seguridad import obtener_caja_autorizada
 
     if request.method == "POST":
