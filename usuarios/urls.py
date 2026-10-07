@@ -1,16 +1,6 @@
 from django.urls import path
 
 from .views import (
-    login_view,
-    registro_view,
-    logout_view,
-    home,
-    seleccionar_perfil,
-    modificar_usuario,
-    baja_usuario,
-    panel_colaborador,
-    panel_contable,
-    panel_legal,
     panel_desarrollador,
     reemplazar_secret_key_desarrollador,
     panel_admin,
@@ -22,6 +12,26 @@ from .views import (
     confirmar_reemplazo,
     guardar_configuracion_arca_desarrollador,
     
+)
+
+
+from .http.auth import (
+    login_view,
+    registro_view,
+    logout_view,
+)
+
+from .http.cuenta import (
+    home,
+    seleccionar_perfil,
+    modificar_usuario,
+    baja_usuario,
+)
+
+from .http.perfiles_basicos import (
+    panel_colaborador,
+    panel_contable,
+    panel_legal,
 )
 
 
