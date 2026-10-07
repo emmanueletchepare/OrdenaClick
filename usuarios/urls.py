@@ -30,15 +30,6 @@ from .views import (
     modificar_recurso_operativo,
     eliminar_recurso_operativo,
     reactivar_recurso_operativo,
-    listar_tarjetas,
-    guardar_tarjeta,
-    modificar_tarjeta,
-    eliminar_tarjeta,
-    reactivar_tarjeta,
-    listar_retenciones,
-    guardar_retencion,
-    modificar_retencion,
-    eliminar_retencion,
     guardar_movimiento,
     verificar_comprobante_duplicado,
     listar_proximos_vencimientos,
@@ -49,7 +40,6 @@ from .views import (
     eliminar_pago_movimiento,
     registrar_debito_automatico_movimiento,
     guardar_configuracion_arca_desarrollador,
-    reactivar_retencion
     
 )
 
@@ -112,6 +102,22 @@ from .http.cuentas_bancarias import (
     modificar_cuenta_bancaria,
     eliminar_cuenta_bancaria,
     reactivar_cuenta_bancaria,
+)
+
+from .http.tarjetas import (
+    listar_tarjetas,
+    guardar_tarjeta,
+    modificar_tarjeta,
+    eliminar_tarjeta,
+    reactivar_tarjeta,
+)
+
+from .http.retenciones import (
+    listar_retenciones,
+    guardar_retencion,
+    modificar_retencion,
+    eliminar_retencion,
+    reactivar_retencion,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
