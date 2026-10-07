@@ -30,11 +30,6 @@ from .views import (
     modificar_recurso_operativo,
     eliminar_recurso_operativo,
     reactivar_recurso_operativo,
-    listar_cuentas_bancarias,
-    guardar_cuenta_bancaria,
-    modificar_cuenta_bancaria,
-    eliminar_cuenta_bancaria,
-    reactivar_cuenta_bancaria,
     listar_tarjetas,
     guardar_tarjeta,
     modificar_tarjeta,
@@ -109,6 +104,14 @@ from .http.bancos import (
     listar_bancos,
     modificar_banco,
     eliminar_banco,
+)
+
+from .http.cuentas_bancarias import (
+    listar_cuentas_bancarias,
+    guardar_cuenta_bancaria,
+    modificar_cuenta_bancaria,
+    eliminar_cuenta_bancaria,
+    reactivar_cuenta_bancaria,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
