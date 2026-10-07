@@ -1,8 +1,6 @@
 from django.urls import path
 
 from .views import (
-    panel_desarrollador,
-    reemplazar_secret_key_desarrollador,
     panel_admin,
     panel_admin,
     exportar_empresa,
@@ -10,7 +8,6 @@ from .views import (
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    guardar_configuracion_arca_desarrollador,
     
 )
 
@@ -32,6 +29,12 @@ from .http.perfiles_basicos import (
     panel_colaborador,
     panel_contable,
     panel_legal,
+)
+
+from .http.desarrollador import (
+    panel_desarrollador,
+    reemplazar_secret_key_desarrollador,
+    guardar_configuracion_arca_desarrollador,
 )
 
 

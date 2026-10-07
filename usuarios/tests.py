@@ -2670,7 +2670,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         )
 
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_usuario_normal_es_rechazado(
         self,
@@ -2695,7 +2695,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         reemplazar_mock.assert_not_called()
 
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_superusuario_no_puede_utilizar_get(
         self,
@@ -2727,7 +2727,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         },
     )
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_variable_de_entorno_impide_reemplazo(
         self,
@@ -2762,7 +2762,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         clear=True,
     )
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_superusuario_puede_preparar_nueva_clave_privada(
         self,
@@ -2805,7 +2805,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         clear=True,
     )
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_respuesta_no_expone_secret_key(
         self,
@@ -2848,7 +2848,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         clear=True,
     )
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_error_de_escritura_se_informa_sin_exponer_detalles(
         self,
@@ -2892,7 +2892,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         clear=True,
     )
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_reinicio_pendiente_devuelve_conflicto_controlado(
         self,
@@ -2935,7 +2935,7 @@ class SeguridadInstalacionDesarrolladorTests(TestCase):
         )
 
     @patch(
-        "usuarios.views.reemplazar_secret_key_privada"
+        "usuarios.http.desarrollador.reemplazar_secret_key_privada"
     )
     def test_post_sin_csrf_es_rechazado(
         self,
