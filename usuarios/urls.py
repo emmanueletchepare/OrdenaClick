@@ -22,9 +22,6 @@ from .views import (
     confirmar_reemplazo,
     guardar_movimiento,
     actualizar_movimiento,
-    registrar_pago_manual_movimiento,
-    eliminar_pago_movimiento,
-    registrar_debito_automatico_movimiento,
     guardar_configuracion_arca_desarrollador,
     
 )
@@ -129,6 +126,12 @@ from .http.vencimientos_alertas import (
 from .http.movimientos_consultas import (
     verificar_comprobante_duplicado,
     obtener_movimiento_edicion,
+)
+
+from .http.movimientos_pagos import (
+    eliminar_pago_movimiento,
+    registrar_pago_manual_movimiento,
+    registrar_debito_automatico_movimiento,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
