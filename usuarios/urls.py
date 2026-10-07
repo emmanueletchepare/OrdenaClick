@@ -39,12 +39,6 @@ from .views import (
     modificar_proveedor,
     eliminar_proveedor,
     reactivar_proveedor,
-    listar_clientes,
-    autocompletar_cliente_arca,
-    guardar_cliente,
-    modificar_cliente,
-    eliminar_cliente,
-    reactivar_cliente,
     listar_cuentas_bancarias,
     guardar_cuenta_bancaria,
     modificar_cuenta_bancaria,
@@ -100,6 +94,15 @@ from .http.tipos_gasto import (
     modificar_tipo_gasto,
     eliminar_tipo_gasto,
     reactivar_tipo_gasto,
+)
+
+from .http.clientes import (
+    listar_clientes,
+    autocompletar_cliente_arca,
+    guardar_cliente,
+    modificar_cliente,
+    eliminar_cliente,
+    reactivar_cliente,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
