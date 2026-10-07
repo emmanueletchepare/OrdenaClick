@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -350,7 +350,7 @@ Dashboard
 </span>
 
 <span class="sidebar-nav-text">
-PrÃ³ximos vencimientos
+Próximos vencimientos
 </span>
 
 </button>
@@ -552,7 +552,7 @@ ABMs
 </span>
 
 <span class="sidebar-nav-text">
-ConfiguraciÃ³n
+Configuración
 </span>
 
 </button>
@@ -714,10 +714,10 @@ data-designar-perfiles-url="{% url 'gestionar_relaciones_empresa' empresa_actual
 
 {% if ejercicio %}
 
-Ejercicio NÂº {{ ejercicio.numero }}
-â€¢
+Ejercicio Nº {{ ejercicio.numero }}
+•
 {{ ejercicio.fecha_inicio|date:"d/m/Y" }}
-â†’
+→
 {{ ejercicio.fecha_cierre|date:"d/m/Y" }}
 
 {% endif %}
@@ -738,7 +738,7 @@ style="margin-top:25px;">
 
 <div class="empty-state">
 
-Seleccione una opciÃ³n del menÃº lateral
+Seleccione una opción del menú lateral
 
 </div>
 
@@ -770,8 +770,8 @@ id="contenido"
 style="display:none;"
 {% endif %}>
 
-SeleccionÃ¡ una empresa desde el panel lateral
-o creÃ¡ una nueva empresa para comenzar.
+Seleccioná una empresa desde el panel lateral
+o creá una nueva empresa para comenzar.
 
 </div>
 
@@ -812,7 +812,7 @@ enctype="multipart/form-data">
 <div class="field">
 
 <label class="label">
-RazÃ³n social
+Razón social
 </label>
 
 <input
@@ -820,14 +820,14 @@ type="text"
 name="razon_social"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.razon_social }}{% elif empresa_actual %}{{ empresa_actual.razon_social }}{% endif %}"
-placeholder="RazÃ³n social">
+placeholder="Razón social">
 
 </div>
 
 <div class="field">
 
 <label class="label">
-Nombre fantasÃ­a
+Nombre fantasía
 </label>
 
 <input
@@ -835,14 +835,14 @@ type="text"
 name="nombre_fantasia"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.nombre_fantasia }}{% elif empresa_actual %}{{ empresa_actual.nombre_fantasia }}{% endif %}"
-placeholder="Nombre fantasÃ­a">
+placeholder="Nombre fantasía">
 
 </div>
 
 <div class="field">
 
 <label class="label">
-CondiciÃ³n fiscal
+Condición fiscal
 </label>
 
 <select
@@ -928,7 +928,7 @@ value="{% if empresa_importada %}{{ empresa_importada.inicio_contable }}{% elif 
 <div class="field">
 
 <label class="label">
-DirecciÃ³n fiscal
+Dirección fiscal
 </label>
 
 <input
@@ -936,14 +936,14 @@ type="text"
 name="direccion_fiscal"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.direccion_fiscal }}{% elif empresa_actual %}{{ empresa_actual.direccion_fiscal }}{% endif %}"
-placeholder="DirecciÃ³n fiscal">
+placeholder="Dirección fiscal">
 
 </div>
 
 <div class="field">
 
 <label class="label">
-DirecciÃ³n real
+Dirección real
 </label>
 
 <input
@@ -951,14 +951,14 @@ type="text"
 name="direccion_real"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.direccion_real }}{% elif empresa_actual %}{{ empresa_actual.direccion_real }}{% endif %}"
-placeholder="DirecciÃ³n real">
+placeholder="Dirección real">
 
 </div>
 
 <div class="field">
 
 <label class="label">
-TelÃ©fono principal
+Teléfono principal
 </label>
 
 <input
@@ -966,14 +966,14 @@ type="text"
 name="telefono1"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.telefono1 }}{% elif empresa_actual %}{{ empresa_actual.telefono1 }}{% endif %}"
-placeholder="TelÃ©fono principal">
+placeholder="Teléfono principal">
 
 </div>
 
 <div class="field">
 
 <label class="label">
-TelÃ©fono secundario
+Teléfono secundario
 </label>
 
 <input
@@ -981,14 +981,14 @@ type="text"
 name="telefono2"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.telefono2 }}{% elif empresa_actual %}{{ empresa_actual.telefono2 }}{% endif %}"
-placeholder="TelÃ©fono secundario">
+placeholder="Teléfono secundario">
 
 </div>
 
 <div class="field field-full">
 
 <label class="label">
-Correo electrÃ³nico
+Correo electrónico
 </label>
 
 <input
@@ -996,7 +996,7 @@ type="email"
 name="email"
 class="input-box"
 value="{% if empresa_importada %}{{ empresa_importada.email }}{% elif empresa_actual %}{{ empresa_actual.email }}{% endif %}"
-placeholder="Correo electrÃ³nico">
+placeholder="Correo electrónico">
 
 </div>
 
@@ -1046,7 +1046,7 @@ font-weight:600;
 color:#cbd5e1;
 ">
 
-DocumentaciÃ³n societaria
+Documentación societaria
 
 </div>
 
@@ -1120,7 +1120,7 @@ Sin archivo cargado
 <label class="file-btn">
 
 <span id="texto-estatuto">
-ðŸ“„ Adjuntar archivo
+📄 Adjuntar archivo
 </span>
 
 <input
@@ -1202,7 +1202,7 @@ Sin archivo cargado
 
 <span id="texto-acta">
 
-ðŸ“„ Adjuntar archivo
+📄 Adjuntar archivo
 
 </span>
 
@@ -1225,7 +1225,7 @@ display:block;
 margin-top:20px;
 ">
 
-DesignaciÃ³n
+Designación
 
 </label>
 
@@ -1285,7 +1285,7 @@ Sin archivo cargado
 
 <span id="texto-designacion">
 
-ðŸ“„ Adjuntar archivo
+📄 Adjuntar archivo
 
 </span>
 
@@ -1316,7 +1316,7 @@ id="btn-importar-empresa"
 type="button"
 class="action-btn">
 
-ðŸ“¦ Importar Empresa
+📦 Importar Empresa
 
 </button>
 
@@ -1355,7 +1355,7 @@ display:flex;
 align-items:center;
 justify-content:center;
 ">
-â† Volver a ConfiguraciÃ³n
+← Volver a Configuración
 </button>
 
 <button
@@ -1486,7 +1486,7 @@ margin-top:0;
 text-align:center;
 ">
 
-âš ï¸ Eliminar empresa
+⚠️ Eliminar empresa
 
 </h3>
 
@@ -1500,19 +1500,19 @@ margin-bottom:20px;
 
 <div>
 
-Se eliminarÃ¡n:
+Se eliminarán:
 
 </div>
 
 <div>
 
-â€¢ Datos de la empresa
+• Datos de la empresa
 
 </div>
 
 <div>
 
-â€¢ DocumentaciÃ³n asociada
+• Documentación asociada
 
 </div>
 
@@ -1610,7 +1610,7 @@ Ya existe una empresa con ese CUIT.
 
 <br><br>
 
-Â¿Desea reemplazarla?
+¿Desea reemplazarla?
 
 </p>
 
@@ -1638,7 +1638,7 @@ onclick="
 window.location='/confirmar-reemplazo/';
 ">
 
-SÃ­
+Sí
 
 </button>
 
