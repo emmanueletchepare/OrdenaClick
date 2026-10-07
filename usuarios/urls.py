@@ -87,12 +87,12 @@ from .views import (
 )
 
 
-from .relaciones_views import (
+from .http.relaciones import (
     gestionar_relaciones_empresa,
     panel_relaciones,
     resolver_solicitud,
 )
-from .empresa_backup_views import (
+from .http.empresa_backup import (
     cancelar_importacion_empresa,
     exportar_empresa_v1,
     importar_empresa_v1,
