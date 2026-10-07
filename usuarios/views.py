@@ -218,7 +218,7 @@ def home(request):
 
     return render(
         request,
-        "usuarios/home.html",
+        "usuarios/cuenta/home.html",
         {
             "solicitudes_pendientes_count": solicitudes_pendientes_count,
         },
@@ -304,7 +304,7 @@ def modificar_usuario(request):
 
     return render(
         request,
-        "usuarios/modificar_usuario.html",
+        "usuarios/cuenta/modificar_usuario.html",
         {
             "perfil": perfil,
             "error": error
@@ -5767,7 +5767,7 @@ def listar_gestion_claves(request):
     )
 
     html = render_to_string(
-        "usuarios/gestion_claves.html",
+        "usuarios/empresa/gestion_claves.html",
         {
             "empresa": empresa,
             "claves": claves
