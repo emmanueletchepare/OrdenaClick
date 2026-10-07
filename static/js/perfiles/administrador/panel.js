@@ -1,0 +1,17461 @@
+let origenABM = "menu";
+
+let origenABMTiposGasto = "menu";
+
+let contenidoAnteriorABM = null;
+
+let contextoRetornoABM = null;
+
+let contenidoAnteriorABMProveedores = null;
+
+let proveedoresCargaSimple = [];
+
+let recursosCargaSimple = [];
+
+let contenidoAnteriorABMBancosDesdeCuentaBancaria = null;
+
+let origenABMCuentasBancarias = "menu";
+
+let origenABMTarjetas = "menu";
+
+let contenidoAnteriorABMTarjetas = null;
+
+let contenidoAnteriorABMCuentasBancariasDesdeTarjeta = null;
+
+
+/*
+ * =========================================
+ * RETENCIONES
+ * =========================================
+ */
+
+let origenABMRetenciones = "menu";
+
+let contenidoAnteriorABMRetenciones = null;
+
+
+let ultimoBancoCreado = null;
+
+function limpiarPanelOperativo(){
+
+    const submenu =
+    document.getElementById(
+        "submenu-dinamico"
+    );
+
+    if(submenu){
+
+        submenu.innerHTML = "";
+
+    }
+
+    const contenido =
+    document.getElementById(
+        "contenido-operativo"
+    );
+
+    if(contenido){
+
+        contenido.innerHTML = "";
+
+    }
+
+}
+
+function posicionarMainEnElemento(
+    elemento,
+    margenSuperior = 15
+){
+
+    if(!elemento){
+
+        return;
+
+    }
+
+
+    const main =
+        document.querySelector(
+            ".main"
+        );
+
+
+    if(!main){
+
+        return;
+
+    }
+
+
+    function posicionar(){
+
+        const rectMain =
+            main.getBoundingClientRect();
+
+
+        const rectElemento =
+            elemento.getBoundingClientRect();
+
+
+        const destino =
+            main.scrollTop +
+            rectElemento.top -
+            rectMain.top -
+            margenSuperior;
+
+
+        main.scrollTop =
+            Math.max(
+                0,
+                destino
+            );
+
+    }
+
+
+    /*
+     * Primer posicionamiento:
+     * después de restaurar el DOM.
+     */
+
+    requestAnimationFrame(
+        function(){
+
+            requestAnimationFrame(
+                function(){
+
+                    posicionar();
+
+
+                    /*
+                     * Segundo posicionamiento:
+                     *
+                     * Algunas reconstrucciones del formulario
+                     * todavía modifican alturas después de los
+                     * requestAnimationFrame.
+                     *
+                     * Este es el que deja la posición definitiva.
+                     */
+
+                    setTimeout(
+                        function(){
+
+                            posicionar();
+
+                        },
+                        80
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+function posicionarCargaSimpleEnCampo(
+    campoId
+){
+
+    const campo =
+        document.getElementById(
+            campoId
+        );
+
+
+    if(!campo){
+
+        return;
+
+    }
+
+
+    /*
+     * Apuntamos al field completo para que
+     * queden visibles:
+     *
+     * - la etiqueta;
+     * - el select;
+     * - el [+].
+     */
+
+    const field =
+        campo.closest(
+            ".field"
+        );
+
+
+    posicionarMainEnElemento(
+        field || campo,
+        15
+    );
+
+}
+
+function mostrarAltaEmpresa(){
+
+    limpiarPanelOperativo();
+
+    const panelEmpresa =
+    document.getElementById(
+        "panel-empresa"
+    );
+
+    if(panelEmpresa){
+
+        panelEmpresa.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "block";
+
+    const form =
+    document.getElementById("form-alta");
+
+    const contenido =
+    document.getElementById("contenido");
+
+    const titulo =
+    document.getElementById("titulo-panel");
+
+    titulo.innerHTML =
+    'Alta nueva <span>empresa</span>';
+
+    if(contenido){
+
+        contenido.style.display = "none";
+
+    }
+
+    if(form){
+
+        form.style.display = "block";
+
+    }
+
+    document.getElementById(
+        "botonera-alta"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "botonera-modificar"
+    ).style.display = "none";
+}
+
+function mostrarEmpresas(){
+
+    console.log("1");
+
+    limpiarPanelOperativo();
+
+    console.log("2");
+
+    const bloqueAlta =
+    document.getElementById(
+        "bloque-alta-empresa"
+    );
+
+    console.log("3", bloqueAlta);
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display = "none";
+
+    }
+
+    console.log("4");
+
+    const panelEmpresa =
+    document.getElementById(
+        "panel-empresa"
+    );
+
+    console.log("5", panelEmpresa);
+
+    if(panelEmpresa){
+
+        panelEmpresa.style.display = "block";
+
+    }
+
+    console.log("6");
+
+    const menuPrincipal =
+    document.getElementById(
+        "menu-principal"
+    );
+
+    console.log("7", menuPrincipal);
+
+    if(menuPrincipal){
+
+        menuPrincipal.style.display = "none";
+
+    }
+
+    console.log("8");
+
+    const menuEmpresa =
+    document.getElementById(
+        "menu-empresa"
+    );
+
+    if(menuEmpresa){
+
+        menuEmpresa.style.display = "none";
+
+    }
+
+    const menuEmpresas =
+    document.getElementById(
+        "menu-empresas"
+    );
+
+    console.log("9", menuEmpresas);
+
+    if(menuEmpresas){
+
+        menuEmpresas.style.display = "flex";
+
+    }
+
+    console.log("10");
+}
+
+function volverMenuPrincipal(){
+
+    limpiarPanelOperativo();
+
+    const menuPrincipal =
+    document.getElementById(
+        "menu-principal"
+    );
+
+    if(menuPrincipal){
+
+        menuPrincipal.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "menu-empresas"
+    ).style.display = "none";
+}
+
+function mostrarNombreArchivo(input,id){
+
+    if(input.files.length > 0){
+
+        document.getElementById(id).innerText =
+        input.files[0].name;
+
+    }
+
+}
+
+function mostrarContenido(titulo){
+
+    const bloqueAlta =
+    document.getElementById(
+        "bloque-alta-empresa"
+    );
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display = "none";
+
+    }
+
+    document.getElementById(
+        "submenu-dinamico"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "contenido-operativo"
+    ).innerHTML = `
+        <div class="empty-state">
+            ${titulo} en desarrollo
+        </div>
+    `;
+}
+
+function mostrarSubmenu(tipo){
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+    /*
+     * Cada entrada desde el menú lateral vuelve al estado base
+     * de la Empresa. Las subpantallas pueden ocultar/modificar
+     * esta cabecera después, pero nunca dejan residuos al salir.
+     */
+    if(typeof window.restaurarCabeceraEmpresa === "function"){
+        window.restaurarCabeceraEmpresa();
+    }
+
+
+    let html =
+        "";
+
+
+    /*
+     * =========================================
+     * REGISTROS
+     * =========================================
+     */
+
+    if(tipo === "registros"){
+
+        html = `
+
+            <div
+                class="
+                    vencimientos-navegacion
+                    registros-navegacion
+                "
+            >
+
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-izquierda
+                    "
+                    id="btnRegistrosAnterior"
+                    aria-label="Opciones anteriores"
+                    title="Opciones anteriores"
+                >
+                    ❮
+                </button>
+
+                <div
+                    class="
+                        vencimientos-botonera
+                        registros-botonera
+                    "
+                    id="botoneraRegistros"
+                >
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btnRegistrosComprobantes"
+                        onclick="mostrarCargaSimple()"
+                    >
+                        Comprobantes
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                        id="btn-obligaciones"
+                    >
+                        Obligaciones
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Carga Planificada
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Registrar Pago
+                    </button>
+
+                    <button
+                        type="button"
+                        class="vencimientos-segmento"
+                    >
+                        Modificar / Eliminar
+                    </button>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="
+                        vencimientos-flecha
+                        vencimientos-flecha-derecha
+                    "
+                    id="btnRegistrosSiguiente"
+                    aria-label="Opciones siguientes"
+                    title="Opciones siguientes"
+                >
+                    ❯
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * ABMs
+     * =========================================
+     */
+
+    if(tipo === "abms"){
+
+        html = `
+
+            <div class="abms-grupos">
+
+
+                <!-- =================================
+                    ESTRUCTURA OPERATIVA
+                ================================== -->
+
+                <section class="abms-grupo">
+
+                    <div class="abms-grupo-titulo">
+                        Estructura operativa
+                    </div>
+
+                    <div
+                        class="
+                            vencimientos-navegacion
+                            abms-navegacion
+                        "
+                    >
+
+                        <button
+                            type="button"
+                            class="
+                                vencimientos-flecha
+                                vencimientos-flecha-izquierda
+                            "
+                            id="btnEstructuraOperativaAnterior"
+                            aria-label="Opciones anteriores"
+                            title="Opciones anteriores"
+                        >
+                            ❮
+                        </button>
+
+                        <div
+                            class="
+                                vencimientos-botonera
+                                abms-botonera
+                            "
+                            id="botoneraEstructuraOperativa"
+                        >
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMCentrosOperativos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Centros Operativos
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMRecursosOperativos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Recurso operativo
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMProveedores(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Proveedores
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMTiposGasto(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Tipos de gasto
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMClientes(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Clientes
+                            </button>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="
+                                vencimientos-flecha
+                                vencimientos-flecha-derecha
+                            "
+                            id="btnEstructuraOperativaSiguiente"
+                            aria-label="Opciones siguientes"
+                            title="Opciones siguientes"
+                        >
+                            ❯
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================
+                     FINANZAS Y MEDIOS DE PAGO
+                ================================== -->
+
+                <section class="abms-grupo">
+
+                    <div class="abms-grupo-titulo">
+                        Finanzas y medios de pago
+                    </div>
+
+                    <div
+                        class="
+                            vencimientos-navegacion
+                            abms-navegacion
+                        "
+                    >
+
+                        <div
+                            class="
+                                vencimientos-botonera
+                                abms-botonera
+                            "
+                        >
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMBancos(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Bancos
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMCuentasBancarias(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Cuentas Bancarias
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="vencimientos-segmento"
+                                onclick="
+                                    mostrarABMTarjetas(
+                                        'menu'
+                                    )
+                                "
+                            >
+                                Tarjetas
+                            </button>
+
+
+                            <button
+                                id="btnAbrirABMRetenciones"
+                                type="button"
+                                class="vencimientos-segmento"
+                            >
+                                Retenciones
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * HERRAMIENTAS
+     * =========================================
+     */
+
+    if(tipo === "herramientas"){
+
+        html = `
+
+            <button
+                class="module-card"
+                onclick="mostrarABMGestionClaves()"
+            >
+                Gestión de claves
+            </button>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * CONFIGURACIÓN
+     * =========================================
+     */
+
+    if(tipo === "configuracion"){
+
+        html = `
+
+            <button
+                class="module-card"
+                onclick="mostrarModificarEmpresa()"
+            >
+                Modificar Empresa
+            </button>
+
+
+            <button
+                type="button"
+                class="module-card"
+                id="btn-designar-perfiles"
+                data-designar-perfiles-url="${document.getElementById('panel-empresa')?.dataset.designarPerfilesUrl || ''}"
+            >
+                Designar perfiles
+            </button>
+
+        `;
+
+    }
+
+
+    const submenu =
+        document.getElementById(
+            "submenu-dinamico"
+        );
+
+
+    const contenido =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    if(submenu){
+
+        submenu.innerHTML =
+            html;
+
+    }
+
+
+    if(tipo === "abms"){
+
+        inicializarNavegacionEstructuraOperativa();
+
+    }
+
+
+    if(contenido){
+
+        contenido.innerHTML = "";
+
+    }
+
+
+    /*
+     * =========================================
+     * EVENTOS DEL SUBMENÚ
+     * =========================================
+     *
+     * Retenciones se incorpora sin agregar
+     * JavaScript inline nuevo.
+     */
+
+    const btnRetenciones =
+        document.getElementById(
+            "btnAbrirABMRetenciones"
+        );
+
+
+    if(btnRetenciones){
+
+        btnRetenciones.addEventListener(
+            "click",
+            function(){
+
+                mostrarABMRetenciones(
+                    "menu"
+                );
+
+            }
+        );
+
+    }
+
+}
+
+function mostrarModificarEmpresa(){
+
+    limpiarPanelOperativo();
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "block";
+
+    document.getElementById(
+        "form-alta"
+    ).style.display = "block";
+
+    document.getElementById(
+        "contenido"
+    ).style.display = "none";
+
+    document.getElementById(
+        "titulo-panel"
+    ).innerHTML =
+    'Modificar <span>Empresa</span>';
+
+    document.getElementById(
+        "botonera-alta"
+    ).style.display = "none";
+
+    document.getElementById(
+         "botonera-modificar"
+    ).style.display = "flex";
+
+}
+
+async function mostrarABMGestionClaves(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    if(
+        !contenidoOperativo ||
+        !empresaActiva
+    ){
+
+        alert(
+            "No se pudo preparar Gestión de claves."
+        );
+
+        return;
+
+    }
+
+    const empresa =
+        empresaActiva.value;
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/gestion-claves/?empresa=${encodeURIComponent(empresa)}`
+            );
+
+        const resultado =
+            await respuesta.json();
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo cargar Gestión de claves."
+            );
+
+            return;
+
+        }
+
+        const bloqueAlta =
+            document.getElementById(
+                "bloque-alta-empresa"
+            );
+
+        if(bloqueAlta){
+
+            bloqueAlta.style.display =
+                "none";
+
+        }
+
+        contenidoOperativo.innerHTML =
+            resultado.html;
+
+        if(
+            typeof iniciarABMGestionClaves ===
+            "function"
+        ){
+
+            iniciarABMGestionClaves();
+
+        }else{
+
+            console.error(
+                "No se encontró iniciarABMGestionClaves()."
+            );
+
+            alert(
+                "Gestión de claves se cargó, pero no pudo iniciarse."
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando Gestión de claves:",
+            error
+        );
+
+        alert(
+            "No se pudo conectar con Gestión de claves."
+        );
+
+    }
+
+}
+
+async function mostrarABMCentrosOperativos(origen = "menu"){
+
+    origenABM = origen;
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM = null;
+
+    }
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        (
+            origen === "registro" ||
+            origen === "cliente"
+        ) &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+        while(contenidoOperativo.firstChild){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+    const respuesta = await fetch(
+        `/listar-centros-operativos/?empresa=${empresa}`
+    );
+
+    if(!respuesta.ok){
+
+        alert(
+            "No se pudo cargar el módulo de centros operativos."
+        );
+
+        return;
+
+    }
+
+    const datos =
+        await respuesta.json();
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "none";
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+    iniciarABMCentrosOperativos();
+
+}
+
+/**
+ * Carga el ABM de Clientes correspondiente a la Empresa
+ * activa y conserva el origen de navegación para permitir
+ * el futuro retorno contextual desde formularios.
+ */
+async function mostrarABMClientes(origen = "menu"){
+
+    origenABM = origen;
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const inputEmpresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !inputEmpresa
+    ){
+
+        console.error(
+            "No se encontraron los elementos necesarios para abrir Clientes."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        inputEmpresa.value;
+
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/clientes/?empresa=${empresa}`
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de clientes."
+            );
+
+            return;
+
+        }
+
+
+        const datos =
+            await respuesta.json();
+
+
+        const bloqueAlta =
+            document.getElementById(
+                "bloque-alta-empresa"
+            );
+
+
+        if(bloqueAlta){
+
+            bloqueAlta.style.display =
+                "none";
+
+        }
+
+
+        contenidoOperativo.innerHTML =
+            datos.html;
+
+
+        iniciarABMClientes();
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando clientes:",
+            error
+        );
+
+        alert(
+            "Ocurrió un error al cargar el módulo de clientes."
+        );
+
+    }
+
+}
+
+
+/**
+ * Regresa desde el ABM de Clientes al menú general de ABMs.
+ *
+ * El retorno contextual desde formularios se incorporará
+ * cuando exista el primer selector de Cliente con botón [+].
+ */
+function volverDesdeABMClientes(){
+
+    mostrarSubmenu(
+        "abms"
+    );
+
+}
+
+function volverDesdeABMCentrosOperativos(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    if(
+        origenABM === "cliente" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        actualizarCentroOperativoDelCliente();
+
+        return;
+
+    }
+
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABM
+    ){
+
+        contenidoOperativo.innerHTML = "";
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+        contenidoAnteriorABM = null;
+
+        actualizarCentroOperativoDelRegistro();
+
+        return;
+
+    }
+
+    contenidoAnteriorABM = null;
+
+    mostrarSubmenu("abms");
+
+}
+
+async function actualizarCentroOperativoDelRegistro(){
+
+    if(
+        typeof cargarSelectCentrosOperativos !==
+            "function"
+    ){
+
+        return;
+
+    }
+
+
+    await cargarSelectCentrosOperativos();
+
+
+    const select =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+
+    if(!select){
+
+        ultimoCentroOperativoCreado =
+            null;
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * SELECCIONAR CENTRO RECIÉN CREADO
+     * =========================================
+     */
+
+    if(
+        ultimoCentroOperativoCreado
+    ){
+
+        const centroId =
+            typeof ultimoCentroOperativoCreado ===
+                "object"
+
+                ? String(
+                    ultimoCentroOperativoCreado.id
+                )
+
+                : String(
+                    ultimoCentroOperativoCreado
+                );
+
+
+        const opcion =
+            select.querySelector(
+                `option[value="${centroId}"]`
+            );
+
+
+        if(opcion){
+
+            select.value =
+                centroId;
+
+        }
+
+    }
+
+
+    ultimoCentroOperativoCreado =
+        null;
+
+
+    /*
+     * El Recurso Operativo depende del Centro.
+     * Actualizamos sus opciones después de
+     * restaurar el Centro seleccionado.
+     */
+
+    if(
+        typeof actualizarRecursosPorCentroOperativo ===
+            "function"
+    ){
+
+        actualizarRecursosPorCentroOperativo();
+
+    }
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "centroOperativoRegistro"
+    );
+
+}
+
+async function mostrarABMProveedores(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    if(
+        !contenidoOperativo ||
+        !empresaActiva
+    ){
+
+        alert(
+            "No se pudo preparar el módulo de proveedores."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        empresaActiva.value;
+
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    let datos;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de proveedores."
+            );
+
+            return;
+
+        }
+
+
+        datos =
+            await respuesta.json();
+
+    }
+    catch(error){
+
+        console.error(
+            "Error al cargar el ABM de proveedores:",
+            error
+        );
+
+        alert(
+            "No se pudo conectar con el módulo de proveedores."
+        );
+
+        return;
+
+    }
+
+
+    origenABM =
+        origen;
+
+    origenABMTiposGasto =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABMProveedores =
+            null;
+
+    }
+
+
+    if(
+        (
+            origen === "registro" ||
+            origen === "tipo_gasto"
+        ) &&
+        contenidoAnteriorABMProveedores ===
+            null
+    ){
+
+        contenidoAnteriorABMProveedores =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMProveedores
+                .appendChild(
+                    contenidoOperativo.firstChild
+                );
+
+        }
+
+    }
+
+
+    const bloqueAltaEmpresa =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAltaEmpresa){
+
+        bloqueAltaEmpresa.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+
+    if(
+        typeof iniciarABMProveedores ===
+        "function"
+    ){
+
+        iniciarABMProveedores();
+
+    }
+    else{
+
+        console.error(
+            "No se encontró la función iniciarABMProveedores()."
+        );
+
+        alert(
+            "El módulo de proveedores se cargó, pero no pudo iniciarse."
+        );
+
+    }
+
+}
+
+async function mostrarABMTiposGasto(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresaActiva
+    ){
+
+        alert(
+            "No se pudo preparar el módulo de tipos de gasto."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        empresaActiva.value;
+
+
+    if(!empresa){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Primero validamos y cargamos el ABM.
+     * De esta forma no retiramos Carga Simple
+     * si ocurre un error de conexión.
+     */
+    let datos;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/tipos-gasto/?empresa=${encodeURIComponent(empresa)}`
+
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de tipos de gasto."
+            );
+
+            return;
+
+        }
+
+
+        datos =
+            await respuesta.json();
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando tipos de gasto:",
+            error
+        );
+
+        alert(
+            "No se pudo conectar con el módulo de tipos de gasto."
+        );
+
+        return;
+
+    }
+
+
+    origenABM = origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM = null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAltaEmpresa =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAltaEmpresa){
+
+        bloqueAltaEmpresa.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+
+    if(
+        typeof iniciarABMTiposGasto ===
+        "function"
+    ){
+
+        iniciarABMTiposGasto();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMTiposGasto()."
+        );
+
+        alert(
+            "El módulo se cargó, pero no pudo iniciarse."
+        );
+
+    }
+
+}
+
+function actualizarTipoGastoDelRegistro(){
+
+    const select =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+
+    if(!select){
+
+        ultimoTipoGastoCreado =
+            null;
+
+        return;
+
+    }
+
+
+    /*
+     * Aunque no se haya creado un elemento,
+     * si volvemos desde el ABM debemos quedar
+     * exactamente en Tipo de Gasto.
+     */
+
+    if(!ultimoTipoGastoCreado){
+
+        posicionarCargaSimpleEnCampo(
+            "tipoGastoRegistro"
+        );
+
+        return;
+
+    }
+
+
+    const tipoGastoId =
+        typeof ultimoTipoGastoCreado ===
+            "object"
+
+            ? String(
+                ultimoTipoGastoCreado.id
+            )
+
+            : String(
+                ultimoTipoGastoCreado
+            );
+
+
+    const tipoGastoNombre =
+        typeof ultimoTipoGastoCreado ===
+            "object"
+
+            ? ultimoTipoGastoCreado.nombre
+
+            : "Tipo de gasto creado";
+
+
+    let opcion =
+        select.querySelector(
+            `option[value="${tipoGastoId}"]`
+        );
+
+
+    if(!opcion){
+
+        opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value =
+            tipoGastoId;
+
+
+        opcion.textContent =
+            tipoGastoNombre ||
+            "Tipo de gasto creado";
+
+
+        select.appendChild(
+            opcion
+        );
+
+    }
+
+
+    select.value =
+        tipoGastoId;
+
+
+    ultimoTipoGastoCreado =
+        null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "tipoGastoRegistro"
+    );
+
+}
+
+async function volverDesdeABMProveedores(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    if(!contenidoOperativo){
+
+        alert(
+            "No se pudo recuperar el módulo anterior."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Proveedores abierto desde Carga Simple.
+     */
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABMProveedores
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABMProveedores
+        );
+
+
+        contenidoAnteriorABMProveedores =
+            null;
+
+
+        if(
+            typeof actualizarProveedorDelRegistro ===
+            "function"
+        ){
+
+            await actualizarProveedorDelRegistro();
+
+        }
+
+
+        origenABM =
+            "registro";
+
+
+        return;
+
+    }
+
+
+    /*
+     * Proveedores abierto desde Tipo de Gasto.
+     */
+    if(
+        origenABM === "tipo_gasto" &&
+        contenidoAnteriorABMProveedores
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABMProveedores
+        );
+
+
+        contenidoAnteriorABMProveedores =
+            null;
+
+
+        if(
+            typeof actualizarProveedoresDelTipoGasto ===
+            "function"
+        ){
+
+            await actualizarProveedoresDelTipoGasto();
+
+        }
+
+
+        /*
+        * Volvemos a Tipo de Gasto, pero restauramos
+        * también el origen REAL desde donde ese ABM
+        * había sido abierto.
+        *
+        * Ejemplo:
+        *
+        * Carga Simple
+        * → Tipo de Gasto
+        * → Proveedor
+        * → Tipo de Gasto
+        * → Carga Simple
+        */
+
+        origenABM =
+            origenABMTiposGasto;
+
+
+        return;
+
+    }
+
+
+    /*
+     * Proveedores abierto directamente desde el menú.
+     */
+    contenidoAnteriorABMProveedores =
+        null;
+
+    origenABM =
+        "menu";
+
+
+    mostrarSubmenu(
+        "abms"
+    );
+
+}
+
+
+async function actualizarProveedorDelRegistro(){
+
+    await cargarSelectProveedores();
+
+
+    const select =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+
+    if(!select){
+
+        ultimoProveedorCreado =
+            null;
+
+        return;
+
+    }
+
+
+    if(
+        ultimoProveedorCreado
+    ){
+
+        const opcion =
+            select.querySelector(
+                `option[value="${ultimoProveedorCreado}"]`
+            );
+
+
+        if(opcion){
+
+            select.value =
+                ultimoProveedorCreado;
+
+        }
+
+    }
+
+
+    ultimoProveedorCreado =
+        null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "proveedorRegistro"
+    );
+
+}
+
+async function mostrarABMTarjetas(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/tarjetas/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar las tarjetas."
+            );
+
+            return;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando tarjetas:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar las tarjetas."
+        );
+
+        return;
+
+    }
+
+
+    origenABM =
+        origen;
+
+    origenABMTarjetas =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABMTarjetas =
+            null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABMTarjetas === null
+    ){
+
+        contenidoAnteriorABMTarjetas =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMTarjetas.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    if(
+        typeof iniciarABMTarjetas ===
+        "function"
+    ){
+
+        iniciarABMTarjetas();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMTarjetas()."
+        );
+
+    }
+
+}
+
+async function mostrarABMRetenciones(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    /*
+     * =========================================
+     * CARGAR ABM
+     * =========================================
+     */
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/retenciones/?empresa=${encodeURIComponent(
+                    empresa.value
+                )}`
+
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar las retenciones."
+            );
+
+            return;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando retenciones:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar las retenciones."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * GUARDAR ORIGEN
+     * =========================================
+     */
+
+    origenABM =
+        origen;
+
+    origenABMRetenciones =
+        origen;
+
+
+    /*
+     * =========================================
+     * APERTURA DESDE MENÚ
+     * =========================================
+     */
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABMRetenciones =
+            null;
+
+    }
+
+
+    /*
+     * =========================================
+     * APERTURA DESDE PAGO
+     * =========================================
+     *
+     * Todavía no usamos esta rama.
+     *
+     * Queda preparada para:
+     *
+     * Carga Simple
+     * → Pago determinado
+     * → Retenciones
+     * → [+]
+     * → ABM Retenciones
+     *
+     * Guardamos LOS MISMOS nodos para no perder
+     * importe, comprobante, otros pagos, etc.
+     */
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABMRetenciones ===
+            null
+    ){
+
+        contenidoAnteriorABMRetenciones =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMRetenciones
+                .appendChild(
+                    contenidoOperativo.firstChild
+                );
+
+        }
+
+    }
+
+
+    /*
+     * =========================================
+     * OCULTAR ALTA DE EMPRESA
+     * =========================================
+     */
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    /*
+     * =========================================
+     * MOSTRAR ABM
+     * =========================================
+     */
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    /*
+     * =========================================
+     * INICIALIZAR JS EXTERNO
+     * =========================================
+     */
+
+    if(
+        typeof iniciarABMRetenciones ===
+            "function"
+    ){
+
+        iniciarABMRetenciones();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMRetenciones()."
+        );
+
+    }
+
+}
+
+async function mostrarABMCuentasBancarias(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar las cuentas bancarias."
+            );
+
+            return;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando cuentas bancarias:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar las cuentas bancarias."
+        );
+
+        return;
+
+    }
+
+
+    origenABM =
+        origen;
+
+    origenABMCuentasBancarias =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Tarjetas → Cuentas Bancarias.
+     * Guardamos el DOM completo del ABM de Tarjetas para
+     * poder restaurarlo exactamente al volver.
+     */
+
+    if(
+        origen === "tarjeta" &&
+        contenidoAnteriorABMCuentasBancariasDesdeTarjeta === null
+    ){
+
+        contenidoAnteriorABMCuentasBancariasDesdeTarjeta =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMCuentasBancariasDesdeTarjeta.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    if(
+        typeof iniciarABMCuentasBancarias ===
+        "function"
+    ){
+
+        iniciarABMCuentasBancarias();
+
+    }
+
+}
+
+async function mostrarABMRecursosOperativos(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        alert(
+            "Seleccione una empresa."
+        );
+
+        return;
+
+    }
+
+
+    let resultado;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/recursos-operativos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            alert(
+                resultado.mensaje ||
+                "No se pudieron cargar los recursos operativos."
+            );
+
+            return;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando recursos operativos:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar los recursos operativos."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Recién después de comprobar que el ABM cargó
+     * guardamos el origen.
+     */
+    origenABM =
+        origen;
+
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
+
+    /*
+     * Si viene desde Carga Simple, retiramos físicamente
+     * el formulario y lo guardamos completo.
+     *
+     * Así conserva inputs, selects y demás estado.
+     */
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        resultado.html;
+
+
+    if(
+        typeof iniciarABMRecursosOperativos ===
+        "function"
+    ){
+
+        iniciarABMRecursosOperativos();
+
+    }else{
+
+        console.error(
+            "No se encontró iniciarABMRecursosOperativos()."
+        );
+
+        alert(
+            "El módulo se cargó, pero no pudo iniciarse."
+        );
+
+    }
+
+}
+
+async function actualizarRecursoOperativoDelRegistro(){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    const selectCentro =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+
+    const selectRecurso =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !selectCentro ||
+        !selectRecurso
+    ){
+
+        ultimoRecursoOperativoCreado =
+            null;
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/recursos-operativos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.recursos
+            )
+        ){
+
+            posicionarCargaSimpleEnCampo(
+                "recursoOperativoRegistro"
+            );
+
+            return;
+
+        }
+
+
+        recursosCargaSimple =
+            resultado.recursos;
+
+
+        if(
+            ultimoRecursoOperativoCreado
+        ){
+
+            const recursoId =
+                typeof ultimoRecursoOperativoCreado ===
+                    "object"
+
+                    ? String(
+                        ultimoRecursoOperativoCreado.id
+                    )
+
+                    : String(
+                        ultimoRecursoOperativoCreado
+                    );
+
+
+            const recursoCreado =
+                recursosCargaSimple.find(
+
+                    function(recurso){
+
+                        return String(
+                            recurso.id
+                        ) === recursoId;
+
+                    }
+
+                );
+
+
+            if(recursoCreado){
+
+                const centrosRecurso =
+                    Array.isArray(
+                        recursoCreado.centros_operativos_ids
+                    )
+
+                        ? recursoCreado.centros_operativos_ids
+
+                        : [];
+
+
+                /*
+                 * Si el Centro Operativo actual pertenece
+                 * al recurso nuevo, lo conservamos.
+                 */
+
+                const centroActual =
+                    String(
+                        selectCentro.value ||
+                        ""
+                    );
+
+
+                const perteneceAlCentroActual =
+                    centrosRecurso
+
+                        .map(
+                            function(centroId){
+
+                                return String(
+                                    centroId
+                                );
+
+                            }
+                        )
+
+                        .includes(
+                            centroActual
+                        );
+
+
+                /*
+                 * Si no pertenece al Centro actual,
+                 * usamos el primero asociado al recurso.
+                 */
+
+                if(!perteneceAlCentroActual){
+
+                    const primerCentroId =
+                        centrosRecurso.length > 0
+
+                            ? String(
+                                centrosRecurso[0]
+                            )
+
+                            : "";
+
+
+                    if(primerCentroId){
+
+                        const opcionCentro =
+                            selectCentro.querySelector(
+                                `option[value="${primerCentroId}"]`
+                            );
+
+
+                        if(opcionCentro){
+
+                            selectCentro.value =
+                                primerCentroId;
+
+                        }
+
+                    }
+
+                }
+
+
+                /*
+                 * Reconstruimos Recursos según
+                 * el Centro Operativo seleccionado.
+                 */
+
+                actualizarRecursosPorCentroOperativo();
+
+
+                const opcionRecurso =
+                    selectRecurso.querySelector(
+                        `option[value="${recursoId}"]`
+                    );
+
+
+                if(opcionRecurso){
+
+                    selectRecurso.value =
+                        recursoId;
+
+                }
+
+            }else{
+
+                actualizarRecursosPorCentroOperativo();
+
+            }
+
+        }else{
+
+            actualizarRecursosPorCentroOperativo();
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error actualizando Recursos Operativos del registro:",
+            error
+        );
+
+    }
+
+
+    ultimoRecursoOperativoCreado =
+        null;
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     */
+
+    posicionarCargaSimpleEnCampo(
+        "recursoOperativoRegistro"
+    );
+
+}
+
+async function mostrarABMBancos(
+    origen = "menu"
+){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+    const empresaElemento =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !contenidoOperativo ||
+        !empresaElemento ||
+        !empresaElemento.value
+    ){
+
+        alert(
+            "No hay una empresa seleccionada."
+        );
+
+        return;
+
+    }
+
+
+    const empresa =
+        empresaElemento.value;
+
+
+    let datos;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/listar-bancos/?empresa=${encodeURIComponent(empresa)}`
+            );
+
+
+        if(!respuesta.ok){
+
+            alert(
+                "No se pudo cargar el módulo de bancos."
+            );
+
+            return;
+
+        }
+
+
+        datos =
+            await respuesta.json();
+
+    }catch(error){
+
+        console.error(
+            "Error cargando bancos:",
+            error
+        );
+
+
+        alert(
+            "Ocurrió un error al cargar el módulo de bancos."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Guardamos el formulario anterior recién después
+     * de comprobar que Bancos pudo cargarse.
+     */
+
+    if(origen === "menu"){
+
+        contenidoAnteriorABM =
+            null;
+
+    }
+
+
+    if(
+        origen === "registro" &&
+        contenidoAnteriorABM === null
+    ){
+
+        contenidoAnteriorABM =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABM.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Segundo nivel:
+     *
+     * Formulario original
+     * → Cuentas Bancarias
+     * → Bancos
+     *
+     * Este fragmento guarda exclusivamente
+     * el ABM de Cuentas Bancarias.
+     */
+
+    if(
+        origen === "cuenta_bancaria" &&
+        contenidoAnteriorABMBancosDesdeCuentaBancaria === null
+    ){
+
+        contenidoAnteriorABMBancosDesdeCuentaBancaria =
+            document.createDocumentFragment();
+
+
+        while(
+            contenidoOperativo.firstChild
+        ){
+
+            contenidoAnteriorABMBancosDesdeCuentaBancaria.appendChild(
+                contenidoOperativo.firstChild
+            );
+
+        }
+
+    }
+
+
+    origenABM =
+        origen;
+
+
+    const bloqueAlta =
+        document.getElementById(
+            "bloque-alta-empresa"
+        );
+
+
+    if(bloqueAlta){
+
+        bloqueAlta.style.display =
+            "none";
+
+    }
+
+
+    contenidoOperativo.innerHTML =
+        datos.html;
+
+
+    iniciarABMBancos();
+
+}
+
+async function volverDesdeABMBancos(){
+
+    const contenidoOperativo =
+        document.getElementById(
+            "contenido-operativo"
+        );
+
+
+    /*
+     * =========================================
+     * BANCOS ABIERTO DESDE CUENTAS BANCARIAS
+     * =========================================
+     */
+
+    if(
+        origenABM === "cuenta_bancaria" &&
+        contenidoAnteriorABMBancosDesdeCuentaBancaria &&
+        contenidoOperativo
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABMBancosDesdeCuentaBancaria
+        );
+
+
+        contenidoAnteriorABMBancosDesdeCuentaBancaria =
+            null;
+
+
+        origenABM =
+            origenABMCuentasBancarias;
+
+
+        if(
+            typeof actualizarBancosCuentaBancaria ===
+                "function"
+        ){
+
+            await actualizarBancosCuentaBancaria();
+
+        }
+
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * BANCOS ABIERTOS DESDE REGISTRO
+     * =========================================
+     */
+
+    if(
+        origenABM === "registro" &&
+        contenidoAnteriorABM &&
+        contenidoOperativo
+    ){
+
+        contenidoOperativo.innerHTML =
+            "";
+
+
+        contenidoOperativo.appendChild(
+            contenidoAnteriorABM
+        );
+
+
+        contenidoAnteriorABM =
+            null;
+
+
+        /*
+         * =====================================
+         * DESTINO TRANSFERENCIA / DEPÓSITO
+         * =====================================
+         */
+
+        if(
+            contextoRetornoABM &&
+            contextoRetornoABM.tipo ===
+                "operacion_bancaria" &&
+            contextoRetornoABM.campo ===
+                "destino"
+        ){
+
+            const pagoId =
+                Number(
+                    contextoRetornoABM.pagoId
+                );
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            if(!tarjeta){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            /*
+             * Recargar Bancos de ESTA transferencia.
+             */
+
+            await cargarBancosOperacionBancaria(
+                pagoId
+            );
+
+
+            /*
+             * Abrir Transferencias / Depósitos.
+             */
+
+            const bloque =
+                tarjeta.querySelector(
+                    ".bloque-operaciones-bancarias"
+                );
+
+
+            const boton =
+                tarjeta.querySelector(
+                    ".btn-toggle-operaciones-bancarias"
+                );
+
+
+            const total =
+                tarjeta.querySelector(
+                    ".total-operaciones-bancarias"
+                );
+
+
+            if(bloque){
+
+                bloque.style.display =
+                    "block";
+
+            }
+
+
+            if(boton){
+
+                boton.innerHTML = `
+
+                    <span>
+                        ▼ Transferencias / Depósitos
+                    </span>
+
+                    <strong
+                        class="total-operaciones-bancarias"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
+
+                `;
+
+            }
+
+
+            /*
+             * Banco recién creado.
+             *
+             * cargarBancosOperacionBancaria()
+             * ya maneja ultimoBancoCreado y selecciona
+             * automáticamente el Banco nuevo.
+             */
+
+
+            contextoRetornoABM =
+                null;
+
+
+            origenABM =
+                "registro";
+
+
+            /*
+             * =====================================
+             * POSICIÓN EXACTA
+             * =====================================
+             *
+             * El encabezado Transferencias queda
+             * arriba, igual que con Cuenta Bancaria.
+             */
+
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * =====================================
+         * CHEQUE DE TERCERO DEL PAGO
+         * =====================================
+         */
+
+        if(
+            contextoRetornoABM &&
+            contextoRetornoABM.tipo ===
+                "cheque_pago" &&
+            contextoRetornoABM.origen ===
+                "tercero"
+        ){
+
+            const pagoId =
+                Number(
+                    contextoRetornoABM.pagoId
+                );
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            if(!tarjeta){
+
+                contextoRetornoABM =
+                    null;
+
+                return;
+
+            }
+
+
+            await cargarEntidadesChequePago(
+                pagoId,
+                "tercero"
+            );
+
+
+            const bloque =
+                tarjeta.querySelector(
+                    ".bloque-cheques-pago"
+                );
+
+
+            const boton =
+                tarjeta.querySelector(
+                    ".btn-toggle-cheques-pago"
+                );
+
+
+            const total =
+                tarjeta.querySelector(
+                    ".total-cheques-pago"
+                );
+
+
+            if(bloque){
+
+                bloque.style.display =
+                    "block";
+
+            }
+
+
+            if(boton){
+
+                boton.innerHTML = `
+
+                    <span>
+                        ▼ Cheques
+                    </span>
+
+                    <strong
+                        class="total-cheques-pago"
+                    >
+                        ${
+                            total
+                                ? total.textContent
+                                : "$ 0,00"
+                        }
+                    </strong>
+
+                `;
+
+            }
+
+
+            /*
+             * Mantener origen Tercero.
+             */
+
+            const selectOrigen =
+                tarjeta.querySelector(
+                    ".origen-cheque-pago"
+                );
+
+
+            if(selectOrigen){
+
+                selectOrigen.value =
+                    "tercero";
+
+            }
+
+
+            contextoRetornoABM =
+                null;
+
+
+            origenABM =
+                "registro";
+
+
+            posicionarMainEnElemento(
+                boton,
+                15
+            );
+
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+     * =========================================
+     * ABM ABIERTO DESDE MENÚ
+     * =========================================
+     */
+
+    contenidoAnteriorABM =
+        null;
+
+
+    contextoRetornoABM =
+        null;
+
+
+    origenABM =
+        "menu";
+
+
+    mostrarSubmenu(
+        "abms"
+    );
+
+}
+
+function agregarBancoTemporal(){
+
+    const input =
+        document.getElementById(
+            "nuevoBanco"
+        );
+
+    const nombre =
+        input.value.trim();
+
+    if(nombre===""){
+
+        alert(
+            "Ingrese el nombre del banco."
+        );
+
+        return;
+
+    }
+
+    const grilla =
+        document.getElementById(
+            "grillaBancos"
+        );
+
+    grilla.insertAdjacentHTML(
+        "beforeend",
+        `
+
+<div
+style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:14px 18px;
+background:#1b2130;
+border:1px solid #2b3447;
+border-radius:14px;
+">
+
+<div>
+
+${nombre}
+
+</div>
+
+<div
+style="
+display:flex;
+gap:8px;
+">
+
+<button
+class="action-btn">
+
+Modificar
+
+</button>
+
+<button
+class="action-btn"
+style="
+background:#7f1d1d;
+border-color:#991b1b;
+">
+
+Eliminar
+
+</button>
+
+</div>
+
+</div>
+
+`
+    );
+
+    input.value="";
+
+    input.focus();
+
+}
+
+async function iniciarEventosCargaSimple(){
+
+    const selectTipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+    const selectProveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    const selectCentroOperativo =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    const selectRecursoOperativo =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+    const botonAgregarTipoGasto =
+        document.getElementById(
+            "btnAgregarTipoGastoRegistro"
+        );
+
+    const botonAgregarProveedor =
+        document.getElementById(
+            "btnAgregarProveedorRegistro"
+        );
+
+    const botonAgregarRecurso =
+        document.getElementById(
+            "btnAgregarRecursoOperativoRegistro"
+        );
+
+    const empresaActiva =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const selectOrigenCheque =
+        document.getElementById(
+            "origenCheque"
+        );
+
+
+    const selectTipoCheque =
+        document.getElementById(
+            "tipoCheque"
+        );
+
+
+    if(
+        !selectTipoGasto ||
+        !selectProveedor ||
+        !selectCentroOperativo ||
+        !selectRecursoOperativo ||
+        !empresaActiva
+    ){
+
+        console.error(
+            "No se encontraron todos los controles de Carga Simple."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Proveedor depende de Tipo de Gasto.
+     */
+    if(!selectTipoGasto.value){
+
+        selectProveedor.disabled = true;
+
+        selectProveedor.innerHTML = `
+            <option value="">
+                Seleccione primero un tipo de gasto...
+            </option>
+        `;
+
+
+        if(botonAgregarProveedor){
+
+            botonAgregarProveedor.disabled =
+                true;
+
+        }
+
+    }
+
+
+    /*
+     * Recurso Operativo depende de Centro Operativo.
+     */
+    if(!selectCentroOperativo.value){
+
+        selectRecursoOperativo.disabled =
+            true;
+
+        selectRecursoOperativo.innerHTML = `
+            <option value="">
+                Seleccione primero un Centro Operativo...
+            </option>
+        `;
+
+
+        if(botonAgregarRecurso){
+
+            botonAgregarRecurso.disabled =
+                true;
+
+        }
+
+    }
+
+
+    if(
+        botonAgregarTipoGasto &&
+        !botonAgregarTipoGasto.dataset.eventoAsignado
+    ){
+
+        botonAgregarTipoGasto.addEventListener(
+
+            "click",
+
+            function(){
+
+                mostrarABMTiposGasto(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarTipoGasto.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        botonAgregarProveedor &&
+        !botonAgregarProveedor.dataset.eventoAsignado
+    ){
+
+        botonAgregarProveedor.addEventListener(
+
+            "click",
+
+            function(){
+
+                if(!selectTipoGasto.value){
+
+                    return;
+
+                }
+
+
+                mostrarABMProveedores(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarProveedor.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        botonAgregarRecurso &&
+        !botonAgregarRecurso.dataset.eventoAsignado
+    ){
+
+        botonAgregarRecurso.addEventListener(
+
+            "click",
+
+            function(){
+
+                if(!selectCentroOperativo.value){
+
+                    return;
+
+                }
+
+
+                mostrarABMRecursosOperativos(
+                    "registro"
+                );
+
+            }
+
+        );
+
+
+        botonAgregarRecurso.dataset.eventoAsignado =
+            "true";
+
+    }
+
+
+    if(
+        !selectTipoGasto.dataset.eventoProveedorAsignado
+    ){
+
+        selectTipoGasto.addEventListener(
+
+            "change",
+
+            actualizarProveedoresPorTipoGasto
+
+        );
+
+
+        selectTipoGasto.dataset.eventoProveedorAsignado =
+            "true";
+
+    }
+
+
+    if(
+        !selectCentroOperativo.dataset.eventoRecursoAsignado
+    ){
+
+        selectCentroOperativo.addEventListener(
+
+            "change",
+
+            actualizarRecursosPorCentroOperativo
+
+        );
+
+
+        selectCentroOperativo.dataset.eventoRecursoAsignado =
+            "true";
+
+    }
+
+    /*
+     * Cheques:
+     * Banco / Cuenta Bancaria depende del origen.
+     */
+    if(
+        selectOrigenCheque &&
+        !selectOrigenCheque.dataset.eventoChequeAsignado
+    ){
+
+        selectOrigenCheque.addEventListener(
+
+            "change",
+
+            cambiarOrigenCheque
+
+        );
+
+
+        selectOrigenCheque.dataset.eventoChequeAsignado =
+            "true";
+
+    }
+
+
+    /*
+     * Cheques:
+     * Las fechas dependen de si es común o diferido.
+     */
+    if(
+        selectTipoCheque &&
+        !selectTipoCheque.dataset.eventoChequeAsignado
+    ){
+
+        selectTipoCheque.addEventListener(
+
+            "change",
+
+            cambiarTipoCheque
+
+        );
+
+
+        selectTipoCheque.dataset.eventoChequeAsignado =
+            "true";
+
+    }
+
+    const empresa =
+        empresaActiva.value;
+
+
+    if(!empresa){
+
+        return;
+
+    }
+
+
+    try{
+
+        const respuestas =
+            await Promise.all([
+
+                fetch(
+                    `/tipos-gasto/?empresa=${encodeURIComponent(empresa)}`
+                ),
+
+                fetch(
+                    `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+                ),
+
+                fetch(
+                    `/recursos-operativos/?empresa=${encodeURIComponent(empresa)}`
+                )
+
+            ]);
+
+
+        const respuestaTipos =
+            respuestas[0];
+
+        const respuestaProveedores =
+            respuestas[1];
+
+        const respuestaRecursos =
+            respuestas[2];
+
+
+        const resultadoTipos =
+            await respuestaTipos.json();
+
+        const resultadoProveedores =
+            await respuestaProveedores.json();
+
+        const resultadoRecursos =
+            await respuestaRecursos.json();
+
+
+        if(
+            !respuestaTipos.ok ||
+            !resultadoTipos.ok
+        ){
+
+            console.error(
+                resultadoTipos.mensaje ||
+                "No se pudieron cargar los tipos de gasto."
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !respuestaProveedores.ok ||
+            !Array.isArray(
+                resultadoProveedores.proveedores
+            )
+        ){
+
+            console.error(
+                "No se pudieron cargar los proveedores."
+            );
+
+            return;
+
+        }
+
+
+        if(
+            !respuestaRecursos.ok ||
+            !resultadoRecursos.ok ||
+            !Array.isArray(
+                resultadoRecursos.recursos
+            )
+        ){
+
+            console.error(
+                resultadoRecursos.mensaje ||
+                "No se pudieron cargar los recursos operativos."
+            );
+
+            return;
+
+        }
+
+
+        proveedoresCargaSimple =
+            resultadoProveedores.proveedores;
+
+
+        recursosCargaSimple =
+            resultadoRecursos.recursos;
+
+
+        selectTipoGasto.innerHTML = `
+            <option value=""></option>
+        `;
+
+
+        const tiposGasto =
+            Array.isArray(
+                resultadoTipos.tipos_gasto
+            )
+                ? resultadoTipos.tipos_gasto
+                : [];
+
+
+        tiposGasto.forEach(
+
+            function(tipoGasto){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        tipoGasto.id
+                    );
+
+
+                opcion.textContent =
+                    tipoGasto.nombre;
+
+
+                opcion.dataset.proveedores =
+                    JSON.stringify(
+
+                        Array.isArray(
+                            tipoGasto.proveedores
+                        )
+                            ? tipoGasto.proveedores
+                                .map(function(proveedor){
+
+                                    if(
+                                        proveedor &&
+                                        typeof proveedor === "object"
+                                    ){
+
+                                        return String(
+                                            proveedor.id ??
+                                            proveedor.proveedor_id ??
+                                            ""
+                                        );
+
+                                    }
+
+
+                                    return String(
+                                        proveedor
+                                    );
+
+                                })
+                                .filter(function(id){
+
+                                    return id !== "";
+
+                                })
+
+                            : []
+
+                    );
+
+
+                selectTipoGasto.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+
+        if(ultimoTipoGastoCreado){
+
+            actualizarTipoGastoDelRegistro();
+
+        }
+
+
+        /*
+         * Si Carga Simple fue restaurada desde un ABM,
+         * respetamos el Centro Operativo que ya tenía.
+         */
+        actualizarRecursosPorCentroOperativo();
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando datos de Carga Simple:",
+            error
+        );
+
+    }
+
+
+
+}
+
+function actualizarProveedoresPorTipoGasto(){
+
+    const selectTipoGasto =
+        document.getElementById(
+            "tipoGastoRegistro"
+        );
+
+    const selectProveedor =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    const botonAgregarProveedor =
+        document.getElementById(
+            "btnAgregarProveedorRegistro"
+        );
+
+
+    if(
+        !selectTipoGasto ||
+        !selectProveedor
+    ){
+
+        return;
+
+    }
+
+
+    selectProveedor.value = "";
+
+    selectProveedor.innerHTML = "";
+
+
+    if(!selectTipoGasto.value){
+
+        const opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value = "";
+
+        opcion.textContent =
+            "Seleccione primero un tipo de gasto...";
+
+
+        selectProveedor.appendChild(
+            opcion
+        );
+
+
+        selectProveedor.disabled = true;
+
+
+        if(botonAgregarProveedor){
+
+            botonAgregarProveedor.disabled = true;
+
+        }
+
+
+        return;
+
+    }
+
+
+    selectProveedor.disabled = false;
+
+
+    if(botonAgregarProveedor){
+
+        botonAgregarProveedor.disabled = false;
+
+    }
+
+
+    const opcionInicial =
+        document.createElement(
+            "option"
+        );
+
+
+    opcionInicial.value = "";
+
+    opcionInicial.textContent =
+        "Seleccione...";
+
+
+    selectProveedor.appendChild(
+        opcionInicial
+    );
+
+
+    const opcionTipoGasto =
+        selectTipoGasto.options[
+            selectTipoGasto.selectedIndex
+        ];
+
+
+    let proveedoresRelacionados = [];
+
+
+    try{
+
+        proveedoresRelacionados =
+            JSON.parse(
+                opcionTipoGasto.dataset.proveedores ||
+                "[]"
+            );
+
+    }catch(error){
+
+        console.error(
+            "No se pudieron interpretar los proveedores asociados:",
+            error
+        );
+
+    }
+
+
+    proveedoresCargaSimple
+
+        .filter(
+
+            function(proveedor){
+
+                return proveedoresRelacionados.includes(
+                    String(
+                        proveedor.id
+                    )
+                );
+
+            }
+
+        )
+
+        .forEach(
+
+            function(proveedor){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        proveedor.id
+                    );
+
+
+                opcion.textContent =
+                    proveedor.cuit
+
+                        ? `${proveedor.razon_social} · ${proveedor.cuit}`
+
+                        : proveedor.razon_social;
+
+
+                selectProveedor.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+}
+
+function actualizarRecursosPorCentroOperativo(){
+
+    const selectCentro =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    const selectRecurso =
+        document.getElementById(
+            "recursoOperativoRegistro"
+        );
+
+    const botonAgregarRecurso =
+        document.getElementById(
+            "btnAgregarRecursoOperativoRegistro"
+        );
+
+
+    if(
+        !selectCentro ||
+        !selectRecurso
+    ){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        selectRecurso.value;
+
+
+    selectRecurso.innerHTML =
+        "";
+
+
+    if(!selectCentro.value){
+
+        const opcion =
+            document.createElement(
+                "option"
+            );
+
+
+        opcion.value =
+            "";
+
+        opcion.textContent =
+            "Seleccione primero un Centro Operativo...";
+
+
+        selectRecurso.appendChild(
+            opcion
+        );
+
+
+        selectRecurso.disabled =
+            true;
+
+
+        if(botonAgregarRecurso){
+
+            botonAgregarRecurso.disabled =
+                true;
+
+        }
+
+
+        return;
+
+    }
+
+
+    selectRecurso.disabled =
+        false;
+
+
+    if(botonAgregarRecurso){
+
+        botonAgregarRecurso.disabled =
+            false;
+
+    }
+
+
+    const opcionInicial =
+        document.createElement(
+            "option"
+        );
+
+
+    opcionInicial.value =
+        "";
+
+    opcionInicial.textContent =
+        "Seleccione...";
+
+
+    selectRecurso.appendChild(
+        opcionInicial
+    );
+
+
+    const centroSeleccionado =
+        String(
+            selectCentro.value
+        );
+
+
+    recursosCargaSimple
+
+        .filter(
+
+            function(recurso){
+
+                const centrosRecurso =
+                    Array.isArray(
+                        recurso.centros_operativos_ids
+                    )
+                        ? recurso.centros_operativos_ids
+                        : [];
+
+
+                return centrosRecurso
+                    .map(
+                        function(centroId){
+
+                            return String(
+                                centroId
+                            );
+
+                        }
+                    )
+                    .includes(
+                        centroSeleccionado
+                    );
+
+            }
+
+        )
+
+        .forEach(
+
+            function(recurso){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        recurso.id
+                    );
+
+
+                opcion.textContent =
+                    recurso.tipo_recurso_label
+                        ? `${recurso.nombre} · ${recurso.tipo_recurso_label}`
+                        : recurso.nombre;
+
+
+                selectRecurso.appendChild(
+                    opcion
+                );
+
+            }
+
+        );
+
+
+    /*
+     * Si el recurso que estaba seleccionado
+     * sigue perteneciendo al Centro Operativo
+     * elegido, conservamos la selección.
+     */
+
+    if(
+        valorAnterior &&
+        selectRecurso.querySelector(
+            `option[value="${valorAnterior}"]`
+        )
+    ){
+
+        selectRecurso.value =
+            valorAnterior;
+
+    }
+
+}
+
+function mostrarCargaSimple(){
+
+    document.getElementById(
+        "bloque-alta-empresa"
+    ).style.display = "none";
+
+    document.getElementById(
+        "contenido-operativo"
+    ).innerHTML = `
+
+<div class="card">
+
+<div
+style="
+font-size:28px;
+font-weight:700;
+margin-bottom:8px;
+">
+
+Carga Simple
+
+</div>
+
+<div
+style="
+color:#8b93a7;
+margin-bottom:30px;
+">
+
+Registro manual de un gasto.
+
+</div>
+
+<div class="form-grid">
+
+<div class="field">
+
+<label
+class="label"
+for="tipoGastoRegistro">
+
+Tipo de gasto
+
+</label>
+
+<div
+style="
+display:flex;
+gap:10px;
+">
+
+<select
+id="tipoGastoRegistro"
+class="input-box"
+style="flex:1;">
+
+<div
+style="
+display:flex;
+gap:10px;
+">
+
+<select
+id="tipoGastoRegistro"
+class="input-box"
+style="flex:1;">
+
+<option value=""></option>
+
+</select>
+
+<button
+type="button"
+class="action-btn"
+onclick="mostrarABMTiposGasto('registro')">
+
++
+
+</button>
+
+</div>
+</div>
+
+<div class="field">
+
+<label
+class="label"
+for="proveedorRegistro">
+
+Proveedor
+
+</label>
+
+<div
+style="
+display:flex;
+gap:10px;
+">
+
+<select
+id="proveedorRegistro"
+class="input-box"
+style="flex:1;"
+disabled>
+
+<option value="">
+
+Seleccione primero un tipo de gasto...
+
+</option>
+
+</select>
+
+<button
+id="btnAgregarProveedorRegistro"
+type="button"
+class="action-btn"
+disabled>
+
++
+
+</button>
+
+</div>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Centro Operativo
+
+</label>
+
+<div
+style="
+display:flex;
+gap:10px;
+">
+
+<select
+id="centroOperativoRegistro"
+class="input-box"
+style="flex:1;">
+
+<option value="">
+
+Seleccione...
+
+</option>
+
+</select>
+
+<button
+type="button"
+class="action-btn"
+onclick="mostrarABMCentrosOperativos('registro')">
+
++
+
+</button>
+
+</div>
+
+</div>
+
+<div class="field">
+
+<label
+class="label"
+for="recursoOperativoRegistro">
+
+Recurso operativo
+
+</label>
+
+<div
+style="
+display:flex;
+gap:10px;
+">
+
+<select
+id="recursoOperativoRegistro"
+class="input-box"
+style="flex:1;"
+disabled>
+
+<option value="">
+
+Seleccione primero un Centro Operativo...
+
+</option>
+
+</select>
+
+<button
+id="btnAgregarRecursoOperativoRegistro"
+type="button"
+class="action-btn"
+disabled>
+
++
+
+</button>
+
+</div>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Fecha
+
+</label>
+
+<input
+id="fechaRegistro"
+type="date"
+class="input-box">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Fecha de Vencimiento
+
+</label>
+
+<input
+id="fechaVencimientoRegistro"
+type="date"
+class="input-box">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Tipo de comprobante
+
+</label>
+
+<select
+id="tipoComprobanteRegistro"
+class="input-box">
+
+<option>A</option>
+
+<option>B</option>
+
+<option>C</option>
+
+<option>X</option>
+
+</select>
+
+</div>
+
+<div class="field">
+
+    <label class="label">
+        Número
+    </label>
+
+    <div style="
+        display:grid;
+        grid-template-columns:110px 18px 1fr;
+        gap:8px;
+        align-items:center;
+    ">
+
+        <input
+        id="puntoVentaComprobanteRegistro"
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        class="input-box"
+        placeholder="0000"
+        onblur="normalizarComprobanteRegistro()">
+
+        <div style="
+            text-align:center;
+            color:#98a2b3;
+        ">
+            -
+        </div>
+
+        <input
+        id="numeroComprobanteRegistro"
+        type="text"
+        inputmode="numeric"
+        maxlength="8"
+        class="input-box"
+        placeholder="00000000"
+        onblur="normalizarComprobanteRegistro()">
+
+    </div>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Neto Gravado
+
+</label>
+
+<input
+id="neto"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalRegistro()">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+No Gravado / Exento
+
+</label>
+
+<input
+id="exento"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalRegistro()">
+
+</div>
+
+<div
+style="
+grid-column:1 / -1;
+display:grid;
+grid-template-columns:1fr 20px 1fr 20px 1fr;
+align-items:end;
+gap:12px;
+margin-top:5px;
+">
+
+<!-- IVA 21 -->
+
+<div class="field">
+
+<label class="label">
+
+IVA 21%
+
+</label>
+
+<div
+style="
+display:flex;
+gap:8px;
+">
+
+<input
+id="iva21"
+type="text"
+inputmode="decimal"
+class="input-box"
+style="flex:1"
+oninput="calcularTotalRegistro()">
+
+<button
+type="button"
+class="action-btn"
+onclick="calcularIVA(0.21,'iva21')">
+
+21%
+
+</button>
+
+</div>
+
+</div>
+
+<div
+style="
+text-align:center;
+font-size:22px;
+color:#64748b;
+">
+
+|
+
+</div>
+
+<!-- IVA 27 -->
+
+<div class="field">
+
+<label class="label">
+
+IVA 27%
+
+</label>
+
+<div
+style="
+display:flex;
+gap:8px;
+">
+
+<input
+id="iva27"
+type="text"
+inputmode="decimal"
+class="input-box"
+style="flex:1"
+oninput="calcularTotalRegistro()">
+
+<button
+type="button"
+class="action-btn"
+onclick="calcularIVA(0.27,'iva27')">
+
+27%
+
+</button>
+
+</div>
+
+</div>
+
+<div
+style="
+text-align:center;
+font-size:22px;
+color:#64748b;
+">
+
+|
+
+</div>
+
+<!-- IVA 10.5 -->
+
+<div class="field">
+
+<label class="label">
+
+IVA 10.5%
+
+</label>
+
+<div
+style="
+display:flex;
+gap:8px;
+">
+
+<input
+id="iva105"
+type="text"
+inputmode="decimal"
+class="input-box"
+style="flex:1"
+oninput="calcularTotalRegistro()">
+
+<button
+type="button"
+class="action-btn"
+onclick="calcularIVA(0.105,'iva105')">
+
+10.5%
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Recargos / Intereses
+
+</label>
+
+<input
+id="recargosIntereses"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalRegistro()">
+
+</div>
+
+<div class="field">
+
+<label class="label">
+
+Ajuste por redondeo
+
+</label>
+
+<input
+id="ajuste"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalRegistro()">
+
+</div>
+
+<div
+style="
+grid-column:1/-1;
+margin-top:10px;
+">
+
+<button
+type="button"
+class="sidebar-btn"
+style="
+justify-content:space-between;
+padding-left:20px;
+padding-right:20px;
+"
+onclick="togglePercepciones()"
+id="btnPercepciones">
+
+<span>
+► Percepciones
+</span>
+
+<span id="totalPercepcionesBoton">
+$ 0.00
+</span>
+
+</button>
+
+</div>
+
+
+<div
+id="bloquePercepciones"
+style="
+display:none;
+grid-column:1/-1;
+">
+
+<div class="form-grid">
+
+
+<div class="field">
+
+<label class="label">
+
+Ingresos Brutos (IIBB)
+
+</label>
+
+<input
+id="percepcionIIBB"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalPercepciones()">
+
+</div>
+
+
+<div class="field">
+
+<label class="label">
+
+IVA (Impuesto al Valor Agregado)
+
+</label>
+
+<input
+id="percepcionIVA"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalPercepciones()">
+
+</div>
+
+
+<div class="field">
+
+<label class="label">
+
+Impuesto a las Ganancias
+
+</label>
+
+<input
+id="percepcionGanancias"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalPercepciones()">
+
+</div>
+
+
+<div class="field">
+
+<label class="label">
+
+Tasas Municipales
+
+</label>
+
+<input
+id="percepcionTasasMunicipales"
+type="text"
+inputmode="decimal"
+class="input-box"
+oninput="calcularTotalPercepciones()">
+
+</div>
+
+
+</div>
+
+</div>
+
+<div
+class="field"
+style="grid-column:1 / -1;">
+
+<label class="label">
+
+Total del Registro
+
+</label>
+
+<div
+style="
+display:flex;
+align-items:center;
+gap:10px;
+">
+
+<input
+id="total_registro"
+type="text"
+class="input-box"
+style="
+flex:1;
+font-size:22px;
+font-weight:700;
+text-align:right;
+background:#111827;
+color:#60a5fa;"
+readonly>
+
+<button
+id="btnAdjuntarFacturaRegistro"
+type="button"
+class="action-btn"
+style="
+flex-shrink:0;
+padding:0 16px;
+">
+
+📎 Factura
+
+</button>
+
+<input
+id="archivoFacturaRegistro"
+type="file"
+accept=".pdf,.jpg,.jpeg,.png,.webp"
+hidden>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- PREVISIÓN DE PAGO -->
+<!-- ===================================================== -->
+
+<div
+id="bloquePrevisionPagoRegistro"
+style="
+grid-column:1 / -1;
+margin-top:6px;
+padding-top:22px;
+border-top:1px solid #252c3d;
+"
+>
+
+<div
+style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+"
+>
+
+<div class="field">
+
+<label
+class="label"
+for="modalidadPagoRegistro">
+
+Forma prevista de pago
+
+</label>
+
+<select
+id="modalidadPagoRegistro"
+class="input-box">
+
+<option value="Manual">
+Pago manual
+</option>
+
+<option value="DebitoAutomatico">
+Débito automático
+</option>
+
+</select>
+
+</div>
+
+
+<div
+id="campoCuentaDebitoRegistro"
+class="field"
+style="
+visibility:hidden;
+pointer-events:none;
+"
+>
+
+<label
+class="label"
+for="cuentaDebitoRegistro">
+
+Cuenta para débito
+
+</label>
+
+<select
+id="cuentaDebitoRegistro"
+class="input-box"
+disabled>
+
+<option value="">
+Seleccione una cuenta...
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- FIN DATOS DEL REGISTRO -->
+<!-- ===================================================== -->
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- PAGOS DEL REGISTRO -->
+<!-- ===================================================== -->
+
+<div
+    id="listaPagosRegistro"
+    style="
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        margin-top:24px;
+    "
+>
+</div>
+
+<!-- ===================================================== -->
+<!-- ACCIONES DEL REGISTRO -->
+<!-- ===================================================== -->
+
+<div
+style="
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:12px;
+margin-top:22px;
+"
+>
+
+    <button
+        id="btnGuardarRegistro"
+        type="button"
+        class="guardar"
+        style="
+        margin-top:0;
+        "
+    >
+        Guardar registro
+    </button>
+
+
+    <button
+        id="btnAgregarPagoRegistro"
+        type="button"
+        class="action-btn"
+        style="
+        height:52px;
+        "
+    >
+        + Agregar pago
+    </button>
+
+
+    <button
+        id="btnPlanPagoRegistro"
+        type="button"
+        class="action-btn"
+        style="
+        height:52px;
+        "
+    >
+        Plan de pago
+    </button>
+
+</div>
+
+`;
+
+cargarSelectCentrosOperativos();
+
+iniciarEventosCargaSimple();
+
+}
+
+async function cargarSelectCentrosOperativos(){
+
+    const empresaInput =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const select =
+        document.getElementById(
+            "centroOperativoRegistro"
+        );
+
+    if(!empresaInput || !select){
+
+        return;
+
+    }
+
+    const empresa =
+        empresaInput.value;
+
+    if(!empresa){
+
+        return;
+
+    }
+
+    const valorAnterior =
+        select.value;
+
+    try{
+
+        const respuesta = await fetch(
+            `/listar-centros-operativos/?empresa=${encodeURIComponent(empresa)}`
+        );
+
+        if(!respuesta.ok){
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}`
+            );
+
+        }
+
+        const datos =
+            await respuesta.json();
+
+        select.innerHTML = `
+            <option value="">
+                Seleccione...
+            </option>
+        `;
+
+        if(!Array.isArray(datos.centros)){
+
+            console.error(
+                "La respuesta no contiene datos.centros:",
+                datos
+            );
+
+            return;
+
+        }
+
+        datos.centros.forEach(centro => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                String(centro.id);
+
+            option.textContent =
+                centro.nombre;
+
+            select.appendChild(
+                option
+            );
+
+        });
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando centros operativos:",
+            error
+        );
+
+    }
+
+}
+
+async function cargarSelectProveedores(){
+
+    const empresaInput =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const select =
+        document.getElementById(
+            "proveedorRegistro"
+        );
+
+    if(
+        !empresaInput ||
+        !select
+    ){
+
+        return;
+
+    }
+
+    const empresa =
+        empresaInput.value;
+
+    if(!empresa){
+
+        return;
+
+    }
+
+    const valorAnterior =
+        select.value;
+
+    try{
+
+        const respuesta = await fetch(
+            `/listar-proveedores/?empresa=${encodeURIComponent(empresa)}`
+        );
+
+        if(!respuesta.ok){
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}`
+            );
+
+        }
+
+        const datos =
+            await respuesta.json();
+
+        select.innerHTML = `
+            <option value="">
+                Seleccione...
+            </option>
+        `;
+
+        if(
+            !Array.isArray(
+                datos.proveedores
+            )
+        ){
+
+            return;
+
+        }
+
+        datos.proveedores.forEach(
+            proveedor => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    String(
+                        proveedor.id
+                    );
+
+                option.textContent =
+                    `${proveedor.razon_social} · ${proveedor.cuit}`;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando proveedores:",
+            error
+        );
+
+    }
+
+}
+
+async function cargarSelectBancos(){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        ).value;
+
+    const select =
+        document.getElementById(
+            "bancoCheque"
+        );
+
+    if(!empresa || !select){
+
+        return;
+
+    }
+
+    const respuesta = await fetch(
+        `/listar-bancos/?empresa=${empresa}`
+    );
+
+    if(!respuesta.ok){
+
+        return;
+
+    }
+
+    const datos =
+        await respuesta.json();
+
+    select.innerHTML = `
+        <option value="">
+            Seleccione...
+        </option>
+    `;
+
+    datos.bancos.forEach(banco => {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = banco.id;
+
+        option.textContent =
+            banco.nombre;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+function formatearImporte(
+    valor
+){
+
+    const numero =
+        Number(
+            valor || 0
+        );
+
+
+    return numero.toLocaleString(
+        "es-AR",
+        {
+            minimumFractionDigits:
+                2,
+
+            maximumFractionDigits:
+                2
+        }
+    );
+
+}
+
+function leerImporte(
+    valor
+){
+
+    if(
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ){
+
+        return 0;
+
+    }
+
+
+    if(
+        typeof valor === "number"
+    ){
+
+        return valor;
+
+    }
+
+
+    let texto =
+        String(
+            valor
+        )
+        .trim()
+        .replace(
+            /\$/g,
+            ""
+        )
+        .replace(
+            /\s/g,
+            ""
+        );
+
+
+    /*
+     * Formato argentino:
+     *
+     * 1.234.567,89
+     *
+     * Eliminamos puntos de miles y
+     * convertimos la coma decimal a punto.
+     */
+
+    texto =
+        texto
+            .replace(
+                /\./g,
+                ""
+            )
+            .replace(
+                ",",
+                "."
+            );
+
+
+    const numero =
+        Number(
+            texto
+        );
+
+
+    return Number.isFinite(
+        numero
+    )
+        ? numero
+        : 0;
+
+}
+
+
+function formatearCampoImporte(
+    input
+){
+
+    if(!input){
+
+        return;
+
+    }
+
+
+    const valor =
+        leerImporte(
+            input.value
+        );
+
+
+    if(
+        input.value.trim() === ""
+    ){
+
+        return;
+
+    }
+
+
+    input.value =
+        formatearImporte(
+            valor
+        );
+
+}
+
+function calcularTotalRegistro(){
+
+    const neto =
+        leerImporte(
+            document.getElementById(
+                "neto"
+            )?.value
+        );
+
+
+    const exento =
+        leerImporte(
+            document.getElementById(
+                "exento"
+            )?.value
+        );
+
+
+    const iva21 =
+        leerImporte(
+            document.getElementById(
+                "iva21"
+            )?.value
+        );
+
+
+    const iva27 =
+        leerImporte(
+            document.getElementById(
+                "iva27"
+            )?.value
+        );
+
+
+    const iva105 =
+        leerImporte(
+            document.getElementById(
+                "iva105"
+            )?.value
+        );
+
+
+    const recargosIntereses =
+        leerImporte(
+            document.getElementById(
+                "recargosIntereses"
+            )?.value
+        );
+
+
+    const percepcionIIBB =
+        leerImporte(
+            document.getElementById(
+                "percepcionIIBB"
+            )?.value
+        );
+
+
+    const percepcionIVA =
+        leerImporte(
+            document.getElementById(
+                "percepcionIVA"
+            )?.value
+        );
+
+
+    const percepcionGanancias =
+        leerImporte(
+            document.getElementById(
+                "percepcionGanancias"
+            )?.value
+        );
+
+
+    const percepcionTasasMunicipales =
+        leerImporte(
+            document.getElementById(
+                "percepcionTasasMunicipales"
+            )?.value
+        );
+
+
+    const ajuste =
+        leerImporte(
+            document.getElementById(
+                "ajuste"
+            )?.value
+        );
+
+
+    const totalPercepciones =
+        percepcionIIBB +
+        percepcionIVA +
+        percepcionGanancias +
+        percepcionTasasMunicipales;
+
+
+    const total =
+        neto +
+        exento +
+        iva21 +
+        iva27 +
+        iva105 +
+        recargosIntereses +
+        totalPercepciones +
+        ajuste;
+
+
+    const inputTotal =
+        document.getElementById(
+            "total_registro"
+        );
+
+
+    if(inputTotal){
+
+        inputTotal.dataset.valorNumerico =
+            String(
+                total
+            );
+
+
+        inputTotal.value =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+function calcularIVA(
+    porcentaje,
+    idDestino
+){
+
+    const neto =
+        leerImporte(
+            document.getElementById(
+                "neto"
+            )?.value
+        );
+
+
+    const iva =
+        neto *
+        porcentaje;
+
+
+    const destino =
+        document.getElementById(
+            idDestino
+        );
+
+
+    if(destino){
+
+        destino.value =
+            formatearImporte(
+                iva
+            );
+
+    }
+
+
+    calcularTotalRegistro();
+
+}
+
+function togglePercepciones(){
+
+    const bloque =
+        document.getElementById(
+            "bloquePercepciones"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnPercepciones"
+        );
+
+    const total =
+        document.getElementById(
+            "totalPercepcionesBoton"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0.00";
+
+
+    if(
+        bloque.style.display === "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Percepciones
+            </span>
+
+            <span id="totalPercepcionesBoton">
+                ${textoTotal}
+            </span>
+
+        `;
+
+    }else{
+
+        bloque.style.display =
+            "none";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ► Percepciones
+            </span>
+
+            <span id="totalPercepcionesBoton">
+                ${textoTotal}
+            </span>
+
+        `;
+
+    }
+
+}
+
+function calcularTotalPercepciones(){
+
+    const iibB =
+        leerImporte(
+            document.getElementById(
+                "percepcionIIBB"
+            )?.value
+        );
+
+
+    const iva =
+        leerImporte(
+            document.getElementById(
+                "percepcionIVA"
+            )?.value
+        );
+
+
+    const ganancias =
+        leerImporte(
+            document.getElementById(
+                "percepcionGanancias"
+            )?.value
+        );
+
+
+    const tasasMunicipales =
+        leerImporte(
+            document.getElementById(
+                "percepcionTasasMunicipales"
+            )?.value
+        );
+
+
+    const total =
+        iibB +
+        iva +
+        ganancias +
+        tasasMunicipales;
+
+
+    const totalBoton =
+        document.getElementById(
+            "totalPercepcionesBoton"
+        );
+
+
+    if(totalBoton){
+
+        totalBoton.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    calcularTotalRegistro();
+
+}
+
+async function cargarEntidadesChequePago(
+    pagoId,
+    origen = null
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const selectOrigen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const selectEntidad =
+        tarjeta.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+
+    if(
+        !selectOrigen ||
+        !selectEntidad
+    ){
+
+        return;
+
+    }
+
+
+    const origenActual =
+        origen ||
+        selectOrigen.value;
+
+
+    const valorAnterior =
+        selectEntidad.value;
+
+
+    selectEntidad.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        /*
+         * =====================================
+         * CHEQUE DE TERCERO
+         * =====================================
+         */
+
+        if(
+            origenActual ===
+            "tercero"
+        ){
+
+            const respuesta =
+                await fetch(
+
+                    `/listar-bancos/?empresa=${encodeURIComponent(empresa.value)}&_=${Date.now()}`,
+
+                    {
+                        cache:
+                            "no-store"
+                    }
+
+                );
+
+
+            const resultado =
+                await respuesta.json();
+
+
+            if(
+                !respuesta.ok ||
+                !Array.isArray(
+                    resultado.bancos
+                )
+            ){
+
+                return;
+
+            }
+
+
+            resultado.bancos.forEach(
+                function(banco){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            banco.id
+                        );
+
+
+                    opcion.textContent =
+                        banco.nombre;
+
+
+                    selectEntidad.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+            /*
+             * =================================
+             * BANCO RECIÉN CREADO
+             * =================================
+             */
+
+            if(
+                typeof ultimoBancoCreado !==
+                    "undefined" &&
+                ultimoBancoCreado
+            ){
+
+                const bancoId =
+                    String(
+                        typeof ultimoBancoCreado ===
+                            "object"
+                            ? ultimoBancoCreado.id
+                            : ultimoBancoCreado
+                    );
+
+
+                const opcionNueva =
+                    selectEntidad.querySelector(
+                        `option[value="${bancoId}"]`
+                    );
+
+
+                /*
+                 * IMPORTANTE:
+                 *
+                 * Solo limpiamos ultimoBancoCreado
+                 * si realmente encontramos el banco
+                 * en el listado actualizado.
+                 */
+
+                if(opcionNueva){
+
+                    selectEntidad.value =
+                        bancoId;
+
+
+                    ultimoBancoCreado =
+                        null;
+
+
+                    return;
+
+                }
+
+            }
+
+        }else{
+
+            /*
+             * =====================================
+             * CHEQUE PROPIO
+             * =====================================
+             */
+
+            const respuesta =
+                await fetch(
+
+                    `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}&_=${Date.now()}`,
+
+                    {
+                        cache:
+                            "no-store"
+                    }
+
+                );
+
+
+            const resultado =
+                await respuesta.json();
+
+
+            if(
+                !respuesta.ok ||
+                !resultado.ok ||
+                !Array.isArray(
+                    resultado.cuentas
+                )
+            ){
+
+                return;
+
+            }
+
+
+            resultado.cuentas.forEach(
+                function(cuenta){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            cuenta.id
+                        );
+
+
+                    opcion.textContent =
+                        `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                    selectEntidad.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+            /*
+            * =================================
+            * CUENTA BANCARIA RECIÉN CREADA
+            * =================================
+            */
+
+            if(
+                typeof ultimaCuentaBancariaCreada !==
+                    "undefined" &&
+                ultimaCuentaBancariaCreada
+            ){
+
+                const cuentaId =
+                    String(
+                        typeof ultimaCuentaBancariaCreada ===
+                            "object"
+                            ? ultimaCuentaBancariaCreada.id
+                            : ultimaCuentaBancariaCreada
+                    );
+
+
+                let opcionNueva =
+                    selectEntidad.querySelector(
+                        `option[value="${cuentaId}"]`
+                    );
+
+
+                /*
+                * Si la cuenta todavía no vino en el listado,
+                * la incorporamos manualmente.
+                *
+                * Esto es válido porque acabamos de recibir
+                * del backend la confirmación de que fue creada.
+                */
+
+                if(
+                    !opcionNueva &&
+                    typeof ultimaCuentaBancariaCreada ===
+                        "object"
+                ){
+
+                    opcionNueva =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcionNueva.value =
+                        cuentaId;
+
+
+                    const bancoNombre =
+                        ultimaCuentaBancariaCreada.banco ||
+                        "";
+
+
+                    const cuentaNombre =
+                        ultimaCuentaBancariaCreada.nombre ||
+                        "Cuenta bancaria";
+
+
+                    opcionNueva.textContent =
+                        bancoNombre
+                            ? `${bancoNombre} · ${cuentaNombre}`
+                            : cuentaNombre;
+
+
+                    selectEntidad.appendChild(
+                        opcionNueva
+                    );
+
+                }
+
+
+                /*
+                * Si existe —porque vino del servidor
+                * o porque acabamos de incorporarla—
+                * queda seleccionada.
+                */
+
+                if(opcionNueva){
+
+                    selectEntidad.value =
+                        cuentaId;
+
+
+                    ultimaCuentaBancariaCreada =
+                        null;
+
+
+                    return;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+         * =====================================
+         * CONSERVAR SELECCIÓN ANTERIOR
+         * =====================================
+         */
+
+        if(
+            valorAnterior &&
+            selectEntidad.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            selectEntidad.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando Banco/Cuenta del cheque del pago:",
+            error
+        );
+
+    }
+
+}
+
+async function cambiarOrigenChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const labelEntidad =
+        tarjeta.querySelector(
+            ".label-entidad-cheque-pago"
+        );
+
+    const botonAgregar =
+        tarjeta.querySelector(
+            ".btn-agregar-entidad-cheque-pago"
+        );
+
+    const bloqueEntrega =
+        tarjeta.querySelector(
+            ".bloque-entrega-cheque-pago"
+        );
+
+    const quienEntrega =
+        tarjeta.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+
+    if(
+        !origen ||
+        !labelEntidad ||
+        !botonAgregar ||
+        !bloqueEntrega
+    ){
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * TERCERO
+     * =====================================
+     */
+
+    if(
+        origen.value ===
+        "tercero"
+    ){
+
+        labelEntidad.textContent =
+            "Banco";
+
+
+        botonAgregar.title =
+            "Agregar banco";
+
+
+        bloqueEntrega.style.display =
+            "block";
+
+
+        await cargarEntidadesChequePago(
+            pagoId,
+            "tercero"
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * PROPIO
+     * =====================================
+     */
+
+    labelEntidad.textContent =
+        "Cuenta bancaria";
+
+
+    botonAgregar.title =
+        "Agregar cuenta bancaria";
+
+
+    bloqueEntrega.style.display =
+        "none";
+
+
+    if(quienEntrega){
+
+        quienEntrega.value =
+            "";
+
+    }
+
+
+    await cargarEntidadesChequePago(
+        pagoId,
+        "propio"
+    );
+
+}
+
+function cambiarTipoChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const bloqueAcreditacion =
+        tarjeta.querySelector(
+            ".bloque-fecha-acreditacion-cheque-pago"
+        );
+
+    const fechaEmision =
+        tarjeta.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const fechaAcreditacion =
+        tarjeta.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+
+    if(
+        !tipo ||
+        !bloqueAcreditacion ||
+        !fechaEmision ||
+        !fechaAcreditacion
+    ){
+
+        return;
+
+    }
+
+
+    const esChequeSimple =
+        (
+            tipo.value === "simple" ||
+            tipo.value === "comun"
+        );
+
+
+    /*
+     * =====================================
+     * CHEQUE SIMPLE
+     * =====================================
+     *
+     * Se oculta Fecha acreditación,
+     * pero SE CONSERVA su espacio en
+     * la grilla.
+     *
+     * Nada de abajo debe subir.
+     */
+
+    if(esChequeSimple){
+
+        bloqueAcreditacion.style.visibility =
+            "hidden";
+
+
+        bloqueAcreditacion.style.pointerEvents =
+            "none";
+
+
+        /*
+         * Internamente usamos Fecha emisión
+         * también como Fecha acreditación.
+         */
+
+        fechaAcreditacion.value =
+            fechaEmision.value;
+
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * CHEQUE DIFERIDO
+     * =====================================
+     */
+
+    bloqueAcreditacion.style.visibility =
+        "visible";
+
+
+    bloqueAcreditacion.style.pointerEvents =
+        "auto";
+
+}
+
+function abrirABMEntidadChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        )?.value;
+
+
+    if(!origen){
+
+        return;
+
+    }
+
+
+    /*
+     * Guardamos exactamente qué Pago
+     * y qué acordeón originó el ABM.
+     */
+
+    contextoRetornoABM = {
+
+        tipo:
+            "cheque_pago",
+
+        pagoId:
+            Number(
+                pagoId
+            ),
+
+        campo:
+            "entidad",
+
+        origen:
+            origen
+
+    };
+
+
+    /*
+     * CHEQUE PROPIO
+     * → Cuenta Bancaria
+     */
+
+    if(
+        origen ===
+        "propio"
+    ){
+
+        mostrarABMCuentasBancarias(
+            "registro"
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * CHEQUE TERCERO
+     * → Banco
+     */
+
+    mostrarABMBancos(
+        "registro"
+    );
+
+}
+
+function agregarPagoRegistro(){
+
+    const lista =
+        document.getElementById(
+            "listaPagosRegistro"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    contadorPagosRegistro +=
+        1;
+
+
+    const pagoId =
+        contadorPagosRegistro;
+
+
+    /*
+     * Creamos desde ahora un Pago real
+     * dentro del estado de Carga Simple.
+     *
+     * Más adelante este mismo objeto tendrá:
+     * transferencias,
+     * tarjetas,
+     * retenciones,
+     * cheques,
+     * etc.
+     */
+
+    const pago = {
+
+        id:
+            pagoId,
+
+        fecha_pago:
+            "",
+
+        efectivo:
+            0,
+
+        transferencias:
+            [],
+
+        tarjetas:
+            [],
+
+        retenciones:
+            [],
+
+        cheques:
+            [],
+
+        total:
+            0
+
+    };
+
+
+    pagosRegistro.push(
+        pago
+    );
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.id =
+        `pagoRegistro_${pagoId}`;
+
+
+    tarjeta.className =
+        "tarjeta-pago-registro";
+
+
+    tarjeta.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    tarjeta.style.cssText = `
+        background:#171c26;
+        border:1px solid #252c3d;
+        border-radius:24px;
+        padding:32px;
+    `;
+
+
+    tarjeta.innerHTML = `
+
+        <div
+            class="cabecera-pago-registro"
+            style="
+                display:flex;
+                align-items:center;
+                gap:12px;
+            "
+        >
+
+            <button
+                type="button"
+                class="sidebar-btn btn-toggle-pago-registro"
+                data-pago-id="${pagoId}"
+                style="
+                    flex:1;
+                    justify-content:space-between;
+                    padding-left:20px;
+                    padding-right:20px;
+                "
+            >
+
+                <span
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                    "
+                >
+
+                    <span
+                        class="indicador-pago-registro"
+                    >
+                        ▼
+                    </span>
+
+                    <span>
+                        Pago ${pagoId}
+                    </span>
+
+                </span>
+
+
+                <strong
+                    class="total-pago-registro"
+                >
+                    $ 0.00
+                </strong>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="btn-eliminar-pago-registro"
+                data-pago-id="${pagoId}"
+                title="Eliminar pago"
+                style="
+                    width:48px;
+                    height:48px;
+                    border:none;
+                    border-radius:14px;
+                    background:#2a1820;
+                    color:#f87171;
+                    cursor:pointer;
+                    font-size:17px;
+                "
+            >
+                🗑
+            </button>
+
+        </div>
+
+
+        <div
+            class="contenido-pago-registro"
+            style="
+                display:block;
+                padding-top:22px;
+            "
+        >
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label class="label">
+                        Fecha de Pago
+                    </label>
+
+                    <input
+                        type="date"
+                        class="input-box fecha-pago-registro"
+                        data-pago-id="${pagoId}"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label class="label">
+                        Efectivo
+                    </label>
+
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        class="input-box efectivo-pago-registro"
+                        data-pago-id="${pagoId}"
+                    >
+
+                </div>
+
+            </div>
+
+            <div
+                style="
+                    margin-top:22px;
+                "
+            >
+
+                <button
+                    type="button"
+                    class="sidebar-btn btn-toggle-operaciones-bancarias"
+                    data-pago-id="${pagoId}"
+                    style="
+                        width:100%;
+                        justify-content:space-between;
+                        padding-left:20px;
+                        padding-right:20px;
+                    "
+                >
+
+                    <span>
+                        ► Transferencias / Depósitos
+                    </span>
+
+                    <strong
+                        class="total-operaciones-bancarias"
+                    >
+                        $ 0.00
+                    </strong>
+
+                </button>
+
+
+                <div
+                    class="bloque-operaciones-bancarias"
+                    data-pago-id="${pagoId}"
+                    style="
+                        display:none;
+                        padding-top:10px;
+                    "
+                >
+
+                    <div
+                        class="contenido-operaciones-bancarias"
+                        style="
+                            margin-left:6px;
+                            margin-right:6px;
+                            padding:28px 10px 22px 10px;
+                            border-left:2px solid #252c3d;
+                            border-right:2px solid #252c3d;
+                        "
+                    >
+
+                    <div class="form-grid">
+
+                        <div class="field">
+
+                            <label class="label">
+                                Tipo
+                            </label>
+
+                            <select
+                                class="input-box tipo-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                                <option value="Transferencia">
+                                    Transferencia
+                                </option>
+
+                                <option value="Deposito">
+                                    Depósito
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Moneda
+                            </label>
+
+                            <select
+                                class="input-box moneda-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                disabled
+                            >
+
+                                <option value="ARS">
+                                    Pesos
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div
+                            class="field bloque-origen-operacion-bancaria"
+                        >
+
+                            <label class="label">
+                                Origen
+                            </label>
+
+                            <div
+                                style="
+                                    display:flex;
+                                    gap:10px;
+                                    align-items:center;
+                                "
+                            >
+
+                                <select
+                                    class="input-box cuenta-origen-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    style="flex:1;"
+                                >
+
+                                    <option value="">
+                                        Seleccione...
+                                    </option>
+
+                                </select>
+
+
+                                <button
+                                    type="button"
+                                    class="action-btn btn-agregar-cuenta-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    title="Agregar cuenta bancaria"
+                                    style="
+                                        width:50px;
+                                        padding:0;
+                                        flex:none;
+                                    "
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Destino
+                            </label>
+
+                            <div
+                                style="
+                                    display:flex;
+                                    gap:10px;
+                                    align-items:center;
+                                "
+                            >
+
+                                <select
+                                    class="input-box banco-destino-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    style="flex:1;"
+                                >
+
+                                    <option value="">
+                                        Seleccione...
+                                    </option>
+
+                                </select>
+
+
+                                <button
+                                    type="button"
+                                    class="action-btn btn-agregar-banco-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    title="Agregar banco"
+                                    style="
+                                        width:50px;
+                                        padding:0;
+                                        flex:none;
+                                    "
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field field-full">
+
+                            <label class="label">
+                                Referencia destino
+                            </label>
+
+                            <input
+                                type="text"
+                                class="input-box referencia-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                placeholder="Nombre, cuenta, alias o referencia opcional"
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Fecha
+                            </label>
+
+                            <input
+                                type="date"
+                                class="input-box fecha-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label class="label">
+                                Importe
+                            </label>
+
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                class="input-box importe-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                            >
+
+                        </div>
+
+
+                        <div class="field field-full">
+
+                            <label class="label">
+                                Comprobante
+                            </label>
+
+                            <label class="file-btn">
+
+                                <span
+                                    class="texto-comprobante-operacion-bancaria"
+                                >
+                                    📎 Adjuntar comprobante
+                                </span>
+
+                                <input
+                                    type="file"
+                                    class="comprobante-operacion-bancaria"
+                                    data-pago-id="${pagoId}"
+                                    hidden
+                                >
+
+                            </label>
+
+                        </div>
+
+
+                        <div
+                            class="field field-full"
+                            style="
+                                display:flex;
+                                flex-direction:row;
+                                gap:12px;
+                                align-items:center;
+                            "
+                        >
+
+                            <button
+                                type="button"
+                                class="guardar btn-registrar-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    margin-top:0;
+                                    flex:1;
+                                "
+                            >
+                                REGISTRAR TRANSFERENCIA
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="action-btn btn-cancelar-edicion-operacion-bancaria"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    display:none;
+                                    margin:0;
+                                    flex:0 0 180px;
+                                "
+                            >
+                                CANCELAR CAMBIOS
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="lista-operaciones-bancarias"
+                        data-pago-id="${pagoId}"
+                        style="
+                            display:flex;
+                            flex-direction:column;
+                            gap:12px;
+                            margin-top:18px;
+                        "
+                    >
+                    </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="sidebar-btn btn-cerrar-operaciones-bancarias"
+                        data-pago-id="${pagoId}"
+                        style="
+                            margin-top:10px;
+                            width:100%;
+                        "
+                        title="Cerrar Transferencias / Depósitos"
+                    >
+                        ▲
+                    </button>
+
+                </div>
+
+
+
+                <div
+                    style="
+                        margin-top:22px;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="sidebar-btn btn-toggle-tarjeta-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            width:100%;
+                            justify-content:space-between;
+                            padding-left:20px;
+                            padding-right:20px;
+                        "
+                    >
+
+                        <span>
+                            ► Tarjetas
+                        </span>
+
+                        <strong
+                            class="total-tarjeta-pago"
+                        >
+                            $ 0,00
+                        </strong>
+
+                    </button>
+
+
+                    <div
+                        class="bloque-tarjeta-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            display:none;
+                            padding-top:10px;
+                        "
+                    >
+
+                        <div
+                            class="contenido-tarjeta-pago"
+                            style="
+                                margin-left:6px;
+                                margin-right:6px;
+                                padding:28px 10px 22px 10px;
+                                border-left:2px solid #252c3d;
+                                border-right:2px solid #252c3d;
+                            "
+                        >
+
+                            <div class="form-grid">
+
+                                <div class="field field-full">
+
+                                    <label class="label">
+                                        Tarjeta
+                                    </label>
+
+                                    <div
+                                        style="
+                                            display:flex;
+                                            gap:10px;
+                                            align-items:center;
+                                        "
+                                    >
+
+                                        <select
+                                            class="input-box tarjeta-seleccion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="flex:1;"
+                                        >
+
+                                            <option value="">
+                                                Seleccione...
+                                            </option>
+
+                                        </select>
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-agregar-tarjeta-pago"
+                                            data-pago-id="${pagoId}"
+                                            title="Agregar tarjeta"
+                                            style="
+                                                width:50px;
+                                                padding:0;
+                                                flex:none;
+                                            "
+                                        >
+                                            +
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Fecha
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        class="input-box fecha-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Importe aplicado
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="input-box importe-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div
+                                    class="field bloque-cuotas-tarjeta-pago"
+                                    style="display:none;"
+                                >
+
+                                    <label class="label">
+                                        Cuotas
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value="1"
+                                        class="input-box cuotas-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div
+                                    class="field bloque-intereses-tarjeta-pago"
+                                    style="display:none;"
+                                >
+
+                                    <label class="label">
+                                        Intereses de financiación
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="input-box intereses-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div class="field field-full">
+
+                                    <label class="label">
+                                        Referencia
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        class="input-box referencia-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                        placeholder="Opcional"
+                                    >
+
+                                </div>
+
+
+                                <div class="field field-full">
+
+                                    <label class="label">
+                                        Comprobante
+                                    </label>
+
+                                    <label class="file-btn">
+
+                                        <span
+                                            class="texto-comprobante-tarjeta-pago"
+                                        >
+                                            📎 Adjuntar comprobante
+                                        </span>
+
+                                        <input
+                                            type="file"
+                                            class="comprobante-tarjeta-pago"
+                                            data-pago-id="${pagoId}"
+                                            hidden
+                                        >
+
+                                    </label>
+
+                                </div>
+
+
+                                <div
+                                    class="field field-full"
+                                    style="
+                                        display:flex;
+                                        flex-direction:row;
+                                        gap:12px;
+                                        align-items:center;
+                                    "
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="guardar btn-registrar-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                        style="
+                                            margin-top:0;
+                                            flex:1;
+                                        "
+                                    >
+                                        REGISTRAR PAGO CON TARJETA
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="action-btn btn-cancelar-edicion-tarjeta-pago"
+                                        data-pago-id="${pagoId}"
+                                        style="
+                                            display:none;
+                                            margin:0;
+                                            flex:0 0 180px;
+                                            background:#dc2626;
+                                            border-color:#dc2626;
+                                            color:#ffffff;
+                                        "
+                                    >
+                                        CANCELAR CAMBIOS
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="lista-tarjetas-pago"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    display:flex;
+                                    flex-direction:column;
+                                    gap:12px;
+                                    margin-top:18px;
+                                "
+                            >
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="sidebar-btn btn-cerrar-tarjeta-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                margin-top:10px;
+                                width:100%;
+                            "
+                            title="Cerrar Tarjetas"
+                        >
+                            ▲
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    style="
+                        margin-top:22px;
+                    "
+                >
+
+                    <button
+                        type="button"
+                        class="sidebar-btn btn-toggle-cheques-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            width:100%;
+                            justify-content:space-between;
+                            padding-left:20px;
+                            padding-right:20px;
+                        "
+                    >
+
+                        <span>
+                            ► Cheques
+                        </span>
+
+                        <strong
+                            class="total-cheques-pago"
+                        >
+                            $ 0,00
+                        </strong>
+
+                    </button>
+
+
+                    <div
+                        class="bloque-cheques-pago"
+                        data-pago-id="${pagoId}"
+                        style="
+                            display:none;
+                            padding-top:10px;
+                        "
+                    >
+
+                        <div
+                            class="contenido-cheques-pago"
+                            style="
+                                margin-left:6px;
+                                margin-right:6px;
+                                padding:28px 10px 22px 10px;
+                                border-left:2px solid #252c3d;
+                                border-right:2px solid #252c3d;
+                            "
+                        >
+
+                            <div class="form-grid">
+
+                                <!-- =========================
+                                    TIPO DE INSTRUMENTO
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Tipo
+                                    </label>
+
+                                    <select
+                                        class="input-box instrumento-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="Cheque">
+                                            Cheque físico
+                                        </option>
+
+                                        <option value="ECheq">
+                                            e-Cheq
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    TIPO DE CHEQUE
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Tipo de cheque
+                                    </label>
+
+                                    <select
+                                        class="input-box tipo-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="diferido">
+                                            Cheque Diferido
+                                        </option>
+
+                                        <option value="comun">
+                                            Cheque Simple
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    ORIGEN
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Origen
+                                    </label>
+
+                                    <select
+                                        class="input-box origen-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                        <option value="propio">
+                                            Propio
+                                        </option>
+
+                                        <option value="tercero">
+                                            Tercero
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    BANCO / CUENTA
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label
+                                        class="label label-entidad-cheque-pago"
+                                    >
+                                        Cuenta bancaria
+                                    </label>
+
+                                    <div
+                                        style="
+                                            display:flex;
+                                            gap:10px;
+                                            align-items:center;
+                                        "
+                                    >
+
+                                        <select
+                                            class="input-box entidad-cheque-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="flex:1;"
+                                        >
+
+                                            <option value="">
+                                                Seleccione...
+                                            </option>
+
+                                        </select>
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-agregar-entidad-cheque-pago"
+                                            data-pago-id="${pagoId}"
+                                            title="Agregar cuenta bancaria"
+                                            style="
+                                                width:50px;
+                                                padding:0;
+                                                flex:none;
+                                            "
+                                        >
+                                            +
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- =========================
+                                    FECHAS
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Fecha emisión
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        class="input-box fecha-emision-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <div
+                                    class="field bloque-fecha-acreditacion-cheque-pago"
+                                >
+
+                                    <label class="label">
+                                        Fecha acreditación
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        class="input-box fecha-acreditacion-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    QUIÉN LO ENTREGÓ
+                                ========================== -->
+
+                                <div
+                                    class="field field-full bloque-entrega-cheque-pago"
+                                    style="
+                                        display:none;
+                                    "
+                                >
+
+                                    <label class="label">
+                                        Quién lo entregó
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        class="input-box quien-entrega-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    NÚMERO
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Número
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        maxlength="8"
+                                        inputmode="numeric"
+                                        pattern="[0-9]{8}"
+                                        class="input-box numero-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    IMPORTE
+                                ========================== -->
+
+                                <div class="field">
+
+                                    <label class="label">
+                                        Importe
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="input-box importe-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                    >
+
+                                </div>
+
+
+                                <!-- =========================
+                                    REGISTRAR / CANCELAR CAMBIOS
+                                ========================== -->
+
+                                <div
+                                    class="field field-full"
+                                    style="
+                                        display:flex;
+                                        flex-direction:row;
+                                        gap:12px;
+                                        align-items:center;
+                                    "
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="guardar btn-registrar-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                        style="
+                                            margin-top:0;
+                                            flex:1;
+                                        "
+                                    >
+                                        REGISTRAR CHEQUE
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="action-btn btn-cancelar-edicion-cheque-pago"
+                                        data-pago-id="${pagoId}"
+                                        style="
+                                            display:none;
+                                            margin:0;
+                                            flex:0 0 180px;
+                                            background:#dc2626;
+                                            border-color:#dc2626;
+                                            color:#ffffff;
+                                        "
+                                    >
+                                        CANCELAR CAMBIOS
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="lista-cheques-pago"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    display:flex;
+                                    flex-direction:column;
+                                    gap:12px;
+                                    margin-top:18px;
+                                "
+                            >
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="sidebar-btn btn-cerrar-cheques-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                margin-top:10px;
+                                width:100%;
+                            "
+                            title="Cerrar Cheques"
+                        >
+                            ▲
+                        </button>
+
+                    </div>
+
+                    <!-- ========================================= -->
+                    <!-- RETENCIONES -->
+                    <!-- ========================================= -->
+
+                    <div
+                        style="
+                            margin-top:22px;
+                        "
+                    >
+
+                        <button
+                            type="button"
+                            class="sidebar-btn btn-toggle-retenciones-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                width:100%;
+                                justify-content:space-between;
+                                padding-left:20px;
+                                padding-right:20px;
+                            "
+                        >
+
+                            <span>
+                                ► Retenciones
+                            </span>
+
+                            <strong
+                                class="total-retenciones-pago"
+                            >
+                                $ 0,00
+                            </strong>
+
+                        </button>
+
+
+                        <div
+                            class="bloque-retenciones-pago"
+                            data-pago-id="${pagoId}"
+                            style="
+                                display:none;
+                                padding-top:10px;
+                            "
+                        >
+
+                            <div
+                                class="contenido-retenciones-pago"
+                                style="
+                                    margin-left:6px;
+                                    margin-right:6px;
+                                    padding:28px 10px 22px 10px;
+                                    border-left:2px solid #252c3d;
+                                    border-right:2px solid #252c3d;
+                                "
+                            >
+
+                                <div class="form-grid">
+
+
+                                    <!-- =========================
+                                        RETENCIÓN
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Retención
+                                        </label>
+
+
+                                        <div
+                                            style="
+                                                display:flex;
+                                                gap:10px;
+                                                align-items:center;
+                                            "
+                                        >
+
+                                            <select
+                                                class="input-box retencion-seleccion-pago"
+                                                data-pago-id="${pagoId}"
+                                                style="
+                                                    flex:1;
+                                                "
+                                            >
+
+                                                <option value="">
+                                                    Seleccione...
+                                                </option>
+
+                                            </select>
+
+
+                                            <button
+                                                type="button"
+                                                class="action-btn btn-agregar-retencion-pago"
+                                                data-pago-id="${pagoId}"
+                                                title="Agregar retención"
+                                                style="
+                                                    flex:0 0 52px;
+                                                    margin:0;
+                                                "
+                                            >
+                                                +
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        IMPORTE
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Importe
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            inputmode="decimal"
+                                            class="input-box importe-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            placeholder="$"
+                                        >
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        COMPROBANTE
+                                    ========================== -->
+
+                                    <div class="field field-full">
+
+                                        <label class="label">
+                                            Comprobante
+                                        </label>
+
+
+                                        <input
+                                            type="file"
+                                            class="comprobante-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                display:none;
+                                            "
+                                        >
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-adjuntar-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                width:100%;
+                                                margin:0;
+                                            "
+                                        >
+
+                                            <span
+                                                class="texto-comprobante-retencion-pago"
+                                            >
+                                                📎 Adjuntar comprobante
+                                            </span>
+
+                                        </button>
+
+                                    </div>
+
+
+                                    <!-- =========================
+                                        REGISTRAR / CANCELAR
+                                    ========================== -->
+
+                                    <div
+                                        class="field field-full"
+                                        style="
+                                            display:flex;
+                                            flex-direction:row;
+                                            gap:12px;
+                                            align-items:center;
+                                        "
+                                    >
+
+                                        <button
+                                            type="button"
+                                            class="guardar btn-registrar-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                margin-top:0;
+                                                flex:1;
+                                            "
+                                        >
+                                            REGISTRAR RETENCIÓN
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            class="action-btn btn-cancelar-edicion-retencion-pago"
+                                            data-pago-id="${pagoId}"
+                                            style="
+                                                display:none;
+                                                margin:0;
+                                                flex:0 0 180px;
+                                                background:#dc2626;
+                                                border-color:#dc2626;
+                                                color:#ffffff;
+                                            "
+                                        >
+                                            CANCELAR CAMBIOS
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    class="lista-retenciones-pago"
+                                    data-pago-id="${pagoId}"
+                                    style="
+                                        display:flex;
+                                        flex-direction:column;
+                                        gap:12px;
+                                        margin-top:18px;
+                                    "
+                                >
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="sidebar-btn btn-cerrar-retenciones-pago"
+                                data-pago-id="${pagoId}"
+                                style="
+                                    margin-top:10px;
+                                    width:100%;
+                                "
+                                title="Cerrar Retenciones"
+                            >
+                                ▲
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+lista.appendChild(
+    tarjeta
+);
+
+
+/*
+ * La operación bancaria nace como
+ * Transferencia.
+ *
+ * Cargamos:
+ * - Cuentas Bancarias propias.
+ * - Bancos destino.
+ */
+
+cargarCuentasOperacionBancaria(
+    pagoId
+);
+
+cargarBancosOperacionBancaria(
+    pagoId
+);
+
+
+cargarTarjetasPago(
+    pagoId
+);
+
+
+cargarRetencionesPago(
+    pagoId
+);
+
+
+actualizarResumenGeneralPagos();
+
+}
+
+function abrirABMCuentaOperacionBancaria(
+    pagoId
+){
+
+    contextoRetornoABM = {
+
+        tipo:
+            "operacion_bancaria",
+
+        pagoId:
+            Number(
+                pagoId
+            ),
+
+        campo:
+            "origen"
+
+    };
+
+
+    mostrarABMCuentasBancarias(
+        "registro"
+    );
+
+}
+
+function abrirABMBancoOperacionBancaria(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        alert(
+            "No se pudo identificar el Pago desde el que se abrió Bancos."
+        );
+
+        return;
+
+    }
+
+
+    contextoRetornoABM = {
+
+        tipo:
+            "operacion_bancaria",
+
+        pagoId:
+            idPago,
+
+        campo:
+            "destino"
+
+    };
+
+
+    mostrarABMBancos(
+        "registro"
+    );
+
+}
+
+function toggleOperacionesBancarias(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-operaciones-bancarias"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-operaciones-bancarias"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0.00";
+
+
+    if(
+        bloque.style.display ===
+        "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Transferencias / Depósitos
+            </span>
+
+            <strong
+                class="total-operaciones-bancarias"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Transferencias / Depósitos
+        </span>
+
+        <strong
+            class="total-operaciones-bancarias"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+
+async function cargarTarjetasPago(
+    pagoId
+){
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjetaPago.querySelector(
+            ".tarjeta-seleccion-pago"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/tarjetas/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok
+        ){
+
+            console.error(
+                "No se pudieron cargar las tarjetas del Pago.",
+                resultado
+            );
+
+            return;
+
+        }
+
+
+        select.innerHTML = `
+
+            <option value="">
+                Seleccione...
+            </option>
+
+        `;
+
+
+        const tarjetas =
+            Array.isArray(
+                resultado.tarjetas
+            )
+                ? resultado.tarjetas
+                : [];
+
+
+        tarjetas.forEach(
+            function(item){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+                opcion.value =
+                    String(
+                        item.id
+                    );
+
+                opcion.dataset.tipo =
+                    item.tipo_tarjeta ||
+                    "";
+
+                opcion.dataset.tipoLabel =
+                    item.tipo_tarjeta_label ||
+                    "";
+
+                opcion.textContent =
+                    item.nombre +
+                    (
+                        item.tipo_tarjeta_label
+                            ? ` · ${item.tipo_tarjeta_label}`
+                            : ""
+                    );
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        let valorASeleccionar =
+            valorAnterior;
+
+
+        if(
+            typeof ultimaTarjetaCreada !==
+                "undefined" &&
+            ultimaTarjetaCreada
+        ){
+
+            valorASeleccionar =
+                String(
+                    typeof ultimaTarjetaCreada ===
+                    "object"
+                        ? ultimaTarjetaCreada.id
+                        : ultimaTarjetaCreada
+                );
+
+        }
+
+
+        if(
+            valorASeleccionar &&
+            select.querySelector(
+                `option[value="${valorASeleccionar}"]`
+            )
+        ){
+
+            select.value =
+                valorASeleccionar;
+
+        }
+
+
+        cambiarTarjetaPago(
+            pagoId
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando tarjetas del Pago:",
+            error
+        );
+
+    }
+
+}
+
+function abrirABMTarjetaPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        alert(
+            "No se pudo identificar el Pago desde el que se abrió Tarjetas."
+        );
+
+        return;
+
+    }
+
+
+    contextoRetornoABM = {
+
+        tipo:
+            "tarjeta_pago",
+
+        pagoId:
+            idPago
+
+    };
+
+
+    mostrarABMTarjetas(
+        "registro"
+    );
+
+}
+
+async function actualizarTarjetaDelRegistro(){
+
+    if(
+        !contextoRetornoABM ||
+        contextoRetornoABM.tipo !==
+            "tarjeta_pago"
+    ){
+
+        return;
+
+    }
+
+
+    const pagoId =
+        Number(
+            contextoRetornoABM.pagoId
+        );
+
+
+    /*
+     * =========================================
+     * RECARGAR TARJETAS DEL PAGO
+     * =========================================
+     */
+
+    await cargarTarjetasPago(
+        pagoId
+    );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        contextoRetornoABM =
+            null;
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjetaPago.querySelector(
+            ".bloque-tarjeta-pago"
+        );
+
+
+    const boton =
+        tarjetaPago.querySelector(
+            ".btn-toggle-tarjeta-pago"
+        );
+
+
+    const total =
+        tarjetaPago.querySelector(
+            ".total-tarjeta-pago"
+        );
+
+
+    /*
+     * =========================================
+     * ABRIR ACORDEÓN TARJETAS
+     * =========================================
+     */
+
+    if(bloque){
+
+        bloque.style.display =
+            "block";
+
+    }
+
+
+    if(boton){
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Tarjetas
+            </span>
+
+            <strong
+                class="total-tarjeta-pago"
+            >
+                ${
+                    total
+                        ? total.textContent
+                        : "$ 0,00"
+                }
+            </strong>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * LIMPIAR CONTEXTO
+     * =========================================
+     */
+
+    contextoRetornoABM =
+        null;
+
+
+    if(
+        typeof ultimaTarjetaCreada !==
+            "undefined"
+    ){
+
+        ultimaTarjetaCreada =
+            null;
+
+    }
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     *
+     * Dejamos el encabezado Tarjetas arriba
+     * del área operativa, igual que:
+     *
+     * - Transferencias / Depósitos
+     * - Cheques
+     */
+
+    posicionarMainEnElemento(
+        boton,
+        15
+    );
+
+}
+
+function toggleTarjetaPago(
+    pagoId
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjetaPago.querySelector(
+            ".bloque-tarjeta-pago"
+        );
+
+    const boton =
+        tarjetaPago.querySelector(
+            ".btn-toggle-tarjeta-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjetaPago.querySelector(
+            ".total-tarjeta-pago"
+        );
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    if(
+        bloque.style.display ===
+        "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Tarjetas
+            </span>
+
+            <strong
+                class="total-tarjeta-pago"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+    boton.innerHTML = `
+
+        <span>
+            ► Tarjetas
+        </span>
+
+        <strong
+            class="total-tarjeta-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+function cambiarTarjetaPago(
+    pagoId
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjetaPago.querySelector(
+            ".tarjeta-seleccion-pago"
+        );
+
+    const bloqueCuotas =
+        tarjetaPago.querySelector(
+            ".bloque-cuotas-tarjeta-pago"
+        );
+
+    const bloqueIntereses =
+        tarjetaPago.querySelector(
+            ".bloque-intereses-tarjeta-pago"
+        );
+
+    const inputCuotas =
+        tarjetaPago.querySelector(
+            ".cuotas-tarjeta-pago"
+        );
+
+    const inputIntereses =
+        tarjetaPago.querySelector(
+            ".intereses-tarjeta-pago"
+        );
+
+
+    const opcion =
+        select?.selectedOptions?.[0];
+
+    const tipo =
+        opcion?.dataset?.tipo ||
+        "";
+
+    const esCredito =
+        tipo.toLowerCase() ===
+        "credito";
+
+
+    if(bloqueCuotas){
+
+        bloqueCuotas.style.display =
+            esCredito
+                ? "block"
+                : "none";
+
+    }
+
+
+    if(bloqueIntereses){
+
+        bloqueIntereses.style.display =
+            esCredito
+                ? "block"
+                : "none";
+
+    }
+
+
+    if(
+        !esCredito &&
+        inputCuotas
+    ){
+
+        inputCuotas.value =
+            "1";
+
+    }
+
+
+    if(
+        !esCredito &&
+        inputIntereses
+    ){
+
+        inputIntereses.value =
+            "";
+
+    }
+
+}
+
+function registrarTarjetaPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjetaPago.querySelector(
+            ".tarjeta-seleccion-pago"
+        );
+
+    const fecha =
+        tarjetaPago.querySelector(
+            ".fecha-tarjeta-pago"
+        );
+
+    const importe =
+        tarjetaPago.querySelector(
+            ".importe-tarjeta-pago"
+        );
+
+    const cuotas =
+        tarjetaPago.querySelector(
+            ".cuotas-tarjeta-pago"
+        );
+
+    const intereses =
+        tarjetaPago.querySelector(
+            ".intereses-tarjeta-pago"
+        );
+
+    const referencia =
+        tarjetaPago.querySelector(
+            ".referencia-tarjeta-pago"
+        );
+
+    const comprobante =
+        tarjetaPago.querySelector(
+            ".comprobante-tarjeta-pago"
+        );
+
+
+    if(
+        !select ||
+        !select.value
+    ){
+
+        alert(
+            "Seleccione una tarjeta."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !fecha ||
+        !fecha.value
+    ){
+
+        alert(
+            "Ingrese la fecha de la operación con tarjeta."
+        );
+
+        return;
+
+    }
+
+
+    const importeAplicado =
+        leerImporte(
+            importe?.value
+        );
+
+
+    if(importeAplicado <= 0){
+
+        alert(
+            "Ingrese un importe aplicado mayor a cero."
+        );
+
+        if(importe){
+
+            importe.focus();
+
+        }
+
+        return;
+
+    }
+
+
+    const opcion =
+        select.selectedOptions?.[0];
+
+    const tipo =
+        opcion?.dataset?.tipo ||
+        "";
+
+    const esCredito =
+        tipo.toLowerCase() ===
+        "credito";
+
+
+    const cuotasOperacion =
+        esCredito
+            ? Math.max(
+                1,
+                Number(
+                    cuotas?.value || 1
+                )
+            )
+            : 1;
+
+    const interesesOperacion =
+        esCredito
+            ? leerImporte(
+                intereses?.value
+            )
+            : 0;
+
+
+    if(interesesOperacion < 0){
+
+        alert(
+            "Los intereses de financiación no pueden ser negativos."
+        );
+
+        return;
+
+    }
+
+
+    const tarjetaIdEditando =
+        tarjetasPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+    const estaEditando =
+        tarjetaIdEditando !==
+        undefined;
+
+
+    let comprobanteOperacion =
+        null;
+
+
+    if(
+        comprobante &&
+        comprobante.files &&
+        comprobante.files.length
+    ){
+
+        comprobanteOperacion =
+            comprobante.files[0];
+
+    }else if(estaEditando){
+
+        comprobanteOperacion =
+            pago.tarjetas.find(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        tarjetaIdEditando
+                    );
+
+                }
+            )?.comprobante ||
+            null;
+
+    }
+
+
+    const operacionTarjeta = {
+
+        id:
+            estaEditando
+                ? Number(
+                    tarjetaIdEditando
+                )
+                : Date.now(),
+
+        tarjeta_id:
+            String(
+                select.value
+            ),
+
+        tarjeta_nombre:
+            opcion?.textContent?.trim() ||
+            "",
+
+        tipo_tarjeta:
+            tipo,
+
+        fecha:
+            fecha.value,
+
+        importe:
+            importeAplicado,
+
+        cuotas:
+            cuotasOperacion,
+
+        intereses_financiacion:
+            interesesOperacion,
+
+        referencia:
+            referencia
+                ? referencia.value.trim()
+                : "",
+
+        comprobante:
+            comprobanteOperacion
+
+    };
+
+
+    if(estaEditando){
+
+        const indice =
+            pago.tarjetas.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        tarjetaIdEditando
+                    );
+
+                }
+            );
+
+
+        if(indice === -1){
+
+            alert(
+                "La operación con tarjeta que se estaba modificando ya no existe.\n\n" +
+                "El formulario volverá al modo de registro."
+            );
+
+            delete tarjetasPagoEditando[
+                String(
+                    idPago
+                )
+            ];
+
+            limpiarFormularioTarjetaPago(
+                idPago
+            );
+
+            return;
+
+        }
+
+
+        pago.tarjetas[
+            indice
+        ] = operacionTarjeta;
+
+
+        const tarjetaAnterior =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-tarjeta-pago[data-tarjeta-operacion-id="${tarjetaIdEditando}"]`
+            );
+
+
+        if(tarjetaAnterior){
+
+            tarjetaAnterior.remove();
+
+        }
+
+
+        delete tarjetasPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+    }else{
+
+        pago.tarjetas.push(
+            operacionTarjeta
+        );
+
+    }
+
+
+    renderizarTarjetaPago(
+        idPago,
+        operacionTarjeta
+    );
+
+    actualizarTotalTarjetasPago(
+        idPago
+    );
+
+    limpiarFormularioTarjetaPago(
+        idPago
+    );
+
+}
+
+function renderizarTarjetaPago(
+    pagoId,
+    operacion
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjetaPago.querySelector(
+            ".lista-tarjetas-pago"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.className =
+        "tarjeta-operacion-tarjeta-pago";
+
+
+    tarjeta.dataset.tarjetaOperacionId =
+        String(
+            operacion.id
+        );
+
+
+    tarjeta.style.cssText = `
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        padding:16px 18px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        min-width:0;
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        operacion.tarjeta_nombre;
+
+
+    const detalle =
+        document.createElement(
+            "span"
+        );
+
+
+    detalle.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    const tipoTexto =
+        operacion.tipo_tarjeta
+            ? operacion.tipo_tarjeta.charAt(0).toUpperCase() +
+              operacion.tipo_tarjeta.slice(1).toLowerCase()
+            : "Tarjeta";
+
+
+    detalle.textContent =
+        operacion.tipo_tarjeta?.toLowerCase() === "credito"
+            ? `${tipoTexto} · ${operacion.cuotas} cuota${Number(operacion.cuotas) === 1 ? "" : "s"} · ${operacion.fecha}`
+            : `${tipoTexto} · ${operacion.fecha}`;
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        detalle
+    );
+
+
+    if(operacion.referencia){
+
+        const referencia =
+            document.createElement(
+                "span"
+            );
+
+
+        referencia.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        referencia.textContent =
+            `Referencia: ${operacion.referencia}`;
+
+
+        datos.appendChild(
+            referencia
+        );
+
+    }
+
+
+    if(
+        Number(
+            operacion.intereses_financiacion || 0
+        ) > 0
+    ){
+
+        const intereses =
+            document.createElement(
+                "span"
+            );
+
+
+        intereses.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        intereses.textContent =
+            "Intereses: $ " +
+            formatearImporte(
+                operacion.intereses_financiacion
+            );
+
+
+        datos.appendChild(
+            intereses
+        );
+
+    }
+
+
+    if(operacion.comprobante){
+
+        const archivo =
+            document.createElement(
+                "span"
+            );
+
+
+        archivo.style.cssText = `
+            color:#60a5fa;
+            font-size:12px;
+        `;
+
+
+        archivo.textContent =
+            `📎 ${operacion.comprobante.name}`;
+
+
+        datos.appendChild(
+            archivo
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        align-items:center;
+        gap:16px;
+        flex:none;
+    `;
+
+
+    const importe =
+        document.createElement(
+            "strong"
+        );
+
+
+    importe.textContent =
+        "$ " +
+        formatearImporte(
+            operacion.importe
+        );
+
+
+    const botonModificar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonModificar.type =
+        "button";
+
+
+    botonModificar.className =
+        "action-btn btn-modificar-tarjeta-pago";
+
+
+    botonModificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonModificar.dataset.tarjetaOperacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonModificar.textContent =
+        "📝";
+
+
+    botonModificar.title =
+        "Modificar pago con tarjeta";
+
+
+    const botonEliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonEliminar.type =
+        "button";
+
+
+    botonEliminar.className =
+        "action-btn btn-eliminar-tarjeta-pago";
+
+
+    botonEliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonEliminar.dataset.tarjetaOperacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonEliminar.textContent =
+        "🗑";
+
+
+    botonEliminar.title =
+        "Eliminar pago con tarjeta";
+
+
+    acciones.appendChild(
+        importe
+    );
+
+
+    acciones.appendChild(
+        botonModificar
+    );
+
+
+    acciones.appendChild(
+        botonEliminar
+    );
+
+
+    tarjeta.appendChild(
+        datos
+    );
+
+
+    tarjeta.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        tarjeta
+    );
+
+}
+
+async function modificarTarjetaPago(
+    pagoId,
+    tarjetaOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            tarjetaOperacionId
+        );
+
+
+    const tarjetaYaEditando =
+        tarjetasPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        tarjetaYaEditando !== undefined &&
+        Number(
+            tarjetaYaEditando
+        ) !== idOperacion
+    ){
+
+        alert(
+            "Ya hay una operación con tarjeta en edición.\n\n" +
+            "Registre o cancele los cambios antes de modificar otra."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.tarjetas.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    tarjetasPagoEditando[
+        String(
+            idPago
+        )
+    ] = idOperacion;
+
+
+    const select =
+        tarjetaPago.querySelector(
+            ".tarjeta-seleccion-pago"
+        );
+
+    const fecha =
+        tarjetaPago.querySelector(
+            ".fecha-tarjeta-pago"
+        );
+
+    const importe =
+        tarjetaPago.querySelector(
+            ".importe-tarjeta-pago"
+        );
+
+    const cuotas =
+        tarjetaPago.querySelector(
+            ".cuotas-tarjeta-pago"
+        );
+
+    const intereses =
+        tarjetaPago.querySelector(
+            ".intereses-tarjeta-pago"
+        );
+
+    const referencia =
+        tarjetaPago.querySelector(
+            ".referencia-tarjeta-pago"
+        );
+
+    const textoComprobante =
+        tarjetaPago.querySelector(
+            ".texto-comprobante-tarjeta-pago"
+        );
+
+    const botonRegistrar =
+        tarjetaPago.querySelector(
+            ".btn-registrar-tarjeta-pago"
+        );
+
+    const botonCancelar =
+        tarjetaPago.querySelector(
+            ".btn-cancelar-edicion-tarjeta-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            String(
+                operacion.tarjeta_id
+            );
+
+    }
+
+
+    cambiarTarjetaPago(
+        idPago
+    );
+
+
+    if(fecha){
+
+        fecha.value =
+            operacion.fecha ||
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            formatearImporte(
+                operacion.importe
+            );
+
+    }
+
+
+    if(cuotas){
+
+        cuotas.value =
+            String(
+                operacion.cuotas || 1
+            );
+
+    }
+
+
+    if(intereses){
+
+        intereses.value =
+            operacion.intereses_financiacion
+                ? formatearImporte(
+                    operacion.intereses_financiacion
+                )
+                : "";
+
+    }
+
+
+    if(referencia){
+
+        referencia.value =
+            operacion.referencia ||
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            operacion.comprobante?.name
+                ? `📎 ${operacion.comprobante.name}`
+                : "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR CAMBIOS";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "flex";
+
+        botonCancelar.style.alignItems =
+            "center";
+
+        botonCancelar.style.justifyContent =
+            "center";
+
+    }
+
+
+    const bloque =
+        tarjetaPago.querySelector(
+            ".bloque-tarjeta-pago"
+        );
+
+
+    if(bloque){
+
+        bloque.scrollIntoView({
+
+            behavior:
+                "smooth",
+
+            block:
+                "start"
+
+        });
+
+    }
+
+}
+
+function cancelarEdicionTarjetaPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    delete tarjetasPagoEditando[
+        String(
+            idPago
+        )
+    ];
+
+
+    limpiarFormularioTarjetaPago(
+        idPago
+    );
+
+}
+
+function eliminarTarjetaPago(
+    pagoId,
+    tarjetaOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            tarjetaOperacionId
+        );
+
+
+    const tarjetaEditandoId =
+        tarjetasPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        tarjetaEditandoId !== undefined
+    ){
+
+        alert(
+            "Hay una operación con tarjeta en edición.\n\n" +
+            "Registre los cambios o cancele la edición " +
+            "antes de eliminar una operación con tarjeta."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    pago.tarjetas =
+        pago.tarjetas.filter(
+            function(item){
+
+                return Number(
+                    item.id
+                ) !== idOperacion;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(tarjetaPago){
+
+        const tarjetaOperacion =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-tarjeta-pago[data-tarjeta-operacion-id="${idOperacion}"]`
+            );
+
+
+        if(tarjetaOperacion){
+
+            tarjetaOperacion.remove();
+
+        }
+
+    }
+
+
+    actualizarTotalTarjetasPago(
+        idPago
+    );
+
+}
+
+function limpiarFormularioTarjetaPago(
+    pagoId
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjetaPago.querySelector(
+            ".tarjeta-seleccion-pago"
+        );
+
+    const fecha =
+        tarjetaPago.querySelector(
+            ".fecha-tarjeta-pago"
+        );
+
+    const importe =
+        tarjetaPago.querySelector(
+            ".importe-tarjeta-pago"
+        );
+
+    const cuotas =
+        tarjetaPago.querySelector(
+            ".cuotas-tarjeta-pago"
+        );
+
+    const intereses =
+        tarjetaPago.querySelector(
+            ".intereses-tarjeta-pago"
+        );
+
+    const referencia =
+        tarjetaPago.querySelector(
+            ".referencia-tarjeta-pago"
+        );
+
+    const comprobante =
+        tarjetaPago.querySelector(
+            ".comprobante-tarjeta-pago"
+        );
+
+    const textoComprobante =
+        tarjetaPago.querySelector(
+            ".texto-comprobante-tarjeta-pago"
+        );
+
+    const botonRegistrar =
+        tarjetaPago.querySelector(
+            ".btn-registrar-tarjeta-pago"
+        );
+
+    const botonCancelar =
+        tarjetaPago.querySelector(
+            ".btn-cancelar-edicion-tarjeta-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            "";
+
+    }
+
+
+    if(fecha){
+
+        fecha.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(cuotas){
+
+        cuotas.value =
+            "1";
+
+    }
+
+
+    if(intereses){
+
+        intereses.value =
+            "";
+
+    }
+
+
+    if(referencia){
+
+        referencia.value =
+            "";
+
+    }
+
+
+    if(comprobante){
+
+        comprobante.value =
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR PAGO CON TARJETA";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+
+    cambiarTarjetaPago(
+        pagoId
+    );
+
+}
+
+function actualizarTotalTarjetasPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.tarjetas.reduce(
+            function(acumulado, operacion){
+
+                return acumulado +
+                    Number(
+                        operacion.importe || 0
+                    );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjetaPago.querySelector(
+            ".total-tarjeta-pago"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        idPago
+    );
+
+}
+
+function cerrarTarjetaPago(
+    pagoId
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjetaPago.querySelector(
+            ".bloque-tarjeta-pago"
+        );
+
+    const boton =
+        tarjetaPago.querySelector(
+            ".btn-toggle-tarjeta-pago"
+        );
+
+    const total =
+        tarjetaPago.querySelector(
+            ".total-tarjeta-pago"
+        );
+
+
+    if(bloque){
+
+        bloque.style.display =
+            "none";
+
+    }
+
+
+    if(boton){
+
+        boton.innerHTML = `
+
+            <span>
+                ► Tarjetas
+            </span>
+
+            <strong
+                class="total-tarjeta-pago"
+            >
+                ${
+                    total
+                        ? total.textContent
+                        : "$ 0,00"
+                }
+            </strong>
+
+        `;
+
+    }
+
+}
+
+async function cargarRetencionesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !empresa ||
+        !empresa.value ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+
+                `/retenciones/?empresa=${encodeURIComponent(
+                    empresa.value
+                )}`
+
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.retenciones
+            )
+        ){
+
+            console.error(
+                "No se pudieron cargar las retenciones del Pago.",
+                resultado
+            );
+
+            return;
+
+        }
+
+
+        select.innerHTML = `
+
+            <option value="">
+                Seleccione...
+            </option>
+
+        `;
+
+
+        resultado.retenciones.forEach(
+            function(retencion){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        retencion.id
+                    );
+
+
+                opcion.textContent =
+                    retencion.tipo;
+
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        /*
+         * Conservamos selección anterior.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+
+        /*
+         * Si volvemos del [+], seleccionamos
+         * automáticamente la retención creada.
+         */
+
+        if(
+            typeof ultimaRetencionCreada !==
+                "undefined" &&
+            ultimaRetencionCreada
+        ){
+
+            const retencionId =
+                String(
+                    typeof ultimaRetencionCreada ===
+                        "object"
+                        ? ultimaRetencionCreada.id
+                        : ultimaRetencionCreada
+                );
+
+
+            const opcionNueva =
+                select.querySelector(
+                    `option[value="${retencionId}"]`
+                );
+
+
+            if(opcionNueva){
+
+                select.value =
+                    retencionId;
+
+            }
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando retenciones del Pago:",
+            error
+        );
+
+    }
+
+}
+
+async function toggleRetencionesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    if(
+        bloque.style.display ===
+            "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Retenciones
+            </span>
+
+            <strong
+                class="total-retenciones-pago"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        await cargarRetencionesPago(
+            pagoId
+        );
+
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Retenciones
+        </span>
+
+        <strong
+            class="total-retenciones-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+function cerrarRetencionesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Retenciones
+        </span>
+
+        <strong
+            class="total-retenciones-pago"
+        >
+            ${
+                total
+                    ? total.textContent
+                    : "$ 0,00"
+            }
+        </strong>
+
+    `;
+
+}
+
+function abrirABMRetencionPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        alert(
+            "No se pudo identificar el Pago desde el que se abrió Retenciones."
+        );
+
+        return;
+
+    }
+
+
+    contextoRetornoABM = {
+
+        tipo:
+            "retencion_pago",
+
+        pagoId:
+            idPago
+
+    };
+
+
+    mostrarABMRetenciones(
+        "registro"
+    );
+
+}
+
+async function actualizarRetencionDelRegistro(){
+
+    if(
+        !contextoRetornoABM ||
+        contextoRetornoABM.tipo !==
+            "retencion_pago"
+    ){
+
+        return;
+
+    }
+
+
+    const pagoId =
+        Number(
+            contextoRetornoABM.pagoId
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        contextoRetornoABM =
+            null;
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * RECARGAR RETENCIONES DEL PAGO
+     * =========================================
+     */
+
+    await cargarRetencionesPago(
+        pagoId
+    );
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-retenciones-pago"
+        );
+
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-retenciones-pago"
+        );
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    /*
+     * =========================================
+     * ABRIR ACORDEÓN RETENCIONES
+     * =========================================
+     */
+
+    if(bloque){
+
+        bloque.style.display =
+            "block";
+
+    }
+
+
+    if(boton){
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Retenciones
+            </span>
+
+            <strong
+                class="total-retenciones-pago"
+            >
+                ${
+                    total
+                        ? total.textContent
+                        : "$ 0,00"
+                }
+            </strong>
+
+        `;
+
+    }
+
+
+    /*
+     * =========================================
+     * LIMPIAR CONTEXTO
+     * =========================================
+     */
+
+    contextoRetornoABM =
+        null;
+
+
+    if(
+        typeof ultimaRetencionCreada !==
+            "undefined"
+    ){
+
+        ultimaRetencionCreada =
+            null;
+
+    }
+
+
+    /*
+     * =========================================
+     * POSICIÓN EXACTA
+     * =========================================
+     *
+     * Dejamos el encabezado Retenciones arriba
+     * del área operativa, igual que:
+     *
+     * - Transferencias / Depósitos
+     * - Cheques
+     * - Tarjetas
+     */
+
+    posicionarMainEnElemento(
+        boton,
+        15
+    );
+
+}
+
+function actualizarTotalRetencionesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const totalRetenciones =
+        pago.retenciones.reduce(
+            function(acumulado, retencion){
+
+                return (
+                    acumulado +
+                    Number(
+                        retencion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-retenciones-pago"
+        );
+
+
+    if(total){
+
+        total.textContent =
+            "$ " +
+            formatearImporte(
+                totalRetenciones
+            );
+
+    }
+
+
+    /*
+     * Las Retenciones forman parte
+     * del importe aplicado al Pago.
+     *
+     * Por eso, cada vez que cambia
+     * el total de Retenciones,
+     * recalculamos también el Pago.
+     */
+
+    actualizarPagoRegistro(
+        idPago
+    );
+
+}
+
+function registrarRetencionPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-retencion-pago"
+        );
+
+
+    if(
+        !select ||
+        !select.value
+    ){
+
+        alert(
+            "Seleccione una retención."
+        );
+
+        return;
+
+    }
+
+
+    const importeAplicado =
+        leerImporte(
+            importe?.value
+        );
+
+
+    if(importeAplicado <= 0){
+
+        alert(
+            "Ingrese un importe de retención mayor a cero."
+        );
+
+
+        if(importe){
+
+            importe.focus();
+
+        }
+
+
+        return;
+
+    }
+
+
+    const retencionEditandoId =
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    const estaEditando =
+        retencionEditandoId !==
+        undefined;
+
+
+    let comprobanteOperacion =
+        null;
+
+
+    if(
+        comprobante &&
+        comprobante.files &&
+        comprobante.files.length
+    ){
+
+        comprobanteOperacion =
+            comprobante.files[0];
+
+    }else if(estaEditando){
+
+        comprobanteOperacion =
+            pago.retenciones.find(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        retencionEditandoId
+                    );
+
+                }
+            )?.comprobante ||
+            null;
+
+    }
+
+
+    const opcion =
+        select.selectedOptions?.[0];
+
+
+    const operacion = {
+
+        id:
+            estaEditando
+                ? Number(
+                    retencionEditandoId
+                )
+                : Date.now(),
+
+        retencion_id:
+            String(
+                select.value
+            ),
+
+        retencion_tipo:
+            opcion?.textContent?.trim() ||
+            "",
+
+        importe:
+            importeAplicado,
+
+        comprobante:
+            comprobanteOperacion
+
+    };
+
+
+    if(estaEditando){
+
+        const indice =
+            pago.retenciones.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        retencionEditandoId
+                    );
+
+                }
+            );
+
+
+        if(indice === -1){
+
+            alert(
+                "La retención que se estaba modificando ya no existe."
+            );
+
+
+            delete retencionesPagoEditando[
+                String(
+                    idPago
+                )
+            ];
+
+
+            limpiarFormularioRetencionPago(
+                idPago
+            );
+
+
+            return;
+
+        }
+
+
+        pago.retenciones[
+            indice
+        ] = operacion;
+
+
+        const anterior =
+            tarjeta.querySelector(
+                `.tarjeta-retencion-pago[data-retencion-operacion-id="${retencionEditandoId}"]`
+            );
+
+
+        if(anterior){
+
+            anterior.remove();
+
+        }
+
+
+        delete retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    }else{
+
+        pago.retenciones.push(
+            operacion
+        );
+
+    }
+
+
+    renderizarRetencionPago(
+        idPago,
+        operacion
+    );
+
+
+    actualizarTotalRetencionesPago(
+        idPago
+    );
+
+
+    limpiarFormularioRetencionPago(
+        idPago
+    );
+
+}
+
+function renderizarRetencionPago(
+    pagoId,
+    operacion
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjeta.querySelector(
+            ".lista-retenciones-pago"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const fila =
+        document.createElement(
+            "div"
+        );
+
+
+    fila.className =
+        "tarjeta-retencion-pago";
+
+
+    fila.dataset.retencionOperacionId =
+        String(
+            operacion.id
+        );
+
+
+    fila.style.cssText = `
+
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:15px;
+        padding:14px 16px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+        min-width:0;
+
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        operacion.retencion_tipo;
+
+
+    const importe =
+        document.createElement(
+            "span"
+        );
+
+
+    importe.textContent =
+        "$ " +
+        formatearImporte(
+            operacion.importe
+        );
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        importe
+    );
+
+
+    if(
+        operacion.comprobante &&
+        operacion.comprobante.name
+    ){
+
+        const archivo =
+            document.createElement(
+                "span"
+            );
+
+
+        archivo.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        archivo.textContent =
+            `📎 ${operacion.comprobante.name}`;
+
+
+        datos.appendChild(
+            archivo
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        gap:8px;
+        flex:none;
+    `;
+
+
+    const modificar =
+        document.createElement(
+            "button"
+        );
+
+
+    modificar.type =
+        "button";
+
+    modificar.className =
+        "action-btn btn-modificar-retencion-pago";
+
+    modificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+    modificar.dataset.retencionId =
+        String(
+            operacion.id
+        );
+
+    modificar.textContent =
+        "📝";
+
+
+    const eliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    eliminar.type =
+        "button";
+
+    eliminar.className =
+        "action-btn btn-eliminar-retencion-pago";
+
+    eliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+    eliminar.dataset.retencionId =
+        String(
+            operacion.id
+        );
+
+    eliminar.textContent =
+        "🗑";
+
+    eliminar.style.cssText = `
+        background:#7f1d1d;
+        border-color:#991b1b;
+    `;
+
+
+    acciones.appendChild(
+        modificar
+    );
+
+    acciones.appendChild(
+        eliminar
+    );
+
+
+    fila.appendChild(
+        datos
+    );
+
+    fila.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        fila
+    );
+
+}
+
+function modificarRetencionPago(
+    pagoId,
+    retencionOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            retencionOperacionId
+        );
+
+
+    const yaEditando =
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        yaEditando !== undefined &&
+        Number(
+            yaEditando
+        ) !== idOperacion
+    ){
+
+        alert(
+            "Ya hay una retención en edición.\n\n" +
+            "Registre o cancele los cambios antes de modificar otra."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.retenciones.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    retencionesPagoEditando[
+        String(
+            idPago
+        )
+    ] = idOperacion;
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-retencion-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-retencion-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-retencion-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            String(
+                operacion.retencion_id
+            );
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            formatearImporte(
+                operacion.importe
+            );
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            operacion.comprobante?.name
+                ? `📎 ${operacion.comprobante.name}`
+                : "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR CAMBIOS";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "inline-block";
+
+    }
+
+}
+
+function cancelarEdicionRetencionPago(
+    pagoId
+){
+
+    delete retencionesPagoEditando[
+        String(
+            pagoId
+        )
+    ];
+
+
+    limpiarFormularioRetencionPago(
+        pagoId
+    );
+
+}
+
+function eliminarRetencionPago(
+    pagoId,
+    retencionOperacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            retencionOperacionId
+        );
+
+
+    if(
+        retencionesPagoEditando[
+            String(
+                idPago
+            )
+        ] !== undefined
+    ){
+
+        alert(
+            "Hay una retención en edición.\n\n" +
+            "Registre o cancele los cambios antes de eliminar."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.retenciones.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    if(
+        !window.confirm(
+            `¿Eliminar la retención "${operacion.retencion_tipo}" de este Pago?`
+        )
+    ){
+
+        return;
+
+    }
+
+
+    pago.retenciones =
+        pago.retenciones.filter(
+            function(item){
+
+                return Number(
+                    item.id
+                ) !== idOperacion;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    tarjeta
+        ?.querySelector(
+            `.tarjeta-retencion-pago[data-retencion-operacion-id="${idOperacion}"]`
+        )
+        ?.remove();
+
+
+    actualizarTotalRetencionesPago(
+        idPago
+    );
+
+}
+
+function limpiarFormularioRetencionPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".retencion-seleccion-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-retencion-pago"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-retencion-pago"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-retencion-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-retencion-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-retencion-pago"
+        );
+
+
+    if(select){
+
+        select.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(comprobante){
+
+        comprobante.value =
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR RETENCIÓN";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+}
+
+async function toggleChequesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-cheques-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-cheques-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    /*
+     * ABRIR
+     */
+
+    if(
+        bloque.style.display ===
+        "none"
+    ){
+
+        bloque.style.display =
+            "block";
+
+
+        boton.innerHTML = `
+
+            <span>
+                ▼ Cheques
+            </span>
+
+            <strong
+                class="total-cheques-pago"
+            >
+                ${textoTotal}
+            </strong>
+
+        `;
+
+
+        await cambiarOrigenChequePago(
+            pagoId
+        );
+
+
+        cambiarTipoChequePago(
+            pagoId
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+     * CERRAR
+     */
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Cheques
+        </span>
+
+        <strong
+            class="total-cheques-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+}
+
+async function cargarCuentasOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/cuentas-bancarias/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !resultado.ok ||
+            !Array.isArray(
+                resultado.cuentas
+            )
+        ){
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * BETA ORDENACLICK
+         * SOLO CUENTAS EN PESOS
+         * =========================================
+         *
+         * La versión Beta trabaja exclusivamente
+         * con movimientos y pagos en ARS.
+         *
+         * Las cuentas en otras monedas continúan
+         * existiendo en el ABM, pero no pueden
+         * utilizarse como medio de pago.
+         */
+
+        resultado.cuentas
+
+            .filter(
+                function(cuenta){
+
+                    return (
+                        cuenta.moneda === "ARS"
+                    );
+
+                }
+            )
+
+            .forEach(
+                function(cuenta){
+
+                    const opcion =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    opcion.value =
+                        String(
+                            cuenta.id
+                        );
+
+
+                    opcion.textContent =
+                        `${cuenta.banco} · ${cuenta.nombre}`;
+
+
+                    select.appendChild(
+                        opcion
+                    );
+
+                }
+            );
+
+
+        /*
+         * Conservamos la selección anterior
+         * solamente si sigue siendo válida.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Error cargando cuentas bancarias de la operación:",
+            error
+        );
+
+    }
+
+}
+
+async function cargarBancosOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+    const empresa =
+        document.getElementById(
+            "empresaActiva"
+        );
+
+
+    if(
+        !tarjeta ||
+        !empresa ||
+        !empresa.value
+    ){
+
+        return;
+
+    }
+
+
+    const select =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+
+    if(!select){
+
+        return;
+
+    }
+
+
+    const valorAnterior =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Seleccione...
+        </option>
+
+    `;
+
+
+    try{
+
+        const respuesta =
+            await fetch(
+                `/listar-bancos/?empresa=${encodeURIComponent(empresa.value)}`
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if(
+            !respuesta.ok ||
+            !Array.isArray(
+                resultado.bancos
+            )
+        ){
+
+            return;
+
+        }
+
+
+        resultado.bancos.forEach(
+            function(banco){
+
+                const opcion =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                opcion.value =
+                    String(
+                        banco.id
+                    );
+
+
+                opcion.textContent =
+                    banco.nombre;
+
+
+                select.appendChild(
+                    opcion
+                );
+
+            }
+        );
+
+
+        /*
+         * Banco recién creado desde este formulario.
+         */
+
+        if(
+            typeof ultimoBancoCreado !==
+                "undefined" &&
+            ultimoBancoCreado
+        ){
+
+            const bancoId =
+                String(
+                    typeof ultimoBancoCreado ===
+                    "object"
+
+                        ? ultimoBancoCreado.id
+
+                        : ultimoBancoCreado
+                );
+
+
+            const opcionNueva =
+                select.querySelector(
+                    `option[value="${bancoId}"]`
+                );
+
+
+            if(opcionNueva){
+
+                select.value =
+                    bancoId;
+
+            }
+
+
+            ultimoBancoCreado =
+                null;
+
+
+            return;
+
+        }
+
+
+        /*
+         * Si no hubo alta nueva,
+         * mantenemos el valor anterior.
+         */
+
+        if(
+            valorAnterior &&
+            select.querySelector(
+                `option[value="${valorAnterior}"]`
+            )
+        ){
+
+            select.value =
+                valorAnterior;
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Error cargando bancos destino de la operación:",
+            error
+        );
+
+    }
+
+}
+
+async function cambiarTipoOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const botonCuenta =
+        tarjeta.querySelector(
+            ".btn-agregar-cuenta-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+    const estaEditando =
+        operacionesBancariasEditando[
+            String(
+                pagoId
+            )
+        ] !== undefined;
+
+    if(
+        !tipo ||
+        !cuentaOrigen ||
+        !botonCuenta ||
+        !botonRegistrar
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        tipo.value ===
+        "Deposito"
+    ){
+
+        /*
+         * DEPÓSITO
+         *
+         * El origen conceptual es Caja.
+         * Conservamos físicamente el espacio
+         * de la grilla.
+         */
+
+        cuentaOrigen.innerHTML = `
+
+            <option value="">
+                Caja
+            </option>
+
+        `;
+
+
+        cuentaOrigen.disabled =
+            true;
+
+
+        botonCuenta.style.visibility =
+            "hidden";
+
+        botonCuenta.style.pointerEvents =
+            "none";
+
+
+        botonRegistrar.textContent =
+            estaEditando
+                ? "REGISTRAR CAMBIOS"
+                : "REGISTRAR DEPÓSITO";
+
+
+        return;
+
+    }
+
+
+    /*
+     * TRANSFERENCIA
+     */
+
+    cuentaOrigen.disabled =
+        false;
+
+
+    botonCuenta.style.visibility =
+        "visible";
+
+    botonCuenta.style.pointerEvents =
+        "auto";
+
+
+    botonRegistrar.textContent =
+        estaEditando
+            ? "REGISTRAR CAMBIOS"
+            : "REGISTRAR TRANSFERENCIA";
+
+
+    await cargarCuentasOperacionBancaria(
+        pagoId
+    );
+
+}
+
+function registrarOperacionBancaria(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const tipo =
+        tarjetaPago.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjetaPago.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const bancoDestino =
+        tarjetaPago.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjetaPago.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjetaPago.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjetaPago.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjetaPago.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const comprobante =
+        tarjetaPago.querySelector(
+            ".comprobante-operacion-bancaria"
+        );
+
+
+    if(
+        !tipo ||
+        !cuentaOrigen ||
+        !bancoDestino ||
+        !referencia ||
+        !moneda ||
+        !fecha ||
+        !importe
+    ){
+
+        alert(
+            "No se pudo leer el formulario de la operación."
+        );
+
+        return;
+
+    }
+
+
+    const tipoOperacion =
+        tipo.value;
+
+    if(
+        moneda.value !== "ARS"
+    ){
+
+        alert(
+            "La versión Beta de OrdenaClick admite pagos únicamente en Pesos."
+        );
+
+        moneda.value =
+            "ARS";
+
+        return;
+
+    }
+
+    /*
+     * ORIGEN
+     */
+
+    let cuentaOrigenId =
+        null;
+
+    let cuentaOrigenNombre =
+        "Caja";
+
+
+    if(
+        tipoOperacion ===
+        "Transferencia"
+    ){
+
+        if(!cuentaOrigen.value){
+
+            alert(
+                "Seleccione la cuenta bancaria de origen."
+            );
+
+            return;
+
+        }
+
+
+        cuentaOrigenId =
+            String(
+                cuentaOrigen.value
+            );
+
+
+        cuentaOrigenNombre =
+            cuentaOrigen.options[
+                cuentaOrigen.selectedIndex
+            ]?.textContent.trim() || "";
+
+    }
+
+
+    /*
+     * DESTINO
+     */
+
+    if(!bancoDestino.value){
+
+        alert(
+            "Seleccione el banco de destino."
+        );
+
+        return;
+
+    }
+
+
+    const bancoDestinoId =
+        String(
+            bancoDestino.value
+        );
+
+
+    const bancoDestinoNombre =
+        bancoDestino.options[
+            bancoDestino.selectedIndex
+        ]?.textContent.trim() || "";
+
+
+    /*
+     * FECHA
+     */
+
+    if(!fecha.value){
+
+        alert(
+            "Ingrese la fecha de la operación."
+        );
+
+        fecha.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * IMPORTE
+     */
+
+    const importeOperacion =
+        leerImporte(
+            importe.value
+        );
+
+
+    if(importeOperacion <= 0){
+
+        alert(
+            "Ingrese un importe válido."
+        );
+
+        importe.focus();
+
+        return;
+
+    }
+
+
+    /*
+    * =========================================
+    * OPERACIÓN
+    * =========================================
+    */
+
+    const operacionIdEditando =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    const estaEditando =
+        operacionIdEditando !==
+        undefined;
+
+
+    const operacion = {
+
+        id:
+            estaEditando
+                ? Number(
+                    operacionIdEditando
+                )
+                : Date.now(),
+
+        tipo_operacion:
+            tipoOperacion,
+
+        cuenta_origen_id:
+            cuentaOrigenId,
+
+        cuenta_origen_nombre:
+            cuentaOrigenNombre,
+
+        banco_destino_id:
+            bancoDestinoId,
+
+        banco_destino_nombre:
+            bancoDestinoNombre,
+
+        referencia_destino:
+            referencia.value.trim(),
+
+        moneda:
+            moneda.value,
+
+        fecha:
+            fecha.value,
+
+        importe:
+            importeOperacion,
+
+        comprobante:
+            (
+                comprobante &&
+                comprobante.files &&
+                comprobante.files.length
+            )
+                ? comprobante.files[0]
+                : (
+                    estaEditando
+                        ? (
+                            pago.transferencias.find(
+                                function(item){
+
+                                    return Number(
+                                        item.id
+                                    ) === Number(
+                                        operacionIdEditando
+                                    );
+
+                                }
+                            )?.comprobante || null
+                        )
+                        : null
+                )
+
+    };
+
+
+    /*
+    * =========================================
+    * ACTUALIZAR O AGREGAR
+    * =========================================
+    */
+
+    if(estaEditando){
+
+        const indice =
+            pago.transferencias.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        operacionIdEditando
+                    );
+
+                }
+            );
+
+
+        if(indice === -1){
+
+            alert(
+                "La operación que se estaba modificando ya no existe.\n\n" +
+                "El formulario volverá al modo de registro."
+            );
+
+
+            delete operacionesBancariasEditando[
+                String(
+                    idPago
+                )
+            ];
+
+
+            limpiarFormularioOperacionBancaria(
+                idPago
+            );
+
+
+            return;
+
+        }
+
+
+        pago.transferencias[
+            indice
+        ] = operacion;
+
+
+        const tarjetaAnterior =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-bancaria[data-operacion-id="${operacionIdEditando}"]`
+            );
+
+
+        if(tarjetaAnterior){
+
+            tarjetaAnterior.remove();
+
+        }
+
+
+        delete operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+    }else{
+
+        pago.transferencias.push(
+            operacion
+        );
+
+    }
+
+
+    /*
+    * =========================================
+    * RENDERIZAR
+    * =========================================
+    */
+
+    renderizarOperacionBancaria(
+        pagoId,
+        operacion
+    );
+
+
+    actualizarTotalOperacionesBancarias(
+        pagoId
+    );
+
+
+    limpiarFormularioOperacionBancaria(
+        pagoId
+    );
+    }
+
+function renderizarOperacionBancaria(
+    pagoId,
+    operacion
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjetaPago.querySelector(
+            ".lista-operaciones-bancarias"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.className =
+        "tarjeta-operacion-bancaria";
+
+
+    tarjeta.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    tarjeta.style.cssText = `
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        padding:16px 18px;
+        background:#1b2130;
+        border:1px solid #2b3447;
+        border-radius:14px;
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        min-width:0;
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        operacion.tipo_operacion ===
+        "Deposito"
+
+            ? `Depósito → ${operacion.banco_destino_nombre}`
+
+            : `${operacion.cuenta_origen_nombre} → ${operacion.banco_destino_nombre}`;
+
+
+    const detalle =
+        document.createElement(
+            "span"
+        );
+
+
+    detalle.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    const monedaTexto =
+        operacion.moneda === "USD"
+            ? "Dólares"
+            : "Pesos";
+
+
+    detalle.textContent =
+        `${monedaTexto} · ${operacion.fecha}`;
+
+
+    datos.appendChild(
+        titulo
+    );
+
+
+    datos.appendChild(
+        detalle
+    );
+
+
+    if(
+        operacion.referencia_destino
+    ){
+
+        const referencia =
+            document.createElement(
+                "span"
+            );
+
+
+        referencia.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        referencia.textContent =
+            `Referencia: ${operacion.referencia_destino}`;
+
+
+        datos.appendChild(
+            referencia
+        );
+
+    }
+
+
+    if(operacion.comprobante){
+
+        const archivo =
+            document.createElement(
+                "span"
+            );
+
+
+        archivo.style.cssText = `
+            color:#60a5fa;
+            font-size:12px;
+        `;
+
+
+        archivo.textContent =
+            `📎 ${operacion.comprobante.name}`;
+
+
+        datos.appendChild(
+            archivo
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        align-items:center;
+        gap:16px;
+        flex:none;
+    `;
+
+
+    const importe =
+        document.createElement(
+            "strong"
+        );
+
+
+importe.textContent =
+    "$ " +
+    formatearImporte(
+        operacion.importe
+    );
+
+    /*
+    * =========================================
+    * MODIFICAR
+    * =========================================
+    */
+
+    const botonModificar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonModificar.type =
+        "button";
+
+
+    botonModificar.className =
+        "action-btn btn-modificar-operacion-bancaria";
+
+
+    botonModificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonModificar.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonModificar.textContent =
+        "📝";
+
+    botonModificar.title =
+        "Modificar operación";
+
+    const botonEliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonEliminar.type =
+        "button";
+
+
+    botonEliminar.className =
+        "action-btn btn-eliminar-operacion-bancaria";
+
+
+    botonEliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonEliminar.dataset.operacionId =
+        String(
+            operacion.id
+        );
+
+
+    botonEliminar.textContent =
+        "🗑";
+
+
+    acciones.appendChild(
+        importe
+    );
+
+    acciones.appendChild(
+        botonModificar
+    );
+
+    acciones.appendChild(
+        botonEliminar
+    );
+
+
+    tarjeta.appendChild(
+        datos
+    );
+
+
+    tarjeta.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        tarjeta
+    );
+
+}
+
+function modificarOperacionBancaria(
+    pagoId,
+    operacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            operacionId
+        );
+
+    /*
+    * =========================================
+    * EVITAR DOS EDICIONES SIMULTÁNEAS
+    * =========================================
+    */
+
+    const operacionYaEditando =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        operacionYaEditando !== undefined &&
+        Number(
+            operacionYaEditando
+        ) !== idOperacion
+    ){
+
+        alert(
+            "Ya hay una operación en edición.\n\n" +
+            "Registre los cambios antes de modificar otra."
+        );
+
+        return;
+
+    }
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const operacion =
+        pago.transferencias.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) ===
+                idOperacion;
+
+            }
+        );
+
+
+    if(!operacion){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * MARCAR EDICIÓN
+     * =========================================
+     */
+
+    operacionesBancariasEditando[
+        String(
+            idPago
+        )
+    ] = idOperacion;
+
+
+    /*
+     * =========================================
+     * ELEMENTOS DEL FORMULARIO
+     * =========================================
+     */
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjeta.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const cuentaOrigen =
+        tarjeta.querySelector(
+            ".cuenta-origen-operacion-bancaria"
+        );
+
+    const bancoDestino =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjeta.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjeta.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+    const botonCancelarCambios =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
+
+
+    /*
+     * =========================================
+     * TIPO DE OPERACIÓN
+     * =========================================
+     */
+
+    if(tipo){
+
+        tipo.value =
+            operacion.tipo_operacion;
+
+    }
+
+
+    /*
+     * Primero actualizamos el formulario
+     * según sea Transferencia o Depósito.
+     *
+     * Esto carga correctamente las cuentas
+     * bancarias en caso de Transferencia.
+     */
+
+    cambiarTipoOperacionBancaria(
+        idPago
+    ).then(
+        function(){
+
+            /*
+             * =========================================
+             * CUENTA ORIGEN
+             * =========================================
+             */
+
+            if(
+                cuentaOrigen &&
+                operacion.tipo_operacion ===
+                "Transferencia"
+            ){
+
+                cuentaOrigen.value =
+                    operacion.cuenta_origen_id ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * BANCO DESTINO
+             * =========================================
+             */
+
+            if(bancoDestino){
+
+                bancoDestino.value =
+                    operacion.banco_destino_id ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * MONEDA
+             * =========================================
+             */
+
+            if(moneda){
+
+                moneda.value =
+                    operacion.moneda ||
+                    "ARS";
+
+            }
+
+
+            /*
+             * =========================================
+             * REFERENCIA
+             * =========================================
+             */
+
+            if(referencia){
+
+                referencia.value =
+                    operacion.referencia_destino ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * FECHA
+             * =========================================
+             */
+
+            if(fecha){
+
+                fecha.value =
+                    operacion.fecha ||
+                    "";
+
+            }
+
+
+            /*
+             * =========================================
+             * IMPORTE
+             * =========================================
+             *
+             * La operación internamente guarda un número.
+             * Al volver al formulario lo mostramos con
+             * formato argentino:
+             *
+             * 1.500,00
+             */
+
+            if(importe){
+
+                importe.value =
+                    formatearImporte(
+                        operacion.importe
+                    );
+
+            }
+
+
+            /*
+             * =========================================
+             * COMPROBANTE
+             * =========================================
+             */
+
+            if(
+                textoComprobante &&
+                operacion.comprobante
+            ){
+
+                textoComprobante.textContent =
+                    `📎 ${operacion.comprobante.name}`;
+
+            }else if(textoComprobante){
+
+                textoComprobante.textContent =
+                    "📎 Adjuntar comprobante";
+
+            }
+
+
+            /*
+             * =========================================
+             * INDICAR QUE ESTAMOS MODIFICANDO
+             * =========================================
+             */
+
+            if(botonRegistrar){
+
+                botonRegistrar.textContent =
+                    "REGISTRAR CAMBIOS";
+
+            }
+
+            if(botonCancelarCambios){
+
+                botonCancelarCambios.style.display =
+                    "flex";
+
+                botonCancelarCambios.style.alignItems =
+                    "center";
+
+                botonCancelarCambios.style.justifyContent =
+                    "center";
+
+                botonCancelarCambios.style.background =
+                    "#dc2626";
+
+                botonCancelarCambios.style.borderColor =
+                    "#dc2626";
+
+                botonCancelarCambios.style.color =
+                    "#ffffff";
+
+            }
+
+            /*
+             * =========================================
+             * LLEVAR AL USUARIO AL FORMULARIO
+             * =========================================
+             *
+             * Al pulsar modificar desde una tarjeta
+             * subimos automáticamente al comienzo
+             * del acordeón.
+             */
+
+            const bloqueFormulario =
+                tarjeta.querySelector(
+                    ".bloque-operaciones-bancarias"
+                );
+
+
+            if(bloqueFormulario){
+
+                bloqueFormulario.scrollIntoView({
+
+                    behavior:
+                        "smooth",
+
+                    block:
+                        "start"
+
+                });
+
+            }
+
+        }
+    );
+
+}
+
+/*
+ * =========================================
+ * CANCELAR EDICIÓN DE OPERACIÓN BANCARIA
+ * =========================================
+ */
+
+function cancelarEdicionOperacionBancaria(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    /*
+     * =========================================
+     * SALIR DEL MODO EDICIÓN
+     * =========================================
+     */
+
+    delete operacionesBancariasEditando[
+        String(
+            idPago
+        )
+    ];
+
+
+    /*
+     * =========================================
+     * LIMPIAR FORMULARIO
+     * =========================================
+     *
+     * Esta función ya limpia los campos y
+     * devuelve el formulario a su estado normal.
+     */
+
+    limpiarFormularioOperacionBancaria(
+        idPago
+    );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * OCULTAR CANCELAR CAMBIOS
+     * =========================================
+     */
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+
+    /*
+     * =========================================
+     * RESTABLECER BOTÓN PRINCIPAL
+     * =========================================
+     */
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-operacion-bancaria"
+        );
+
+
+    if(
+        tipo &&
+        botonRegistrar
+    ){
+
+        botonRegistrar.textContent =
+            tipo.value === "Deposito"
+                ? "REGISTRAR DEPÓSITO"
+                : "REGISTRAR TRANSFERENCIA";
+
+    }
+
+}
+
+function actualizarTotalOperacionesBancarias(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        pagoId
+    );
+
+}
+
+function togglePagoRegistro(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+    /*
+    * =========================================
+    * SALIR DEL MODO EDICIÓN
+    * =========================================
+    */
+
+    delete operacionesBancariasEditando[
+        String(
+            pagoId
+        )
+    ];
+
+    const contenido =
+        tarjeta.querySelector(
+            ".contenido-pago-registro"
+        );
+
+    const indicador =
+        tarjeta.querySelector(
+            ".indicador-pago-registro"
+        );
+
+
+    if(
+        !contenido ||
+        !indicador
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        contenido.style.display ===
+        "none"
+    ){
+
+        contenido.style.display =
+            "block";
+
+        indicador.textContent =
+            "▼";
+
+    }else{
+
+        contenido.style.display =
+            "none";
+
+        indicador.textContent =
+            "▶";
+
+    }
+
+}
+
+function eliminarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    /*
+     * Eliminamos el Pago del borrador.
+     *
+     * Esto solamente es válido mientras
+     * el registro todavía no fue guardado.
+     *
+     * Para Pagos históricos habrá luego
+     * una lógica controlada de reversión.
+     */
+
+    pagosRegistro =
+        pagosRegistro.filter(
+            function(pago){
+
+                return pago.id !==
+                    id;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(tarjeta){
+
+        tarjeta.remove();
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+function actualizarPagoRegistro(
+    pagoId
+){
+
+    const id =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    id;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${id}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const inputFecha =
+        tarjeta.querySelector(
+            ".fecha-pago-registro"
+        );
+
+
+    const inputEfectivo =
+        tarjeta.querySelector(
+            ".efectivo-pago-registro"
+        );
+
+
+    pago.fecha_pago =
+        inputFecha
+            ? inputFecha.value
+            : "";
+
+
+    pago.efectivo =
+        leerImporte(
+            inputEfectivo?.value
+        );
+
+
+    const totalOperaciones =
+        pago.transferencias.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalTarjeta =
+        pago.tarjetas.reduce(
+            function(acumulado, operacion){
+
+                return (
+                    acumulado +
+                    Number(
+                        operacion.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalCheques =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+    const totalRetenciones =
+    pago.retenciones.reduce(
+        function(acumulado, retencion){
+
+            return (
+                acumulado +
+                Number(
+                    retencion.importe || 0
+                )
+            );
+
+        },
+        0
+    );
+
+    /*
+     * Los intereses de financiación de Tarjeta
+     * se conservan dentro de cada operación de pago.tarjetas,
+     * pero NO aumentan el importe aplicado
+     * al Movimiento.
+     *
+     * Más adelante agregaremos:
+     *
+     * retenciones
+     */
+
+    pago.total =
+        pago.efectivo +
+        totalOperaciones +
+        totalTarjeta +
+        totalCheques +
+        totalRetenciones;
+
+
+    const totalCabecera =
+        tarjeta.querySelector(
+            ".total-pago-registro"
+        );
+
+
+    if(totalCabecera){
+
+        totalCabecera.textContent =
+            "$ " +
+            formatearImporte(
+                pago.total
+            );
+
+    }
+
+
+    actualizarResumenGeneralPagos();
+
+}
+
+async function limpiarFormularioChequePago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * SALIR DEL MODO EDICIÓN
+     * =========================================
+     */
+
+    delete chequesEditando[
+        String(
+            pagoId
+        )
+    ];
+
+
+    const instrumento =
+        tarjeta.querySelector(
+            ".instrumento-cheque-pago"
+        );
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const entidad =
+        tarjeta.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+    const numero =
+        tarjeta.querySelector(
+            ".numero-cheque-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-cheque-pago"
+        );
+
+    const entrega =
+        tarjeta.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+    const fechaEmision =
+        tarjeta.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const fechaAcreditacion =
+        tarjeta.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-cheque-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-cheque-pago"
+        );
+
+
+    /*
+     * =========================================
+     * VALORES INICIALES
+     * =========================================
+     */
+
+    if(instrumento){
+
+        instrumento.selectedIndex =
+            0;
+
+    }
+
+
+    if(tipo){
+
+        tipo.value =
+            "diferido";
+
+    }
+
+
+    if(origen){
+
+        origen.value =
+            "propio";
+
+    }
+
+
+    if(entidad){
+
+        entidad.value =
+            "";
+
+    }
+
+
+    if(numero){
+
+        numero.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(entrega){
+
+        entrega.value =
+            "";
+
+    }
+
+
+    if(fechaEmision){
+
+        fechaEmision.value =
+            "";
+
+    }
+
+
+    if(fechaAcreditacion){
+
+        fechaAcreditacion.value =
+            "";
+
+    }
+
+
+    /*
+     * =========================================
+     * RESTAURAR FORMULARIO
+     * =========================================
+     */
+
+    await cambiarOrigenChequePago(
+        pagoId
+    );
+
+
+    cambiarTipoChequePago(
+        pagoId
+    );
+
+
+    /*
+     * =========================================
+     * RESTAURAR BOTONES
+     * =========================================
+     */
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR CHEQUE";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "none";
+
+    }
+
+
+    if(numero){
+
+        numero.focus();
+
+    }
+
+}
+
+function cancelarEdicionChequePago(
+    pagoId
+){
+
+    limpiarFormularioChequePago(
+        pagoId
+    );
+
+}
+
+function cerrarChequesPago(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-cheques-pago"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-cheques-pago"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0,00";
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Cheques
+        </span>
+
+        <strong
+            class="total-cheques-pago"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+
+    boton.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "center"
+
+    });
+
+}
+
+function eliminarOperacionBancaria(
+    pagoId,
+    operacionId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idOperacion =
+        Number(
+            operacionId
+        );
+
+    /*
+    * =========================================
+    * BLOQUEAR ELIMINACIÓN DURANTE EDICIÓN
+    * =========================================
+    */
+
+    const operacionEditandoId =
+        operacionesBancariasEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        operacionEditandoId !== undefined
+    ){
+
+        alert(
+            "Hay una operación en edición.\n\n" +
+            "Registre los cambios o cancele la edición " +
+            "antes de eliminar una operación."
+        );
+
+        return;
+
+    }
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    pago.transferencias =
+        pago.transferencias.filter(
+            function(operacion){
+
+                return operacion.id !==
+                    idOperacion;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(tarjetaPago){
+
+        const tarjetaOperacion =
+            tarjetaPago.querySelector(
+                `.tarjeta-operacion-bancaria[data-operacion-id="${idOperacion}"]`
+            );
+
+
+        if(tarjetaOperacion){
+
+            tarjetaOperacion.remove();
+
+        }
+
+    }
+
+
+    actualizarTotalOperacionesBancarias(
+        idPago
+    );
+
+}
+
+function limpiarFormularioOperacionBancaria(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+    /*
+    * =========================================
+    * BOTÓN CANCELAR CAMBIOS
+    * =========================================
+    */
+
+    const botonCancelarCambios =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-operacion-bancaria"
+        );
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-operacion-bancaria"
+        );
+
+    const moneda =
+        tarjeta.querySelector(
+            ".moneda-operacion-bancaria"
+        );
+
+    const referencia =
+        tarjeta.querySelector(
+            ".referencia-operacion-bancaria"
+        );
+
+    const fecha =
+        tarjeta.querySelector(
+            ".fecha-operacion-bancaria"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-operacion-bancaria"
+        );
+
+    const comprobante =
+        tarjeta.querySelector(
+            ".comprobante-operacion-bancaria"
+        );
+
+    const textoComprobante =
+        tarjeta.querySelector(
+            ".texto-comprobante-operacion-bancaria"
+        );
+
+    const banco =
+        tarjeta.querySelector(
+            ".banco-destino-operacion-bancaria"
+        );
+
+
+    if(tipo){
+
+        tipo.value =
+            "Transferencia";
+
+    }
+
+
+    if(moneda){
+
+        moneda.value =
+            "ARS";
+
+    }
+
+
+    if(referencia){
+
+        referencia.value =
+            "";
+
+    }
+
+
+    if(fecha){
+
+        fecha.value =
+            "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            "";
+
+    }
+
+
+    if(comprobante){
+
+        comprobante.value =
+            "";
+
+    }
+
+
+    if(textoComprobante){
+
+        textoComprobante.textContent =
+            "📎 Adjuntar comprobante";
+
+    }
+
+
+    if(banco){
+
+        banco.value =
+            "";
+
+    }
+
+    /*
+    * =========================================
+    * OCULTAR CANCELAR CAMBIOS
+    * =========================================
+    */
+
+    if(botonCancelarCambios){
+
+        botonCancelarCambios.style.display =
+            "none";
+
+    }
+
+    cambiarTipoOperacionBancaria(
+        pagoId
+    );
+
+}
+
+function cerrarOperacionesBancarias(
+    pagoId
+){
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjeta){
+
+        return;
+
+    }
+
+
+    const bloque =
+        tarjeta.querySelector(
+            ".bloque-operaciones-bancarias"
+        );
+
+    const boton =
+        tarjeta.querySelector(
+            ".btn-toggle-operaciones-bancarias"
+        );
+
+
+    if(
+        !bloque ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        tarjeta.querySelector(
+            ".total-operaciones-bancarias"
+        );
+
+
+    const textoTotal =
+        total
+            ? total.textContent
+            : "$ 0.00";
+
+
+    bloque.style.display =
+        "none";
+
+
+    boton.innerHTML = `
+
+        <span>
+            ► Transferencias / Depósitos
+        </span>
+
+        <strong
+            class="total-operaciones-bancarias"
+        >
+            ${textoTotal}
+        </strong>
+
+    `;
+
+
+    boton.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "center"
+
+    });
+
+}
+
+function actualizarResumenGeneralPagos(){
+
+    const totalPagado =
+        pagosRegistro.reduce(
+            function(acumulado, pago){
+
+                return (
+                    acumulado +
+                    Number(
+                        pago.total || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const inputTotalRegistro =
+        document.getElementById(
+            "total_registro"
+        );
+
+
+    const totalRegistro =
+        Number(
+            inputTotalRegistro
+                ?.dataset
+                .valorNumerico || 0
+        );
+
+
+    const saldoPendiente =
+        totalRegistro -
+        totalPagado;
+
+
+    return {
+
+        total_registro:
+            totalRegistro,
+
+        total_pagado:
+            totalPagado,
+
+        saldo_pendiente:
+            saldoPendiente
+
+    };
+
+}
+
+function togglePago(){
+
+    const bloque =
+        document.getElementById(
+            "bloquePago"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnPago"
+        );
+
+    const cabecera =
+        document.getElementById(
+            "cabeceraPagoContenedor"
+        );
+
+
+    if(
+        !bloque ||
+        !boton ||
+        !cabecera
+    ){
+
+        return;
+
+    }
+
+
+    const indicador =
+        boton.querySelector(
+            ".indicador-pago"
+        );
+
+
+    if(
+        bloque.style.display === "none"
+    ){
+
+        /*
+         * ABIERTO
+         */
+
+        bloque.style.display =
+            "block";
+
+
+        cabecera.style.borderRadius =
+            "24px 24px 0 0";
+
+        cabecera.style.borderBottom =
+            "none";
+
+
+        if(indicador){
+
+            indicador.textContent =
+                "▼ Datos del Pago";
+
+        }
+
+
+        return;
+
+    }
+
+
+    /*
+     * CERRADO
+     */
+
+    bloque.style.display =
+        "none";
+
+
+    cabecera.style.borderRadius =
+        "24px";
+
+    cabecera.style.borderBottom =
+        "1px solid #2b3447";
+
+
+    if(indicador){
+
+        indicador.textContent =
+            "► Datos del Pago";
+
+    }
+
+}
+
+
+let contadorPagosRegistro = 0;
+
+let pagosRegistro = [];
+
+/*
+ * =========================================
+ * OPERACIONES BANCARIAS EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> operacionId
+ */
+
+let operacionesBancariasEditando = {};
+
+/*
+ * =========================================
+ * TARJETAS EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> tarjetaOperacionId
+ */
+
+let tarjetasPagoEditando = {};
+
+/*
+ * =========================================
+ * RETENCIONES EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> retencionOperacionId
+ */
+
+let retencionesPagoEditando = {};
+
+/*
+ * =========================================
+ * CHEQUES EN EDICIÓN
+ * =========================================
+ *
+ * Guarda:
+ *
+ * pagoId -> chequeId
+ */
+
+let chequesEditando = {};
+
+function registrarChequePago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjetaPago
+    ){
+
+        return;
+
+    }
+
+
+    const selectEntidad =
+        tarjetaPago.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+    const inputNumero =
+        tarjetaPago.querySelector(
+            ".numero-cheque-pago"
+        );
+
+    const inputImporte =
+        tarjetaPago.querySelector(
+            ".importe-cheque-pago"
+        );
+
+    const selectOrigen =
+        tarjetaPago.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const selectInstrumento =
+        tarjetaPago.querySelector(
+            ".instrumento-cheque-pago"
+        );
+
+    const selectTipo =
+        tarjetaPago.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const inputFechaEmision =
+        tarjetaPago.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const inputFechaAcreditacion =
+        tarjetaPago.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+    const inputEntrega =
+        tarjetaPago.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+
+    if(
+        !selectEntidad ||
+        !inputNumero ||
+        !inputImporte ||
+        !selectOrigen ||
+        !selectInstrumento ||
+        !selectTipo ||
+        !inputFechaEmision ||
+        !inputFechaAcreditacion
+    ){
+
+        alert(
+            "No se pudo leer el formulario del cheque."
+        );
+
+        return;
+
+    }
+
+
+    const origen =
+        selectOrigen.value;
+
+    const instrumento =
+        selectInstrumento.value;
+
+    const tipo =
+        selectTipo.value;
+
+    const entidadId =
+        selectEntidad.value;
+
+    const entidadNombre =
+        selectEntidad.options[
+            selectEntidad.selectedIndex
+        ]?.textContent.trim() || "";
+
+
+    const numero =
+        inputNumero.value
+            .replace(
+                /\D/g,
+                ""
+            );
+
+
+    const importe =
+        leerImporte(
+            inputImporte.value
+        );
+
+
+    const fechaEmision =
+        inputFechaEmision.value;
+
+
+    let fechaAcreditacion =
+        inputFechaAcreditacion.value;
+
+
+    const entrega =
+        inputEntrega
+            ? inputEntrega.value.trim()
+            : "";
+
+
+    /*
+     * =====================================
+     * BANCO / CUENTA BANCARIA
+     * =====================================
+     */
+
+    if(!entidadId){
+
+        alert(
+            origen === "propio"
+                ? "Seleccione una cuenta bancaria."
+                : "Seleccione un banco."
+        );
+
+        selectEntidad.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * NÚMERO
+     * =====================================
+     */
+
+    if(numero.length !== 8){
+
+        alert(
+            "El número de cheque debe tener 8 dígitos."
+        );
+
+        inputNumero.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * IMPORTE
+     * =====================================
+     */
+
+    if(importe <= 0){
+
+        alert(
+            "Ingrese un importe válido."
+        );
+
+        inputImporte.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * FECHA EMISIÓN
+     * =====================================
+     */
+
+    if(!fechaEmision){
+
+        alert(
+            "Ingrese la fecha de emisión."
+        );
+
+        inputFechaEmision.focus();
+
+        return;
+
+    }
+
+
+    /*
+     * =====================================
+     * DIFERIDO
+     * =====================================
+     */
+
+    if(
+        tipo === "diferido"
+    ){
+
+        if(!fechaAcreditacion){
+
+            alert(
+                "Ingrese la fecha de acreditación."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
+
+        const emision =
+            new Date(
+                fechaEmision +
+                "T00:00:00"
+            );
+
+
+        const acreditacion =
+            new Date(
+                fechaAcreditacion +
+                "T00:00:00"
+            );
+
+
+        if(
+            acreditacion <=
+            emision
+        ){
+
+            alert(
+                "La fecha de acreditación debe ser posterior a la fecha de emisión."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
+
+        const dias =
+            (
+                acreditacion -
+                emision
+            ) /
+            (
+                1000 *
+                60 *
+                60 *
+                24
+            );
+
+
+        if(dias > 360){
+
+            alert(
+                "La acreditación no puede superar los 360 días desde la emisión."
+            );
+
+            inputFechaAcreditacion.focus();
+
+            return;
+
+        }
+
+    }else{
+
+        /*
+         * CHEQUE SIMPLE:
+         * acreditación = emisión.
+         */
+
+        fechaAcreditacion =
+            fechaEmision;
+
+
+        inputFechaAcreditacion.value =
+            fechaEmision;
+
+    }
+
+
+    /*
+     * =====================================
+     * TERCERO
+     * =====================================
+     */
+
+    if(
+        origen === "tercero" &&
+        !entrega
+    ){
+
+        alert(
+            "Ingrese quién entregó el cheque."
+        );
+
+        if(inputEntrega){
+
+            inputEntrega.focus();
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * ¿ESTAMOS MODIFICANDO?
+     * =========================================
+     */
+
+    const chequeIdEditando =
+        chequesEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    const estaEditando =
+        chequeIdEditando !==
+        undefined;
+
+
+    /*
+     * =========================================
+     * ARMAR CHEQUE
+     * =========================================
+     */
+
+    const cheque = {
+
+        id:
+            estaEditando
+                ? Number(
+                    chequeIdEditando
+                )
+                : Date.now(),
+
+        instrumento:
+            instrumento,
+
+        tipo:
+            tipo,
+
+        origen:
+            origen,
+
+        entidad_id:
+            String(
+                entidadId
+            ),
+
+        entidad_nombre:
+            entidadNombre,
+
+        numero:
+            numero,
+
+        fecha_emision:
+            fechaEmision,
+
+        fecha_acreditacion:
+            fechaAcreditacion,
+
+        quien_entrega:
+            entrega,
+
+        importe:
+            importe
+
+    };
+
+
+    /*
+     * =========================================
+     * ACTUALIZAR O AGREGAR
+     * =========================================
+     */
+
+    if(estaEditando){
+
+        const indice =
+            pago.cheques.findIndex(
+                function(item){
+
+                    return Number(
+                        item.id
+                    ) === Number(
+                        chequeIdEditando
+                    );
+
+                }
+            );
+
+
+        /*
+         * RED DE SEGURIDAD
+         */
+
+        if(indice === -1){
+
+            alert(
+                "El cheque que se estaba modificando ya no existe.\n\n" +
+                "El formulario volverá al modo de registro."
+            );
+
+
+            delete chequesEditando[
+                String(
+                    idPago
+                )
+            ];
+
+
+            limpiarFormularioChequePago(
+                idPago
+            );
+
+
+            return;
+
+        }
+
+
+        pago.cheques[
+            indice
+        ] = cheque;
+
+
+        const tarjetaAnterior =
+            tarjetaPago.querySelector(
+                `.tarjeta-cheque-pago[data-cheque-id="${chequeIdEditando}"]`
+            );
+
+
+        if(tarjetaAnterior){
+
+            tarjetaAnterior.remove();
+
+        }
+
+
+        delete chequesEditando[
+            String(
+                idPago
+            )
+        ];
+
+    }else{
+
+        pago.cheques.push(
+            cheque
+        );
+
+    }
+
+
+    /*
+     * =========================================
+     * RENDERIZAR
+     * =========================================
+     */
+
+    renderizarChequePago(
+        idPago,
+        cheque
+    );
+
+
+    actualizarTotalChequesPago(
+        idPago
+    );
+
+
+    limpiarFormularioChequePago(
+        idPago
+    );
+
+}
+
+function renderizarChequePago(
+    pagoId,
+    cheque
+){
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${pagoId}`
+        );
+
+
+    if(!tarjetaPago){
+
+        return;
+
+    }
+
+
+    const lista =
+        tarjetaPago.querySelector(
+            ".lista-cheques-pago"
+        );
+
+
+    if(!lista){
+
+        return;
+
+    }
+
+
+    const tarjeta =
+        document.createElement(
+            "div"
+        );
+
+
+    tarjeta.className =
+        "tarjeta-cheque-pago";
+
+
+    tarjeta.dataset.chequeId =
+        String(
+            cheque.id
+        );
+
+
+    tarjeta.style.cssText = `
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+        background:#1b2130;
+        border-left:6px solid ${
+            cheque.origen === "propio"
+                ? "#2563eb"
+                : "#16a34a"
+        };
+        border-radius:12px;
+        padding:12px 16px;
+    `;
+
+
+    const datos =
+        document.createElement(
+            "div"
+        );
+
+
+    datos.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        min-width:0;
+    `;
+
+
+    const titulo =
+        document.createElement(
+            "strong"
+        );
+
+
+    titulo.textContent =
+        cheque.origen === "propio"
+            ? `Cuenta: ${cheque.entidad_nombre}`
+            : `Banco: ${cheque.entidad_nombre}`;
+
+
+    const detalle =
+        document.createElement(
+            "span"
+        );
+
+
+    detalle.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    const tipoTexto =
+        cheque.tipo === "diferido"
+            ? "Diferido"
+            : "Simple";
+
+
+    detalle.textContent =
+        `${cheque.instrumento} · ${tipoTexto} · Nº ${cheque.numero}`;
+
+
+    const fechas =
+        document.createElement(
+            "span"
+        );
+
+
+    fechas.style.cssText = `
+        color:#8b93a7;
+        font-size:12px;
+    `;
+
+
+    if(
+        cheque.tipo ===
+        "diferido"
+    ){
+
+        fechas.textContent =
+            `Emisión: ${cheque.fecha_emision} · Acreditación: ${cheque.fecha_acreditacion}`;
+
+    }else{
+
+        fechas.textContent =
+            `Emisión: ${cheque.fecha_emision}`;
+
+    }
+
+
+    datos.appendChild(
+        titulo
+    );
+
+    datos.appendChild(
+        detalle
+    );
+
+    datos.appendChild(
+        fechas
+    );
+
+
+    if(
+        cheque.origen === "tercero" &&
+        cheque.quien_entrega
+    ){
+
+        const entrega =
+            document.createElement(
+                "span"
+            );
+
+
+        entrega.style.cssText = `
+            color:#8b93a7;
+            font-size:12px;
+        `;
+
+
+        entrega.textContent =
+            `Entregado por: ${cheque.quien_entrega}`;
+
+
+        datos.appendChild(
+            entrega
+        );
+
+    }
+
+
+    const acciones =
+        document.createElement(
+            "div"
+        );
+
+
+    acciones.style.cssText = `
+        display:flex;
+        align-items:center;
+        gap:16px;
+        flex:none;
+    `;
+
+
+    const importe =
+        document.createElement(
+            "strong"
+        );
+
+
+    importe.textContent =
+        "$ " +
+        formatearImporte(
+            cheque.importe
+        );
+
+
+    /*
+     * =========================================
+     * MODIFICAR
+     * =========================================
+     */
+
+    const botonModificar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonModificar.type =
+        "button";
+
+
+    botonModificar.className =
+        "action-btn btn-modificar-cheque-pago";
+
+
+    botonModificar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonModificar.dataset.chequeId =
+        String(
+            cheque.id
+        );
+
+
+    botonModificar.textContent =
+        "📝";
+
+
+    botonModificar.title =
+        "Modificar cheque";
+
+
+    /*
+     * =========================================
+     * ELIMINAR
+     * =========================================
+     */
+
+    const botonEliminar =
+        document.createElement(
+            "button"
+        );
+
+
+    botonEliminar.type =
+        "button";
+
+
+    botonEliminar.className =
+        "action-btn btn-eliminar-cheque-pago";
+
+
+    botonEliminar.dataset.pagoId =
+        String(
+            pagoId
+        );
+
+
+    botonEliminar.dataset.chequeId =
+        String(
+            cheque.id
+        );
+
+
+    botonEliminar.textContent =
+        "🗑";
+
+
+    botonEliminar.title =
+        "Eliminar cheque";
+
+
+    acciones.appendChild(
+        importe
+    );
+
+    acciones.appendChild(
+        botonModificar
+    );
+
+    acciones.appendChild(
+        botonEliminar
+    );
+
+
+    tarjeta.appendChild(
+        datos
+    );
+
+    tarjeta.appendChild(
+        acciones
+    );
+
+
+    lista.appendChild(
+        tarjeta
+    );
+
+}
+
+async function modificarChequePago(
+    pagoId,
+    chequeId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idCheque =
+        Number(
+            chequeId
+        );
+
+
+    /*
+     * =========================================
+     * EVITAR DOS EDICIONES SIMULTÁNEAS
+     * =========================================
+     */
+
+    const chequeYaEditando =
+        chequesEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        chequeYaEditando !== undefined &&
+        Number(
+            chequeYaEditando
+        ) !== idCheque
+    ){
+
+        alert(
+            "Ya hay un cheque en edición.\n\n" +
+            "Registre o cancele los cambios antes de modificar otro."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const cheque =
+        pago.cheques.find(
+            function(item){
+
+                return Number(
+                    item.id
+                ) === idCheque;
+
+            }
+        );
+
+
+    if(!cheque){
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * MARCAR EDICIÓN
+     * =========================================
+     */
+
+    chequesEditando[
+        String(
+            idPago
+        )
+    ] = idCheque;
+
+
+    /*
+     * =========================================
+     * CAMPOS
+     * =========================================
+     */
+
+    const instrumento =
+        tarjeta.querySelector(
+            ".instrumento-cheque-pago"
+        );
+
+    const tipo =
+        tarjeta.querySelector(
+            ".tipo-cheque-pago"
+        );
+
+    const origen =
+        tarjeta.querySelector(
+            ".origen-cheque-pago"
+        );
+
+    const entidad =
+        tarjeta.querySelector(
+            ".entidad-cheque-pago"
+        );
+
+    const numero =
+        tarjeta.querySelector(
+            ".numero-cheque-pago"
+        );
+
+    const importe =
+        tarjeta.querySelector(
+            ".importe-cheque-pago"
+        );
+
+    const fechaEmision =
+        tarjeta.querySelector(
+            ".fecha-emision-cheque-pago"
+        );
+
+    const fechaAcreditacion =
+        tarjeta.querySelector(
+            ".fecha-acreditacion-cheque-pago"
+        );
+
+    const entrega =
+        tarjeta.querySelector(
+            ".quien-entrega-cheque-pago"
+        );
+
+    const botonRegistrar =
+        tarjeta.querySelector(
+            ".btn-registrar-cheque-pago"
+        );
+
+    const botonCancelar =
+        tarjeta.querySelector(
+            ".btn-cancelar-edicion-cheque-pago"
+        );
+
+
+    /*
+     * =========================================
+     * VALORES PRINCIPALES
+     * =========================================
+     */
+
+    if(instrumento){
+
+        instrumento.value =
+            cheque.instrumento;
+
+    }
+
+
+    if(tipo){
+
+        tipo.value =
+            cheque.tipo;
+
+    }
+
+
+    if(origen){
+
+        origen.value =
+            cheque.origen;
+
+    }
+
+
+    /*
+     * Origen define si Entidad lista
+     * Cuentas Bancarias o Bancos.
+     */
+
+    await cambiarOrigenChequePago(
+        idPago
+    );
+
+
+    /*
+     * Luego de cargar el select correcto,
+     * seleccionamos la entidad del cheque.
+     */
+
+    if(entidad){
+
+        entidad.value =
+            String(
+                cheque.entidad_id
+            );
+
+    }
+
+
+    if(numero){
+
+        numero.value =
+            cheque.numero || "";
+
+    }
+
+
+    if(importe){
+
+        importe.value =
+            formatearImporte(
+                cheque.importe
+            );
+
+    }
+
+
+    if(fechaEmision){
+
+        fechaEmision.value =
+            cheque.fecha_emision ||
+            "";
+
+    }
+
+
+    if(fechaAcreditacion){
+
+        fechaAcreditacion.value =
+            cheque.fecha_acreditacion ||
+            "";
+
+    }
+
+
+    if(entrega){
+
+        entrega.value =
+            cheque.quien_entrega ||
+            "";
+
+    }
+
+
+    /*
+     * Aplicamos Simple / Diferido
+     * después de cargar las fechas.
+     */
+
+    cambiarTipoChequePago(
+        idPago
+    );
+
+
+    /*
+     * =========================================
+     * MODO EDICIÓN
+     * =========================================
+     */
+
+    if(botonRegistrar){
+
+        botonRegistrar.textContent =
+            "REGISTRAR CAMBIOS";
+
+    }
+
+
+    if(botonCancelar){
+
+        botonCancelar.style.display =
+            "flex";
+
+        botonCancelar.style.alignItems =
+            "center";
+
+        botonCancelar.style.justifyContent =
+            "center";
+
+    }
+
+
+    /*
+     * =========================================
+     * SCROLL AL FORMULARIO
+     * =========================================
+     */
+
+    const bloqueFormulario =
+        tarjeta.querySelector(
+            ".bloque-cheques-pago"
+        );
+
+
+    if(bloqueFormulario){
+
+        bloqueFormulario.scrollIntoView({
+
+            behavior:
+                "smooth",
+
+            block:
+                "start"
+
+        });
+
+    }
+
+}
+
+/*
+ * =========================================
+ * ELIMINAR CHEQUE DEL PAGO
+ * =========================================
+ */
+
+function eliminarChequePago(
+    pagoId,
+    chequeId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+    const idCheque =
+        Number(
+            chequeId
+        );
+
+
+    /*
+     * =========================================
+     * BLOQUEAR ELIMINACIÓN DURANTE EDICIÓN
+     * =========================================
+     */
+
+    const chequeEditandoId =
+        chequesEditando[
+            String(
+                idPago
+            )
+        ];
+
+
+    if(
+        chequeEditandoId !== undefined
+    ){
+
+        alert(
+            "Hay un cheque en edición.\n\n" +
+            "Registre los cambios o cancele la edición " +
+            "antes de eliminar un cheque."
+        );
+
+        return;
+
+    }
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    if(!pago){
+
+        return;
+
+    }
+
+
+    pago.cheques =
+        pago.cheques.filter(
+            function(cheque){
+
+                return Number(
+                    cheque.id
+                ) !== idCheque;
+
+            }
+        );
+
+
+    const tarjetaPago =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(tarjetaPago){
+
+        const tarjetaCheque =
+            tarjetaPago.querySelector(
+                `.tarjeta-cheque-pago[data-cheque-id="${idCheque}"]`
+            );
+
+
+        if(tarjetaCheque){
+
+            tarjetaCheque.remove();
+
+        }
+
+    }
+
+
+    actualizarTotalChequesPago(
+        idPago
+    );
+
+}
+
+function actualizarTotalChequesPago(
+    pagoId
+){
+
+    const idPago =
+        Number(
+            pagoId
+        );
+
+
+    const pago =
+        pagosRegistro.find(
+            function(item){
+
+                return item.id ===
+                    idPago;
+
+            }
+        );
+
+
+    const tarjeta =
+        document.getElementById(
+            `pagoRegistro_${idPago}`
+        );
+
+
+    if(
+        !pago ||
+        !tarjeta
+    ){
+
+        return;
+
+    }
+
+
+    const total =
+        pago.cheques.reduce(
+            function(acumulado, cheque){
+
+                return (
+                    acumulado +
+                    Number(
+                        cheque.importe || 0
+                    )
+                );
+
+            },
+            0
+        );
+
+
+    const totalAcordeon =
+        tarjeta.querySelector(
+            ".total-cheques-pago"
+        );
+
+
+    if(totalAcordeon){
+
+        totalAcordeon.textContent =
+            "$ " +
+            formatearImporte(
+                total
+            );
+
+    }
+
+
+    actualizarPagoRegistro(
+        pagoId
+    );
+
+}
+
+document.addEventListener(
+    "input",
+    function(event){
+
+        if(
+            event.target.id !==
+            "numeroCheque"
+        ){
+
+            return;
+
+        }
+
+
+        event.target.value =
+            event.target.value
+                .replace(
+                    /\D/g,
+                    ""
+                )
+                .slice(
+                    0,
+                    8
+                );
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        /*
+         * =========================================
+         * ADJUNTAR FACTURA
+         * =========================================
+         */
+
+        const botonFactura =
+            event.target.closest(
+                "#btnAdjuntarFacturaRegistro"
+            );
+
+
+        if(botonFactura){
+
+            abrirSelectorFacturaRegistro();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR EMPRESA
+         * =========================================
+         */
+
+        const botonEliminarEmpresa =
+            event.target.closest(
+                "#btnEliminarEmpresa"
+            );
+
+
+        if(botonEliminarEmpresa){
+
+            confirmarEliminarEmpresa();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CANCELAR ELIMINACIÓN DE EMPRESA
+         * =========================================
+         */
+
+        const botonCancelarEliminarEmpresa =
+            event.target.closest(
+                "#btnCancelarEliminarEmpresa"
+            );
+
+
+        if(botonCancelarEliminarEmpresa){
+
+            cerrarModalEliminarEmpresa();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * AGREGAR PAGO
+         * =========================================
+         */
+
+        const botonAgregarPago =
+            event.target.closest(
+                "#btnAgregarPagoRegistro"
+            );
+
+
+        if(botonAgregarPago){
+
+            agregarPagoRegistro();
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * PLEGAR / DESPLEGAR PAGO
+         * =========================================
+         */
+
+        const botonTogglePago =
+            event.target.closest(
+                ".btn-toggle-pago-registro"
+            );
+
+
+        if(botonTogglePago){
+
+            togglePagoRegistro(
+                botonTogglePago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR PAGO
+         * =========================================
+         */
+
+        const botonEliminarPago =
+            event.target.closest(
+                ".btn-eliminar-pago-registro"
+            );
+
+
+        if(botonEliminarPago){
+
+            eliminarPagoRegistro(
+                botonEliminarPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * TRANSFERENCIAS / DEPÓSITOS
+         * ABRIR / CERRAR ACORDEÓN
+         * =========================================
+         */
+
+        const botonOperacionesBancarias =
+            event.target.closest(
+                ".btn-toggle-operaciones-bancarias"
+            );
+
+
+        if(botonOperacionesBancarias){
+
+            toggleOperacionesBancarias(
+                botonOperacionesBancarias.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CUENTA BANCARIA ORIGEN
+         * TRANSFERENCIA
+         * =========================================
+         */
+
+        const botonCuentaOperacion =
+            event.target.closest(
+                ".btn-agregar-cuenta-operacion-bancaria"
+            );
+
+
+        if(botonCuentaOperacion){
+
+            abrirABMCuentaOperacionBancaria(
+                botonCuentaOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * BANCO DESTINO
+         * TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonBancoOperacion =
+            event.target.closest(
+                ".btn-agregar-banco-operacion-bancaria"
+            );
+
+
+        if(botonBancoOperacion){
+
+            abrirABMBancoOperacionBancaria(
+                botonBancoOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * REGISTRAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonRegistrarOperacion =
+            event.target.closest(
+                ".btn-registrar-operacion-bancaria"
+            );
+
+
+        if(botonRegistrarOperacion){
+
+            registrarOperacionBancaria(
+                botonRegistrarOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CANCELAR CAMBIOS
+         * TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonCancelarOperacion =
+            event.target.closest(
+                ".btn-cancelar-edicion-operacion-bancaria"
+            );
+
+
+        if(botonCancelarOperacion){
+
+            cancelarEdicionOperacionBancaria(
+                botonCancelarOperacion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * MODIFICAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonModificarOperacion =
+            event.target.closest(
+                ".btn-modificar-operacion-bancaria"
+            );
+
+
+        if(botonModificarOperacion){
+
+            modificarOperacionBancaria(
+
+                botonModificarOperacion.dataset.pagoId,
+
+                botonModificarOperacion.dataset.operacionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR TRANSFERENCIA / DEPÓSITO
+         * =========================================
+         */
+
+        const botonEliminarOperacion =
+            event.target.closest(
+                ".btn-eliminar-operacion-bancaria"
+            );
+
+
+        if(botonEliminarOperacion){
+
+            eliminarOperacionBancaria(
+
+                botonEliminarOperacion.dataset.pagoId,
+
+                botonEliminarOperacion.dataset.operacionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CERRAR TRANSFERENCIAS / DEPÓSITOS
+         * DESDE ABAJO
+         * =========================================
+         */
+
+        const botonCerrarOperaciones =
+            event.target.closest(
+                ".btn-cerrar-operaciones-bancarias"
+            );
+
+
+        if(botonCerrarOperaciones){
+
+            cerrarOperacionesBancarias(
+                botonCerrarOperaciones.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CHEQUES DEL PAGO
+         * ABRIR / CERRAR ACORDEÓN
+         * =========================================
+         */
+
+        const botonChequesPago =
+            event.target.closest(
+                ".btn-toggle-cheques-pago"
+            );
+
+
+        if(botonChequesPago){
+
+            toggleChequesPago(
+                botonChequesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * AGREGAR BANCO / CUENTA
+         * DEL CHEQUE DEL PAGO
+         * =========================================
+         */
+
+        const botonEntidadChequePago =
+            event.target.closest(
+                ".btn-agregar-entidad-cheque-pago"
+            );
+
+
+        if(botonEntidadChequePago){
+
+            abrirABMEntidadChequePago(
+                botonEntidadChequePago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * REGISTRAR CHEQUE
+         * =========================================
+         */
+
+        const botonRegistrarCheque =
+            event.target.closest(
+                ".btn-registrar-cheque-pago"
+            );
+
+
+        if(botonRegistrarCheque){
+
+            registrarChequePago(
+                botonRegistrarCheque.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CANCELAR CAMBIOS DEL CHEQUE
+         * =========================================
+         */
+
+        const botonCancelarCheque =
+            event.target.closest(
+                ".btn-cancelar-edicion-cheque-pago"
+            );
+
+
+        if(botonCancelarCheque){
+
+            cancelarEdicionChequePago(
+                botonCancelarCheque.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * MODIFICAR CHEQUE
+         * =========================================
+         */
+
+        const botonModificarCheque =
+            event.target.closest(
+                ".btn-modificar-cheque-pago"
+            );
+
+
+        if(botonModificarCheque){
+
+            modificarChequePago(
+
+                botonModificarCheque.dataset.pagoId,
+
+                botonModificarCheque.dataset.chequeId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR CHEQUE
+         * =========================================
+         */
+
+        const botonEliminarChequePago =
+            event.target.closest(
+                ".btn-eliminar-cheque-pago"
+            );
+
+
+        if(botonEliminarChequePago){
+
+            eliminarChequePago(
+
+                botonEliminarChequePago.dataset.pagoId,
+
+                botonEliminarChequePago.dataset.chequeId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CERRAR CHEQUES DESDE ABAJO
+         * =========================================
+         */
+
+        const botonCerrarChequesPago =
+            event.target.closest(
+                ".btn-cerrar-cheques-pago"
+            );
+
+
+        if(botonCerrarChequesPago){
+
+            cerrarChequesPago(
+                botonCerrarChequesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * RETENCIONES
+         * ABRIR / CERRAR
+         * =========================================
+         */
+
+        const botonRetencionesPago =
+            event.target.closest(
+                ".btn-toggle-retenciones-pago"
+            );
+
+
+        if(botonRetencionesPago){
+
+            toggleRetencionesPago(
+                botonRetencionesPago.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * [+] RETENCIÓN
+         * =========================================
+         */
+
+        const botonAgregarRetencion =
+            event.target.closest(
+                ".btn-agregar-retencion-pago"
+            );
+
+
+        if(botonAgregarRetencion){
+
+            abrirABMRetencionPago(
+                botonAgregarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ADJUNTAR COMPROBANTE RETENCIÓN
+         * =========================================
+         */
+
+        const botonAdjuntarRetencion =
+            event.target.closest(
+                ".btn-adjuntar-retencion-pago"
+            );
+
+
+        if(botonAdjuntarRetencion){
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${botonAdjuntarRetencion.dataset.pagoId}`
+                );
+
+
+            tarjeta
+                ?.querySelector(
+                    ".comprobante-retencion-pago"
+                )
+                ?.click();
+
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * REGISTRAR RETENCIÓN
+         * =========================================
+         */
+
+        const botonRegistrarRetencion =
+            event.target.closest(
+                ".btn-registrar-retencion-pago"
+            );
+
+
+        if(botonRegistrarRetencion){
+
+            registrarRetencionPago(
+                botonRegistrarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CANCELAR CAMBIOS RETENCIÓN
+         * =========================================
+         */
+
+        const botonCancelarRetencion =
+            event.target.closest(
+                ".btn-cancelar-edicion-retencion-pago"
+            );
+
+
+        if(botonCancelarRetencion){
+
+            cancelarEdicionRetencionPago(
+                botonCancelarRetencion.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * MODIFICAR RETENCIÓN
+         * =========================================
+         */
+
+        const botonModificarRetencion =
+            event.target.closest(
+                ".btn-modificar-retencion-pago"
+            );
+
+
+        if(botonModificarRetencion){
+
+            modificarRetencionPago(
+
+                botonModificarRetencion.dataset.pagoId,
+
+                botonModificarRetencion.dataset.retencionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * ELIMINAR RETENCIÓN
+         * =========================================
+         */
+
+        const botonEliminarRetencion =
+            event.target.closest(
+                ".btn-eliminar-retencion-pago"
+            );
+
+
+        if(botonEliminarRetencion){
+
+            eliminarRetencionPago(
+
+                botonEliminarRetencion.dataset.pagoId,
+
+                botonEliminarRetencion.dataset.retencionId
+
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * =========================================
+         * CERRAR RETENCIONES DESDE ABAJO
+         * =========================================
+         */
+
+        const botonCerrarRetenciones =
+            event.target.closest(
+                ".btn-cerrar-retenciones-pago"
+            );
+
+
+        if(botonCerrarRetenciones){
+
+            cerrarRetencionesPago(
+                botonCerrarRetenciones.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const comprobante =
+            event.target.closest(
+                ".comprobante-retencion-pago"
+            );
+
+
+        if(!comprobante){
+
+            return;
+
+        }
+
+
+        const tarjeta =
+            document.getElementById(
+                `pagoRegistro_${comprobante.dataset.pagoId}`
+            );
+
+
+        const texto =
+            tarjeta?.querySelector(
+                ".texto-comprobante-retencion-pago"
+            );
+
+
+        if(!texto){
+
+            return;
+
+        }
+
+
+        texto.textContent =
+            comprobante.files &&
+            comprobante.files.length
+
+                ? `📎 ${comprobante.files[0].name}`
+
+                : "📎 Adjuntar comprobante";
+
+    }
+);
+
+document.addEventListener(
+    "input",
+    function(event){
+
+        const campoPago =
+            event.target.closest(
+                ".fecha-pago-registro, " +
+                ".efectivo-pago-registro"
+            );
+
+
+        if(!campoPago){
+
+            return;
+
+        }
+
+
+        const pagoId =
+            campoPago.dataset.pagoId;
+
+
+        if(!pagoId){
+
+            return;
+
+        }
+
+
+        actualizarPagoRegistro(
+            pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const fechaPago =
+            event.target.closest(
+                ".fecha-pago-registro"
+            );
+
+
+        if(!fechaPago){
+
+            return;
+
+        }
+
+
+        actualizarPagoRegistro(
+            fechaPago.dataset.pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const tipoOperacion =
+            event.target.closest(
+                ".tipo-operacion-bancaria"
+            );
+
+
+        if(!tipoOperacion){
+
+            return;
+
+        }
+
+
+        const pagoId =
+            tipoOperacion.dataset.pagoId;
+
+
+        if(!pagoId){
+
+            return;
+
+        }
+
+
+        cambiarTipoOperacionBancaria(
+            pagoId
+        );
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        /*
+         * ORIGEN DEL CHEQUE
+         */
+
+        const origenCheque =
+            event.target.closest(
+                ".origen-cheque-pago"
+            );
+
+
+        if(origenCheque){
+
+            cambiarOrigenChequePago(
+                origenCheque.dataset.pagoId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * TIPO DE CHEQUE
+         */
+
+        const tipoCheque =
+            event.target.closest(
+                ".tipo-cheque-pago"
+            );
+
+
+        if(tipoCheque){
+
+            cambiarTipoChequePago(
+                tipoCheque.dataset.pagoId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * FECHA EMISIÓN
+         *
+         * Si es Simple, acreditación siempre
+         * acompaña a emisión.
+         */
+
+        const fechaEmision =
+            event.target.closest(
+                ".fecha-emision-cheque-pago"
+            );
+
+
+        if(fechaEmision){
+
+            const pagoId =
+                fechaEmision.dataset.pagoId;
+
+
+            const tarjeta =
+                document.getElementById(
+                    `pagoRegistro_${pagoId}`
+                );
+
+
+            const tipo =
+                tarjeta?.querySelector(
+                    ".tipo-cheque-pago"
+                );
+
+
+            const acreditacion =
+                tarjeta?.querySelector(
+                    ".fecha-acreditacion-cheque-pago"
+                );
+
+
+            if(
+                tipo &&
+                acreditacion &&
+                (
+                    tipo.value === "simple" ||
+                    tipo.value === "comun"
+                )
+            ){
+
+                acreditacion.value =
+                    fechaEmision.value;
+
+            }
+
+        }
+
+    }
+);
+
+document.addEventListener(
+    "focusout",
+    function(event){
+
+        const input =
+            event.target;
+
+
+        if(!input){
+
+            return;
+
+        }
+
+
+        /*
+         * IMPORTES DE CARGA SIMPLE
+         */
+
+        const esImporteCargaSimple =
+            [
+                "neto",
+                "exento",
+                "iva21",
+                "iva27",
+                "iva105",
+                "recargosIntereses",
+                "ajuste",
+                "percepcionIIBB",
+                "percepcionIVA",
+                "percepcionGanancias",
+                "percepcionTasasMunicipales"
+            ].includes(
+                input.id
+            );
+
+
+        /*
+         * EFECTIVO DEL PAGO
+         */
+
+        const esImportePago =
+            input.classList.contains(
+                "efectivo-pago-registro"
+            );
+
+
+        /*
+         * TRANSFERENCIA / DEPÓSITO
+         */
+
+        const esImporteOperacion =
+            input.classList.contains(
+                "importe-operacion-bancaria"
+            );
+
+
+        /*
+         * CHEQUE
+         */
+
+        const esImporteCheque =
+            input.classList.contains(
+                "importe-cheque-pago"
+            );
+
+
+        /*
+         * DÉBITO AUTOMÁTICO
+         */
+
+        const esImporteDebitoAutomatico =
+            input.id ===
+                "importePagoDebitoAutomaticoRegistro";
+
+
+        if(
+            !esImporteCargaSimple &&
+            !esImportePago &&
+            !esImporteOperacion &&
+            !esImporteCheque &&
+            !esImporteDebitoAutomatico
+        ){
+
+            return;
+
+        }
+
+
+        formatearCampoImporte(
+            input
+        );
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        const botonToggleTarjeta =
+            event.target.closest(
+                ".btn-toggle-tarjeta-pago"
+            );
+
+
+        if(botonToggleTarjeta){
+
+            toggleTarjetaPago(
+                botonToggleTarjeta.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        const botonAgregarTarjeta =
+            event.target.closest(
+                ".btn-agregar-tarjeta-pago"
+            );
+
+
+        if(botonAgregarTarjeta){
+
+            abrirABMTarjetaPago(
+                botonAgregarTarjeta.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        const botonRegistrarTarjeta =
+            event.target.closest(
+                ".btn-registrar-tarjeta-pago"
+            );
+
+
+        if(botonRegistrarTarjeta){
+
+            registrarTarjetaPago(
+                botonRegistrarTarjeta.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        const botonCancelarTarjeta =
+            event.target.closest(
+                ".btn-cancelar-edicion-tarjeta-pago"
+            );
+
+
+        if(botonCancelarTarjeta){
+
+            cancelarEdicionTarjetaPago(
+                botonCancelarTarjeta.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+        const botonModificarTarjeta =
+            event.target.closest(
+                ".btn-modificar-tarjeta-pago"
+            );
+
+
+        if(botonModificarTarjeta){
+
+            modificarTarjetaPago(
+                botonModificarTarjeta.dataset.pagoId,
+                botonModificarTarjeta.dataset.tarjetaOperacionId
+            );
+
+            return;
+
+        }
+
+
+        const botonEliminarTarjeta =
+            event.target.closest(
+                ".btn-eliminar-tarjeta-pago"
+            );
+
+
+        if(botonEliminarTarjeta){
+
+            eliminarTarjetaPago(
+                botonEliminarTarjeta.dataset.pagoId,
+                botonEliminarTarjeta.dataset.tarjetaOperacionId
+            );
+
+            return;
+
+        }
+
+
+        const botonCerrarTarjeta =
+            event.target.closest(
+                ".btn-cerrar-tarjeta-pago"
+            );
+
+
+        if(botonCerrarTarjeta){
+
+            cerrarTarjetaPago(
+                botonCerrarTarjeta.dataset.pagoId
+            );
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        const selectTarjeta =
+            event.target.closest(
+                ".tarjeta-seleccion-pago"
+            );
+
+
+        if(selectTarjeta){
+
+            cambiarTarjetaPago(
+                selectTarjeta.dataset.pagoId
+            );
+
+            return;
+
+        }
+
+
+
+
+    }
+);
+
+
+document.addEventListener(
+    "focusout",
+    function(event){
+
+        const input =
+            event.target;
+
+
+        if(
+            !input ||
+            (
+                !input.classList.contains(
+                    "importe-tarjeta-pago"
+                ) &&
+                !input.classList.contains(
+                    "intereses-tarjeta-pago"
+                )
+            )
+        ){
+
+            return;
+
+        }
+
+
+        formatearCampoImporte(
+            input
+        );
+
+    }
+);
+
+
+function confirmarEliminarEmpresa(){
+
+    document.getElementById(
+        "modal-eliminar-empresa"
+    ).style.display = "flex";
+
+}
+
+function cerrarModalEliminarEmpresa(){
+
+    document.getElementById(
+        "modal-eliminar-empresa"
+    ).style.display = "none";
+
+}
+
+function abrirSelectorFacturaRegistro(){
+
+    const input =
+        document.getElementById(
+            "archivoFacturaRegistro"
+        );
+
+
+    if(!input){
+
+        return;
+
+    }
+
+
+    input.click();
+
+}
+
+
+function actualizarFacturaSeleccionada(){
+
+    const input =
+        document.getElementById(
+            "archivoFacturaRegistro"
+        );
+
+    const boton =
+        document.getElementById(
+            "btnAdjuntarFacturaRegistro"
+        );
+
+
+    if(
+        !input ||
+        !boton
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        !input.files ||
+        input.files.length === 0
+    ){
+
+        boton.textContent =
+            "📎 Factura";
+
+        boton.removeAttribute(
+            "title"
+        );
+
+        return;
+
+    }
+
+
+    const archivo =
+        input.files[0];
+
+
+    boton.textContent =
+        "📎 Factura ✓";
+
+
+    boton.title =
+        archivo.name;
+
+}
+
+document.addEventListener(
+    "change",
+    function(event){
+
+        if(
+            event.target.id !==
+            "archivoFacturaRegistro"
+        ){
+
+            return;
+
+        }
+
+
+        actualizarFacturaSeleccionada();
+
+    }
+);

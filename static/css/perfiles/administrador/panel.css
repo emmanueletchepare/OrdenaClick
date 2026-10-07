@@ -1,0 +1,693 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --bg:#0f1115;
+    --sidebar:#151922;
+    --panel:#171c26;
+    --panel-2:#1b2130;
+    --input:#0f131b;
+
+    --border:#252c3d;
+    --border-2:#2b3447;
+
+    --text:#f1f5f9;
+    --muted:#8b93a7;
+
+    --primary:#3b82f6;
+    --primary-hover:#2563eb;
+}
+
+body{
+
+    background:var(--bg);
+
+    font-family:Inter,Arial,sans-serif;
+
+    color:var(--text);
+
+    height:100vh;
+
+    display:flex;
+
+    overflow:hidden;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar-btn{
+
+    width:100%;
+
+    min-height:48px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    color:#dbe3ef;
+
+    text-decoration:none;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:12px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    font-size:14px;
+
+    font-weight:500;
+}
+
+.sidebar-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+
+    color:#ffffff;
+}
+
+.sidebar-btn.ativo{
+
+    background:linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    border-color:#3b82f6;
+
+    color:white;
+
+    box-shadow:0 0 20px rgba(37,99,235,.35);
+}
+
+.back-btn{
+
+    margin-top:28px;
+
+    width:100%;
+
+    height:48px;
+
+    border-radius:14px;
+
+    background:#1b2130;
+
+    border:1px solid var(--border-2);
+
+    color:#dbe3ef;
+
+    text-decoration:none;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.2s;
+}
+
+.back-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+/* =========================
+   MAIN
+========================= */
+
+.main{
+
+    flex:1;
+
+    height:100vh;
+
+    padding:40px;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    min-width:0;
+}
+
+.topbar{
+
+    margin-bottom:28px;
+}
+
+.title{
+
+    font-size:34px;
+
+    font-weight:700;
+
+    margin-bottom:8px;
+}
+
+.title span{
+    color:var(--primary);
+}
+
+.subtitle{
+
+    color:var(--muted);
+
+    font-size:15px;
+}
+
+/* =========================
+   SCROLLBAR ORDENACLICK
+========================= */
+
+.sidebar,
+.main{
+
+    scrollbar-width:thin;
+
+    scrollbar-color:
+        #334155
+        transparent;
+}
+
+
+.sidebar::-webkit-scrollbar,
+.main::-webkit-scrollbar{
+
+    width:8px;
+}
+
+
+.sidebar::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track{
+
+    background:transparent;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb{
+
+    background:#334155;
+
+    border-radius:999px;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover{
+
+    background:#3b82f6;
+
+    border:2px solid transparent;
+
+    background-clip:padding-box;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.card{
+
+    background:var(--panel);
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    padding:32px;
+
+    min-height:500px;
+}
+
+.empty-state{
+
+    color:var(--muted);
+
+    line-height:1.8;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:18px;
+}
+
+.field{
+
+    display:flex;
+
+    flex-direction:column;
+}
+
+.field-full{
+
+    grid-column:1 / -1;
+}
+
+.label{
+
+    font-size:13px;
+
+    color:#98a2b3;
+
+    margin-bottom:8px;
+}
+
+.input-box{
+
+    width:100%;
+
+    height:50px;
+
+    background:var(--input);
+
+    border:1px solid var(--border-2);
+
+    border-radius:14px;
+
+    padding:0 16px;
+
+    color:var(--text);
+
+    font-size:14px;
+}
+
+.guardar{
+
+    margin-top:24px;
+
+    width:100%;
+
+    height:52px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:var(--primary);
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+.guardar:hover{
+    background:var(--primary-hover);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+/* =========================
+   MODULOS
+========================= */
+
+.modules{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:14px;
+
+    margin-top:24px;
+}
+
+.modules{
+    overflow:visible;
+}
+
+.module-card{
+
+    position:relative;
+
+    padding:14px 22px;
+
+    border-radius:14px;
+
+    background:#1b2130;
+
+    border:1px solid #2b3447;
+
+    color:#ffffff;
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    transition:.2s;
+}
+
+.module-card{
+    z-index:1;
+}
+
+.module-card:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+
+    transform:translateY(-2px);
+}
+
+.module-card:hover{
+    z-index:999;
+}
+
+.module-tooltip{
+
+    position:absolute;
+
+    top:55px;
+
+    bottom:auto;
+
+    z-index:9999;
+
+    left:0;
+
+    background:#111827;
+
+    border:1px solid #2b3447;
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    width:220px;
+
+    color:#9ca3af;
+
+    font-size:12px;
+
+    line-height:1.5;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transition:.2s;
+
+    z-index:100;
+}
+
+.module-card:hover .module-tooltip{
+
+    opacity:1;
+}
+
+.exercise-info{
+
+    color:#9ca3af;
+
+    margin-top:8px;
+
+    font-size:15px;
+}
+
+/* =========================
+   MOVIMIENTOS
+========================= */
+
+.section-title{
+
+    font-size:24px;
+
+    font-weight:700;
+
+    margin-top:40px;
+
+    margin-bottom:24px;
+}
+
+.movimientos{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+    margin-top:28px;
+}
+
+.movimiento-card{
+
+    background:#1b2130;
+
+    border:1px solid #2b3447;
+
+    border-radius:18px;
+
+    padding:20px;
+}
+
+.movimiento-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:14px;
+}
+
+.movimiento-titulo{
+
+    font-size:16px;
+
+    font-weight:600;
+}
+
+.movimiento-importe{
+
+    color:#60a5fa;
+
+    font-size:18px;
+
+    font-weight:700;
+}
+
+.movimiento-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr 1fr;
+
+    gap:12px;
+
+    color:#9ca3af;
+
+    font-size:13px;
+}
+
+.estado{
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:max-content;
+}
+
+.estado-pendiente{
+
+    background:#3b2f12;
+
+    color:#facc15;
+}
+
+.estado-pagado{
+
+    background:#12351f;
+
+    color:#4ade80;
+}
+
+.estado-vencido{
+
+    background:#3a1717;
+
+    color:#f87171;
+}
+
+/* =========================
+   FILE BUTTONS
+========================= */
+
+.file-btn{
+
+    width:100%;
+
+    height:50px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    color:#dbe3ef;
+
+    font-size:14px;
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+.file-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+
+.file-btn input{
+
+    position:absolute;
+
+    width:100%;
+
+    height:100%;
+
+    opacity:0;
+
+    cursor:pointer;
+}
+
+/* =========================
+   PANEL EMPRESA
+========================= */
+
+.top-actions{
+
+    display:flex;
+
+    gap:14px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:30px;
+}
+
+.action-btn{
+
+    height:44px;
+
+    padding:0 22px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#1c2331;
+
+    border:1px solid #2d374a;
+
+    color:#dbe3ef;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.action-btn:hover{
+
+    background:#263146;
+
+    border-color:var(--primary);
+}
+
+@media(max-width:1000px){
+
+    body{
+
+        height:auto;
+
+        min-height:100vh;
+
+        flex-direction:column;
+
+        overflow-y:auto;
+
+        overflow-x:hidden;
+    }
+
+    .main{
+
+        height:auto;
+
+        overflow:visible;
+
+        padding:24px;
+    }
+
+
+    .form-grid{
+
+        grid-template-columns:1fr;
+    }
+
+}
