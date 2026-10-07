@@ -34,7 +34,7 @@ def eliminar_pago_movimiento(request):
         Movimiento,
         Pago,
     )
-    from usuarios.services.financiero import (
+    from usuarios.services.pagos import (
         eliminar_pago_movimiento as eliminar_pago_servicio,
     )
     from usuarios.services.seguridad import (
@@ -284,9 +284,11 @@ def registrar_pago_manual_movimiento(request):
     from django.db import transaction
 
     from usuarios.services.financiero import (
-        crear_pago_validado_movimiento,
         total_aplicado_movimiento,
         validar_importe_aplicable,
+    )
+    from usuarios.services.pagos import (
+        crear_pago_validado_movimiento,
         validar_pago_movimiento,
     )
 

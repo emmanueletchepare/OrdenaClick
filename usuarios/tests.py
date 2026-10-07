@@ -23,6 +23,9 @@ from usuarios.services.financiero import (
     resumen_financiero_movimiento,
     DIAS_ANTICIPACION_ALERTA,
     movimientos_en_alerta,
+)
+
+from usuarios.services.pagos import (
     validar_pago_movimiento,
 )
 

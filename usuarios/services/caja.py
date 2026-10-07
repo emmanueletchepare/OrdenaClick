@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from usuarios.services.financiero import (
+from usuarios.services.pagos import (
     normalizar_numero_cheque,
     validar_fechas_cheque,
 )

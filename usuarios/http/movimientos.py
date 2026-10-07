@@ -42,8 +42,10 @@ def guardar_movimiento(request):
     de una Ãºnica transacciÃ³n atÃ³mica.
     """
     from usuarios.services.financiero import (
-        crear_pago_validado_movimiento,
         validar_importe_aplicable,
+    )
+    from usuarios.services.pagos import (
+        crear_pago_validado_movimiento,
         validar_pago_movimiento,
     )
 
@@ -1425,9 +1427,11 @@ def actualizar_movimiento(request):
     from decimal import Decimal, InvalidOperation
 
     from usuarios.services.financiero import (
-        crear_pago_validado_movimiento,
         total_aplicado_movimiento,
         validar_importe_aplicable,
+    )
+    from usuarios.services.pagos import (
+        crear_pago_validado_movimiento,
         validar_pago_movimiento,
     )
 
