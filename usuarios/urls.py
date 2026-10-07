@@ -1,16 +1,14 @@
 from django.urls import path
 
-from .views import (
-    panel_admin,
-    panel_admin,
-    exportar_empresa,
+
+
+from .http.administrador import panel_admin
+from .http.empresa_legado import (
     exportar_empresa,
     eliminar_empresa,
     importar_empresa,
     confirmar_reemplazo,
-    
 )
-
 
 from .http.auth import (
     login_view,
