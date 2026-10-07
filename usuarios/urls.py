@@ -34,11 +34,6 @@ from .views import (
     modificar_recurso_operativo,
     eliminar_recurso_operativo,
     reactivar_recurso_operativo,
-    listar_proveedores,
-    guardar_proveedor,
-    modificar_proveedor,
-    eliminar_proveedor,
-    reactivar_proveedor,
     listar_cuentas_bancarias,
     guardar_cuenta_bancaria,
     modificar_cuenta_bancaria,
@@ -103,6 +98,14 @@ from .http.clientes import (
     modificar_cliente,
     eliminar_cliente,
     reactivar_cliente,
+)
+
+from .http.proveedores import (
+    listar_proveedores,
+    guardar_proveedor,
+    modificar_proveedor,
+    eliminar_proveedor,
+    reactivar_proveedor,
 )
 from .http.empresa_backup import (
     cancelar_importacion_empresa,
