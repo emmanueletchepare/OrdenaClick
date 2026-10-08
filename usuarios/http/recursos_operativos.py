@@ -1,15 +1,19 @@
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
 
-from django.contrib.auth.decorators import login_required
 from usuarios.models import (
     CentroOperativo,
     RecursoOperativo,
     RecursoOperativoCentro,
 )
 
-from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 
 
 def obtener_centros_recurso_request(
@@ -84,6 +88,7 @@ def obtener_centros_recurso_request(
     )
 
 @login_required
+@require_GET
 def listar_recursos_operativos(request):
 
     empresa_id = request.GET.get(
@@ -91,10 +96,12 @@ def listar_recursos_operativos(request):
     )
 
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     recursos = (
@@ -211,6 +218,7 @@ def listar_recursos_operativos(request):
 
 
 @login_required
+@require_POST
 def guardar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -225,10 +233,12 @@ def guardar_recurso_operativo(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     nombre = (
@@ -384,6 +394,7 @@ def guardar_recurso_operativo(request):
 
 
 @login_required
+@require_POST
 def modificar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -403,10 +414,12 @@ def modificar_recurso_operativo(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     nombre = (
@@ -558,6 +571,7 @@ def modificar_recurso_operativo(request):
 
 
 @login_required
+@require_POST
 def eliminar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -575,10 +589,12 @@ def eliminar_recurso_operativo(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     try:
 
@@ -633,6 +649,7 @@ def eliminar_recurso_operativo(request):
 
 
 @login_required
+@require_POST
 def reactivar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -652,10 +669,12 @@ def reactivar_recurso_operativo(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     try:

@@ -575,6 +575,58 @@ class SeguridadMaestrosEmpresaTests(TestCase):
                 )
                 self.assertEqual(respuesta.status_code, 200)
 
+    def test_recursos_operativos_exigen_metodo_http_correcto(self):
+        self.client.force_login(self.propietario)
+
+        respuesta_get_mutacion = self.client.get(
+            reverse("guardar_recurso_operativo"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_get_mutacion.status_code, 405)
+
+        respuesta_post_listado = self.client.post(
+            reverse("listar_recursos_operativos"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_post_listado.status_code, 405)
+
+    def test_admin_centro_no_administra_recursos_operativos(self):
+        admin_centro = User.objects.create_user(
+            username="seg_recursos_admin_centro",
+            password="prueba123",
+        )
+        AsignacionUsuarioEmpresa.objects.create(
+            empresa=self.empresa,
+            usuario=admin_centro,
+            jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
+            centro_operativo=self.centro,
+            activo=True,
+        )
+
+        self.client.force_login(admin_centro)
+
+        respuesta = self.client.get(
+            reverse("listar_recursos_operativos"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_superusuario_conserva_administracion_de_recursos_operativos(self):
+        superusuario = User.objects.create_superuser(
+            username="seg_recursos_super",
+            email="seg-recursos-super@example.com",
+            password="prueba123",
+        )
+        self.client.force_login(superusuario)
+
+        respuesta = self.client.get(
+            reverse("listar_recursos_operativos"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+
     def test_admin_general_activo_puede_listar_maestros(self):
         self.client.force_login(self.admin_general)
 
