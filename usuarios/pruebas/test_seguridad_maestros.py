@@ -266,6 +266,58 @@ class SeguridadMaestrosEmpresaTests(TestCase):
         self.proveedor_ajeno.refresh_from_db()
         self.assertEqual(self.proveedor_ajeno.razon_social, "Proveedor Ajeno")
 
+    def test_bancos_exigen_metodo_http_correcto(self):
+        self.client.force_login(self.propietario)
+
+        respuesta_get_mutacion = self.client.get(
+            reverse("guardar_banco"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_get_mutacion.status_code, 405)
+
+        respuesta_post_listado = self.client.post(
+            reverse("listar_bancos"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_post_listado.status_code, 405)
+
+    def test_admin_centro_no_recibe_capacidad_administrar_bancos(self):
+        admin_centro = User.objects.create_user(
+            username="seg_bancos_admin_centro",
+            password="prueba123",
+        )
+        AsignacionUsuarioEmpresa.objects.create(
+            empresa=self.empresa,
+            usuario=admin_centro,
+            jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
+            centro_operativo=self.centro,
+            activo=True,
+        )
+
+        self.client.force_login(admin_centro)
+
+        respuesta = self.client.get(
+            reverse("listar_bancos"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_superusuario_conserva_capacidad_administrar_bancos(self):
+        superusuario = User.objects.create_superuser(
+            username="seg_bancos_super",
+            email="seg-bancos-super@example.com",
+            password="prueba123",
+        )
+        self.client.force_login(superusuario)
+
+        respuesta = self.client.get(
+            reverse("listar_bancos"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+
     def test_id_ajeno_no_elimina_banco(self):
         self.client.force_login(self.propietario)
 

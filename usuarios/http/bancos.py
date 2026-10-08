@@ -1,23 +1,25 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import Banco
-from usuarios.services.seguridad import obtener_empresa_administrable
-from django.contrib.auth.decorators import login_required
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 
 
 @login_required
+@require_POST
 def guardar_banco(request):
 
-    if request.method != "POST":
-        return JsonResponse(
-            {"ok": False}
-        )
-
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         request.POST.get("empresa"),
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     nombre = (
         request.POST.get("nombre") or ""
@@ -61,14 +63,17 @@ def guardar_banco(request):
 
 
 @login_required
+@require_GET
 def listar_bancos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     bancos = Banco.objects.filter(
         empresa=empresa,
@@ -108,21 +113,18 @@ def listar_bancos(request):
     })
 
 @login_required
+@require_POST
 def modificar_banco(request):
-
-    if request.method != "POST":
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "Método no permitido."
-        }, status=405)
 
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     nombre = (
         request.POST.get("nombre") or ""
@@ -167,21 +169,18 @@ def modificar_banco(request):
 
 
 @login_required
+@require_POST
 def eliminar_banco(request):
-
-    if request.method != "POST":
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "Método no permitido."
-        }, status=405)
 
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     try:
         banco = Banco.objects.get(
