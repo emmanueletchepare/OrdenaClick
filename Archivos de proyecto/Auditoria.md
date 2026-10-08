@@ -283,3 +283,15 @@ La próxima revisión integral debe hacerse sobre el commit candidato a Beta e i
 - configuración de producción.
 
 No debe confundirse esta auditoría final con continuar hardening indefinidamente durante el desarrollo funcional.
+
+## 15. Decisión de auditoría — Base Server
+
+Se abre formalmente una etapa previa al desarrollo funcional intensivo cuyo alcance está definido en `BASE_SERVER_SEGURIDAD.md`.
+
+Prioridades: capacidades/autorización, rutas privadas, autenticación, Gestión de Claves, archivos privados, PostgreSQL/settings production, CSP/HTTPS/cookies/headers, logging/auditoría, idempotencia/concurrencia, dependencias, Backup adversarial y auditoría final.
+
+### Excepción aceptada
+
+El acceso global actual de `is_superuser` a Empresas es una decisión vigente de producto. No clasificarlo como vulnerabilidad mientras sólo aplique a superusuario y no se propague a jerarquías normales.
+
+La dirección futura es mover tareas comerciales/técnicas a un panel global del Perfil Desarrollador: habilitar, suspender, configurar capacidades/suscripción, exportar Empresa y generar un resumen administrativo.

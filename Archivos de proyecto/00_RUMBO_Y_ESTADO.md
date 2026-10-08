@@ -145,6 +145,20 @@ Obligaciones / Liquidaciones tienen definición conceptual propia y no deben for
 - batería adversarial final de Backup;
 - regresión completa candidata a Beta.
 
+## 6.1. Decisión de etapa — Base Server
+
+Antes de retomar el desarrollo funcional intensivo se cierra una etapa específica de arquitectura y seguridad orientada a servidor.
+
+Documento rector: `BASE_SERVER_SEGURIDAD.md`.
+
+Objetivo formal:
+
+> **BASE ARQUITECTÓNICA Y DE SEGURIDAD PARA SERVER: CERRADA**
+
+Por decisión vigente, el superusuario conserva por ahora acceso a Empresas. Más adelante el Perfil Desarrollador incorporará un panel global para administrar habilitación, suspensión, capacidades/suscripciones, exportar una Empresa y generar un resumen administrativo, reduciendo la necesidad de operar directamente sobre la base.
+
+Al cerrar Base Server se retoma REGISTROS como prioridad funcional Beta.
+
 ## 7. Orden de trabajo desde este punto
 
 ### Prioridad 1 — cerrar riesgos activos reales

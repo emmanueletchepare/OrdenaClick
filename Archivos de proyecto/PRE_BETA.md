@@ -162,3 +162,23 @@ Este archivo enumera condiciones de salida. Un punto no se considera resuelto po
 - [ ] restore real probado desde ese candidato.
 
 Sólo entonces se publica la Beta.
+
+## 11. Base Server obligatoria
+
+Antes de retomar el desarrollo funcional intensivo:
+
+- [ ] autorización/capacidades definida;
+- [ ] auditoría de rutas privadas cerrada;
+- [ ] autenticación/reautenticación endurecida;
+- [ ] Gestión de Claves endurecida;
+- [ ] uploads/archivos privados resueltos;
+- [ ] PostgreSQL validado para concurrencia;
+- [ ] settings de producción separados;
+- [ ] CSP/HTTPS/cookies/headers definidos;
+- [ ] logging/auditoría sensible definido;
+- [ ] idempotencia/concurrencia financiera base definida;
+- [ ] dependencias reproducibles;
+- [ ] Backup v1 adversarial cerrado;
+- [ ] `manage.py check --deploy` ejecutado sobre configuración candidata.
+
+La excepción actual de acceso global del superusuario se mantiene por decisión de producto y no se considera un fallo mientras permanezca limitada a superusuario.

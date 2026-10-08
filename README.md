@@ -25,6 +25,8 @@ Ese documento explica:
 
 ## Documentación vigente
 
+- `BASE_SERVER_SEGURIDAD.md` — base obligatoria de arquitectura y seguridad para servidor.
+- `01_CONTINUIDAD_IA.md` — continuidad para otro chat/IA.
 - `VISION.md` — identidad y horizonte del producto.
 - `REGLAS.md` — reglas obligatorias de desarrollo.
 - `DECISIONES.md` — decisiones funcionales cerradas.

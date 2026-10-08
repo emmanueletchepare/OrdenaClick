@@ -389,3 +389,21 @@ reutilizarse inicialmente en:
     `templates/usuarios/desarrollador/`, `static/css/desarrollador/` y
     `static/js/desarrollador/`; la migración de áreas existentes se hará
     progresivamente y sin desviar la Beta.
+
+------------------------------------------------------------------------
+
+## Decisiones cerradas --- Base Server, superusuario y protección del producto
+
+- Antes de retomar desarrollo funcional intensivo se cierra `BASE_SERVER_SEGURIDAD.md`.
+- El objetivo formal es **BASE ARQUITECTÓNICA Y DE SEGURIDAD PARA SERVER: CERRADA**.
+- El superusuario conserva por ahora acceso global a Empresas.
+- Esa excepción no concede privilegios a ningún otro perfil.
+- El Perfil Desarrollador evolucionará hacia un panel global de plataforma.
+- Ese panel administrará habilitación, inhabilitación, suspensión, capacidades y suscripción sin depender de operar directamente la base.
+- El superusuario podrá exportar una copia autorizada de Empresa.
+- Se desarrollará posteriormente un resumen administrativo de Empresa.
+- La política futura sobre acceso directo del superusuario a pantallas operativas se revisará cuando exista ese panel.
+- Producción utilizará PostgreSQL; SQLite queda para desarrollo local.
+- Archivos de Empresa serán privados por defecto en producción.
+- Configuración de producción se separará de desarrollo.
+- La lógica diferencial permanecerá principalmente en backend; no se adoptará ofuscación como sustituto de seguridad o protección comercial.
