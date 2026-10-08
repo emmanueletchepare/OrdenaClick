@@ -5,6 +5,7 @@ from django.urls import reverse
 from usuarios.models import (
     AsignacionUsuarioEmpresa,
     Empresa,
+    Movimiento,
     Proveedor,
 )
 
@@ -50,6 +51,46 @@ class SeguridadMovimientosEmpresaTests(TestCase):
             empresa=self.empresa_ajena,
             razon_social="Proveedor Seguridad Ajeno",
             cuit="30-44444444-4",
+        )
+
+    def test_guardar_movimiento_rechaza_empresa_ajena_antes_de_operar(self):
+        self.client.force_login(self.propietario)
+
+        respuesta = self.client.post(
+            reverse("guardar_movimiento"),
+            {
+                "empresa": self.empresa_ajena.pk,
+                "tipo_gasto": "999999",
+                "proveedor": self.proveedor_ajeno.pk,
+                "fecha_registro": "2026-10-08",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertFalse(
+            Movimiento.objects.filter(
+                empresa=self.empresa_ajena,
+            ).exists()
+        )
+
+    def test_admin_general_no_gana_alta_movimiento_por_asignacion(self):
+        self.client.force_login(self.admin_general)
+
+        respuesta = self.client.post(
+            reverse("guardar_movimiento"),
+            {
+                "empresa": self.empresa.pk,
+                "tipo_gasto": "999999",
+                "proveedor": self.proveedor.pk,
+                "fecha_registro": "2026-10-08",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertFalse(
+            Movimiento.objects.filter(
+                empresa=self.empresa,
+            ).exists()
         )
 
     def test_verificar_comprobante_rechaza_empresa_ajena(self):

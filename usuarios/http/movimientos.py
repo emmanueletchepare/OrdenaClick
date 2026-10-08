@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import JsonResponse
 
@@ -47,6 +48,9 @@ def guardar_movimiento(request):
     from usuarios.services.pagos import (
         crear_pago_validado_movimiento,
         validar_pago_movimiento,
+    )
+    from usuarios.services.seguridad import (
+        obtener_empresa_autorizada,
     )
 
     if request.method != "POST":
@@ -175,22 +179,10 @@ def guardar_movimiento(request):
         # EMPRESA
         # =========================================
 
-        empresa = Empresa.objects.filter(
-            id=empresa_id
-        ).first()
-
-
-        if not empresa:
-
-            return JsonResponse(
-                {
-                    "ok": False,
-                    "mensaje": (
-                        "La empresa seleccionada no existe."
-                    ),
-                },
-                status=404,
-            )
+        empresa = obtener_empresa_autorizada(
+            request.user,
+            empresa_id,
+        )
 
         # =========================================
         # PREVISIÃ“N DE PAGO
@@ -1381,6 +1373,11 @@ def guardar_movimiento(request):
                     estado_movimiento,
             }
         )
+
+
+    except PermissionDenied:
+
+        raise
 
 
     except Exception as error:
