@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from usuarios.models import GestionClave
 from usuarios.services.seguridad import obtener_empresa_administrable
 from usuarios.seguridad_claves import cifrar_clave, descifrar_clave
+from django.contrib.auth.decorators import login_required
 
 
 # =========================================
@@ -105,6 +106,7 @@ def validar_datos_gestion_clave(
     return None
 
 
+@login_required
 def listar_gestion_claves(request):
 
     empresa_id = request.GET.get(
@@ -137,6 +139,7 @@ def listar_gestion_claves(request):
         "html": html
     })
 
+@login_required
 def guardar_gestion_clave(request):
 
     if request.method != "POST":
@@ -272,6 +275,7 @@ def guardar_gestion_clave(request):
 
     })
 
+@login_required
 def ver_gestion_clave(request):
 
     empresa_id = request.GET.get(
@@ -355,6 +359,7 @@ def ver_gestion_clave(request):
 
     })
 
+@login_required
 def modificar_gestion_clave(request):
 
     if request.method != "POST":
@@ -511,6 +516,7 @@ def modificar_gestion_clave(request):
         "ok": True
     })
 
+@login_required
 def eliminar_gestion_clave(request):
 
     if request.method != "POST":
@@ -562,6 +568,7 @@ def eliminar_gestion_clave(request):
     })
 
 
+@login_required
 def reactivar_gestion_clave(request):
 
     if request.method != "POST":

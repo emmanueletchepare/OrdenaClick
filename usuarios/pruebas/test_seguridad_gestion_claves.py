@@ -88,6 +88,43 @@ class SeguridadGestionClavesTests(TestCase):
             activo=False,
         )
 
+    def test_rutas_privadas_requieren_login(self):
+        casos_get = (
+            "listar_gestion_claves",
+            "ver_gestion_clave",
+        )
+
+        for nombre_url in casos_get:
+            with self.subTest(metodo="GET", url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
+        casos_post = (
+            "guardar_gestion_clave",
+            "modificar_gestion_clave",
+            "eliminar_gestion_clave",
+            "reactivar_gestion_clave",
+        )
+
+        for nombre_url in casos_post:
+            with self.subTest(metodo="POST", url=nombre_url):
+                respuesta = self.client.post(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
     def test_listado_rechaza_empresa_ajena(self):
         self.client.force_login(self.propietario)
         respuesta = self.client.get(

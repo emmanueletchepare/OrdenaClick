@@ -184,6 +184,52 @@ class SeguridadMaestrosEmpresaTests(TestCase):
                     respuesta["Location"],
                 )
 
+    def test_maestros_privados_segundo_bloque_requieren_login(self):
+        casos_get = (
+            "listar_tarjetas",
+            "listar_retenciones",
+            "listar_recursos_operativos",
+        )
+
+        for nombre_url in casos_get:
+            with self.subTest(metodo="GET", url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
+        casos_post = (
+            "guardar_tarjeta",
+            "modificar_tarjeta",
+            "eliminar_tarjeta",
+            "reactivar_tarjeta",
+            "guardar_retencion",
+            "modificar_retencion",
+            "eliminar_retencion",
+            "reactivar_retencion",
+            "guardar_recurso_operativo",
+            "modificar_recurso_operativo",
+            "eliminar_recurso_operativo",
+            "reactivar_recurso_operativo",
+        )
+
+        for nombre_url in casos_post:
+            with self.subTest(metodo="POST", url=nombre_url):
+                respuesta = self.client.post(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
     def test_listados_rechazan_empresa_ajena(self):
         self.client.force_login(self.propietario)
 

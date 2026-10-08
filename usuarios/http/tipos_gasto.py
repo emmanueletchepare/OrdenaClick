@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 
 from usuarios.models import Proveedor, TipoGasto, TipoGastoProveedor
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
 def obtener_proveedores_tipo_gasto(request, empresa):
@@ -37,6 +38,7 @@ def obtener_proveedores_tipo_gasto(request, empresa):
     return proveedores
 
 
+@login_required
 def listar_tipos_gasto(request):
     """
     Devuelve el ABM de tipos de gasto correspondiente a la empresa activa.
@@ -102,6 +104,7 @@ def listar_tipos_gasto(request):
 
 
 @transaction.atomic
+@login_required
 def guardar_tipo_gasto(request):
     """
     Crea un tipo de gasto y registra sus proveedores relacionados.
@@ -219,6 +222,7 @@ def guardar_tipo_gasto(request):
 
 
 @transaction.atomic
+@login_required
 def modificar_tipo_gasto(request):
     """
     Modifica un tipo de gasto y reemplaza sus proveedores relacionados.
@@ -336,6 +340,7 @@ def modificar_tipo_gasto(request):
     })
 
 
+@login_required
 def eliminar_tipo_gasto(request):
     """
     Da de baja lógica un tipo de gasto activo.
@@ -389,6 +394,7 @@ def eliminar_tipo_gasto(request):
     })
 
 
+@login_required
 def reactivar_tipo_gasto(request):
     """
     Reactiva un tipo de gasto previamente dado de baja.

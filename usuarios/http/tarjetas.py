@@ -3,8 +3,10 @@ from django.template.loader import render_to_string
 
 from usuarios.models import CuentaBancaria, Tarjeta
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def listar_tarjetas(request):
 
     empresa_id = request.GET.get(
@@ -108,6 +110,7 @@ def listar_tarjetas(request):
 # RETENCIONES
 # =========================================
 
+@login_required
 def guardar_tarjeta(request):
 
     if request.method != "POST":
@@ -262,6 +265,7 @@ def guardar_tarjeta(request):
     })
 
 
+@login_required
 def modificar_tarjeta(request):
 
     if request.method != "POST":
@@ -405,6 +409,7 @@ def modificar_tarjeta(request):
     })
 
 
+@login_required
 def eliminar_tarjeta(request):
 
     if request.method != "POST":
@@ -466,6 +471,7 @@ def eliminar_tarjeta(request):
     })
 
 
+@login_required
 def reactivar_tarjeta(request):
 
     if request.method != "POST":

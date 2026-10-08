@@ -3,8 +3,10 @@ from django.template.loader import render_to_string
 
 from usuarios.models import Retencion
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def listar_retenciones(request):
     """
     Devuelve el ABM y el listado de retenciones activas
@@ -73,6 +75,7 @@ def listar_retenciones(request):
     })
 
 
+@login_required
 def guardar_retencion(request):
     """
     Crea una retención nueva para una empresa.
@@ -203,6 +206,7 @@ def guardar_retencion(request):
     })
 
 
+@login_required
 def modificar_retencion(request):
     """
     Modifica una retención activa perteneciente
@@ -326,6 +330,7 @@ def modificar_retencion(request):
     })
 
 
+@login_required
 def eliminar_retencion(request):
     """
     Desactiva lógicamente una retención.
@@ -393,6 +398,7 @@ def eliminar_retencion(request):
     })
 
 
+@login_required
 def reactivar_retencion(request):
     """
     Reactiva una retención previamente desactivada

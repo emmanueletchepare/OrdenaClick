@@ -88,6 +88,42 @@ class SeguridadTiposGastoTests(TestCase):
             proveedor=self.proveedor,
         )
 
+    def test_rutas_privadas_requieren_login(self):
+        casos_get = (
+            "listar_tipos_gasto",
+        )
+
+        for nombre_url in casos_get:
+            with self.subTest(metodo="GET", url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
+        casos_post = (
+            "guardar_tipo_gasto",
+            "modificar_tipo_gasto",
+            "eliminar_tipo_gasto",
+            "reactivar_tipo_gasto",
+        )
+
+        for nombre_url in casos_post:
+            with self.subTest(metodo="POST", url=nombre_url):
+                respuesta = self.client.post(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
     def test_listado_rechaza_empresa_ajena(self):
         self.client.force_login(self.propietario)
 

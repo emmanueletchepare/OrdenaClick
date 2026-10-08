@@ -2,6 +2,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
+from django.contrib.auth.decorators import login_required
 from usuarios.models import (
     CentroOperativo,
     RecursoOperativo,
@@ -82,6 +83,7 @@ def obtener_centros_recurso_request(
         None
     )
 
+@login_required
 def listar_recursos_operativos(request):
 
     empresa_id = request.GET.get(
@@ -208,6 +210,7 @@ def listar_recursos_operativos(request):
     })
 
 
+@login_required
 def guardar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -380,6 +383,7 @@ def guardar_recurso_operativo(request):
     })
 
 
+@login_required
 def modificar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -553,6 +557,7 @@ def modificar_recurso_operativo(request):
     })
 
 
+@login_required
 def eliminar_recurso_operativo(request):
 
     if request.method != "POST":
@@ -627,6 +632,7 @@ def eliminar_recurso_operativo(request):
     })
 
 
+@login_required
 def reactivar_recurso_operativo(request):
 
     if request.method != "POST":
