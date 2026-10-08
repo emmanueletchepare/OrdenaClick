@@ -751,14 +751,14 @@ def reactivar_recurso_operativo(request):
         })
 
 
-        recurso.activo = True
+    recurso.activo = True
 
 
-        recurso.save(
-            update_fields=[
-                "activo"
-            ]
-        )
+    recurso.save(
+        update_fields=[
+            "activo"
+        ]
+    )
 
 
     return JsonResponse({

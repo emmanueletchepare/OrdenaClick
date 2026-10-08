@@ -627,6 +627,71 @@ class SeguridadMaestrosEmpresaTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
 
+    def test_reactivar_recurso_operativo_activa_recurso_con_centro_activo(self):
+        self.client.force_login(self.propietario)
+
+        recurso = RecursoOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="RECURSO INACTIVO REACTIVABLE",
+            tipo_recurso="Equipo",
+            descripcion="Para reactivar",
+            activo=False,
+        )
+        RecursoOperativoCentro.objects.create(
+            recurso_operativo=recurso,
+            centro_operativo=self.centro,
+        )
+
+        respuesta = self.client.post(
+            reverse("reactivar_recurso_operativo"),
+            {
+                "empresa": self.empresa.pk,
+                "recurso": recurso.pk,
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.json()["ok"])
+
+        recurso.refresh_from_db()
+        self.assertTrue(recurso.activo)
+
+    def test_reactivar_recurso_operativo_no_activa_si_hay_duplicado_activo(self):
+        self.client.force_login(self.propietario)
+
+        recurso = RecursoOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="RECURSO DUPLICADO",
+            tipo_recurso="Equipo",
+            descripcion="Inactivo",
+            activo=False,
+        )
+        RecursoOperativoCentro.objects.create(
+            recurso_operativo=recurso,
+            centro_operativo=self.centro,
+        )
+        RecursoOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="RECURSO DUPLICADO",
+            tipo_recurso="Equipo",
+            descripcion="Activo",
+            activo=True,
+        )
+
+        respuesta = self.client.post(
+            reverse("reactivar_recurso_operativo"),
+            {
+                "empresa": self.empresa.pk,
+                "recurso": recurso.pk,
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["ok"])
+
+        recurso.refresh_from_db()
+        self.assertFalse(recurso.activo)
+
     def test_admin_general_activo_puede_listar_maestros(self):
         self.client.force_login(self.admin_general)
 
