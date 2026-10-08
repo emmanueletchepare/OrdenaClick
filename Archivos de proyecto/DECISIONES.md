@@ -1,3 +1,13 @@
+# Nota de uso — 08/10/2026
+
+Este documento conserva decisiones funcionales cerradas. No es un checklist
+de estado de implementación.
+
+Para saber qué está hecho y qué sigue, consultar `00_RUMBO_Y_ESTADO.md`,
+`TODO.md` y `PRE_BETA.md`.
+
+---
+
 # DECISIONES.md --- Decisiones importantes ya tomadas
 
 ## 1. Producto

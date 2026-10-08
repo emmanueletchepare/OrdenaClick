@@ -1,121 +1,167 @@
-# VISION.md --- Qué queremos que sea OrdenaClick
+# VISION.md — Qué es OrdenaClick y qué queremos que llegue a ser
 
 ## 1. Propósito
 
-OrdenaClick es una aplicación web de gestión orientada a ordenar gastos,
-registros, pagos, vencimientos, alertas e información de gestión. No
-debe limitarse a guardar lo que ya ocurrió: debe ayudar a anticipar
-obligaciones económicas, evitar olvidos y conservar información útil
-para gestión, reportes y futura contabilidad.
+OrdenaClick es una aplicación web de gestión para ordenar registros económicos, pagos, compromisos, vencimientos, alertas e información operativa de una persona, actividad o Empresa.
 
-El producto debe poder acompañar desde una persona que organiza gastos
-familiares hasta una empresa con colaboradores, permisos, conciliaciones
-y acceso a toda la aplicación web.
+Su valor no está solamente en almacenar hechos pasados. Debe ayudar a entender qué ocurrió, conservar una historia confiable y anticipar qué requiere atención.
 
-## 2. Primer objetivo: Beta
+La información operativa debe convertirse progresivamente en materia prima para:
 
-La prioridad inmediata es alcanzar una **Beta usable, estable y
-segura**. Para considerar cumplido este objetivo debe funcionar de punta
-a punta todo lo que pertenece al botón **REGISTROS**, incluyendo: -
-Carga Simple. - Carga Planificada. - Registrar Pago. - Modificar /
-Eliminar. - Los ABM necesarios para esos flujos. - Las idas y vueltas
-entre formularios y ABM. - Conservación del estado del formulario al
-abrir un ABM desde `[+]`. - Selección automática del registro recién
-creado al regresar. - Pagos, saldo pendiente, vencimientos y alertas que
-correspondan al circuito. - Pruebas del flujo completo, no solamente
-pantallas aisladas.
+- control de gastos y pagos;
+- previsibilidad financiera;
+- vencimientos y alertas;
+- reportes;
+- gestión por Centro/Recurso;
+- Caja y Cartera;
+- futura contabilidad.
 
-La Beta también exige navegación contextual `[+]` anidable en cascada,
-con retorno LIFO, conservación de datos y restauración de la posición
-visual en cada nivel.
+## 2. Idea central
 
-Primero se cierran flujos utilizables de punta a punta; después se
-estabilizan y testean. Los refactors o mejoras secundarias no deben
-bloquear la Beta, salvo que afecten seguridad, integridad de datos o
-hagan inviable seguir creciendo.
+**Una sola arquitectura escalable.**
 
-## 3. Una sola arquitectura escalable
+OrdenaClick debe poder servir a una operación simple y crecer junto con una Empresa sin obligar a migrar de producto ni reconstruir historia.
 
-No habrá arquitecturas de datos separadas para usuarios "simples" y
-"complejos".
+**Simplificar la interfaz, no simplificar ni destruir los datos.**
 
-**Regla:** simplificar la interfaz, no empobrecer ni destruir los datos.
+Los planes comerciales habilitarán capacidades. No crearán modelos incompatibles.
 
-Una persona o empresa puede comenzar usando pocas funciones y luego
-habilitar otras sin migrar, reconstruir ni perder su historia.
+## 3. Primer objetivo: Beta
 
-## 4. Suscripciones y capacidades
+La prioridad inmediata es una **Beta usable, estable y segura**.
 
-Los planes comerciales habilitan **capacidades**, no modelos de datos
-incompatibles.
+No se mide por cantidad de funciones sino por circuitos completos.
 
-Perfiles conceptuales de suscripción: - **Persona:** organización de
-gastos familiares/personales con experiencia simple. - **Intermedio:**
-registra ingresos y gastos de una actividad, requiere reportes y
-registros más complejos. - **Empresas:** colaboradores, permisos,
-conciliaciones y acceso a la aplicación web completa.
+El eje Beta es **REGISTROS**:
 
-Un usuario puede mejorar su suscripción y continuar sobre exactamente la
-misma información ya cargada. El crecimiento significa habilitar
-funciones.
+```text
+Comprobantes
+Carga Planificada
+Registrar Pago
+Modificar / Eliminar
+```
 
-La autenticación y la habilitación comercial son conceptos distintos.
-Debe poder existir usuario pendiente, habilitado, suspendido, con
-suscripción activa, vencida, demo o período de prueba.
+Los flujos deben incluir sus ABM, navegación `[+]`, pagos, saldos, vencimientos, alertas, permisos y pruebas.
 
-## 5. Seguridad como requisito de producto
+La Beta también debe preservar la base ya construida de Caja/Cobranza y su arquitectura futura, sin permitir que esa etapa desplace el cierre de REGISTROS.
 
-OrdenaClick estará alojado en un servidor y manejará información
-sensible e importante de clientes. La seguridad no se agrega al final:
-debe evaluarse en **cada implementación**.
+## 4. Núcleo económico
 
-Esto incluye autenticación, autorización por empresa/rol/capacidad,
-validación backend, aislamiento entre empresas, secretos fuera del
-código, cifrado cuando corresponda, backups seguros, auditoría,
-trazabilidad y despliegue seguro.
+OrdenaClick separa hechos económicos de hechos financieros:
 
-## 6. Perfiles funcionales
+- Movimiento: documento/hecho económico.
+- Pago: hecho financiero.
+- AplicacionPago: cuánto de un Pago cancela un destino.
+- Vencimiento: compromiso económico abierto.
+- Alerta: aviso de atención.
 
--   **Administrador:** crea/administra empresas, configura estructura y
-    ABM, registra operaciones, designa colaboradores y define permisos.
--   **Colaborador:** perfil operativo sobre empresas asignadas; registra
-    movimientos/pagos y usa ABM permitidos.
--   **Contable / Contador:** preparado para Plan Contable, imputaciones,
-    Estado de Resultados, Balance y configuración contable.
--   **Legal / Abogado:** futuro, sobre empresas asignadas y módulos
-    legales.
--   **Desarrollador:** entorno interno y aislado; no debe mezclarse con
-    información ni permisos de clientes.
+La historia no se reescribe silenciosamente.
 
-### Usuarios de plataforma y relaciones con Empresas
+Un Movimiento puede existir sin Pago, con Pago parcial, total o múltiples Pagos.
 
--   [x] La cuenta de usuario pertenece a OrdenaClick, no a una Empresa.
--   [x] Un usuario puede existir sin crear ni integrar ninguna Empresa.
--   [x] Un mismo usuario puede relacionarse con múltiples Empresas y asumir funciones distintas en cada una.
--   [x] La jerarquía administrativa/operativa y los roles profesionales son dimensiones separadas: un usuario puede, por ejemplo, ser Colaborador y Contable en la misma Empresa.
--   [x] Los perfiles visibles de plataforma son Administrador, Colaborador, Contable, Legal y Relaciones; Desarrollador es un perfil global reservado a superusuario.
--   [x] Relaciones concentra solicitudes recibidas, vínculos vigentes y, a futuro, disponibilidad, postulaciones, contratación y reputación.
--   [x] Colaboradores, Contables y Legales podrán ser internos o externos. Su origen contractual no concede permisos: el acceso nace de una relación aceptada y autorizada con una Empresa.
--   [x] A futuro, usuarios sin Empresa podrán declararse disponibles y postularse o ser encontrados por Empresas que busquen Colaboradores/Contables/Legales.
--   [x] Ranking, contratación, tiempo de actividad y pagos pertenecen a una capa futura de marketplace y no sustituyen la autorización por Empresa.
+Un Pago puede combinar medios y, en el circuito general Registrar Pago, distribuirse entre varios destinos.
 
-## 7. Principios de producto
+## 5. Anticipación
 
--   Conservar historia.
--   Poder explicar qué ocurrió, cuándo, quién lo hizo y sobre qué
-    empresa.
--   No deducir el pasado desde el estado actual de tablas maestras.
--   Próximos Vencimientos y Alertas son parte central del producto.
--   La arquitectura actual no debe bloquear Agenda, Órdenes de Pago,
-    autorizaciones, cartera de cheques, conciliaciones, contabilidad,
-    legal, multimoneda, nuevos impuestos/medios de pago ni nuevos planes
-    comerciales.
--   Caja y Cartera deben representar valores reales sin obligar al
-    usuario a reconstruir la venta/cobranza externa que los originó,
-    manteniendo una operación simple y trazable.
--   La interfaz debe ocultar complejidad evitable: cuando la naturaleza
-    de un instrumento determina el procedimiento válido (depósito,
-    endoso o cesión), el sistema debe aplicarlo y no trasladar esa
-    decisión al usuario.
--   Toda nueva función se evalúa por su aporte a la Beta y por su
-    compatibilidad con el crecimiento futuro.
+OrdenaClick debe ayudar a responder no sólo “qué pasó”, sino también:
+
+- qué vence;
+- qué está vencido;
+- cuánto queda pendiente;
+- qué cuenta o recurso financiero deberá estar disponible;
+- qué operación todavía necesita acción.
+
+Próximos Vencimientos y Alertas son parte central del producto, no un agregado cosmético.
+
+## 6. Personas, Empresas y colaboración
+
+La cuenta de usuario es global a OrdenaClick.
+
+Una persona puede:
+
+- fundar una Empresa;
+- administrar una Empresa;
+- administrar un Centro;
+- colaborar;
+- actuar como Contable;
+- actuar como Legal;
+- relacionarse con varias Empresas con roles diferentes.
+
+Jerarquía, rol funcional, origen contractual, reputación y suscripción son dimensiones distintas.
+
+Ninguna de ellas sustituye la autorización backend.
+
+## 7. Seguridad como producto
+
+OrdenaClick manejará información empresarial, financiera, documentos y credenciales sensibles.
+
+Por eso seguridad significa, como mínimo:
+
+- autenticación;
+- aislamiento entre Empresas;
+- autorización por rol/capacidad;
+- objetos hijos ligados a la Empresa autorizada;
+- validación backend;
+- secretos fuera del código;
+- cifrado cuando corresponde;
+- backups seguros;
+- trazabilidad;
+- despliegue seguro;
+- concurrencia e idempotencia donde haya operaciones financieras.
+
+Una pantalla que oculta un botón no constituye seguridad.
+
+## 8. Caja, Cartera y Orden de Pago
+
+Caja/Cartera representa dónde están los recursos y si pueden utilizarse.
+
+Su dirección funcional es:
+
+```text
+Ingreso
+→ Caja / Cartera
+→ Disponibilidad
+→ Gestión Administrativa
+→ Traslados
+→ Orden de Pago
+```
+
+No se modela complejidad innecesaria para reproducir sistemas externos. Se conserva sólo la información necesaria para disponibilidad, custodia, uso, historia y gestión.
+
+## 9. Futuro preservado, no adelantado
+
+La arquitectura no debe bloquear:
+
+- Reportes;
+- Estado de Resultados;
+- Balance;
+- Plan Contable;
+- conciliaciones;
+- Cartera;
+- Orden de Pago;
+- Agenda;
+- autorizaciones;
+- multimoneda;
+- marketplace de perfiles;
+- notificaciones móviles;
+- nuevos impuestos y medios.
+
+Pero preparar el futuro no significa implementarlo antes de cerrar la Beta.
+
+## 10. Medida de éxito
+
+OrdenaClick estará bien encaminado cuando una persona que nunca vio el sistema pueda:
+
+```text
+crear usuario
+→ entrar
+→ crear/configurar Empresa
+→ relacionar colaboradores
+→ registrar operaciones reales
+→ registrar Pagos
+→ consultar pendientes
+→ recibir alertas
+→ entender lo que cargó
+```
+
+y cuando cada usuario pueda hacer su trabajo sin obtener acceso a decisiones o datos que no le corresponden.

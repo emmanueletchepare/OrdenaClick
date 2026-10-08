@@ -1,3 +1,14 @@
+# Nota de uso — 08/10/2026
+
+Este documento es normativo: sus reglas siguen vigentes salvo una decisión
+posterior explícita.
+
+La prioridad de implementación se consulta en `00_RUMBO_Y_ESTADO.md`.
+No usar una regla de limpieza/refactor para desplazar un flujo Beta salvo
+seguridad, integridad o mantenibilidad necesaria.
+
+---
+
 # REGLAS.md --- Reglas obligatorias de desarrollo
 
 ## 1. Reglas no negociables

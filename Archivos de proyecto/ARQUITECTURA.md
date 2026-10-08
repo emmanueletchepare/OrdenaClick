@@ -1,3 +1,15 @@
+# Nota de prioridad documental — 08/10/2026
+
+Este documento define arquitectura transversal y continúa vigente.
+
+Para prioridad de trabajo y estado real del proyecto, consultar primero
+`00_RUMBO_Y_ESTADO.md`.
+
+La arquitectura no debe utilizarse para justificar refactors masivos o
+funcionalidad futura que desvíe el cierre de la Beta.
+
+---
+
 # ARQUITECTURA.md --- Cómo está construido OrdenaClick
 
 ## 1. Principio rector

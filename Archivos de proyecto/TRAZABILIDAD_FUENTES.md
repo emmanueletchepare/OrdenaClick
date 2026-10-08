@@ -1,3 +1,13 @@
+# Aviso — documento histórico
+
+Este archivo conserva fuentes y formulaciones anteriores para trazabilidad.
+
+No es una guía de prioridad ni una especificación operativa vigente. Cuando
+exista contradicción, prevalecen `00_RUMBO_Y_ESTADO.md`, `VISION.md`,
+`REGLAS.md`, `DECISIONES.md`, `ARQUITECTURA.md` y el código probado.
+
+---
+
 # TRAZABILIDAD_FUENTES.md
 
 Este archivo no forma parte de los siete documentos operativos. Es un

@@ -1,3 +1,14 @@
+# Alcance dentro del proyecto — 08/10/2026
+
+Este documento sigue siendo la fuente funcional de verdad para Caja, Cartera,
+Gestión Administrativa y Orden de Pago.
+
+No reemplaza la prioridad Beta general definida en `00_RUMBO_Y_ESTADO.md`.
+La base de Caja/Cobranza debe preservarse, pero la evolución hacia Cartera y
+Orden de Pago no debe desplazar el cierre prioritario de REGISTROS.
+
+---
+
 # OrdenaClick --- Caja, Carteras, Gestión Administrativa y Órdenes de Pago
 
 **Versión:** 2.0\

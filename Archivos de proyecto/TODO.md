@@ -1,492 +1,208 @@
-# TODO.md --- Qué falta y qué queremos agregar
+# TODO.md — Hoja de ruta actual
 
-## 1. BETA --- PRIORIDAD ABSOLUTA
+**Actualizado:** 08/10/2026
 
-Objetivo: circuito completo y estable de **REGISTROS**.
+La prioridad no se decide por el tamaño de una tarea sino por cuánto acerca una Beta usable, estable y segura.
 
-### 1.1 Cerrar flujos
+## 1. Prioridad inmediata — cerrar REGISTROS
 
--   [ ] Comprobantes de punta a punta.
--   [ ] Carga Planificada de punta a punta.
--   [ ] Registrar Pago de punta a punta.
--   [ ] Modificar / Eliminar con reglas financieras e históricas
-    correctas.
--   [ ] Múltiples pagos por Movimiento.
--   [ ] Pagos parciales y saldo pendiente común.
--   [ ] Centralizar validación: nueva aplicación \<= saldo pendiente
-    actual.
--   [ ] Aplicar esa validación en Comprobantes, edición y futura Carga
-    Planificada.
--   [ ] Registrar Pago: distribuir un Pago entre múltiples Movimientos.
--   [ ] Registrar Pago: conservar remanente no aplicado a cuenta cuando
-    corresponda.
--   [ ] Conversión a Plan respetando pagos previos.
--   [ ] Reversión/eliminación de Pago sin romper historia.
--   [ ] Registro real de débitos automáticos.
--   [ ] Vencimientos generados/actualizados desde la fuente financiera
-    correcta.
--   [ ] Próximos Vencimientos consumiendo fuente común.
--   [ ] Alertas/llamador sin duplicar la lógica financiera.
+### Comprobantes
 
-### 1.2 ABM requeridos por REGISTROS
+- [ ] Recorrer Carga Simple de punta a punta con datos representativos.
+- [ ] Verificar alta sin Pago, Pago parcial, Pago total y múltiples Pagos.
+- [ ] Verificar Débito automático real y mora.
+- [ ] Verificar edición sin historia y con Pagos históricos.
+- [ ] Verificar factura/archivo y reglas documentales.
+- [ ] Confirmar que saldo, estado, Vencimiento y Alertas quedan coherentes.
 
--   [ ] Verificar uno por uno apertura desde menú.
--   [ ] Verificar apertura desde `[+]`.
--   [ ] Conservar formulario llamador.
--   [ ] Volver al origen exacto.
--   [ ] Seleccionar automáticamente el alta nueva.
--   [ ] Edición integrada.
--   [ ] Baja lógica + reactivación.
--   [ ] Validaciones de pertenencia a Empresa.
--   [ ] Uniformidad visual.
--   [ ] Completar ABM necesarios para medios de pago (cuentas, tarjetas,
-    bancos, etc.).
+### Registrar Pago
 
-### 1.3 Estabilización obligatoria antes de publicar Beta
+- [ ] Cerrar circuito general independiente del formulario de Movimiento.
+- [ ] Permitir distribuir un Pago entre múltiples Movimientos.
+- [ ] Impedir que una AplicacionPago supere el saldo de su destino.
+- [ ] Definir/persistir remanente a cuenta cuando corresponda.
+- [ ] Reutilizar servicios financieros existentes; no duplicar reglas.
 
-La lista maestra y bloqueante se mantiene en `PRE_BETA.md`.
+### Modificar / Eliminar
 
--   [ ] Eliminar todo JavaScript inline de los flujos publicados en
-    Beta.
--   [ ] Implementar la pila común de navegación contextual `[+]`.
--   [ ] Migrar los retornos especiales heredados y probar navegación
-    multinivel.
--   [ ] Normalizar reglas reutilizables ya pactadas para evitar
-    validaciones distintas del mismo concepto según formulario.
--   [ ] Eliminar código muerto y restos de caminos descartados sólo
-    después de comprobar que no tengan consumidores.
--   [ ] Resolver y revalidar
-    `Auditoria_Seguridad_OrdenaClick_2026-09-24`.
--   [ ] Ejecutar auditoría final de seguridad sobre el commit candidato
-    a Beta.
--   [ ] Ejecutar regresión completa y recorridos manuales de los
-    circuitos Beta.
+- [ ] Mostrar y gestionar Pagos históricos desde edición.
+- [ ] Cerrar eliminación/reversión controlada de Pago.
+- [ ] Recalcular saldo, estado, Vencimiento y Alerta después de una reversión.
+- [ ] Permitir baja física de Movimiento sólo sin AplicacionPago.
+- [ ] Rechazar baja física si existe historia aplicada.
+- [ ] Verificar transacción y locking en operaciones destructivas.
 
-### 1.4 Seguridad antes de servidor/Beta
+### Carga Planificada / Plan
 
--   [ ] Revisar configuración de producción.
--   [ ] HTTPS.
--   [ ] Cookies/sesiones/CSRF seguras.
--   [x] SECRET_KEY fuera del código: entorno o configuración privada de
-    instalación, sin fallback inseguro.
--   [ ] DEBUG desactivado.
--   [ ] ALLOWED_HOSTS/orígenes correctos.
--   [ ] Permisos por Empresa/rol/capacidad en backend.
--   [ ] Evitar IDOR/acceso cruzado entre empresas.
--   [ ] Validar uploads y acceso a archivos privados.
--   [ ] Backups cifrados/seguros y prueba de restauración.
--   [ ] Logging sin secretos/datos sensibles innecesarios.
--   [ ] Auditoría de operaciones críticas.
--   [ ] Dependencias y despliegue actualizados.
--   [ ] Estrategia de recuperación ante fallos.
+- [ ] Cerrar alcance Beta de Carga Planificada.
+- [ ] Convertir a Plan sobre saldo restante.
+- [ ] Conservar historia del Movimiento y Pagos previos.
+- [ ] Generar Cuotas/Vencimientos coherentes.
+- [ ] No desarrollar más del Plan de Pago que lo necesario para el circuito Beta acordado.
 
-### Seguridad de instalación ya implementada
+## 2. Navegación y UX bloqueantes de Beta
 
--   [x] Perfil Desarrollador reservado a superusuarios.
--   [x] Configuración privada global fuera del repositorio para secretos
-    de instalación.
--   [x] Prioridad `ORDENACLICK_SECRET_KEY` del entorno sobre
-    configuración privada.
--   [x] Arranque bloqueado si no existe una `SECRET_KEY` válida.
--   [x] Rotación controlada de `SECRET_KEY` con confirmación, `POST`,
-    CSRF, estado de reinicio pendiente y bloqueo de una segunda
-    rotación.
--   [x] No exposición de `SECRET_KEY` al navegador ni a logs.
--   [x] `LOGIN_URL` configurado al login real de OrdenaClick.
--   [x] Tests específicos de seguridad del Perfil Desarrollador y
-    servicio de rotación.
--   [ ] Definir almacenamiento privado definitivo y ACL/permisos de la
-    cuenta de servicio para producción.
--   [x] Configurar credenciales ARCA de Homologación desde el Perfil
-    Desarrollador.
--   [x] Configurar credenciales ARCA de Producción de forma separada.
--   [x] Implementar servicio ARCA/WSAA con TA reutilizable y renovación
-    segura.
--   [x] Implementar autocompletado de Cliente por CUIT usando ARCA, sin
-    bloquear la carga manual cuando ARCA no esté disponible.
+- [ ] Auditar todos los `[+]` usados por REGISTROS.
+- [ ] Verificar pila LIFO de 1, 2, 3 y más niveles.
+- [ ] Conservar formulario, filas dinámicas, scroll y elemento originador.
+- [ ] Autoseleccionar alta/reactivación al volver.
+- [ ] Eliminar mecanismos heredados sólo después de migrar consumidores.
+- [ ] Eliminar JavaScript inline de los flujos publicados en Beta.
+- [ ] Mantener estilos y componentes consistentes.
 
-### 1.5 Suscripciones
+## 3. Seguridad e integridad — pendientes reales
 
--   [ ] Definir matriz Persona / Intermedio / Empresas.
--   [ ] Implementar capacidades habilitables sin cambiar el modelo de
-    datos.
--   [ ] Upgrade sin pérdida/migración destructiva.
--   [ ] Definir comportamiento ante vencimiento/suspensión sin destruir
-    datos.
--   [ ] Separar autenticación de habilitación comercial.
+### Ya endurecido
 
-### 1.6 Testing Beta
+- [x] Proveedores por Empresa.
+- [x] Bancos por Empresa.
+- [x] Cuentas Bancarias por Empresa.
+- [x] Tarjetas por Empresa.
+- [x] Retenciones por Empresa.
+- [x] Centros Operativos por Empresa.
+- [x] Recursos Operativos por Empresa.
+- [x] Tipos de Gasto por Empresa.
+- [x] Gestión de Claves por Empresa.
+- [x] Verificación de comprobantes por Empresa.
+- [x] Alta de Movimientos por Empresa.
+- [x] Eliminación de Empresa por POST y autorización.
+- [x] Backup Empresa v1 usa autorización central.
+- [x] Alcance Empresa/Centro/Caja centralizado.
+- [x] Colaborador sin acceso implícito a Caja.
+- [x] Perfil Desarrollador reservado a superusuario.
+- [x] SECRET_KEY fuera del código sin fallback inseguro.
 
--   [ ] Tests de servicios financieros.
--   [ ] Tests de permisos y aislamiento por Empresa.
--   [ ] Tests de idas/vueltas de ABM.
--   [ ] Tests de pago parcial/múltiple/plan.
--   [ ] Tests de vencimientos/alertas.
--   [ ] Tests de exportar/importar Empresa.
--   [ ] Pruebas reales con datos representativos.
+### Pendiente antes de Beta pública
 
-## 2. DEUDA TÉCNICA QUE SE CORRIGE PROGRESIVAMENTE
+- [ ] Auditoría final de todas las rutas privadas de `usuarios/urls.py`.
+- [ ] Tests de usuario anónimo para rutas privadas relevantes.
+- [ ] Revisar permisos funcionales por rol/capacidad, no sólo pertenencia a Empresa.
+- [ ] Reautenticación/auditoría para revelar una contraseña de Gestión de Claves.
+- [ ] Uploads: tamaño, tipo, almacenamiento y acceso privado.
+- [ ] Revisar código legacy sin rutas antes de eliminarlo.
+- [ ] Rate limiting/backoff para login/registro.
+- [ ] Logging/auditoría de eventos sensibles sin secretos.
+- [ ] Concurrencia/idempotencia en operaciones financieras críticas.
+- [ ] Revisar historia Git/runtime por secretos o ZIP privados.
+- [ ] Segunda auditoría de seguridad sobre candidato Beta.
 
--   [ ] Extraer JavaScript inline existente. Para los flujos Beta es
-    bloqueante; al tocar cada pantalla.
--   [ ] Extraer CSS inline existente cuando se toque cada pantalla.
--   [ ] No incorporar JavaScript inline nuevo. Todo comportamiento nuevo
-    debe vivir en archivos `.js` externos.
--   [ ] No incorporar CSS inline nuevo salvo excepción mínima,
-    justificada y documentada. Todo estilo nuevo debe reutilizar las
-    clases globales o vivir en archivos `.css` externos.
--   [ ] Mantener las pantallas nuevas dentro del lenguaje visual oscuro
-    de OrdenaClick, reutilizando componentes y patrones existentes.
--   [ ] Reducir templates monolíticos.
--   [ ] Separar `views.py` por dominio cuando sea conveniente.
--   [ ] Mover reglas reutilizables a `services/`.
--   [ ] Eliminar duplicaciones de cálculo de saldo/vencimientos.
--   [ ] Agregar/mejorar docstrings.
--   [ ] Revisar comentarios importantes antes de limpiar código.
+## 4. Backup Empresa v1
 
-## 3. POST-BETA CERCANO
+### Base implementada
 
--   [ ] Dashboard.
--   [ ] Reportes con filtros.
--   [ ] Deudas pendientes.
--   [ ] Mejorar Próximos Vencimientos.
--   [ ] Estado de Resultados.
--   [ ] Plan Contable.
--   [ ] Balance.
--   [ ] Perfil Colaborador completo y permisos configurables.
--   [ ] Perfil Contable.
--   [ ] Perfil Legal.
--   [ ] Conciliaciones bancarias/tarjetas.
--   [ ] Configuración guiada inicial de Empresa mediante wizard por etapas (futuro).
+- [x] Manifest versionado.
+- [x] identificadores portables.
+- [x] exportador dedicado.
+- [x] inspector defensivo.
+- [x] restaurador transaccional.
+- [x] wizard de importación.
+- [x] usuarios históricos separados de autorización actual.
+- [x] ZIP no concede privilegios automáticamente.
+- [x] Gestión de Claves no exporta secreto cifrado portable.
+- [x] round-trip base probado.
+- [x] integración HTTP usa servicios dedicados.
 
-### Relaciones y marketplace de perfiles
+### Pendiente de cierre pre-Beta
 
--   [x] Cuenta de usuario global separada de Empresa.
--   [x] Perfil Relaciones incorporado como punto de solicitudes/vínculos.
--   [x] Modelo de solicitudes de relación con aceptación/rechazo explícitos.
--   [x] Rol funcional Contable acumulable con jerarquía.
--   [x] Rol funcional Legal acumulable con jerarquía.
--   [x] Solicitudes de Administrador general / Administrador / Colaborador / Contable / Legal dirigidas a usuarios existentes.
--   [ ] Diseñar disponibilidad para contratación como Colaborador/Contable/Legal.
--   [ ] Diseñar búsqueda de perfiles disponibles por Empresas.
--   [ ] Diseñar postulaciones de usuarios hacia Empresas que publiquen necesidades.
--   [ ] Diseñar ranking/reputación basado sólo en relaciones/trabajos reales.
--   [ ] Diseñar contratación, registro de actividad/tiempo y liquidación/pagos sin mezclarlo con autorización.
--   [ ] Definir origen interno/externo del vínculo cuando se implemente la capa contractual.
--   [ ] Definir capacidades concretas de Contable y Legal por módulo.
+- [ ] ZIP corrupto.
+- [ ] límites de tamaño/entradas/descompresión.
+- [ ] JSON malformado y tipos inválidos.
+- [ ] referencias internas rotas.
+- [ ] versión no soportada.
+- [ ] autoelevación maliciosa.
+- [ ] activos/inactivos representativos.
+- [ ] rollback forzado.
+- [ ] round-trip de adjuntos.
+- [ ] restore real sobre entorno descartable.
+- [ ] política operativa/cifrado de backups en producción.
 
-## 4. FUNCIONES FUTURAS YA DEFINIDAS
+## 5. Vencimientos y Alertas
 
--   [ ] Listado/cartera de cheques y e-Cheqs.
--   [ ] Agenda.
--   [ ] Orden de Pago.
--   [ ] Autorización de operaciones.
--   [ ] Gestión/Agenda de Claves con diseño seguro.
--   [ ] Ver inactivos y reactivar en ABM.
--   [ ] Buscador dinámico en listados/tarjetas de todos los ABM.
--   [ ] Scroll independiente entre sidebar y menú operativo.
--   [ ] Registro/Rendición del vendedor.
--   [x] ABM de Clientes.
--   [ ] Gestión avanzada de saldos a favor/a cuenta y su compensación
-    posterior.
--   [ ] Multimoneda, tipos de cambio y conversiones.
--   [ ] Notificaciones móviles.
--   [ ] Nuevos impuestos, retenciones y medios de pago.
--   [ ] Calificación de colaboradores/contadores/abogados.
--   [ ] Giras/Rendiciones cuando se defina su alcance.
+- [ ] Verificar fuente común contra todos los cambios de saldo.
+- [ ] Verificar obligaciones próximas, hoy y vencidas.
+- [ ] Confirmar que una obligación vencida pendiente nunca desaparece por tiempo.
+- [ ] Revisar política temporal/zona horaria antes de producción.
+- [ ] Tests de frontera temporal.
+- [ ] Mantener toda regla temporal fuera del JavaScript.
 
-## 5. EXPORTAR / IMPORTAR EMPRESA
+## 6. Caja / Cartera
 
--   [ ] Inventariar todas las entidades, archivos y dependencias del entorno
-    Empresa antes de implementar el formato definitivo.
--   [ ] Definir y documentar Backup Empresa v1 + `manifest`.
--   [x] No mantener compatibilidad con ZIP legacy previos a v1 durante esta
-    etapa de desarrollo sin clientes productivos.
--   [ ] Mapear identidades portables al importar; no confiar en PK físicas.
--   [ ] Incluir inactivos e históricos según contrato.
--   [ ] Incluir archivos.
--   [ ] Resolver traslado seguro de información cifrada sin exportar la
-    clave maestra.
--   [ ] Diseñar wizard de importación para confirmar/actualizar datos vigentes
-    antes de restaurar.
--   [ ] Separar identidad histórica de autorización actual de usuarios.
--   [ ] Permitir decidir usuarios activos/inactivos y jerarquías vigentes sin
-    que el ZIP otorgue privilegios automáticamente.
--   [ ] Si el CUIT ya existe, restaurar de forma controlada sin borrar primero
-    la Empresa válida.
--   [ ] Plan de restauración + resumen + confirmación antes de persistir.
--   [ ] Atomicidad/rollback ante fallas intermedias.
--   [ ] Mantener futura precarga de datos estándar separada de Backup/Restore.
+### Base ya incorporada
 
-## 6. DECISIONES PENDIENTES
+- [x] Caja ligada a Empresa/Centro.
+- [x] alcance de Caja según jerarquía.
+- [x] Nueva Cobranza base.
+- [x] MovimientoCaja e identidad histórica.
+- [x] Clientes como ABM.
+- [x] Backup v1 contempla Caja/Cobranza.
 
--   [ ] Reglas exactas de ejercicio cerrado.
--   [ ] Fórmula/configuración definitiva de intereses por mora.
--   [ ] Reglas definitivas de multimoneda.
--   [ ] Alcance final de Carga Planificada.
--   [ ] Matriz detallada de capacidades por suscripción.
--   [ ] Matriz detallada de permisos por rol.
+### Próxima evolución, después del cierre prioritario de REGISTROS
 
-### Obligaciones / Liquidaciones
+- [ ] Cartera física.
+- [ ] e-Cheqs / Cartera electrónica.
+- [ ] disponibilidad canónica.
+- [ ] Gestión Administrativa.
+- [ ] traslados internos.
+- [ ] disponibilidad bancaria informada.
+- [ ] Orden de Pago.
+- [ ] reservas y estados concurrentes.
+- [ ] reversas con conservación histórica.
 
--   [ ] Diseñar el modelo definitivo de Obligaciones sin forzarlo dentro
-    de la estructura documental de una factura.
--   [ ] Implementar circuito de Obligaciones separado de Comprobantes.
--   [ ] Conceptos iniciales: Sueldos / Aportes y Contribuciones / VEP -
-    Impuestos / Tasas y otros.
--   [ ] Definir entidad y ABM para Organismo / beneficiario.
--   [ ] Definir reglas de Período y Referencia según tipo de obligación.
--   [ ] Definir cuándo corresponde Centro Operativo.
--   [ ] No exigir Recurso Operativo cuando no tenga sentido económico.
--   [ ] Integrar Obligaciones con Pago, AplicaciónPago, Vencimiento y
-    Alertas.
--   [ ] Definir reglas particulares de duplicidad para cada tipo de
-    obligación.
+El orden obligatorio es:
 
-### Alertas / Próximos Vencimientos
+```text
+Ingreso
+→ Caja/Cartera
+→ Disponibilidad
+→ Gestión Administrativa
+→ Traslados
+→ Orden de Pago
+```
 
--   [ ] Crear servicio común para determinar Alertas vigentes.
--   [ ] Implementar política inicial de obligaciones: 3 días antes +
-    vencidas pendientes.
--   [ ] Incorporar filtro Alertas en Próximos Vencimientos.
--   [ ] Mantener reglas temporales fuera del JavaScript.
--   [ ] Agregar tests de Alertas.
--   [ ] Diseñar control segmentado reutilizable para botoneras
-    superiores.
--   [ ] Aplicar control segmentado a Próximos Vencimientos.
--   [ ] Evaluar luego su aplicación a la botonera de Registros.
--   [ ] Implementar Cartera de Cheques / e-Cheqs.
--   [ ] Incorporar política de Cartera: fecha de acreditación + ventana
-    de 30 días corridos.
--   [ ] Testear específicamente los límites de los 30 días.
--   [ ] Implementar Llamador de OrdenaClick después de estabilizar la
-    vista Alertas.
+## 7. Producción / instalación
 
-## Caja --- Cartera --- Gestión Administrativa --- Órdenes de Pago
+- [ ] Crear manifiesto reproducible de dependencias.
+- [ ] Separar configuración development/production.
+- [ ] `DEBUG=False` en producción.
+- [ ] `ALLOWED_HOSTS` y CSRF origins explícitos.
+- [ ] HTTPS y cookies seguras.
+- [ ] HSTS/proxy headers según hosting.
+- [ ] validadores de contraseña.
+- [ ] almacenamiento privado definitivo y permisos del servicio.
+- [ ] backup externo/retención/restore.
+- [ ] `manage.py check --deploy`.
+- [ ] procedimiento de despliegue y rollback.
 
-### Principios de esta etapa
+## 8. Documentación
 
--   [ ] Implementar en este orden funcional: **Ingreso → Caja/Cartera →
-    Disponibilidad → Gestión Administrativa → Traslados internos → Orden
-    de Pago**.
--   [ ] No comenzar Orden de Pago antes de que OrdenaClick conozca qué
-    dinero/valores ingresaron, dónde están, quién puede utilizarlos y
-    cuáles están disponibles.
--   [ ] Mantener la complejidad en backend y una interfaz simple para el
-    usuario.
--   [ ] Conservar la composición de las pantallas financieras aprobadas
-    y adaptarlas al tema oscuro, colores y componentes de OrdenaClick.
--   [ ] No duplicar contabilidad ni cuentas corrientes del sistema de
-    gestión externo.
--   [ ] Toda operación financiera sensible debe validarse en backend. El
-    frontend nunca constituye una barrera de seguridad.
--   [ ] Diseñar el circuito para servidor y acceso multiusuario seguro.
--   [ ] Aplicar aislamiento por Empresa y, cuando corresponda, por
-    Centro Operativo/Caja. Cambiar un ID o URL nunca debe permitir
-    acceso cruzado.
--   [ ] Usar POST/CSRF para escrituras y contemplar transacciones,
-    concurrencia, doble clic/reintentos e idempotencia.
--   [ ] Registrar auditoría suficiente de operaciones y transiciones
-    financieras.
--   [ ] No borrar ni reescribir silenciosamente historia financiera.
+- [x] Definir un punto de entrada único: `00_RUMBO_Y_ESTADO.md`.
+- [x] Separar documentación vigente de histórico.
+- [ ] Mantener TODO/PRE_BETA/Auditoria sincronizados con cada bloque grande.
+- [ ] Actualizar documentos funcionales cuando una decisión realmente cambie.
+- [ ] No usar archivos históricos como fuente operativa vigente.
 
-### Clientes relacionados con Caja
+## 9. Post-Beta
 
--   [x] ABM mínimo de Clientes implementado.
--   [x] Flujo contextual `[+]` implementado.
--   [ ] Normalizar presentación del N.º Cliente a cuatro cifras:
-    `1 → 0001`, `25 → 0025`.
--   [ ] Revisar reactivación: validar CUIT, no sobrescribir historia
-    automáticamente y permitir elegir recuperación histórica o datos
-    actuales.
--   [ ] ARCA puede asistir, pero no decidir ni sobrescribir
-    automáticamente.
--   [ ] Cliente será opcional como procedencia de valores recibidos.
--   [ ] La ubicación/custodia de un cheque no se deduce del Cliente.
--   [ ] Todo selector asociado a ABM debe conservar el patrón `[+]`.
+- [ ] Dashboard.
+- [ ] Reportes avanzados.
+- [ ] Estado de Resultados.
+- [ ] Balance.
+- [ ] Plan Contable.
+- [ ] conciliaciones avanzadas.
+- [ ] Contable completo.
+- [ ] Legal completo.
+- [ ] marketplace, disponibilidad, postulaciones y ranking.
+- [ ] billing completo.
+- [ ] Agenda.
+- [ ] multimoneda.
+- [ ] notificaciones móviles.
+- [ ] onboarding guiado.
+- [ ] refactors estructurales no necesarios para Beta.
 
-### 1. Entrada de recursos / Cobranza
+## 10. Regla de prioridad
 
--   [ ] Crear base de Caja vinculada a Empresa y Centro Operativo,
-    preparada para múltiples Cajas futuras sin sobrediseñar la Beta.
--   [ ] Implementar Nueva Cobranza como ingreso único de recursos.
--   [ ] Registrar fecha, referencia, vendedor opcional, total declarado,
-    efectivo y detalle de cheques físicos.
--   [ ] Admitir efectivo ARS y USD como saldos separados.
--   [ ] Carga rápida por cheque: número, banco, acreditación,
-    vencimiento e importe.
--   [ ] Mostrar conciliación: total declarado vs. efectivo + cheques y
-    diferencia.
--   [ ] Definir si una cobranza con diferencia puede guardarse pendiente
-    o debe bloquearse.
--   [ ] El cheque cargado en la cobranza debe crear su valor de Cartera
-    en la misma operación.
--   [ ] Cartera es consecuencia del ingreso; no una segunda carga.
--   [ ] Cliente opcional en el cheque recibido.
--   [ ] No modelar la venta/cuenta corriente externa que originó la
-    cobranza.
+Antes de iniciar una tarea nueva:
 
-### 2. Caja y disponibilidad
+> ¿Cierra un flujo Beta, corrige un riesgo real o protege una decisión arquitectónica?
 
--   [ ] Caja representa custodia y movimiento financiero físico.
--   [ ] Mostrar efectivo disponible por Caja/Centro y moneda.
--   [ ] Mantener cheques físicos individualizados y asociados a su
-    custodia real.
--   [ ] Implementar Cartera física con estados y filtros.
--   [ ] Definir estados definitivos de valores físicos antes de
-    implementar salidas.
--   [ ] Un valor reservado no puede ofrecerse a otra OP ni traslado.
--   [ ] Mantener historial del destino del valor.
--   [ ] Diseñar salida por depósito en Cuenta Bancaria propia.
--   [ ] Incorporar condición de circulación: A la orden / No a la orden.
--   [ ] Determinar disponibilidad en backend según Empresa, Caja/Centro,
-    origen, estado, instrumento y condición.
-
-### 3. Cartera electrónica y Gestión Administrativa
-
--   [ ] Implementar e-Cheqs de terceros separados de la custodia física.
--   [ ] Permitir estado financiero disponible y Gestión Administrativa
-    pendiente simultáneamente.
--   [ ] Implementar Gestión Administrativa separada de Caja.
--   [ ] e-Cheq recibido: Gestión Pendiente → Gestionada.
--   [ ] Permitir devolver e-Cheq y excluirlo de disponibilidad,
-    resolviendo reservas previas.
--   [ ] Registrar usuario y fecha de confirmación de gestión.
--   [ ] Registrar transferencias recibidas con Gestión Administrativa
-    pendiente sin convertirlas en Caja física.
--   [ ] Incorporar alertas de gestiones pendientes.
--   [ ] Integrar Cartera con Vencimientos/Alertas según política
-    definitiva.
--   [ ] Testear límites de la ventana temporal de alertas.
-
-### 4. Traslados internos entre Cajas
-
--   [ ] Implementar Traslado Interno con Caja origen y destino.
--   [ ] Permitir efectivo y cheques físicos seleccionados
-    individualmente.
--   [ ] Reservar recursos al preparar traslado.
--   [ ] Despacho: Disponible origen → Reservado → En tránsito.
--   [ ] Destino debe revisar antes de incorporar a disponibilidad.
--   [ ] Permitir aceptación total o parcial.
--   [ ] Permitir rechazo individual de cheques con motivo.
--   [ ] Definir diferencias/rechazo parcial de efectivo.
--   [ ] Un rechazo permanece ligado al traslado hasta
-    devolución/resolución.
--   [ ] Preservar cadena de custodia.
--   [ ] e-Cheqs no se trasladan físicamente entre Cajas.
-
-### 5. Disponibilidad bancaria informada
-
--   [ ] Implementar disponible bancario informado como apoyo, no
-    conciliación exacta.
--   [ ] Registrar importe, usuario y fecha/hora de actualización.
--   [ ] No bloquear automáticamente transferencias por saldo informado
-    insuficiente.
--   [ ] Mantenerlo separado de Caja física y Cartera.
-
-### 6. Orden de Pago
-
--   [ ] Implementar OP después de estabilizar ingreso, disponibilidad,
-    cartera y traslados.
--   [ ] Una OP preparada no es todavía un evento financiero definitivo.
--   [ ] Medios: Efectivo; Cheques de terceros; e-Cheqs de terceros;
-    Transferencia; Depósito; Cheques propios a emitir; e-Cheqs propios a
-    emitir.
--   [ ] Terceros ya existen y se reservan; propios nacen como
-    instrumentos pendientes de emisión.
--   [ ] Instrumento propio pendiente: importe + acreditación prevista;
-    completar número/datos al emitir.
--   [ ] No generar obligación/alerta de instrumento propio en etapa de
-    propuesta.
--   [ ] Al confirmar emisión real, crear obligación/reminder.
--   [ ] Preparación colaborativa: las OP pendientes pertenecen al flujo
-    de la Empresa, no a una persona.
--   [ ] Usuario autorizado puede confirmar componentes dentro de su
-    alcance.
--   [ ] Guardar quién confirmó cada componente y cuándo.
--   [ ] Confirmar significa ejecución/preparación real, no sólo
-    visualización.
--   [ ] Valores de terceros seleccionados: Disponible → Reservado.
--   [ ] Liberar reserva al cancelar/reemplazar antes de ejecución.
--   [ ] Definir estados definitivos de OP y componentes.
--   [ ] Con todos los componentes confirmados, marcar lista para
-    revisión/cierre y notificar al creador.
--   [ ] Definir alternativa si el creador está ausente, desactivado o
-    sin permisos.
--   [ ] Cierre definitivo actualiza movimientos, documentos, carteras,
-    alertas y auditoría.
--   [ ] Diseñar reversión/cancelación parcial sin destruir historia.
--   [ ] Proteger reservas, confirmaciones y cierre con transacciones y
-    validación de estado.
-
-### 7. Jerarquía y permisos
-
--   [x] Jerarquía administrativa: **Administrador general / Administrador de Centro / Colaborador**; Contable y Legal son roles funcionales separados y acumulables.
--   [ ] La jerarquía define alcance máximo; los permisos definen
-    acciones dentro del alcance.
--   [ ] Administrador general: alcance Empresa y vista consolidada.
--   [ ] Administrador de sucursal: alcance Centro/sucursal habilitado y
-    sus Cajas/operaciones.
--   [ ] Colaborador: acciones sólo por permisos funcionales explícitos.
--   [ ] Un colaborador administrativo no necesita ver saldos globales.
--   [ ] No confiar en botones ocultos para autorización.
--   [x] No rigidizar `Usuario = Centro`; el usuario es global de plataforma y sus relaciones con Empresas/Centros son independientes.
-
-### 8. Seguridad, integridad y servidor
-
--   [ ] Secretos, certificados, claves y credenciales fuera de frontend,
-    `static`, `media` y Git.
--   [ ] Producción exclusivamente bajo HTTPS.
--   [ ] Cookies seguras (`Secure`, `HttpOnly`, `SameSite` apropiado),
-    CSRF y hosts/orígenes permitidos.
--   [ ] Autorizar cada objeto por usuario, Empresa, Centro/Caja, permiso
-    y estado.
--   [ ] Evitar IDOR y acceso cruzado mediante IDs manipulados.
--   [ ] Usar transacciones/bloqueo o validación de concurrencia en
-    reservas, traslados, confirmaciones y cierres.
--   [ ] Una pantalla desactualizada no puede sobrescribir verdad del
-    servidor.
--   [ ] Proteger contra duplicación por doble clic, retry o reenvío.
--   [ ] Documentos/descargas finales bajo autorización backend.
--   [ ] Logs sin secretos ni datos sensibles innecesarios.
--   [ ] Tests de aislamiento Empresa/Centro/Caja, permisos, concurrencia
-    y transiciones inválidas.
--   [ ] Considerar cada nuevo modelo relacionado con Empresa para
-    exportación/importación.
-
-### 9. Pendientes de definición antes de cada bloque
-
--   [ ] Estados exactos de cheques físicos de terceros.
--   [ ] Estados exactos de e-Cheqs de terceros.
--   [ ] Estados exactos de instrumentos propios.
--   [ ] Estados exactos de OP y componentes.
--   [ ] Estados exactos de Traslado Interno, rechazo parcial y
-    devolución.
--   [ ] Momento exacto en que cada medio afecta Caja/Cartera.
--   [ ] Reglas de cancelación/reversión.
--   [ ] Datos obligatorios de cada instrumento.
--   [ ] Tratamiento definitivo de cheque/e-Cheq rechazado.
--   [ ] Tratamiento de depósitos físicos.
--   [ ] Actualización del disponible bancario informado.
--   [ ] Granularidad de permisos Beta bajo las tres jerarquías.
--   [ ] Cierre de OP cuando el creador no esté disponible.
--   [ ] Contenido del documento final de OP.
--   [ ] Política de alertas por estado.
--   [ ] Regla de cobranza con diferencia.
--   [ ] Filtros de OP pendientes y Gestión Administrativa.
--   [ ] Una Caja por Centro en Beta vs. múltiples Cajas futuras.
-
-### Backup Empresa v1 — implementación en validación (04/10/2026)
-
-- [x] Contrato v1 con manifest versionado.
-- [x] Exportador dedicado fuera de `views.py`.
-- [x] Inspector de ZIP con límites, hashes y validación estructural.
-- [x] Restaurador por mapas de identidades portables y transacción.
-- [x] Wizard guiado de importación.
-- [x] Usuarios históricos separados de privilegios actuales.
-- [x] Gestión de Claves excluye el secreto cifrado del backup.
-- [x] Tests específicos de Backup v1 agregados.
-- [ ] Verificación completa en entorno local de Emanuel.
-- [ ] Prueba manual del wizard y revisión estética.
-- [ ] Commit selectivo del bloque.
-- [ ] Retomar integración completa de jerarquías en autorización Empresa/Centro/Caja.
+Si no, debe esperar.

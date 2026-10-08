@@ -1,3 +1,14 @@
+# Estado del documento — 08/10/2026
+
+Backup Empresa v1 ya tiene una implementación base con servicios dedicados,
+manifest, inspector, restaurador, wizard y round-trip. Este inventario se
+mantiene como contrato técnico y checklist de cobertura.
+
+Los puntos aún no marcados siguen siendo pruebas/cierres pre-Beta; no deben
+interpretarse como que el subsistema completo todavía no existe.
+
+---
+
 # BACKUP EMPRESA V1 — INVENTARIO Y CONTRATO PRELIMINAR
 
 **Fecha:** 04/10/2026
