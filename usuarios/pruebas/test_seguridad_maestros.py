@@ -6,8 +6,13 @@ from usuarios.models import (
     AsignacionUsuarioEmpresa,
     Banco,
     CuentaBancaria,
+    CentroOperativo,
     Empresa,
     Proveedor,
+    RecursoOperativo,
+    RecursoOperativoCentro,
+    Retencion,
+    Tarjeta,
 )
 
 
@@ -78,6 +83,68 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             moneda="ARS",
         )
 
+
+        self.tarjeta = Tarjeta.objects.create(
+            empresa=self.empresa,
+            nombre="TARJETA PROPIA",
+            tipo_tarjeta="Credito",
+            cuenta_bancaria=self.cuenta,
+        )
+        self.tarjeta_ajena = Tarjeta.objects.create(
+            empresa=self.empresa_ajena,
+            nombre="TARJETA AJENA",
+            tipo_tarjeta="Credito",
+            cuenta_bancaria=self.cuenta_ajena,
+        )
+
+        self.retencion = Retencion.objects.create(
+            empresa=self.empresa,
+            tipo="GANANCIAS",
+            descripcion="Retención propia",
+        )
+        self.retencion_ajena = Retencion.objects.create(
+            empresa=self.empresa_ajena,
+            tipo="IIBB",
+            descripcion="Retención ajena",
+        )
+
+        self.centro = CentroOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="CENTRO PROPIO",
+            tipo="Casa Central",
+            activo=True,
+        )
+        self.centro_ajeno = CentroOperativo.objects.create(
+            empresa=self.empresa_ajena,
+            nombre="CENTRO AJENO",
+            tipo="Sucursal",
+            activo=True,
+        )
+
+        self.recurso = RecursoOperativo.objects.create(
+            empresa=self.empresa,
+            nombre="RECURSO PROPIO",
+            tipo_recurso="Equipo",
+            descripcion="Recurso propio",
+            activo=True,
+        )
+        self.recurso_ajeno = RecursoOperativo.objects.create(
+            empresa=self.empresa_ajena,
+            nombre="RECURSO AJENO",
+            tipo_recurso="Equipo",
+            descripcion="Recurso ajeno",
+            activo=True,
+        )
+
+        RecursoOperativoCentro.objects.create(
+            recurso_operativo=self.recurso,
+            centro_operativo=self.centro,
+        )
+        RecursoOperativoCentro.objects.create(
+            recurso_operativo=self.recurso_ajeno,
+            centro_operativo=self.centro_ajeno,
+        )
+
     def test_listados_rechazan_empresa_ajena(self):
         self.client.force_login(self.propietario)
 
@@ -85,6 +152,10 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             "listar_proveedores",
             "listar_bancos",
             "listar_cuentas_bancarias",
+            "listar_tarjetas",
+            "listar_retenciones",
+            "listar_centros_operativos",
+            "listar_recursos_operativos",
         ):
             with self.subTest(url=nombre_url):
                 respuesta = self.client.get(
@@ -154,6 +225,10 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             "listar_proveedores",
             "listar_bancos",
             "listar_cuentas_bancarias",
+            "listar_tarjetas",
+            "listar_retenciones",
+            "listar_centros_operativos",
+            "listar_recursos_operativos",
         ):
             with self.subTest(url=nombre_url):
                 respuesta = self.client.get(
@@ -176,3 +251,90 @@ class SeguridadMaestrosEmpresaTests(TestCase):
         )
 
         self.assertEqual(respuesta.status_code, 403)
+
+    def test_ids_ajenos_no_modifican_tarjeta_retencion_centro_recurso(self):
+        self.client.force_login(self.propietario)
+
+        casos = (
+            (
+                "modificar_tarjeta",
+                {
+                    "empresa": self.empresa.pk,
+                    "tarjeta": self.tarjeta_ajena.pk,
+                    "nombre": "TARJETA FORZADA",
+                    "tipo_tarjeta": "Credito",
+                    "cuenta_bancaria": self.cuenta.pk,
+                },
+            ),
+            (
+                "modificar_retencion",
+                {
+                    "empresa": self.empresa.pk,
+                    "retencion": self.retencion_ajena.pk,
+                    "tipo": "RETENCION FORZADA",
+                    "descripcion": "",
+                },
+            ),
+            (
+                "modificar_centro_operativo",
+                {
+                    "empresa": self.empresa.pk,
+                    "centro": self.centro_ajeno.pk,
+                    "nombre": "CENTRO FORZADO",
+                    "tipo": "Sucursal",
+                    "direccion": "",
+                },
+            ),
+            (
+                "modificar_recurso_operativo",
+                {
+                    "empresa": self.empresa.pk,
+                    "recurso": self.recurso_ajeno.pk,
+                    "nombre": "RECURSO FORZADO",
+                    "tipo_recurso": "Equipo",
+                    "descripcion": "",
+                    "centros_operativos": [str(self.centro.pk)],
+                },
+            ),
+        )
+
+        for nombre_url, datos in casos:
+            with self.subTest(url=nombre_url):
+                respuesta = self.client.post(
+                    reverse(nombre_url),
+                    datos,
+                )
+                self.assertEqual(respuesta.status_code, 404)
+
+        self.tarjeta_ajena.refresh_from_db()
+        self.retencion_ajena.refresh_from_db()
+        self.centro_ajeno.refresh_from_db()
+        self.recurso_ajeno.refresh_from_db()
+
+        self.assertEqual(self.tarjeta_ajena.nombre, "TARJETA AJENA")
+        self.assertEqual(self.retencion_ajena.tipo, "IIBB")
+        self.assertEqual(self.centro_ajeno.nombre, "CENTRO AJENO")
+        self.assertEqual(self.recurso_ajeno.nombre, "RECURSO AJENO")
+
+    def test_recurso_rechaza_centro_operativo_de_empresa_ajena(self):
+        self.client.force_login(self.propietario)
+
+        respuesta = self.client.post(
+            reverse("guardar_recurso_operativo"),
+            {
+                "empresa": self.empresa.pk,
+                "nombre": "RECURSO NUEVO",
+                "tipo_recurso": "Equipo",
+                "descripcion": "",
+                "centros_operativos": [str(self.centro_ajeno.pk)],
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["ok"])
+        self.assertFalse(
+            RecursoOperativo.objects.filter(
+                empresa=self.empresa,
+                nombre="RECURSO NUEVO",
+            ).exists()
+        )

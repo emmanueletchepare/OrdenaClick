@@ -1,15 +1,17 @@
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import CentroOperativo, Empresa
+from usuarios.models import CentroOperativo
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def listar_centros_operativos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    empresa = Empresa.objects.get(
-        id=empresa_id
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
     )
 
     centros = CentroOperativo.objects.filter(
@@ -46,8 +48,9 @@ def guardar_centro_operativo(request):
             {"ok": False}
         )
 
-    empresa = Empresa.objects.get(
-        id=request.POST.get("empresa")
+    empresa = obtener_empresa_administrable(
+        request.user,
+        request.POST.get("empresa"),
     )
 
     nombre = (
@@ -113,6 +116,11 @@ def modificar_centro_operativo(request):
     centro_id = request.POST.get("centro")
     empresa_id = request.POST.get("empresa")
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     nombre = (
         request.POST.get("nombre") or ""
     ).strip().upper()
@@ -153,7 +161,7 @@ def modificar_centro_operativo(request):
     try:
         centro = CentroOperativo.objects.get(
             id=centro_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -164,7 +172,7 @@ def modificar_centro_operativo(request):
         }, status=404)
 
     if CentroOperativo.objects.filter(
-        empresa_id=empresa_id,
+        empresa=empresa,
         nombre=nombre,
         activo=True
     ).exclude(id=centro.id).exists():
@@ -202,10 +210,15 @@ def eliminar_centro_operativo(request):
     centro_id = request.POST.get("centro")
     empresa_id = request.POST.get("empresa")
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
         centro = CentroOperativo.objects.get(
             id=centro_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -218,7 +231,7 @@ def eliminar_centro_operativo(request):
     cantidad_centros_activos = (
         CentroOperativo.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
         .count()

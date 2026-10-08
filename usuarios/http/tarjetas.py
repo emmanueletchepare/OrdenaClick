@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import CuentaBancaria, Empresa, Tarjeta
+from usuarios.models import CuentaBancaria, Tarjeta
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def listar_tarjetas(request):
@@ -11,21 +12,10 @@ def listar_tarjetas(request):
     )
 
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
 
     tarjetas = (
@@ -171,21 +161,10 @@ def guardar_tarjeta(request):
         })
 
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
 
     try:
@@ -300,6 +279,11 @@ def modificar_tarjeta(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     tarjeta_id = request.POST.get(
         "tarjeta"
     )
@@ -344,7 +328,7 @@ def modificar_tarjeta(request):
 
         tarjeta = Tarjeta.objects.get(
             id=tarjeta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -363,7 +347,7 @@ def modificar_tarjeta(request):
 
         cuenta = CuentaBancaria.objects.get(
             id=cuenta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -378,7 +362,7 @@ def modificar_tarjeta(request):
     duplicada = (
         Tarjeta.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=nombre,
             activo=True
         )
@@ -438,6 +422,11 @@ def eliminar_tarjeta(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     tarjeta_id = request.POST.get(
         "tarjeta"
     )
@@ -447,7 +436,7 @@ def eliminar_tarjeta(request):
 
         tarjeta = Tarjeta.objects.get(
             id=tarjeta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -494,6 +483,11 @@ def reactivar_tarjeta(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     tarjeta_id = request.POST.get(
         "tarjeta"
     )
@@ -515,7 +509,7 @@ def reactivar_tarjeta(request):
 
         tarjeta = Tarjeta.objects.get(
             id=tarjeta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 
@@ -549,7 +543,7 @@ def reactivar_tarjeta(request):
 
         cuenta = CuentaBancaria.objects.get(
             id=cuenta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -564,7 +558,7 @@ def reactivar_tarjeta(request):
     duplicada = (
         Tarjeta.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=nombre,
             activo=True
         )

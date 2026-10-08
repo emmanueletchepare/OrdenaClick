@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Empresa, Retencion
+from usuarios.models import Retencion
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def listar_retenciones(request):
@@ -15,21 +16,10 @@ def listar_retenciones(request):
     )
 
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
 
     retenciones = (
@@ -123,21 +113,10 @@ def guardar_retencion(request):
         })
 
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
 
     existente = (
@@ -245,6 +224,11 @@ def modificar_retencion(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     retencion_id = request.POST.get(
         "retencion"
     )
@@ -270,7 +254,7 @@ def modificar_retencion(request):
 
         retencion = Retencion.objects.get(
             id=retencion_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -288,7 +272,7 @@ def modificar_retencion(request):
     duplicada = (
         Retencion.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             tipo__iexact=tipo
         )
         .exclude(
@@ -365,6 +349,11 @@ def eliminar_retencion(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     retencion_id = request.POST.get(
         "retencion"
     )
@@ -374,7 +363,7 @@ def eliminar_retencion(request):
 
         retencion = Retencion.objects.get(
             id=retencion_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -425,6 +414,11 @@ def reactivar_retencion(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     retencion_id = request.POST.get(
         "retencion"
     )
@@ -450,7 +444,7 @@ def reactivar_retencion(request):
 
         retencion = Retencion.objects.get(
             id=retencion_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 
@@ -471,7 +465,7 @@ def reactivar_retencion(request):
     duplicada = (
         Retencion.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             tipo__iexact=tipo,
             activo=True
         )

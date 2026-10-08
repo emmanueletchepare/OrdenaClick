@@ -4,15 +4,16 @@ from django.template.loader import render_to_string
 
 from usuarios.models import (
     CentroOperativo,
-    Empresa,
     RecursoOperativo,
     RecursoOperativoCentro,
 )
 
+from usuarios.services.seguridad import obtener_empresa_administrable
+
 
 def obtener_centros_recurso_request(
     request,
-    empresa_id
+    empresa
 ):
 
     centros_ids = request.POST.getlist(
@@ -42,7 +43,7 @@ def obtener_centros_recurso_request(
         CentroOperativo.objects
         .filter(
             id__in=centros_ids,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
     )
@@ -88,19 +89,10 @@ def listar_recursos_operativos(request):
     )
 
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
 
     recursos = (
@@ -230,6 +222,11 @@ def guardar_recurso_operativo(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
 
     nombre = (
         request.POST.get(
@@ -282,7 +279,7 @@ def guardar_recurso_operativo(request):
     centros, error_centros = (
         obtener_centros_recurso_request(
             request,
-            empresa_id
+            empresa
         )
     )
 
@@ -298,7 +295,7 @@ def guardar_recurso_operativo(request):
     existente = (
         RecursoOperativo.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=nombre
         )
         .first()
@@ -339,8 +336,8 @@ def guardar_recurso_operativo(request):
 
         recurso = RecursoOperativo.objects.create(
 
-            empresa_id=
-                empresa_id,
+            empresa=
+                empresa,
 
             nombre=
                 nombre,
@@ -402,6 +399,11 @@ def modificar_recurso_operativo(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
 
     nombre = (
         request.POST.get(
@@ -455,7 +457,7 @@ def modificar_recurso_operativo(request):
 
         recurso = RecursoOperativo.objects.get(
             id=recurso_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -472,7 +474,7 @@ def modificar_recurso_operativo(request):
     centros, error_centros = (
         obtener_centros_recurso_request(
             request,
-            empresa_id
+            empresa
         )
     )
 
@@ -488,7 +490,7 @@ def modificar_recurso_operativo(request):
     duplicado = (
         RecursoOperativo.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=nombre,
             activo=True
         )
@@ -568,11 +570,16 @@ def eliminar_recurso_operativo(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         recurso = RecursoOperativo.objects.get(
             id=recurso_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -588,7 +595,7 @@ def eliminar_recurso_operativo(request):
     cantidad_activos = (
         RecursoOperativo.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
         .count()
@@ -639,6 +646,11 @@ def reactivar_recurso_operativo(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
 
     try:
 
@@ -649,7 +661,7 @@ def reactivar_recurso_operativo(request):
             )
             .get(
                 id=recurso_id,
-                empresa_id=empresa_id,
+                empresa=empresa,
                 activo=False
             )
         )
@@ -692,7 +704,7 @@ def reactivar_recurso_operativo(request):
     duplicado = (
         RecursoOperativo.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=recurso.nombre,
             activo=True
         )
