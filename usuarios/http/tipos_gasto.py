@@ -2,14 +2,16 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Empresa, Proveedor, TipoGasto, TipoGastoProveedor
+from usuarios.models import Proveedor, TipoGasto, TipoGastoProveedor
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
-def obtener_proveedores_tipo_gasto(request, empresa_id):
+def obtener_proveedores_tipo_gasto(request, empresa):
     """
     Obtiene y valida los proveedores enviados para un tipo de gasto.
 
-    Sólo admite proveedores activos pertenecientes a la empresa indicada.
+    Sólo admite proveedores activos pertenecientes a la Empresa
+    previamente autorizada.
     """
 
     proveedores_ids = request.POST.getlist(
@@ -24,7 +26,7 @@ def obtener_proveedores_tipo_gasto(request, empresa_id):
 
     proveedores = Proveedor.objects.filter(
         id__in=proveedores_ids,
-        empresa_id=empresa_id,
+        empresa=empresa,
         activo=True
     )
 
@@ -44,18 +46,10 @@ def listar_tipos_gasto(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     tipos_gasto = (
         TipoGasto.objects
@@ -132,18 +126,10 @@ def guardar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     if not nombre:
 
@@ -196,7 +182,7 @@ def guardar_tipo_gasto(request):
 
     proveedores = obtener_proveedores_tipo_gasto(
         request,
-        empresa.id
+        empresa,
     )
 
     if proveedores is None:
@@ -261,6 +247,11 @@ def modificar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     if not nombre:
 
         return JsonResponse({
@@ -272,7 +263,7 @@ def modificar_tipo_gasto(request):
 
         tipo_gasto = TipoGasto.objects.get(
             id=tipo_gasto_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -286,7 +277,7 @@ def modificar_tipo_gasto(request):
     nombre_duplicado = (
         TipoGasto.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre=nombre
         )
         .exclude(
@@ -307,7 +298,7 @@ def modificar_tipo_gasto(request):
 
     proveedores = obtener_proveedores_tipo_gasto(
         request,
-        empresa_id
+        empresa,
     )
 
     if proveedores is None:
@@ -365,11 +356,16 @@ def eliminar_tipo_gasto(request):
         "tipo_gasto"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         tipo_gasto = TipoGasto.objects.get(
             id=tipo_gasto_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -413,11 +409,16 @@ def reactivar_tipo_gasto(request):
         "tipo_gasto"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         tipo_gasto = TipoGasto.objects.get(
             id=tipo_gasto_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 
