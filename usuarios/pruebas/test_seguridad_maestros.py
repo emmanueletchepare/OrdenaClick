@@ -433,6 +433,80 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             ).exists()
         )
 
+    def test_tarjetas_exigen_metodo_http_correcto(self):
+        self.client.force_login(self.propietario)
+
+        respuesta_get_mutacion = self.client.get(
+            reverse("guardar_tarjeta"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_get_mutacion.status_code, 405)
+
+        respuesta_post_listado = self.client.post(
+            reverse("listar_tarjetas"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_post_listado.status_code, 405)
+
+    def test_admin_centro_no_administra_tarjetas(self):
+        admin_centro = User.objects.create_user(
+            username="seg_tarjetas_admin_centro",
+            password="prueba123",
+        )
+        AsignacionUsuarioEmpresa.objects.create(
+            empresa=self.empresa,
+            usuario=admin_centro,
+            jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
+            centro_operativo=self.centro,
+            activo=True,
+        )
+
+        self.client.force_login(admin_centro)
+
+        respuesta = self.client.get(
+            reverse("listar_tarjetas"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_superusuario_conserva_administracion_de_tarjetas(self):
+        superusuario = User.objects.create_superuser(
+            username="seg_tarjetas_super",
+            email="seg-tarjetas-super@example.com",
+            password="prueba123",
+        )
+        self.client.force_login(superusuario)
+
+        respuesta = self.client.get(
+            reverse("listar_tarjetas"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_tarjeta_nueva_rechaza_cuenta_de_empresa_ajena(self):
+        self.client.force_login(self.propietario)
+
+        respuesta = self.client.post(
+            reverse("guardar_tarjeta"),
+            {
+                "empresa": self.empresa.pk,
+                "nombre": "TARJETA CUENTA AJENA",
+                "tipo_tarjeta": "Credito",
+                "cuenta_bancaria": self.cuenta_ajena.pk,
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["ok"])
+        self.assertFalse(
+            Tarjeta.objects.filter(
+                empresa=self.empresa,
+                nombre="TARJETA CUENTA AJENA",
+            ).exists()
+        )
+
     def test_admin_general_activo_puede_listar_maestros(self):
         self.client.force_login(self.admin_general)
 

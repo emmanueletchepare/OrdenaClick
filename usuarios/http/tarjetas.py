@@ -1,12 +1,17 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import CuentaBancaria, Tarjeta
-from usuarios.services.seguridad import obtener_empresa_administrable
-from django.contrib.auth.decorators import login_required
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 
 
 @login_required
+@require_GET
 def listar_tarjetas(request):
 
     empresa_id = request.GET.get(
@@ -14,10 +19,12 @@ def listar_tarjetas(request):
     )
 
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     tarjetas = (
@@ -111,18 +118,8 @@ def listar_tarjetas(request):
 # =========================================
 
 @login_required
+@require_POST
 def guardar_tarjeta(request):
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
 
     empresa_id = request.POST.get(
         "empresa"
@@ -164,10 +161,12 @@ def guardar_tarjeta(request):
         })
 
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     try:
@@ -266,27 +265,19 @@ def guardar_tarjeta(request):
 
 
 @login_required
+@require_POST
 def modificar_tarjeta(request):
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
 
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     tarjeta_id = request.POST.get(
         "tarjeta"
@@ -410,27 +401,19 @@ def modificar_tarjeta(request):
 
 
 @login_required
+@require_POST
 def eliminar_tarjeta(request):
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
 
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     tarjeta_id = request.POST.get(
         "tarjeta"
@@ -472,27 +455,19 @@ def eliminar_tarjeta(request):
 
 
 @login_required
+@require_POST
 def reactivar_tarjeta(request):
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
 
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     tarjeta_id = request.POST.get(
         "tarjeta"
