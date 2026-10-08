@@ -5,7 +5,8 @@ from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Empresa, Proveedor
+from usuarios.models import Proveedor
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def validar_email_proveedor(valor, nombre_campo):
@@ -134,18 +135,10 @@ def listar_proveedores(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     proveedores = Proveedor.objects.filter(
         empresa=empresa,
@@ -197,18 +190,10 @@ def guardar_proveedor(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     datos = datos_proveedor_request(
         request
@@ -320,11 +305,16 @@ def modificar_proveedor(request):
         "proveedor"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         proveedor = Proveedor.objects.get(
             id=proveedor_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -353,7 +343,7 @@ def modificar_proveedor(request):
     cuit_duplicado = (
         Proveedor.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             cuit=datos["cuit"]
         )
         .exclude(
@@ -408,11 +398,16 @@ def eliminar_proveedor(request):
         "proveedor"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         proveedor = Proveedor.objects.get(
             id=proveedor_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -452,11 +447,16 @@ def reactivar_proveedor(request):
         "proveedor"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         proveedor = Proveedor.objects.get(
             id=proveedor_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 

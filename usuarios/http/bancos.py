@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Banco, Empresa
+from usuarios.models import Banco
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def guardar_banco(request):
@@ -11,8 +12,9 @@ def guardar_banco(request):
             {"ok": False}
         )
 
-    empresa = Empresa.objects.get(
-        id=request.POST.get("empresa")
+    empresa = obtener_empresa_administrable(
+        request.user,
+        request.POST.get("empresa"),
     )
 
     nombre = (
@@ -60,8 +62,9 @@ def listar_bancos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    empresa = Empresa.objects.get(
-        id=empresa_id
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
     )
 
     bancos = Banco.objects.filter(
@@ -112,6 +115,11 @@ def modificar_banco(request):
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     nombre = (
         request.POST.get("nombre") or ""
     ).strip().upper()
@@ -125,7 +133,7 @@ def modificar_banco(request):
     try:
         banco = Banco.objects.get(
             id=banco_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -136,7 +144,7 @@ def modificar_banco(request):
         }, status=404)
 
     if Banco.objects.filter(
-        empresa_id=empresa_id,
+        empresa=empresa,
         nombre=nombre,
         activo=True
     ).exclude(id=banco.id).exists():
@@ -165,10 +173,15 @@ def eliminar_banco(request):
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
         banco = Banco.objects.get(
             id=banco_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 

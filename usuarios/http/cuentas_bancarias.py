@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Banco, CuentaBancaria, Empresa
+from usuarios.models import Banco, CuentaBancaria
+from usuarios.services.seguridad import obtener_empresa_administrable
 
 
 def listar_cuentas_bancarias(request):
@@ -14,21 +15,10 @@ def listar_cuentas_bancarias(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     cuentas = CuentaBancaria.objects.filter(
         empresa=empresa,
@@ -161,21 +151,10 @@ def guardar_cuenta_bancaria(request):
             "mensaje": "Seleccione una moneda válida."
         })
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "La empresa no existe."
-            },
-            status=404
-        )
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     try:
 
@@ -269,6 +248,11 @@ def modificar_cuenta_bancaria(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     cuenta_id = request.POST.get(
         "cuenta"
     )
@@ -338,7 +322,7 @@ def modificar_cuenta_bancaria(request):
 
         cuenta = CuentaBancaria.objects.get(
             id=cuenta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -356,7 +340,7 @@ def modificar_cuenta_bancaria(request):
 
         banco = Banco.objects.get(
             id=banco_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -368,7 +352,7 @@ def modificar_cuenta_bancaria(request):
         })
 
     duplicada = CuentaBancaria.objects.filter(
-        empresa_id=empresa_id,
+        empresa=empresa,
         banco=banco,
         nombre=nombre,
         activo=True
@@ -431,6 +415,11 @@ def eliminar_cuenta_bancaria(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     cuenta_id = request.POST.get(
         "cuenta"
     )
@@ -439,7 +428,7 @@ def eliminar_cuenta_bancaria(request):
 
         cuenta = CuentaBancaria.objects.get(
             id=cuenta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -486,6 +475,11 @@ def reactivar_cuenta_bancaria(request):
         "empresa"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     cuenta_id = request.POST.get(
         "cuenta"
     )
@@ -522,7 +516,7 @@ def reactivar_cuenta_bancaria(request):
 
         cuenta = CuentaBancaria.objects.get(
             id=cuenta_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 
@@ -543,7 +537,7 @@ def reactivar_cuenta_bancaria(request):
 
         banco = Banco.objects.get(
             id=banco_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -555,7 +549,7 @@ def reactivar_cuenta_bancaria(request):
         })
 
     duplicada = CuentaBancaria.objects.filter(
-        empresa_id=empresa_id,
+        empresa=empresa,
         banco=banco,
         nombre=nombre,
         activo=True
