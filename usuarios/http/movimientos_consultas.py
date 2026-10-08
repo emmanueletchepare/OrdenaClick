@@ -3,7 +3,8 @@ import re
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from usuarios.models import Empresa, Movimiento, Proveedor
+from usuarios.models import Movimiento, Proveedor
+from usuarios.services.seguridad import obtener_empresa_autorizada
 
 
 @login_required
@@ -110,23 +111,10 @@ def verificar_comprobante_duplicado(request):
         )
 
 
-    empresa = Empresa.objects.filter(
-        id=empresa_id
-    ).first()
-
-
-    if not empresa:
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": (
-                    "La empresa seleccionada "
-                    "no existe."
-                ),
-            },
-            status=404,
-        )
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
+    )
 
 
     proveedor = Proveedor.objects.filter(
@@ -202,11 +190,6 @@ def obtener_movimiento_edicion(request):
     from usuarios.services.financiero import (
         movimientos_con_saldo_pendiente,
     )
-
-    from usuarios.services.seguridad import (
-        obtener_empresa_autorizada,
-    )
-
 
     empresa_id = (
         request.GET.get("empresa")

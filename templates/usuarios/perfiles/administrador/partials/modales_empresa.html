@@ -96,17 +96,29 @@ Cancelar
 
 </button>
 
-<a
-href="/eliminar-empresa/{{ empresa_actual.id }}/"
+{% if empresa_actual %}
+
+<form
+method="post"
+action="{% url 'eliminar_empresa' empresa_actual.id %}"
+style="margin:0;"
+>
+{% csrf_token %}
+
+<button
+type="submit"
 class="sidebar-btn"
 style="
-text-decoration:none;
 background:#dc2626;
 ">
 
 Eliminar
 
-</a>
+</button>
+
+</form>
+
+{% endif %}
 
 </div>
 

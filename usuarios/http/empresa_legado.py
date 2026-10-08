@@ -6,9 +6,11 @@ import zipfile
 from io import BytesIO
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from usuarios.models import (
     AsignacionUsuarioEmpresa,
@@ -16,6 +18,8 @@ from usuarios.models import (
     Empresa,
     RecursoOperativo,
 )
+
+from usuarios.services.seguridad import obtener_empresa_autorizada
 
 
 def exportar_empresa(request, empresa_id):
@@ -217,13 +221,16 @@ def exportar_empresa(request, empresa_id):
 
     return response
 
+@login_required
+@require_POST
 def eliminar_empresa(
     request,
     empresa_id
 ):
 
-    empresa = Empresa.objects.get(
-        id=empresa_id
+    empresa = obtener_empresa_autorizada(
+        request.user,
+        empresa_id,
     )
 
 
@@ -285,32 +292,6 @@ def eliminar_empresa(
     return redirect(
         'panel_admin'
     )
-
-    empresa = Empresa.objects.get(
-        id=empresa_id
-    )
-
-    if empresa.estatuto:
-
-        empresa.estatuto.delete(
-            save=False
-        )
-
-    if empresa.acta:
-
-        empresa.acta.delete(
-            save=False
-        )
-
-    if empresa.designacion:
-
-        empresa.designacion.delete(
-            save=False
-        )
-
-    empresa.delete()
-
-    return redirect('panel_admin')
 
 def importar_empresa(request):
 
