@@ -3,7 +3,8 @@ from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
-from usuarios.models import Empresa, GestionClave
+from usuarios.models import GestionClave
+from usuarios.services.seguridad import obtener_empresa_administrable
 from usuarios.seguridad_claves import cifrar_clave, descifrar_clave
 
 
@@ -110,18 +111,10 @@ def listar_gestion_claves(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     claves = GestionClave.objects.filter(
         empresa=empresa,
@@ -157,18 +150,10 @@ def guardar_gestion_clave(request):
         "empresa"
     )
 
-    try:
-
-        empresa = Empresa.objects.get(
-            id=empresa_id
-        )
-
-    except Empresa.DoesNotExist:
-
-        return JsonResponse({
-            "ok": False,
-            "mensaje": "La empresa no existe."
-        }, status=404)
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
 
     datos = datos_gestion_clave_request(
         request
@@ -297,11 +282,16 @@ def ver_gestion_clave(request):
         "clave"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         clave = GestionClave.objects.get(
             id=clave_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -382,11 +372,16 @@ def modificar_gestion_clave(request):
         "clave"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         clave = GestionClave.objects.get(
             id=clave_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -416,7 +411,7 @@ def modificar_gestion_clave(request):
     duplicado = (
         GestionClave.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=datos["nombre"],
             activo=True
         )
@@ -533,11 +528,16 @@ def eliminar_gestion_clave(request):
         "clave"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         clave = GestionClave.objects.get(
             id=clave_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=True
         )
 
@@ -579,11 +579,16 @@ def reactivar_gestion_clave(request):
         "clave"
     )
 
+    empresa = obtener_empresa_administrable(
+        request.user,
+        empresa_id,
+    )
+
     try:
 
         clave = GestionClave.objects.get(
             id=clave_id,
-            empresa_id=empresa_id,
+            empresa=empresa,
             activo=False
         )
 
@@ -600,7 +605,7 @@ def reactivar_gestion_clave(request):
     duplicado_activo = (
         GestionClave.objects
         .filter(
-            empresa_id=empresa_id,
+            empresa=empresa,
             nombre__iexact=clave.nombre,
             activo=True
         )
