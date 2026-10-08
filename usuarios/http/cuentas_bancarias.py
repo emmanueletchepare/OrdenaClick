@@ -3,8 +3,10 @@ from django.template.loader import render_to_string
 
 from usuarios.models import Banco, CuentaBancaria
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def listar_cuentas_bancarias(request):
     """
     Devuelve el ABM de cuentas bancarias correspondiente
@@ -69,6 +71,7 @@ def listar_cuentas_bancarias(request):
     })
 
 
+@login_required
 def guardar_cuenta_bancaria(request):
     """
     Crea una cuenta bancaria para la empresa activa.
@@ -228,6 +231,7 @@ def guardar_cuenta_bancaria(request):
     })
 
 
+@login_required
 def modificar_cuenta_bancaria(request):
     """
     Modifica una cuenta bancaria activa perteneciente
@@ -395,6 +399,7 @@ def modificar_cuenta_bancaria(request):
     })
 
 
+@login_required
 def eliminar_cuenta_bancaria(request):
     """
     Realiza la baja lógica de una cuenta bancaria.
@@ -455,6 +460,7 @@ def eliminar_cuenta_bancaria(request):
     })
 
 
+@login_required
 def reactivar_cuenta_bancaria(request):
     """
     Reactiva una cuenta bancaria inactiva y permite

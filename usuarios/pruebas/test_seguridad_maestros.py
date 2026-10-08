@@ -145,6 +145,45 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             centro_operativo=self.centro_ajeno,
         )
 
+    def test_maestros_privados_requieren_autenticacion_explicita(self):
+        casos_get = (
+            "listar_proveedores",
+            "listar_bancos",
+            "listar_cuentas_bancarias",
+            "listar_centros_operativos",
+        )
+
+        for nombre_url in casos_get:
+            with self.subTest(metodo="GET", url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
+        casos_post = (
+            "guardar_proveedor",
+            "guardar_banco",
+            "guardar_cuenta_bancaria",
+            "guardar_centro_operativo",
+        )
+
+        for nombre_url in casos_post:
+            with self.subTest(metodo="POST", url=nombre_url):
+                respuesta = self.client.post(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 302)
+                self.assertIn(
+                    reverse("login"),
+                    respuesta["Location"],
+                )
+
     def test_listados_rechazan_empresa_ajena(self):
         self.client.force_login(self.propietario)
 

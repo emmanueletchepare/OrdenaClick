@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from usuarios.models import Proveedor
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
 def validar_email_proveedor(valor, nombre_campo):
@@ -129,6 +130,7 @@ def validar_datos_proveedor(datos):
     return None
 
 
+@login_required
 def listar_proveedores(request):
 
     empresa_id = request.GET.get(
@@ -177,6 +179,7 @@ def listar_proveedores(request):
     })
 
 
+@login_required
 def guardar_proveedor(request):
 
     if request.method != "POST":
@@ -288,6 +291,7 @@ def guardar_proveedor(request):
     })
 
 
+@login_required
 def modificar_proveedor(request):
 
     if request.method != "POST":
@@ -381,6 +385,7 @@ def modificar_proveedor(request):
     })
 
 
+@login_required
 def eliminar_proveedor(request):
 
     if request.method != "POST":
@@ -430,6 +435,7 @@ def eliminar_proveedor(request):
         "ok": True
     })
 
+@login_required
 def reactivar_proveedor(request):
 
     if request.method != "POST":

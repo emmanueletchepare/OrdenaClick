@@ -3,8 +3,10 @@ from django.template.loader import render_to_string
 
 from usuarios.models import Banco
 from usuarios.services.seguridad import obtener_empresa_administrable
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def guardar_banco(request):
 
     if request.method != "POST":
@@ -58,6 +60,7 @@ def guardar_banco(request):
     })
 
 
+@login_required
 def listar_bancos(request):
 
     empresa_id = request.GET.get("empresa")
@@ -104,6 +107,7 @@ def listar_bancos(request):
 
     })
 
+@login_required
 def modificar_banco(request):
 
     if request.method != "POST":
@@ -162,6 +166,7 @@ def modificar_banco(request):
     })
 
 
+@login_required
 def eliminar_banco(request):
 
     if request.method != "POST":
