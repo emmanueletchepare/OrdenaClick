@@ -1,12 +1,17 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import Banco, CuentaBancaria
-from usuarios.services.seguridad import obtener_empresa_administrable
-from django.contrib.auth.decorators import login_required
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 
 
 @login_required
+@require_GET
 def listar_cuentas_bancarias(request):
     """
     Devuelve el ABM de cuentas bancarias correspondiente
@@ -17,10 +22,12 @@ def listar_cuentas_bancarias(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     cuentas = CuentaBancaria.objects.filter(
         empresa=empresa,
@@ -72,22 +79,13 @@ def listar_cuentas_bancarias(request):
 
 
 @login_required
+@require_POST
 def guardar_cuenta_bancaria(request):
     """
     Crea una cuenta bancaria para la empresa activa.
     Si existe una cuenta equivalente inactiva,
     la reactiva en lugar de crear un duplicado.
     """
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
 
     empresa_id = request.POST.get(
         "empresa"
@@ -154,10 +152,12 @@ def guardar_cuenta_bancaria(request):
             "mensaje": "Seleccione una moneda válida."
         })
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     try:
 
@@ -232,30 +232,23 @@ def guardar_cuenta_bancaria(request):
 
 
 @login_required
+@require_POST
 def modificar_cuenta_bancaria(request):
     """
     Modifica una cuenta bancaria activa perteneciente
     a la empresa indicada.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     cuenta_id = request.POST.get(
         "cuenta"
@@ -400,30 +393,23 @@ def modificar_cuenta_bancaria(request):
 
 
 @login_required
+@require_POST
 def eliminar_cuenta_bancaria(request):
     """
     Realiza la baja lógica de una cuenta bancaria.
     No elimina físicamente el registro.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     cuenta_id = request.POST.get(
         "cuenta"
@@ -461,30 +447,23 @@ def eliminar_cuenta_bancaria(request):
 
 
 @login_required
+@require_POST
 def reactivar_cuenta_bancaria(request):
     """
     Reactiva una cuenta bancaria inactiva y permite
     actualizar sus datos antes de volver a utilizarla.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     cuenta_id = request.POST.get(
         "cuenta"

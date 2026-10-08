@@ -355,6 +355,84 @@ class SeguridadMaestrosEmpresaTests(TestCase):
         self.cuenta_ajena.refresh_from_db()
         self.assertEqual(self.cuenta_ajena.nombre, "CUENTA AJENA")
 
+    def test_cuentas_bancarias_exigen_metodo_http_correcto(self):
+        self.client.force_login(self.propietario)
+
+        respuesta_get_mutacion = self.client.get(
+            reverse("guardar_cuenta_bancaria"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_get_mutacion.status_code, 405)
+
+        respuesta_post_listado = self.client.post(
+            reverse("listar_cuentas_bancarias"),
+            {"empresa": self.empresa.pk},
+        )
+        self.assertEqual(respuesta_post_listado.status_code, 405)
+
+    def test_admin_centro_no_administra_cuentas_bancarias(self):
+        admin_centro = User.objects.create_user(
+            username="seg_cuentas_admin_centro",
+            password="prueba123",
+        )
+        AsignacionUsuarioEmpresa.objects.create(
+            empresa=self.empresa,
+            usuario=admin_centro,
+            jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
+            centro_operativo=self.centro,
+            activo=True,
+        )
+
+        self.client.force_login(admin_centro)
+
+        respuesta = self.client.get(
+            reverse("listar_cuentas_bancarias"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_superusuario_conserva_administracion_de_cuentas_bancarias(self):
+        superusuario = User.objects.create_superuser(
+            username="seg_cuentas_super",
+            email="seg-cuentas-super@example.com",
+            password="prueba123",
+        )
+        self.client.force_login(superusuario)
+
+        respuesta = self.client.get(
+            reverse("listar_cuentas_bancarias"),
+            {"empresa": self.empresa.pk},
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_cuenta_nueva_rechaza_banco_de_empresa_ajena(self):
+        self.client.force_login(self.propietario)
+
+        respuesta = self.client.post(
+            reverse("guardar_cuenta_bancaria"),
+            {
+                "empresa": self.empresa.pk,
+                "banco": self.banco_ajeno.pk,
+                "nombre": "CUENTA CON BANCO AJENO",
+                "tipo_cuenta": "CuentaCorriente",
+                "moneda": "ARS",
+                "numero_cuenta": "",
+                "cbu": "",
+                "alias": "",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.json()["ok"])
+        self.assertFalse(
+            CuentaBancaria.objects.filter(
+                empresa=self.empresa,
+                nombre="CUENTA CON BANCO AJENO",
+            ).exists()
+        )
+
     def test_admin_general_activo_puede_listar_maestros(self):
         self.client.force_login(self.admin_general)
 
