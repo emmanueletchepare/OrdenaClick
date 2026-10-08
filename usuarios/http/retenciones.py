@@ -1,12 +1,17 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import Retencion
-from usuarios.services.seguridad import obtener_empresa_administrable
-from django.contrib.auth.decorators import login_required
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 
 
 @login_required
+@require_GET
 def listar_retenciones(request):
     """
     Devuelve el ABM y el listado de retenciones activas
@@ -18,10 +23,12 @@ def listar_retenciones(request):
     )
 
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     retenciones = (
@@ -76,6 +83,7 @@ def listar_retenciones(request):
 
 
 @login_required
+@require_POST
 def guardar_retencion(request):
     """
     Crea una retención nueva para una empresa.
@@ -83,17 +91,6 @@ def guardar_retencion(request):
     Si existe una retención inactiva con el mismo tipo,
     no crea un duplicado y solicita su reactivación.
     """
-
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
 
     empresa_id = request.POST.get(
         "empresa"
@@ -116,10 +113,12 @@ def guardar_retencion(request):
         })
 
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
 
     existente = (
@@ -207,31 +206,23 @@ def guardar_retencion(request):
 
 
 @login_required
+@require_POST
 def modificar_retencion(request):
     """
     Modifica una retención activa perteneciente
     a una empresa.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     retencion_id = request.POST.get(
         "retencion"
@@ -331,6 +322,7 @@ def modificar_retencion(request):
 
 
 @login_required
+@require_POST
 def eliminar_retencion(request):
     """
     Desactiva lógicamente una retención.
@@ -339,25 +331,16 @@ def eliminar_retencion(request):
     referencias históricas de pagos.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     retencion_id = request.POST.get(
         "retencion"
@@ -399,31 +382,23 @@ def eliminar_retencion(request):
 
 
 @login_required
+@require_POST
 def reactivar_retencion(request):
     """
     Reactiva una retención previamente desactivada
     y permite actualizar sus datos.
     """
 
-    if request.method != "POST":
-
-        return JsonResponse(
-            {
-                "ok": False,
-                "mensaje": "Método no permitido."
-            },
-            status=405
-        )
-
-
     empresa_id = request.POST.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    contexto = exigir_capacidad_empresa(
         request.user,
         empresa_id,
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
     )
+    empresa = contexto.empresa
 
     retencion_id = request.POST.get(
         "retencion"

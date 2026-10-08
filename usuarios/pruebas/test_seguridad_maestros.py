@@ -507,6 +507,74 @@ class SeguridadMaestrosEmpresaTests(TestCase):
             ).exists()
         )
 
+    def test_retenciones_y_centros_exigen_metodo_http_correcto(self):
+        self.client.force_login(self.propietario)
+
+        casos = (
+            ("guardar_retencion", "listar_retenciones"),
+            ("guardar_centro_operativo", "listar_centros_operativos"),
+        )
+
+        for mutacion, listado in casos:
+            with self.subTest(mutacion=mutacion):
+                respuesta = self.client.get(
+                    reverse(mutacion),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 405)
+
+            with self.subTest(listado=listado):
+                respuesta = self.client.post(
+                    reverse(listado),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 405)
+
+    def test_admin_centro_no_administra_retenciones_ni_centros(self):
+        admin_centro = User.objects.create_user(
+            username="seg_ret_cent_admin_centro",
+            password="prueba123",
+        )
+        AsignacionUsuarioEmpresa.objects.create(
+            empresa=self.empresa,
+            usuario=admin_centro,
+            jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
+            centro_operativo=self.centro,
+            activo=True,
+        )
+
+        self.client.force_login(admin_centro)
+
+        for nombre_url in (
+            "listar_retenciones",
+            "listar_centros_operativos",
+        ):
+            with self.subTest(url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 403)
+
+    def test_superusuario_conserva_retenciones_y_centros(self):
+        superusuario = User.objects.create_superuser(
+            username="seg_ret_cent_super",
+            email="seg-ret-cent-super@example.com",
+            password="prueba123",
+        )
+        self.client.force_login(superusuario)
+
+        for nombre_url in (
+            "listar_retenciones",
+            "listar_centros_operativos",
+        ):
+            with self.subTest(url=nombre_url):
+                respuesta = self.client.get(
+                    reverse(nombre_url),
+                    {"empresa": self.empresa.pk},
+                )
+                self.assertEqual(respuesta.status_code, 200)
+
     def test_admin_general_activo_puede_listar_maestros(self):
         self.client.force_login(self.admin_general)
 
