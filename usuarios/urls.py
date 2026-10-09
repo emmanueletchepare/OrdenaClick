@@ -154,7 +154,14 @@ from .http.empresa_backup import (
     importar_empresa_wizard,
 )
 
+from .http.documentos_privados import descargar_documento_empresa
+
 urlpatterns = [
+    path(
+        "empresa/<int:empresa_id>/documentos/<str:campo>/",
+        descargar_documento_empresa,
+        name="descargar_documento_empresa",
+    ),
 
     # =========================================
     # ACCESO / PERFILES

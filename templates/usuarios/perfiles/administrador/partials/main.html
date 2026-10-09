@@ -415,7 +415,7 @@ Fecha:
 </div>
 
 <a
-href="{{ empresa_actual.estatuto.url }}"
+href="{% url "descargar_documento_empresa" empresa_actual.id "estatuto" %}"
 target="_blank"
 class="sidebar-btn"
 style="
@@ -496,7 +496,7 @@ Fecha:
 </div>
 
 <a
-href="{{ empresa_actual.acta.url }}"
+href="{% url "descargar_documento_empresa" empresa_actual.id "acta" %}"
 target="_blank"
 class="sidebar-btn"
 style="
@@ -579,7 +579,7 @@ Fecha:
 </div>
 
 <a
-href="{{ empresa_actual.designacion.url }}"
+href="{% url "descargar_documento_empresa" empresa_actual.id "designacion" %}"
 target="_blank"
 class="sidebar-btn"
 style="
