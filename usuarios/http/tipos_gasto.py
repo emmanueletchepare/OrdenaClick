@@ -3,7 +3,10 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 
 from usuarios.models import Proveedor, TipoGasto, TipoGastoProveedor
-from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 from django.contrib.auth.decorators import login_required
 
 
@@ -44,14 +47,17 @@ def listar_tipos_gasto(request):
     Devuelve el ABM de tipos de gasto correspondiente a la empresa activa.
     """
 
+    if request.method != "GET":
+        return JsonResponse({"ok": False, "mensaje": "MÃ©todo no permitido."}, status=405)
     empresa_id = request.GET.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     tipos_gasto = (
         TipoGasto.objects
@@ -129,10 +135,11 @@ def guardar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     if not nombre:
 
@@ -251,10 +258,11 @@ def modificar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     if not nombre:
 
@@ -361,10 +369,11 @@ def eliminar_tipo_gasto(request):
         "tipo_gasto"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     try:
 
@@ -415,10 +424,11 @@ def reactivar_tipo_gasto(request):
         "tipo_gasto"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     try:
 

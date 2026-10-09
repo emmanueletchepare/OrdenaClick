@@ -6,7 +6,10 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 
 from usuarios.models import Proveedor
-from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.capacidades import (
+    CAPACIDAD_EMPRESA_ADMINISTRAR,
+    exigir_capacidad_empresa,
+)
 from django.contrib.auth.decorators import login_required
 
 
@@ -133,14 +136,17 @@ def validar_datos_proveedor(datos):
 @login_required
 def listar_proveedores(request):
 
+    if request.method != "GET":
+        return JsonResponse({"ok": False, "mensaje": "MÃ©todo no permitido."}, status=405)
     empresa_id = request.GET.get(
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     proveedores = Proveedor.objects.filter(
         empresa=empresa,
@@ -193,10 +199,11 @@ def guardar_proveedor(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     datos = datos_proveedor_request(
         request
@@ -309,10 +316,11 @@ def modificar_proveedor(request):
         "proveedor"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     try:
 
@@ -403,10 +411,11 @@ def eliminar_proveedor(request):
         "proveedor"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     try:
 
@@ -453,10 +462,11 @@ def reactivar_proveedor(request):
         "proveedor"
     )
 
-    empresa = obtener_empresa_administrable(
+    empresa = exigir_capacidad_empresa(
         request.user,
         empresa_id,
-    )
+        CAPACIDAD_EMPRESA_ADMINISTRAR,
+    ).empresa
 
     try:
 
