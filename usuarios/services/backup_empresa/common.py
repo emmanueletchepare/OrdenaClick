@@ -95,10 +95,21 @@ def import_root():
 def cleanup_stale_imports():
     root = import_root()
     cutoff = time.time() - IMPORT_TTL_SECONDS
+    # Nunca borrar archivos ajenos ni seguir enlaces simbolicos en temporales.
+    patron = re.compile(
+        r"^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}"
+        r"(?:\.zip|-(?:estatuto|acta|designacion)\.bin)$"
+    )
     for name in os.listdir(root):
+        if not patron.fullmatch(name):
+            continue
         path = os.path.join(root, name)
         try:
-            if os.path.isfile(path) and os.path.getmtime(path) < cutoff:
+            if (
+                not os.path.islink(path)
+                and os.path.isfile(path)
+                and os.path.getmtime(path) < cutoff
+            ):
                 os.remove(path)
         except OSError:
             pass
