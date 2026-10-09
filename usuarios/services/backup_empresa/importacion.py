@@ -37,17 +37,24 @@ def guardar_upload_temporal(upload):
     token = str(uuid.uuid4())
     path = import_path(token)
     total = 0
-    with open(path, "wb") as target:
-        for chunk in upload.chunks():
-            total += len(chunk)
-            if total > MAX_UPLOAD_BYTES:
-                target.close()
-                try:
-                    os.remove(path)
-                except OSError:
-                    pass
-                raise BackupEmpresaError("El archivo supera el tamaño máximo permitido para importación.")
-            target.write(chunk)
+    # O_EXCL impide sobrescribir archivos existentes, incluso enlaces simbolicos.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as target:
+            for chunk in upload.chunks():
+                total += len(chunk)
+                if total > MAX_UPLOAD_BYTES:
+                    raise BackupEmpresaError(
+                        "El archivo supera el tamaño máximo permitido para importación."
+                    )
+                target.write(chunk)
+    except BaseException:
+        # No conservar ZIP incompleto ante un error o upload interrumpido.
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        raise
     return token
 
 
