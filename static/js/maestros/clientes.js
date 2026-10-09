@@ -328,10 +328,17 @@ async function autocompletarClienteArca(){
     const formulario =
         new FormData();
 
+    const inputEmpresa = document.getElementById("empresaActiva");
+    if(!inputEmpresa || !inputEmpresa.value){
+        alert("No hay una empresa activa seleccionada.");
+        return;
+    }
+
     formulario.append(
         "cuit",
         cuit
     );
+    formulario.append("empresa", inputEmpresa.value);
 
 
     const textoOriginal =

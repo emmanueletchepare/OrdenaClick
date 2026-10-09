@@ -141,6 +141,9 @@ def listar_clientes(request):
     Incluye los Centros Operativos activos de la misma Empresa
     para permitir el alta y la edición del Cliente.
     """
+    if request.method != "GET":
+        return JsonResponse({"ok": False, "mensaje": "Método no permitido."}, status=405)
+
     empresa_id = request.GET.get("empresa")
 
     try:
@@ -239,6 +242,23 @@ def autocompletar_cliente_arca(request):
             "ok": False,
             "mensaje": "Método no permitido.",
         }, status=405)
+
+    empresa_id = request.POST.get("empresa")
+    try:
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
+        )
+        exigir_capacidad_empresa(
+            request.user,
+            empresa_id,
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        )
+    except PermissionDenied:
+        return JsonResponse({
+            "ok": False,
+            "mensaje": "No tiene permiso para operar sobre esta empresa.",
+        }, status=403)
 
     cuit = re.sub(
         r"\D",
