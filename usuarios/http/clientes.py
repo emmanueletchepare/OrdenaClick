@@ -144,14 +144,16 @@ def listar_clientes(request):
     empresa_id = request.GET.get("empresa")
 
     try:
-        from usuarios.services.seguridad import (
-            obtener_empresa_autorizada,
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
         )
 
-        empresa = obtener_empresa_autorizada(
+        empresa = exigir_capacidad_empresa(
             request.user,
             empresa_id,
-        )
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        ).empresa
 
     except PermissionDenied:
         return JsonResponse({
@@ -306,14 +308,16 @@ def guardar_cliente(request):
     empresa_id = request.POST.get("empresa")
 
     try:
-        from usuarios.services.seguridad import (
-            obtener_empresa_autorizada,
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
         )
 
-        empresa = obtener_empresa_autorizada(
+        empresa = exigir_capacidad_empresa(
             request.user,
             empresa_id,
-        )
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        ).empresa
     except PermissionDenied:
         return JsonResponse({
             "ok": False,
@@ -448,14 +452,16 @@ def modificar_cliente(request):
     cliente_id = request.POST.get("cliente")
 
     try:
-        from usuarios.services.seguridad import (
-            obtener_empresa_autorizada,
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
         )
 
-        empresa = obtener_empresa_autorizada(
+        empresa = exigir_capacidad_empresa(
             request.user,
             empresa_id,
-        )
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        ).empresa
     except PermissionDenied:
         return JsonResponse({
             "ok": False,
@@ -571,14 +577,16 @@ def eliminar_cliente(request):
     cliente_id = request.POST.get("cliente")
 
     try:
-        from usuarios.services.seguridad import (
-            obtener_empresa_autorizada,
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
         )
 
-        empresa = obtener_empresa_autorizada(
+        empresa = exigir_capacidad_empresa(
             request.user,
             empresa_id,
-        )
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        ).empresa
     except PermissionDenied:
         return JsonResponse({
             "ok": False,
@@ -624,14 +632,16 @@ def reactivar_cliente(request):
     cliente_id = request.POST.get("cliente")
 
     try:
-        from usuarios.services.seguridad import (
-            obtener_empresa_autorizada,
+        from usuarios.services.capacidades import (
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            exigir_capacidad_empresa,
         )
 
-        empresa = obtener_empresa_autorizada(
+        empresa = exigir_capacidad_empresa(
             request.user,
             empresa_id,
-        )
+            CAPACIDAD_EMPRESA_ADMINISTRAR,
+        ).empresa
     except PermissionDenied:
         return JsonResponse({
             "ok": False,
