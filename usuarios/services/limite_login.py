@@ -11,6 +11,8 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Case, DateTimeField, F, PositiveIntegerField, Value, When
+from django.db.models.functions import Least
 from django.utils import timezone
 
 from usuarios.modelo_intentos_login import IntentoLoginOrigen
@@ -20,16 +22,26 @@ MAX_FALLOS = 25
 VENTANA = timedelta(minutes=10)
 
 
+def _ip_o_none(value):
+    try:
+        return ipaddress.ip_address(value or '').compressed
+    except (ValueError, TypeError):
+        return None
+
+
 def _origen(request):
-    remoto = ipaddress.ip_address(request.META.get('REMOTE_ADDR', '')).compressed
+    # Nunca aceptar una IP arbitraria del cliente por cabeceras reenviadas.
+    remoto = _ip_o_none(request.META.get('REMOTE_ADDR'))
     confiables = getattr(settings, 'ORDENACLICK_LOGIN_PROXIES_CONFIABLES', ())
-    if remoto in confiables:
+    if remoto and remoto in confiables:
         cabecera = request.META.get('HTTP_X_FORWARDED_FOR', '')
-        # Se toma el último valor: proxy directo debe agregar/sobrescribir
-        # la cabecera (se requiere sobrescritura en despliegue).
-        candidato = cabecera.split(',')[-1].strip() if cabecera else ''
-        if candidato:
-            remoto = ipaddress.ip_address(candidato).compressed
+        # Usar sólo el último salto si el proxy directo está autorizado.
+        candidato = cabecera.split(',')[-1].strip() if isinstance(cabecera, str) and cabecera else ''
+        origen_proxy = _ip_o_none(candidato)
+        if origen_proxy:
+            remoto = origen_proxy
+    # Una IP ausente o inválida comparte un bucket restrictivo, nunca libera el límite.
+    remoto = remoto or 'origen-desconocido'
     return hmac.new(settings.SECRET_KEY.encode(), remoto.encode(), hashlib.sha256).hexdigest()
 
 
@@ -42,18 +54,26 @@ def bloqueado(request):
 def registrar_fallo(request):
     origen = _origen(request)
     ahora = timezone.now()
+    # El índice unique sobre origen garantiza una única fila entre procesos.
+    # get_or_create maneja el alta concurrente; el incremento se hace en SQL.
     with transaction.atomic():
         item, _ = IntentoLoginOrigen.objects.get_or_create(
             origen=origen,
             defaults={'inicio_ventana': ahora, 'fallos': 0},
         )
-        # PostgreSQL bloquea la fila para serializar contadores concurrentes.
-        item = IntentoLoginOrigen.objects.select_for_update().get(pk=item.pk)
-        if item.inicio_ventana <= ahora - VENTANA:
-            item.inicio_ventana = ahora
-            item.fallos = 0
-        item.fallos = min(item.fallos + 1, MAX_FALLOS)
-        item.save(update_fields=['inicio_ventana', 'fallos'])
+        # Un UPDATE atómico evita perder incrementos durante intentos simultáneos.
+        IntentoLoginOrigen.objects.filter(pk=item.pk).update(
+            inicio_ventana=Case(
+                When(inicio_ventana__lte=ahora - VENTANA, then=Value(ahora)),
+                default=F('inicio_ventana'),
+                output_field=DateTimeField(),
+            ),
+            fallos=Case(
+                When(inicio_ventana__lte=ahora - VENTANA, then=Value(1)),
+                default=Least(F('fallos') + Value(1), Value(MAX_FALLOS)),
+                output_field=PositiveIntegerField(),
+            ),
+        )
 
 
 def limpiar_exito(request):
