@@ -1,9 +1,11 @@
 # OrdenaClick — Rumbo y estado actual
 
-**Última actualización:** 08/10/2026
+**Última actualización:** 10/10/2026
 **Objetivo operativo:** llegar a una Beta usable, estable y segura durante noviembre de 2026.
 
 Este documento es el punto de entrada para entender qué es OrdenaClick, qué estamos construyendo ahora y qué queda deliberadamente para después.
+
+**Corte Base Server (10/10/2026):** B1 (`7b67b28`) y B2 (`5d68cfb`) publicados. Sus 16 pruebas HTTP/financieras pasaron también en la instalación de casa; migración `usuarios.0041` aplicada y `manage.py check` sin observaciones. Siguen pendientes auditoría exhaustiva de rutas, concurrencia real con PostgreSQL, infraestructura de producción y recorrido visual integral posterior al cierre de seguridad. Los respaldos SQLite locales de casa no se alteran.
 
 ## 1. Qué es OrdenaClick
 
