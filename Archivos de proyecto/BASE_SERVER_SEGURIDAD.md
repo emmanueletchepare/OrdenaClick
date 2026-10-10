@@ -3,6 +3,16 @@
 **Fecha de decisión:** 08/10/2026
 **Estado:** rumbo obligatorio antes de retomar el desarrollo funcional intensivo.
 
+## Estado de ejecución al 10/10/2026
+
+**EN CURSO.** Esta hoja de ruta no certifica por sí misma que OrdenaClick sea seguro para Internet.
+
+Cerrados y publicados: registro con validación de contraseña (A1 `3b30b60`); rate limiting de login (A2 `ded0e90`); cambio de contraseña con comprobación de actual y preservación de datos ante errores (A3 `62fba91`); manejo de IP inválida y actualización atómica de contador (A4 `1296e26`). A3: 10 tests y verificación visual; A2/A4: 15 tests locales aprobados. PostgreSQL y concurrencia multiproceso **sin verificar**.
+
+Existe `ordenaclick/settings_production.py` como configuración separada; **no** hay despliegue validado. Quedan pendientes: prueba detrás de proxy real, recuperación de cuenta, política de sesión y pruebas de caducidad, errores visibles del login, verificación de correo según alcance, auditoría/rate limiting de registro, archivos privados, todas las rutas/capacidades, logging, CSP, dependencias, backups adversariales, idempotencia financiera y pruebas `check --deploy`.
+
+**Precedencia de decisiones de producto:** no modificar UX, navegación, botones o flujo en nombre de la seguridad sin autorización explícita. Ante validaciones, preservar todos los datos no sensibles ingresados; no repoblar passwords. Respetar navegación contextual `[+]`. La reautenticación para revelar secretos empresariales descripta en la sección 7 es una **meta pendiente no autorizada para implementación** por decisión expresa del propietario; no introducirla unilateralmente. Se preserva el acceso especial del superusuario indicado en la sección 3.
+
 ## 1. Objetivo
 
 OrdenaClick continuará su desarrollo sobre una base pensada desde ahora como producto SaaS real, expuesto a Internet, multiusuario y multiempresa.

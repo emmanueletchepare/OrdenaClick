@@ -159,6 +159,21 @@ Por decisión vigente, el superusuario conserva por ahora acceso a Empresas. Má
 
 Al cerrar Base Server se retoma REGISTROS como prioridad funcional Beta.
 
+## 6.2. Avance verificado de Base Server — 10/10/2026
+
+Estado: **EN CURSO**, no cerrada ni autorizada para Internet.
+
+- A1, validación de contraseñas en registro: cerrado (`3b30b60`).
+- A2, límite de intentos de login por origen y ventana: cerrado (`ded0e90`).
+- A3, cambio de contraseña con contraseña actual, validación de nueva contraseña, rechazo si es igual y conservación de datos no sensibles ante errores: cerrado (`62fba91`), 10 tests y pruebas visuales confirmadas.
+- A4, robustez del contador de login ante IP inválida y actualizaciones atómicas: cerrado (`1296e26`), 15 tests de A2/A4 aprobados localmente. **No** equivale a prueba de concurrencia real en PostgreSQL.
+- Configuración de producción separada (`ordenaclick/settings_production.py`), con PostgreSQL, HTTPS y almacenamiento privado: existe como base; falta validación de despliegue.
+- Se avanzó en autorizaciones por Empresa, archivos legales privados y backup temporal; **no** equivalen a auditoría final de todas las rutas ni de todos los archivos.
+
+Pendientes relevantes: recuperación de contraseña, política y pruebas de sesión, avisos de error no visibles en la plantilla actual del login, verificación de correo según alcance, registro/rate limiting y auditoría de eventos sensibles, proxy confiable y concurrencia real con PostgreSQL, rutas privadas, uploads, secretos, cabeceras/CSP, logging, finanzas e idempotencia, Backup adversarial, dependencias y `check --deploy`.
+
+**Decisión de producto:** seguridad y refactors no autorizan cambios visuales, botones, navegación ni flujos. Requieren acuerdo explícito. Un error de validación conserva los datos no sensibles ingresados; la contraseña nunca se repuebla. Mantener el retorno contextual `[+]` sin perder estado. La reautenticación para revelar claves empresariales **no está autorizada actualmente**: no implementarla por iniciativa propia aunque figure como objetivo histórico del documento de seguridad. Superusuario mantiene su excepción de acceso acordada.
+
 ## 7. Orden de trabajo desde este punto
 
 ### Prioridad 1 — cerrar riesgos activos reales

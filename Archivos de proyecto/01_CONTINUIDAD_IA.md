@@ -16,6 +16,25 @@ Antes de sugerir cambios:
 
 Código y tests prevalecen sobre documentación histórica.
 
+## Corte de continuidad — 10/10/2026
+
+Último commit publicado y confirmado: `1296e26` en `main`; árbol limpio al cerrar A4. Verificar HEAD y estado antes de aplicar un bloque nuevo.
+
+Autenticación implementada:
+
+- A1 `3b30b60`: validación de contraseñas de registro.
+- A2 `ded0e90`: límite de 25 fallos de login por origen durante 10 minutos; requiere migración `usuarios.0041_intentos_login_origen` en cada instalación.
+- A3 `62fba91`: contraseña actual requerida sólo al cambiar contraseña; no permite reutilizar la misma, preserva el resto de datos del formulario ante error; mantiene la sesión. 10 tests y UX manual verificados.
+- A4 `1296e26`: IP inválida controlada e incremento atómico del contador. 15 tests A2/A4 aprobados. Falta prueba real de concurrencia en PostgreSQL y configuración correcta de proxy.
+
+Pendientes: recuperación de cuentas, política/pruebas de sesiones, avisos de error ocultos en plantilla de login (la vista los genera, pero actualmente no se muestran), autenticación de producción completa y resto de Base Server. No confundir tests locales con certificación de servidor público.
+
+**Instrucción de UX prevalente:** nunca alterar aspecto, navegación, botones o flujos por seguridad sin aprobación del propietario. Evitar pérdida de datos ingresados ante error; no repoblar contraseñas. Preservar pila `[+]` y retorno al formulario tal como estaba. Los avisos del login requieren acuerdo sobre cambio de plantilla.
+
+**Gestión de Claves:** el propietario rechazó agregar reautenticación al revelado sin autorización expresa. El documento `BASE_SERVER_SEGURIDAD.md` describe una meta, no autoriza imponerla. Mantener la excepción superusuario vigente.
+
+**Cierre de bloque:** tests y revisión manual cuando corresponda; stage selectivo, commit/push; actualizar MD rectores en un commit documental separado cuando cambie el estado. No marcar Base Server cerrada por cierre de subbloques.
+
 ## 1. Etapa actual
 
 No agregar nuevas funciones de negocio todavía.
