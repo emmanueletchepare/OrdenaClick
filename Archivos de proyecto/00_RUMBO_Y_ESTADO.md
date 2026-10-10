@@ -5,7 +5,7 @@
 
 Este documento es el punto de entrada para entender qué es OrdenaClick, qué estamos construyendo ahora y qué queda deliberadamente para después.
 
-**Corte Base Server (10/10/2026):** B1 (`7b67b28`), B2 (`5d68cfb`) y B3 (`874cf1a`) publicados. B1+B2: 16 pruebas HTTP/financieras aprobadas en casa; B3: 8 pruebas de débito automático aprobadas en casa (24 pruebas en estos tres bloques); migración `usuarios.0041` aplicada y `manage.py check` sin observaciones. Siguen pendientes auditoría exhaustiva de rutas, concurrencia real con PostgreSQL, infraestructura de producción y recorrido visual integral posterior al cierre de seguridad. Los respaldos SQLite locales de casa no se alteran.
+**Corte Base Server (10/10/2026):** B1 (`7b67b28`), B2 (`5d68cfb`), B3 (`874cf1a`) y B4 (`95847d4`) publicados. B1+B2: 16 pruebas HTTP/financieras aprobadas en casa; B3: 8 pruebas de débito automático aprobadas en casa (24 pruebas en B1–B3); B4: 4 pruebas de eliminación segura de Pagos aprobadas en casa (28 en B1–B4); migración `usuarios.0041` aplicada y `manage.py check` sin observaciones. Siguen pendientes auditoría exhaustiva de rutas, concurrencia real con PostgreSQL, infraestructura de producción y recorrido visual integral posterior al cierre de seguridad. Los respaldos SQLite locales de casa no se alteran.
 
 ## 1. Qué es OrdenaClick
 
