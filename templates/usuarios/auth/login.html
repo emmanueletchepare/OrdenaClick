@@ -87,6 +87,17 @@
 
         /* FORM */
 
+        .login-error{
+            margin-bottom:18px;
+            padding:12px 14px;
+            border:1px solid #7f3b3b;
+            border-radius:10px;
+            background:#281c21;
+            color:#f9c4c4;
+            font-size:14px;
+            line-height:1.5;
+        }
+
         .form-group{
             margin-bottom:18px;
         }
@@ -223,6 +234,10 @@
                 Ingresá al sistema utilizando tu usuario y contraseña.
             </div>
 
+            {% if error %}
+            <div class="login-error" role="alert">{{ error }}</div>
+            {% endif %}
+
             <form method="POST">
 
                 {% csrf_token %}
@@ -236,6 +251,8 @@
                     <input
                         type="text"
                         name="username"
+                        value="{{ username|default:'' }}"
+                        autocomplete="username"
                         placeholder="Ingresá tu usuario"
                         class="input-box"
                     >

@@ -22,7 +22,7 @@ def login_view(request):
         password = request.POST.get("password") or ""
 
         if bloqueado(request):
-            return render(request, "usuarios/auth/login.html", {"error": "Demasiados intentos de acceso. Intentá nuevamente en unos minutos."})
+            return render(request, "usuarios/auth/login.html", {"error": "Demasiados intentos de acceso. Intentá nuevamente en unos minutos.", "username": username})
 
         user = authenticate(
             request,
@@ -55,7 +55,7 @@ def login_view(request):
     return render(
         request,
         "usuarios/auth/login.html",
-        {"error": error}
+        {"error": error, "username": (request.POST.get("username") or "").strip() if request.method == "POST" else ""}
     )
 
 
