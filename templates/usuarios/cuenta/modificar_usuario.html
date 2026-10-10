@@ -347,7 +347,7 @@
                             type="text"
                             name="nombre"
                             class="input"
-                            value="{{ perfil.nombre }}"
+                            value="{{ valores_formulario.nombre }}"
                             placeholder="Nombre"
                             required
                         >
@@ -362,7 +362,7 @@
                             type="text"
                             name="apellido"
                             class="input"
-                            value="{{ perfil.apellido }}"
+                            value="{{ valores_formulario.apellido }}"
                             placeholder="Apellido"
                             required
                         >
@@ -377,7 +377,7 @@
                             type="email"
                             name="email"
                             class="input"
-                            value="{{ user.email }}"
+                            value="{{ valores_formulario.email }}"
                             placeholder="Correo electrónico"
                             required
                         >
@@ -392,7 +392,7 @@
                             type="text"
                             name="telefono_personal"
                             class="input"
-                            value="{{ perfil.telefono_personal }}"
+                            value="{{ valores_formulario.telefono_personal }}"
                             placeholder="Teléfono personal"
                         >
                     </div>
@@ -406,7 +406,7 @@
                             type="text"
                             name="telefono_laboral"
                             class="input"
-                            value="{{ perfil.telefono_laboral }}"
+                            value="{{ valores_formulario.telefono_laboral }}"
                             placeholder="Teléfono laboral"
                         >
                     </div>
@@ -420,8 +420,22 @@
                             type="text"
                             name="direccion_laboral"
                             class="input"
-                            value="{{ perfil.direccion_laboral }}"
+                            value="{{ valores_formulario.direccion_laboral }}"
                             placeholder="Dirección laboral"
+                        >
+                    </div>
+
+                    <div class="field field-full">
+                        <label class="label">
+                            Contraseña actual (solo si cambiás la contraseña)
+                        </label>
+
+                        <input
+                            type="password"
+                            name="password_actual"
+                            class="input"
+                            autocomplete="current-password"
+                            placeholder="Ingresá tu contraseña actual"
                         >
                     </div>
 

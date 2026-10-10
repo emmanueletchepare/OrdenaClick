@@ -1,5 +1,6 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -63,6 +64,7 @@ def modificar_usuario(request):
         apellido = (request.POST.get("apellido") or "").strip()
         email = (request.POST.get("email") or "").strip().lower()
         password = request.POST.get("password") or ""
+        password_actual = request.POST.get("password_actual") or ""
 
         if not nombre or not apellido or not email:
             error = "Nombre, apellido y correo electrónico son obligatorios."
@@ -73,6 +75,17 @@ def modificar_usuario(request):
                 validate_email(email)
             except ValidationError:
                 error = "Ingresá un correo electrónico válido."
+
+        if error is None and password:
+            if not password_actual or not request.user.check_password(password_actual):
+                error = "La contraseña actual es incorrecta."
+            elif request.user.check_password(password):
+                error = "La nueva contraseña debe ser distinta de la actual."
+            else:
+                try:
+                    validate_password(password, user=request.user)
+                except ValidationError as validacion:
+                    error = " ".join(validacion.messages)
 
         if error is None:
             request.user.first_name = nombre
@@ -92,13 +105,7 @@ def modificar_usuario(request):
             perfil.save()
 
             if password:
-                user = authenticate(
-                    request,
-                    username=request.user.username,
-                    password=password
-                )
-                if user is not None:
-                    login(request, user)
+                update_session_auth_hash(request, request.user)
 
             return redirect("home")
 
@@ -107,7 +114,15 @@ def modificar_usuario(request):
         "usuarios/cuenta/modificar_usuario.html",
         {
             "perfil": perfil,
-            "error": error
+            "error": error,
+            "valores_formulario": {
+                "nombre": (request.POST.get("nombre") or "") if request.method == "POST" else perfil.nombre,
+                "apellido": (request.POST.get("apellido") or "") if request.method == "POST" else perfil.apellido,
+                "email": (request.POST.get("email") or "") if request.method == "POST" else request.user.email,
+                "telefono_personal": (request.POST.get("telefono_personal") or "") if request.method == "POST" else perfil.telefono_personal,
+                "telefono_laboral": (request.POST.get("telefono_laboral") or "") if request.method == "POST" else perfil.telefono_laboral,
+                "direccion_laboral": (request.POST.get("direccion_laboral") or "") if request.method == "POST" else perfil.direccion_laboral,
+            },
         }
     )
 
