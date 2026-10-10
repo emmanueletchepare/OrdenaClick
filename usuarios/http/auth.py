@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.shortcuts import redirect, render
@@ -80,6 +81,18 @@ def registro_view(request):
                 validate_email(email)
             except ValidationError:
                 error = "Ingresá un correo electrónico válido."
+
+        if error is None:
+            candidato = User(
+                username=username,
+                email=email,
+                first_name=nombre,
+                last_name=apellido,
+            )
+            try:
+                validate_password(password, user=candidato)
+            except ValidationError as validacion:
+                error = " ".join(validacion.messages)
 
         if error is None:
             user = User.objects.create_user(
