@@ -18,7 +18,7 @@ Código y tests prevalecen sobre documentación histórica.
 
 ## Corte de continuidad — 10/10/2026
 
-Último commit publicado y confirmado: `6912dd0` en `main`, sincronizado en la computadora de casa el 10/10/2026. Verificar HEAD y estado antes de aplicar un bloque nuevo. Tres respaldos SQLite antiguos permanecen sin seguimiento en casa; conservarlos y no incorporarlos a Git.
+Último commit publicado y confirmado: `45ae87a` en `main`, sincronizado en la computadora de casa el 10/10/2026. Verificar HEAD y estado antes de aplicar un bloque nuevo. Tres respaldos SQLite antiguos permanecen sin seguimiento en casa; conservarlos y no incorporarlos a Git.
 
 Autenticación implementada:
 
@@ -27,9 +27,9 @@ Autenticación implementada:
 - A3 `62fba91`: contraseña actual requerida sólo al cambiar contraseña; no permite reutilizar la misma, preserva el resto de datos del formulario ante error; mantiene la sesión. 10 tests y UX manual verificados.
 - A4 `1296e26`: IP inválida controlada e incremento atómico del contador. 15 tests A2/A4 aprobados. Falta prueba real de concurrencia en PostgreSQL y configuración correcta de proxy.
 
-Desde A4 también publicados: mensajes de error de login y retención de usuario (`8c1fa5b`), `never_cache` al revelar claves empresariales (`a5062aa`), auditoría HTTP B1 (`7b67b28`, 8 tests) y auditoría financiera B2 (`5d68cfb`, 8 tests). B1+B2: 16/16 pruebas aprobadas en casa, luego de aplicar `usuarios.0041` y ejecutar `manage.py check` sin observaciones. B3 de débito automático (`874cf1a`): 8 pruebas HTTP adversariales aprobadas en casa; B4 de eliminación segura de Pagos (`95847d4`): 4 pruebas adversariales aprobadas en casa, incluido fallo simulado que no deja cambios parciales; B5 de lecturas financieras entre Empresas (`7eb847a`): 7 pruebas HTTP adversariales aprobadas en casa; B6 de inventario dinámico de rutas privadas (`6912dd0`): 2 pruebas aprobadas en casa; total B1–B6: 37 pruebas aprobadas en los bloques. No se cambió el flujo de revelación de claves.
+Desde A4 también publicados: mensajes de error de login y retención de usuario (`8c1fa5b`), `never_cache` al revelar claves empresariales (`a5062aa`), auditoría HTTP B1 (`7b67b28`, 8 tests) y auditoría financiera B2 (`5d68cfb`, 8 tests). B1+B2: 16/16 pruebas aprobadas en casa, luego de aplicar `usuarios.0041` y ejecutar `manage.py check` sin observaciones. B3 de débito automático (`874cf1a`): 8 pruebas HTTP adversariales aprobadas en casa; B4 de eliminación segura de Pagos (`95847d4`): 4 pruebas adversariales aprobadas en casa, incluido fallo simulado que no deja cambios parciales; B5 de lecturas financieras entre Empresas (`7eb847a`): 7 pruebas HTTP adversariales aprobadas en casa; B6 de inventario dinámico de rutas privadas (`6912dd0`): 2 pruebas aprobadas en casa; total B1–B6: 37 pruebas aprobadas en los bloques. B7 de sesiones y estados de acceso (`45ae87a`): 7 casos de test incorporados y publicados; verificar salida local antes de declarar 44/44. No se cambió el flujo de revelación de claves.
 
-Pendientes: recuperación de cuentas, política/pruebas de sesiones, proxy real, autenticación de producción completa, auditoría exhaustiva de rutas, concurrencia real con PostgreSQL, resto de Base Server y revisión visual integral tras terminar la seguridad. No confundir tests locales con certificación de servidor público.
+Pendientes: recuperación de cuentas, pruebas reales de caducidad de sesiones en navegador, proxy real, autenticación de producción completa, auditoría exhaustiva de rutas, concurrencia real con PostgreSQL, resto de Base Server y revisión visual integral tras terminar la seguridad. No confundir tests locales con certificación de servidor público.
 
 **Instrucción de UX prevalente:** nunca alterar aspecto, navegación, botones o flujos por seguridad sin aprobación del propietario. Evitar pérdida de datos ingresados ante error; no repoblar contraseñas. Preservar pila `[+]` y retorno al formulario tal como estaba. Los avisos del login ya fueron implementados sin rediseñar la plantilla; cualquier cambio futuro de UX requiere autorización.
 
