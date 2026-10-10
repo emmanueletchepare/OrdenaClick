@@ -42,8 +42,13 @@ class SeguridadHTTPB8Tests(TestCase):
             # Iniciar sesion sin exigir CSRF permite inspeccionar la cookie de sesion.
             usuario = User.objects.create_user(username='b8_cookie', password='ClaveSeguraB8!2026')
             cliente_sesion = Client()
-            cliente_sesion.force_login(usuario)
-            cookie = cliente_sesion.cookies['sessionid']
+            respuesta_login = cliente_sesion.post(reverse('login'), {
+                'username': 'b8_cookie',
+                'password': 'ClaveSeguraB8!2026',
+            })
+            self.assertEqual(respuesta_login.status_code, 302)
+            self.assertIn('sessionid', respuesta_login.cookies)
+            cookie = respuesta_login.cookies['sessionid']
             self.assertTrue(cookie['secure'])
             self.assertTrue(cookie['httponly'])
             self.assertEqual(cookie['samesite'], 'Lax')
