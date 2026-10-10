@@ -7,6 +7,7 @@ from usuarios.models import GestionClave
 from usuarios.services.seguridad import obtener_empresa_administrable
 from usuarios.seguridad_claves import cifrar_clave, descifrar_clave
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 
 
 # =========================================
@@ -276,6 +277,7 @@ def guardar_gestion_clave(request):
     })
 
 @login_required
+@never_cache
 def ver_gestion_clave(request):
 
     empresa_id = request.GET.get(
