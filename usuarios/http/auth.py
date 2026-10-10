@@ -7,6 +7,7 @@ from django.core.validators import validate_email
 from django.shortcuts import redirect, render
 
 from usuarios.models import PerfilUsuario
+from usuarios.services.limite_login import bloqueado, registrar_fallo, limpiar_exito
 
 
 def login_view(request):
@@ -20,6 +21,9 @@ def login_view(request):
         username = (request.POST.get("username") or "").strip()
         password = request.POST.get("password") or ""
 
+        if bloqueado(request):
+            return render(request, "usuarios/auth/login.html", {"error": "Demasiados intentos de acceso. Intentá nuevamente en unos minutos."})
+
         user = authenticate(
             request,
             username=username,
@@ -27,6 +31,7 @@ def login_view(request):
         )
 
         if user is None:
+            registrar_fallo(request)
             error = "Usuario o contraseña incorrectos."
         else:
             perfil, _ = PerfilUsuario.objects.get_or_create(
@@ -44,6 +49,7 @@ def login_view(request):
                 error = "Tu cuenta está pendiente de habilitación."
             else:
                 login(request, user)
+                limpiar_exito(request)
                 return redirect("home")
 
     return render(

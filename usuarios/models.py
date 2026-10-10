@@ -3327,3 +3327,7 @@ class PerfilUsuario(models.Model):
         """Devuelve el nombre visible del usuario."""
         nombre_completo = f"{self.nombre} {self.apellido}".strip()
         return nombre_completo or self.user.username
+
+
+# Modelo separado para limitación distribuida de intentos de acceso.
+from .modelo_intentos_login import IntentoLoginOrigen  # noqa: E402,F401
