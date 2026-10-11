@@ -69,6 +69,16 @@ MEDIA_ROOT = _media
 
 # El proxy/servidor no debe servir MEDIA_ROOT directamente: usar vistas autorizadas.
 
+# B13: los recursos publicos (CSS/JS) se recogen fuera del codigo y jamas
+# pueden compartir ubicacion con los documentos empresariales privados.
+_static = Path(_required('ORDENACLICK_STATIC_ROOT')).expanduser().resolve()
+if _static == BASE_DIR or BASE_DIR in _static.parents:
+    raise RuntimeError('STATIC_ROOT debe estar fuera del proyecto')
+if _static == _media or _static in _media.parents or _media in _static.parents:
+    raise RuntimeError('STATIC_ROOT y MEDIA_ROOT no pueden solaparse')
+STATIC_ROOT = _static
+
+
 # B12: observación CSP sin aplicar bloqueos a la UI heredada.
 MIDDLEWARE = [*MIDDLEWARE, "django.middleware.csp.ContentSecurityPolicyMiddleware"]
 SECURE_CSP_REPORT_ONLY = {

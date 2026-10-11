@@ -170,6 +170,7 @@ class ProteccionMediaB12Tests(SimpleTestCase):
             "ORDENACLICK_DB_PASSWORD": "dummy-not-real",
             "ORDENACLICK_DB_HOST": "127.0.0.1",
             "ORDENACLICK_PRIVATE_MEDIA_ROOT": str(Path(tempfile.gettempdir()) / "ordenaclick-b12-private"),
+            "ORDENACLICK_STATIC_ROOT": str(Path(tempfile.gettempdir()) / "ordenaclick-b12-static"),
             "ORDENACLICK_SMTP_HOST": "smtp.example.test",
             "ORDENACLICK_SMTP_USER": "dummy",
             "ORDENACLICK_SMTP_PASSWORD": "dummy-not-real",
