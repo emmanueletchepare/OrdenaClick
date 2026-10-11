@@ -90,36 +90,10 @@ def panel_admin(request):
             ):
                 return redirect('panel_admin')
 
-            empresa_reemplazar = request.session.get(
-                "empresa_reemplazar"
-            )
-
-            confirmar_reemplazo = request.session.get(
-                "confirmar_reemplazo"
-            )
-
-            if empresa_reemplazar and confirmar_reemplazo:
-
-                try:
-
-                    Empresa.objects.get(
-                        id=empresa_reemplazar
-                    ).delete()
-
-                except Empresa.DoesNotExist:
-
-                    pass
-
-                request.session.pop(
-                    "empresa_reemplazar",
-                    None
-                )
-
-                request.session.pop(
-                    "confirmar_reemplazo",
-                    None
-                )
-
+            # B11: el alta no puede borrar Empresas mediante sesiones legacy.
+            # El reemplazo autorizado usa exclusivamente Backup Empresa v1.
+            request.session.pop("empresa_reemplazar", None)
+            request.session.pop("confirmar_reemplazo", None)
 
             nueva_empresa = Empresa.objects.create(
 
