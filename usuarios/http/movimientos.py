@@ -64,6 +64,18 @@ def guardar_movimiento(request):
         )
 
 
+    from usuarios.services.adjuntos_financieros_b10a import (
+        validar_adjuntos_financieros,
+    )
+
+    try:
+        validar_adjuntos_financieros(request.FILES)
+    except ValueError as error:
+        return JsonResponse(
+            {"ok": False, "mensaje": str(error)},
+            status=400,
+        )
+
     try:
 
         # =========================================
@@ -1447,6 +1459,18 @@ def actualizar_movimiento(request):
             status=405,
         )
 
+
+    from usuarios.services.adjuntos_financieros_b10a import (
+        validar_adjuntos_financieros,
+    )
+
+    try:
+        validar_adjuntos_financieros(request.FILES)
+    except ValueError as error:
+        return JsonResponse(
+            {"ok": False, "mensaje": str(error)},
+            status=400,
+        )
 
     empresa_id = (
         request.POST.get("empresa")
