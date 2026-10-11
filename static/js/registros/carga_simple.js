@@ -2546,6 +2546,8 @@ function limpiarPagoDebitoAutomaticoRegistro(){
  * pero el backend vuelve a validar Empresa, saldo,
  * medios de pago y concurrencia antes de persistir.
  */
+let _b9bUltimaOperacionPago = null;
+
 async function registrarPagoManualEdicion(){
 
     const contenido =
@@ -2616,6 +2618,15 @@ async function registrarPagoManualEdicion(){
     }
 
 
+    // Mantener clave al reintentar el mismo borrador, cambiarla si cambia.
+    const identidad = JSON.stringify({
+        empresa: empresa.value, movimiento: movimientoId, pagos: pagosPreparados,
+        archivos: archivosPagos.map(({clave, archivo}) => [clave, archivo.name, archivo.size, archivo.lastModified]),
+    });
+    if (!_b9bUltimaOperacionPago || _b9bUltimaOperacionPago.identidad !== identidad) {
+        _b9bUltimaOperacionPago = { identidad, clave: crypto.randomUUID() };
+    }
+
     const datos =
         new FormData();
 
@@ -2638,6 +2649,7 @@ async function registrarPagoManualEdicion(){
             pagosPreparados
         )
     );
+    datos.append("clave_idempotencia", _b9bUltimaOperacionPago.clave);
 
 
     for(
@@ -2696,6 +2708,7 @@ async function registrarPagoManualEdicion(){
          * Recién ahora descartamos el borrador.
          */
         pagosRegistro = [];
+        _b9bUltimaOperacionPago = null;
 
 
         alert(

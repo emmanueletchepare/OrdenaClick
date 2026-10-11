@@ -1,3 +1,26 @@
+import hashlib
+import json
+import uuid
+
+from django.http import JsonResponse
+from usuarios.models import Empresa, IdempotenciaPagoManual
+
+
+def _huella_pago_manual(request, pagos):
+    """Huella de contenido y adjuntos; restaura posición de archivos leídos."""
+    h = hashlib.sha256()
+    h.update(json.dumps(pagos, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+    for nombre in sorted(request.FILES):
+        for archivo in request.FILES.getlist(nombre):
+            h.update(nombre.encode("utf-8"))
+            h.update(archivo.name.encode("utf-8"))
+            h.update(str(archivo.size).encode("ascii"))
+            pos = archivo.tell()
+            for chunk in archivo.chunks():
+                h.update(chunk)
+            archivo.seek(pos)
+    return h.hexdigest()
+
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
@@ -409,6 +432,16 @@ def registrar_pago_manual_movimiento(request):
         )
 
 
+    clave_texto = (request.POST.get("clave_idempotencia") or "").strip()
+    clave = None
+    huella = None
+    if clave_texto:
+        try:
+            clave = uuid.UUID(clave_texto)
+        except (ValueError, AttributeError):
+            return JsonResponse({"ok": False, "mensaje": "Identificador de operación inválido."}, status=400)
+        huella = _huella_pago_manual(request, pagos)
+
     empresa = obtener_empresa_autorizada(
         request.user,
         empresa_id,
@@ -418,6 +451,19 @@ def registrar_pago_manual_movimiento(request):
     try:
 
         with transaction.atomic():
+
+            if clave is not None:
+                # Bloqueo de Empresa serializa las claves de pagos de su ámbito
+                # en PostgreSQL, antes de consultar el resultado persistido.
+                Empresa.objects.select_for_update().get(pk=empresa.pk)
+                anterior = IdempotenciaPagoManual.objects.filter(clave=clave).first()
+                if anterior is not None:
+                    if (anterior.empresa_id != empresa.pk or
+                        str(anterior.movimiento_id) != str(movimiento_id) or
+                        anterior.usuario_id != request.user.pk or
+                        anterior.huella != huella):
+                        return JsonResponse({"ok": False, "mensaje": "Identificador ya utilizado con otra operación."}, status=409)
+                    return JsonResponse(anterior.respuesta)
 
             movimiento = (
                 Movimiento.objects
@@ -622,7 +668,7 @@ def registrar_pago_manual_movimiento(request):
             )
 
 
-        return JsonResponse(
+            respuesta_final = JsonResponse(
             {
                 "ok": True,
                 "mensaje": (
@@ -664,6 +710,15 @@ def registrar_pago_manual_movimiento(request):
             }
         )
 
+
+            if clave is not None:
+                IdempotenciaPagoManual.objects.create(
+                    clave=clave, empresa=empresa, movimiento=movimiento,
+                    usuario=request.user, huella=huella,
+                    respuesta=json.loads(respuesta_final.content),
+                )
+
+        return respuesta_final
 
     except Exception:
 

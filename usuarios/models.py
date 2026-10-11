@@ -3331,3 +3331,14 @@ class PerfilUsuario(models.Model):
 
 # Modelo separado para limitación distribuida de intentos de acceso.
 from .modelo_intentos_login import IntentoLoginOrigen  # noqa: E402,F401
+
+
+class IdempotenciaPagoManual(models.Model):
+    """Resultado persistido de un envío de pagos manuales identificado."""
+    clave = models.UUIDField(unique=True)
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT)
+    movimiento = models.ForeignKey('Movimiento', on_delete=models.PROTECT)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    huella = models.CharField(max_length=64)
+    respuesta = models.JSONField()
+    creado = models.DateTimeField(auto_now_add=True)
