@@ -17,7 +17,7 @@ Este documento es el punto de entrada para entender qué es OrdenaClick, qué es
 - Medición y cuota futura por **Empresa**, planes/capacidad adicional y costo de proveedor, backups, tráfico y retención: **decisiones comerciales/infraestructura pendientes**, sin valores de cuota o precios aprobados. El límite por archivo **no equivale** a cuota total.
 - La compresión/optimización automática y elección de proveedor de objetos quedan para etapa posterior. No eliminar ni bloquear consulta de documentos históricos al alcanzar una cuota: los límites comerciales futuros afectan nuevas cargas.
 - Antes de un rechazo por upload inválido, preservar campos no sensibles del formulario; no alterar visual, navegación o botones sin aprobación. No introducir límites sin control previo de persistencia parcial.
-- **B10a aún EN CURSO**: queda cubrir documentos del panel Empresa, formatos reales, rutas privadas y controles completos; Base Server no certificada.
+- **B10a cerrado técnicamente en las rutas probadas; validación integral pendiente**: queda cubrir documentos del panel Empresa, formatos reales, rutas privadas y controles completos; Base Server no certificada.
 
 ## 1. Qué es OrdenaClick
 
@@ -304,3 +304,14 @@ Antes de abrir un bloque de trabajo debe responderse:
 7. ¿Evita desarrollar hoy infraestructura futura innecesaria?
 
 Si la respuesta es “no” a las primeras tres, probablemente no sea la tarea correcta ahora.
+
+## Actualización de continuidad B10a–B10c (11/10/2026)
+
+**Estado de Base Server: EN CURSO.** Los cierres siguientes son técnicos y se limitan al alcance probado; no certifican un servidor público ni una auditoría integral.
+
+- **B10a — cierre técnico en las rutas ensayadas.** Importación temporal protegida (`bb04ef2`); descargas privadas con pruebas (`d3936a5`); límite de 1 MiB para archivos ARCA (`c49324d`); límite de 20 MiB para adjuntos de Movimientos (`6f7d9d7`) y Pago manual (`07691d2`); documentos de Empresa validados (`7517ec7`). Se aprobaron las pruebas focalizadas y la verificación manual de UX del panel Empresa. **Pendiente fuera del alcance B10a probado:** validación profunda de contenido/formato, inventario exhaustivo de otras rutas de carga, acceso privado de punta a punta y configuración del almacenamiento productivo.
+- **B10b — cierre técnico de casos adversariales ensayados.** Validación de backup ZIP ante entradas adversariales (`aa7d64c`) y pruebas de reversión de archivos/restauración (`1222c66`). La ejecución focalizada concluyó **12/12 pruebas aprobadas**, incluyendo rollback. No equivale a ensayar almacenamiento externo, cifrado, retención ni recuperación real en infraestructura productiva.
+- **B10c — cierre técnico de dependencias en el entorno local.** Python 3.12.10, Django 6.0.9 y sqlparse 0.6.0; `pip check` y `manage.py check` sin observaciones; `pip-audit` reportó **0 vulnerabilidades conocidas** para el inventario auditado el 11/10/2026; **11/11 pruebas de regresión focalizadas aprobadas**. Versiones exactas registradas en `requirements.txt` (`33645d2`). La suite global se interrumpió por aparente bloqueo y **no debe presentarse como aprobada**; instalación reproducible por hashes y despliegue CI/productivo siguen pendientes.
+- **Último HEAD de referencia comprobado:** `33645d2` en `main`, sincronizado con `origin/main` antes de este cambio documental. Verificar el nuevo HEAD después de publicarlo.
+- **Protecciones de producto:** preservar sin cambios pantallas, estilos, navegación contextual `[+]`, botones, datos no sensibles ante errores, contraseñas no repobladas y la excepción vigente de superusuario. No introducir reautenticación para revelar claves de Empresa sin autorización expresa.
+- **Próximos pendientes Base Server:** revisión de rutas privadas y permisos/capacidades por Empresa; exposición de archivos y `/media/`; recuperación de cuenta y sesiones; logging/auditoría; configuración de producción detrás de proxy, cabeceras/CSP/HSTS, `check --deploy`, backups externos y recorrido visual final. No declarar Base Server certificada.
