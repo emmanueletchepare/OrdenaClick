@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import stat
 import uuid
@@ -102,15 +102,34 @@ def inspeccionar_backup(token, usuario):
             raise BackupEmpresaError("El ZIP contiene componentes no previstos por Backup Empresa v1.")
 
         manifest = _read_json(archive, "manifest.json")
+        if not isinstance(manifest, dict):
+            raise BackupEmpresaError("El manifest del backup tiene un formato inválido.")
         if manifest.get("format") != FORMAT_ID or manifest.get("version") != FORMAT_VERSION:
             raise BackupEmpresaError("La versión del backup no es compatible con esta instalación.")
 
-        expected = {entry.get("path"): entry for entry in manifest.get("entries", [])}
+        entries = manifest.get("entries")
+        if (
+            not isinstance(entries, list)
+            or any(
+                not isinstance(entry, dict)
+                or not isinstance(entry.get("path"), str)
+                or not isinstance(entry.get("sha256"), str)
+                or not isinstance(entry.get("size"), int)
+                for entry in entries
+            )
+        ):
+            raise BackupEmpresaError("El manifest contiene entradas inválidas.")
+        expected = {entry["path"]: entry for entry in entries}
+        if len(expected) != len(entries):
+            raise BackupEmpresaError("El manifest contiene entradas duplicadas.")
         if set(expected) != (names - {"manifest.json"}):
             raise BackupEmpresaError("El manifest no coincide con el contenido real del ZIP.")
 
         for entry_path, metadata in expected.items():
-            content = archive.read(entry_path)
+            try:
+                content = archive.read(entry_path)
+            except (zipfile.BadZipFile, EOFError, OSError) as error:
+                raise BackupEmpresaError("El ZIP contiene una entrada dañada.") from error
             if sha256_bytes(content) != metadata.get("sha256"):
                 raise BackupEmpresaError(f"Falló la validación de integridad de {entry_path}.")
             if len(content) != metadata.get("size"):
