@@ -23,6 +23,23 @@ from usuarios.services.seguridad_instalacion import (
 )
 
 
+MAX_CREDENCIAL_ARCA_BYTES = 1024 * 1024  # Certificados y claves PEM: 1 MiB por archivo.
+
+
+def _leer_credencial_arca_limitada(upload):
+    """Lee un certificado o clave ARCA sin aceptar cargas de tamaño ilimitado."""
+    if upload.size > MAX_CREDENCIAL_ARCA_BYTES:
+        raise ValueError("El certificado o clave ARCA supera el límite de 1 MiB.")
+    partes = []
+    total = 0
+    for fragmento in upload.chunks():
+        total += len(fragmento)
+        if total > MAX_CREDENCIAL_ARCA_BYTES:
+            raise ValueError("El certificado o clave ARCA supera el límite de 1 MiB.")
+        partes.append(fragmento)
+    return b"".join(partes)
+
+
 def _credenciales_arca_configuradas(
     ambiente,
 ):
@@ -331,15 +348,15 @@ def guardar_configuracion_arca_desarrollador(request):
         if certificado_homologacion:
             guardar_credenciales_arca(
                 AMBIENTE_HOMOLOGACION,
-                certificado_homologacion.read(),
-                clave_homologacion.read(),
+                _leer_credencial_arca_limitada(certificado_homologacion),
+                _leer_credencial_arca_limitada(clave_homologacion),
             )
 
         if certificado_produccion:
             guardar_credenciales_arca(
                 AMBIENTE_PRODUCCION,
-                certificado_produccion.read(),
-                clave_produccion.read(),
+                _leer_credencial_arca_limitada(certificado_produccion),
+                _leer_credencial_arca_limitada(clave_produccion),
             )
 
         guardar_configuracion_general_arca(
