@@ -49,6 +49,11 @@ from .http.caja import (
     nueva_cobranza,
 )
 
+from .http.caja_movimientos import (
+    vista_movimientos_caja,
+    registrar_movimiento_caja_http,
+)
+
 from .http.empresa_claves import (
     listar_gestion_claves,
     guardar_gestion_clave,
@@ -703,6 +708,19 @@ urlpatterns = [
         "caja/cobranzas/nueva/",
         nueva_cobranza,
         name="nueva_cobranza",
+    ),
+
+    # Caja 1: movimientos operativos de efectivo; autenticados y con alcance.
+    path(
+        "caja/movimientos/",
+        vista_movimientos_caja,
+        name="vista_movimientos_caja",
+    ),
+
+    path(
+        "caja/movimientos/registrar/",
+        registrar_movimiento_caja_http,
+        name="registrar_movimiento_caja",
     ),
 
     # =========================================

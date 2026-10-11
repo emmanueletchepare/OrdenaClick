@@ -1,0 +1,27 @@
+/* Caja 1: estilos acotados a la pantalla nueva; no modifican otras vistas. */
+#cajaMovimientosOperativos .caja-movimiento-aviso {
+    margin: 0.5rem 0 1rem;
+    font-size: 0.9rem;
+    opacity: 0.82;
+    line-height: 1.5;
+}
+#cajaMovimientosOperativos .caja-movimiento-concepto { grid-column: 1 / -1; }
+#cajaMovimientosOperativos .caja-movimiento-acciones {
+    display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; margin-top: 1rem;
+}
+#cajaMovimientosOperativos .caja-movimiento-mensaje {
+    min-height: 1.5em; margin: 0.5rem 0; font-weight: 600;
+}
+#cajaMovimientosOperativos .caja-movimiento-tabla-contenedor { width: 100%; overflow-x: auto; }
+#cajaMovimientosOperativos .caja-movimiento-tabla {
+    width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;
+}
+#cajaMovimientosOperativos .caja-movimiento-tabla th,
+#cajaMovimientosOperativos .caja-movimiento-tabla td {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.25); padding: 0.65rem 0.5rem;
+}
+#cajaMovimientosOperativos .caja-movimiento-numero { text-align: right; font-variant-numeric: tabular-nums; }
+#cajaMovimientosOperativos .caja-movimiento-paginacion {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem;
+}
+#cajaMovimientosOperativos [hidden] { display: none !important; }

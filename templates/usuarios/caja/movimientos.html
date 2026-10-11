@@ -1,0 +1,93 @@
+{% load l10n %}
+<section class="caja-modulo" id="cajaMovimientosOperativos">
+    <header class="caja-encabezado">
+        <div>
+            <h2>Movimientos de Caja</h2>
+            <p>{{ caja.centro_operativo.nombre }} — {{ caja.nombre }}</p>
+        </div>
+    </header>
+
+    <form id="cajaMovimientoFormulario" class="cobranza-form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="empresa" value="{{ empresa.pk }}">
+        <input type="hidden" name="caja" value="{{ caja.pk }}">
+        <input type="hidden" name="clave_idempotencia" value="{{ clave }}">
+        <section class="cobranza-card">
+            <div class="cobranza-card-titulo">Registrar entrada o salida de efectivo</div>
+            <p class="caja-movimiento-aviso">
+                Usá este formulario para movimientos manuales de efectivo.
+                Las cobranzas con cheques, los envíos a otra Caja y los movimientos bancarios
+                tienen circuitos separados para evitar duplicaciones.
+            </p>
+            <div class="cobranza-grid">
+                <div class="field">
+                    <label class="label" for="cajaMovFecha">Fecha</label>
+                    <input class="input-box" id="cajaMovFecha" type="date" name="fecha" value="{{ fecha_hoy|date:'Y-m-d' }}" required>
+                </div>
+                <div class="field">
+                    <label class="label" for="cajaMovTipo">Movimiento</label>
+                    <select class="input-box" id="cajaMovTipo" name="tipo" required>
+                        <option value="Ingreso">Entrada</option>
+                        <option value="Egreso">Salida</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="label" for="cajaMovMoneda">Moneda</label>
+                    <select class="input-box" id="cajaMovMoneda" name="moneda" required>
+                        <option value="ARS">Pesos (ARS)</option>
+                        <option value="USD">Dólares (USD)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="label" for="cajaMovImporte">Importe</label>
+                    <input class="input-box" id="cajaMovImporte" name="importe" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej.: 1.250,50" maxlength="22" required>
+                </div>
+                <div class="field caja-movimiento-concepto">
+                    <label class="label" for="cajaMovConcepto">Concepto / referencia</label>
+                    <input class="input-box" id="cajaMovConcepto" name="concepto" type="text" maxlength="200" autocomplete="off" placeholder="Indicá el motivo del movimiento" required>
+                </div>
+            </div>
+            <p id="cajaMovimientoMensaje" class="caja-movimiento-mensaje" role="status" aria-live="polite"></p>
+            <div class="caja-movimiento-acciones">
+                <button class="sidebar-nav-btn" type="submit" id="cajaMovGuardar">Guardar movimiento</button>
+                <button class="caja-btn-secundario" type="button" data-caja-movimiento="otro" id="cajaMovOtro" hidden>Registrar otro</button>
+                <button class="caja-btn-secundario" type="button" data-caja-movimiento="volver">Volver a Caja</button>
+            </div>
+        </section>
+    </form>
+
+    <section class="cobranza-card" id="cajaMovimientosHistorial">
+        <div class="cobranza-card-titulo">Historial de esta Caja</div>
+        <p class="caja-movimiento-aviso">Incluye movimientos manuales y efectivo de cobranzas. No se editan ni borran desde aquí.</p>
+        {% if pagina.object_list %}
+            <div class="caja-movimiento-tabla-contenedor">
+                <table class="caja-movimiento-tabla">
+                    <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Moneda</th><th>Importe</th><th>Registrado por</th></tr></thead>
+                    <tbody>
+                        {% for movimiento in pagina.object_list %}
+                            <tr>
+                                <td>{{ movimiento.fecha|date:'d/m/Y' }}</td>
+                                <td>{{ movimiento.tipo }}</td>
+                                <td>{{ movimiento.concepto }}</td>
+                                <td>{{ movimiento.moneda }}</td>
+                                <td class="caja-movimiento-numero">{{ movimiento.importe|floatformat:2 }}</td>
+                                <td>{{ movimiento.creado_por.nombre_historico|default:movimiento.creado_por.username_historico }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="caja-movimiento-paginacion">
+                {% if pagina.has_previous %}
+                    <button type="button" class="caja-btn-secundario" data-caja-mov-pagina="{{ pagina.previous_page_number }}">Anterior</button>
+                {% endif %}
+                <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} ({{ pagina.paginator.count }} movimientos)</span>
+                {% if pagina.has_next %}
+                    <button type="button" class="caja-btn-secundario" data-caja-mov-pagina="{{ pagina.next_page_number }}">Siguiente</button>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">Todavía no hay movimientos de efectivo en esta Caja.</div>
+        {% endif %}
+    </section>
+</section>

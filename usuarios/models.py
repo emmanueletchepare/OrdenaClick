@@ -3342,3 +3342,20 @@ class IdempotenciaPagoManual(models.Model):
     huella = models.CharField(max_length=64)
     respuesta = models.JSONField()
     creado = models.DateTimeField(auto_now_add=True)
+
+
+class IdempotenciaMovimientoCaja(models.Model):
+    """Deduplicacion tecnica de entradas/salidas, no hecho financiero.
+
+    No se exporta como parte de Backup Empresa v1: el hecho auditable
+    persiste en MovimientoCaja, que ya pertenece al inventario portable.
+    """
+    clave = models.UUIDField(unique=True)
+    # Proteccion anti-reintento local, no entidad portable: al restaurar una
+    # Caja se purgan estas claves y se conserva su historial de movimientos.
+    empresa = models.ForeignKey('Empresa', on_delete=models.CASCADE)
+    caja = models.ForeignKey('Caja', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    huella = models.CharField(max_length=64)
+    respuesta = models.JSONField()
+    creado = models.DateTimeField(auto_now_add=True)
