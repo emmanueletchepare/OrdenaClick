@@ -39,6 +39,37 @@ def panel_admin(request):
     # GUARDAR EMPRESA
     # =====================================
 
+    def _respuesta_archivo_rechazado(mensaje, modo):
+        # La petición vuelve al mismo formulario con los valores no sensibles.
+        from usuarios.services.seguridad import empresas_autorizadas
+        empresas = empresas_autorizadas(request.user).order_by(
+            'nombre_fantasia', 'razon_social'
+        )
+        movimientos = []
+        if empresa_actual:
+            ejercicio = empresa_actual.ejercicios.filter(estado='Abierto').first()
+            if ejercicio:
+                movimientos = Movimiento.objects.filter(
+                    ejercicio=ejercicio
+                ).order_by('-fecha_registro')
+        return render(request, 'usuarios/perfiles/administrador/panel.html', {
+            'empresas': empresas,
+            'empresa_actual': empresa_actual,
+            'empresa_importada': request.POST,
+            'empresa_existente': None,
+            'movimientos': movimientos,
+            'error_archivo_empresa': mensaje,
+            'modo_error_archivo_empresa': modo,
+        }, status=400)
+
+    def _validar_documentos_empresa(modo):
+        from usuarios.services.documentos_empresa_b10a import validar_documentos_empresa
+        try:
+            validar_documentos_empresa(request.FILES)
+        except ValueError as error:
+            return _respuesta_archivo_rechazado(str(error), modo)
+        return None
+
     if request.method == 'POST':
 
         # ================================
@@ -46,6 +77,10 @@ def panel_admin(request):
         # ================================
 
         if request.POST.get('guardar_empresa'):
+            error_archivo = _validar_documentos_empresa('alta')
+            if error_archivo is not None:
+                return error_archivo
+
 
             cuit = request.POST.get('cuit')
 
@@ -224,6 +259,10 @@ def panel_admin(request):
          # ================================
 
         if request.POST.get('guardar_cambios_empresa'):
+            error_archivo = _validar_documentos_empresa('modificar')
+            if error_archivo is not None:
+                return error_archivo
+
 
             empresa_actual.razon_social = request.POST.get(
                 'razon_social'

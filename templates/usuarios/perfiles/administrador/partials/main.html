@@ -131,6 +131,12 @@ method="POST"
 enctype="multipart/form-data">
 
 {% csrf_token %}
+{% if error_archivo_empresa %}
+<div role="alert" style="margin:12px 0;color:#fca5a5;" aria-live="polite">
+{{ error_archivo_empresa }}
+</div>
+{% endif %}
+
 
 <div class="form-grid">
 

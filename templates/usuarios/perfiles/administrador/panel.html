@@ -113,5 +113,18 @@ value="{{ empresa_actual.id }}">
 <script src="{% static 'js/empresa/panel_importacion.js' %}?v=1"></script>
 
 <script src="{% static 'js/empresa/configuracion_empresa.js' %}?v=4"></script>
+{% if error_archivo_empresa %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof mostrarAltaEmpresa === 'function' && typeof mostrarModificarEmpresa === 'function') {
+        {% if modo_error_archivo_empresa == 'modificar' %}
+        mostrarModificarEmpresa();
+        {% else %}
+        mostrarAltaEmpresa();
+        {% endif %}
+    }
+});
+</script>
+{% endif %}
 </body>
 </html>
