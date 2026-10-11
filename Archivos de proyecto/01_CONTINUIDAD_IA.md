@@ -18,7 +18,9 @@ Código y tests prevalecen sobre documentación histórica.
 
 ## Corte de continuidad — 10/10/2026
 
-Último commit publicado y confirmado: `ee852cb` en `main`, sincronizado en la computadora de casa el 10/10/2026. Verificar HEAD y estado antes de aplicar un bloque nuevo. Tres respaldos SQLite antiguos permanecen sin seguimiento en casa; conservarlos y no incorporarlos a Git.
+Último commit publicado y confirmado: `2df790b` en `main`, sincronizado en la computadora de casa el 10/10/2026. Verificar HEAD y estado antes de aplicar un bloque nuevo. Tres respaldos SQLite antiguos permanecen sin seguimiento en casa; conservarlos y no incorporarlos a Git.
+
+**Avance B9 (10/10/2026):** B9a (`42d1cb8`), 3 pruebas de reenvios secuenciales aprobadas. B9b (`2df790b`), backend + integracion JS de idempotencia por clave de operacion; migracion `usuarios.0042_idempotencia_pago_manual` aplicada en casa; 4 pruebas de idempotencia y 3 de regresion aprobadas. **Total de regresiones B1-B9b: 55 pruebas aprobadas**. Las 2 pruebas diagnosticas de B9b fueron evidencia del comportamiento anterior y permanecen sin seguimiento, no son regresiones vigentes. **B9c pendiente:** prueba simultanea multiproceso con PostgreSQL real; SQLite no certifica locking.
 
 Autenticación implementada:
 
