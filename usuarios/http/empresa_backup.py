@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -179,12 +180,37 @@ def _guardar_paso_empresa(request, state, inspection):
         if upload.size > MAX_SINGLE_ENTRY_BYTES:
             raise BackupEmpresaError(f"El archivo de {field_name} supera el límite permitido.")
         path = document_path(state["token"], field_name)
-        with open(path, "wb") as target:
-            for chunk in upload.chunks():
-                target.write(chunk)
+        _guardar_documento_temporal(upload, path)
         state.setdefault("documentos", {})[field_name] = path
         state.setdefault("documentos_nombres", {})[field_name] = safe_backup_filename(upload.name)
 
+
+
+def _guardar_documento_temporal(upload, path):
+    """Guarda un adjunto privado con límite real y reemplazo sin archivo parcial.
+
+    El nombre final proviene exclusivamente de document_path (token UUID y campo
+    permitido). Un error conserva intacto el documento previo del wizard.
+    """
+    total = 0
+    temporal = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="wb", dir=os.path.dirname(path),
+                                         prefix=".b10a-", delete=False) as target:
+            temporal = target.name
+            for chunk in upload.chunks():
+                total += len(chunk)
+                if total > MAX_SINGLE_ENTRY_BYTES:
+                    raise BackupEmpresaError("El documento supera el límite permitido.")
+                target.write(chunk)
+        os.replace(temporal, path)
+        temporal = None
+    finally:
+        if temporal is not None:
+            try:
+                os.remove(temporal)
+            except FileNotFoundError:
+                pass
 
 def _guardar_paso_usuarios(request, state, inspection):
     candidates = buscar_candidatos_usuarios(inspection["usuarios"])
