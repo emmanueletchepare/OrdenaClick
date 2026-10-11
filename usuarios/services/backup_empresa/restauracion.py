@@ -17,7 +17,7 @@ from usuarios.services.seguridad import obtener_empresa_administrable
 
 from .common import BackupEmpresaError, cleanup_import, deserialize_scalar, document_path, safe_backup_filename
 from .importacion import cargar_json_backup, leer_archivo_backup
-from .specs import MODEL_SPECS
+from .specs import MODEL_SPECS, OPTIONAL_NEW_KEYS
 
 
 class RestauradorEmpresaV1:
@@ -125,7 +125,7 @@ class RestauradorEmpresaV1:
             Empresa.objects.filter(pk=empresa.pk).update(**updates)
 
     def _restaurar_spec(self, spec):
-        records = cargar_json_backup(self.token, f"data/{spec.key}.json")
+        records = cargar_json_backup(self.token, f"data/{spec.key}.json", optional=spec.key in OPTIONAL_NEW_KEYS)
         spec_map = self.maps.setdefault(spec.key, {})
         for record in records:
             kwargs = {}

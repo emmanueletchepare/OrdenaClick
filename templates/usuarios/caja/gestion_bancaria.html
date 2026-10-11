@@ -1,0 +1,76 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrdenaClick · Pendientes bancarios</title>
+<link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}?v=1"></head>
+<body>
+<main class="gb-contenedor">
+<header class="gb-header"><div><span class="gb-marca">Ordena<span>click</span></span><h1>Movimientos bancarios pendientes</h1>
+<p>Verificar recibos e imputaciones en el sistema externo, sin duplicar ingresos ni pagos.</p></div>
+<nav><a href="{% url 'home' %}">Volver a perfiles</a></nav></header>
+<section class="gb-tarjeta"><form method="get" action="{% url 'gestion_bancaria' %}" class="gb-filtros">
+<label>Empresa<select name="empresa" required><option value="">Elegir Empresa</option>
+{% for item in empresas %}<option value="{{ item.pk }}" {% if empresa.pk == item.pk %}selected{% endif %}>{{ item.razon_social }}</option>{% endfor %}
+</select></label><button type="submit">Abrir</button></form></section>
+{% if empresa %}
+<section class="gb-tarjeta"><h2>Pendientes de aplicación · {{ empresa.razon_social }}</h2>
+<p class="gb-ayuda">Las transferencias, depósitos y e-Cheqs detectados requieren verificar su aplicación. Esta bandeja <strong>no contabiliza</strong> el dinero ni crea instrumentos de Cartera.</p>
+<form method="get" action="{% url 'gestion_bancaria' %}" class="gb-filtros">
+<input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<label>Estado<select name="estado"><option value="Pendiente" {% if estado == 'Pendiente' %}selected{% endif %}>Pendientes</option>
+<option value="Resuelto" {% if estado == 'Resuelto' %}selected{% endif %}>Resueltos</option></select></label>
+<label>Centro<select name="centro"><option value="">Todos mis Centros</option>
+{% for centro in centros %}<option value="{{ centro.pk }}" {% if centro_filtro == centro.pk|stringformat:'s' %}selected{% endif %}>{{ centro.nombre }}</option>{% endfor %}</select></label>
+<button type="submit">Ver movimientos</button></form>
+<div class="gb-tabla-contenedor"><table><thead><tr><th>Fecha</th><th>Centro</th><th>Operación</th><th>Cuenta / referencia</th><th class="gb-numero">Importe</th><th>Gestión</th></tr></thead>
+<tbody>{% for pendiente in pagina.object_list %}<tr><td>{{ pendiente.fecha|date:'d/m/Y' }}</td>
+<td>{{ pendiente.centro_operativo.nombre|default:'Por identificar' }}</td><td>{{ pendiente.get_tipo_display }}</td>
+<td><strong>{{ pendiente.cuenta_bancaria.banco.nombre }} · {{ pendiente.cuenta_bancaria.nombre }}</strong><small>{{ pendiente.referencia }}</small>
+{% if pendiente.observaciones %}<small>{{ pendiente.observaciones }}</small>{% endif %}</td>
+<td class="gb-numero">$ {{ pendiente.importe|floatformat:2 }}</td><td>
+{% if pendiente.estado == 'Pendiente' and es_general and not pendiente.centro_operativo_id %}
+<form method="post" action="{% url 'clasificar_pendiente_bancario' pendiente.pk %}" class="gb-resolver">
+{% csrf_token %}<input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<label>Asignar Centro<select name="centro" required><option value="">Seleccionar</option>
+{% for centro in centros %}<option value="{{ centro.pk }}">{{ centro.nombre }}</option>{% endfor %}</select></label>
+<button type="submit">Asignar Centro</button></form>
+{% endif %}
+{% if pendiente.estado == 'Pendiente' %}
+<form method="post" action="{% url 'resolver_pendiente_bancario' pendiente.pk %}" class="gb-resolver">
+{% csrf_token %}<input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<label>Resultado<select name="tipo_resolucion" required><option value="YaImputado">Ya estaba imputado</option><option value="ReciboGenerado">Recibo realizado</option></select></label>
+<label>Referencia / recibo<input type="text" name="referencia_resolucion" minlength="3" maxlength="200" placeholder="N.º de recibo o control" required></label>
+<button type="submit">Marcar resuelto</button></form>
+{% else %}<span class="gb-resuelto">Resuelto</span><small>{{ pendiente.get_tipo_resolucion_display|default:pendiente.tipo_resolucion }} · {{ pendiente.referencia_resolucion }}</small>
+<small>{{ pendiente.resuelto_por.nombre_historico|default:pendiente.resuelto_por.username_historico }} · {{ pendiente.resuelto_en|date:'d/m/Y H:i' }}</small>{% endif %}
+</td></tr>{% empty %}<tr><td colspan="6">No hay movimientos para este filtro.</td></tr>{% endfor %}</tbody></table></div>
+<div class="gb-paginacion">{% if pagina.has_previous %}<a href="?empresa={{ empresa.pk }}&estado={{ estado }}&centro={{ centro_filtro }}&pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+<span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+{% if pagina.has_next %}<a href="?empresa={{ empresa.pk }}&estado={{ estado }}&centro={{ centro_filtro }}&pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}</div>
+</section>
+{% if es_administrador %}<section class="gb-tarjeta"><h2>Registrar movimiento bancario detectado</h2>
+<p class="gb-ayuda">Registrar una observación no equivale a crear un recibo. La cuenta y el importe son sólo referencias del banco.</p>
+<form method="post" action="{% url 'registrar_pendiente_bancario' %}" class="gb-filtros gb-alta">
+{% csrf_token %}<input type="hidden" name="empresa" value="{{ empresa.pk }}"><input type="hidden" name="clave" value="{{ clave }}">
+<label>Cuenta bancaria<select name="cuenta" required><option value="">Seleccionar</option>{% for cuenta in cuentas %}<option value="{{ cuenta.pk }}">{{ cuenta.banco.nombre }} · {{ cuenta.nombre }}</option>{% endfor %}</select></label>
+<label>Centro<select name="centro" {% if not es_general %}required{% endif %}>
+{% if es_general %}<option value="">Por identificar</option>{% endif %}
+{% for centro in centros %}<option value="{{ centro.pk }}">{{ centro.nombre }}</option>{% endfor %}</select></label>
+<label>Fecha<input type="date" name="fecha" value="{{ fecha_hoy|date:'Y-m-d' }}" required></label>
+<label>Tipo<select name="tipo"><option value="Transferencia">Transferencia recibida</option><option value="Deposito">Depósito recibido</option><option value="ECheq">e-Cheq detectado</option></select></label>
+<label>Importe<input type="text" name="importe" inputmode="decimal" placeholder="125000.00" maxlength="30" required></label>
+<label>Referencia<input type="text" name="referencia" maxlength="200" required></label>
+<label class="gb-amplio">Observaciones<input type="text" name="observaciones" maxlength="300"></label>
+<button type="submit">Guardar pendiente</button></form></section>{% endif %}
+{% if es_general %}<section class="gb-tarjeta"><h2>Permisos de Colaboradores por Centro</h2>
+<p class="gb-ayuda">Conceder o revocar gestión de pendientes. <strong>No da permisos de Caja ni acceso a saldos.</strong></p>
+<form method="post" action="{% url 'asignar_centro_gestion_bancaria' %}" class="gb-filtros">
+{% csrf_token %}<input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<label>Colaborador<select name="usuario" required>{% for colaborador in colaboradores %}<option value="{{ colaborador.pk }}">{{ colaborador.get_full_name|default:colaborador.username }}</option>{% endfor %}</select></label>
+<label>Centro<select name="centro" required>{% for centro in centros %}<option value="{{ centro.pk }}">{{ centro.nombre }}</option>{% endfor %}</select></label>
+<label>Acción<select name="activo"><option value="1">Autorizar</option><option value="0">Revocar</option></select></label>
+<button type="submit">Guardar permiso</button></form>
+{% if permisos %}<div class="gb-permisos"><strong>Permisos activos</strong>
+{% for permiso in permisos %}<span>{{ permiso.usuario.username }} · {{ permiso.centro_operativo.nombre }}</span>{% endfor %}</div>{% endif %}
+</section>{% endif %}
+{% endif %}
+</main></body></html>

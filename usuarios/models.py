@@ -3359,3 +3359,72 @@ class IdempotenciaMovimientoCaja(models.Model):
     huella = models.CharField(max_length=64)
     respuesta = models.JSONField()
     creado = models.DateTimeField(auto_now_add=True)
+
+# Caja 1: correcciones financieras no destructivas.
+class CorreccionMovimientoCaja(models.Model):
+    clave = models.UUIDField(unique=True)
+    original = models.OneToOneField('MovimientoCaja', on_delete=models.PROTECT, related_name='correccion_operativa')
+    contraasiento = models.OneToOneField('MovimientoCaja', on_delete=models.PROTECT, related_name='contraasiento_de')
+    reemplazo = models.OneToOneField('MovimientoCaja', on_delete=models.PROTECT, related_name='reemplazo_de', null=True, blank=True)
+    accion = models.CharField(max_length=10, choices=[('Editar', 'Editar'), ('Anular', 'Anular')])
+    motivo = models.CharField(max_length=300)
+    huella = models.CharField(max_length=64)
+    creado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    creado = models.DateTimeField(auto_now_add=True)
+
+
+# Caja 2: permisos de gestión administrativa separados de Caja/saldos.
+class PermisoPendienteBancarioCentro(models.Model):
+    empresa = models.ForeignKey('Empresa', on_delete=models.CASCADE, related_name='permisos_pendientes_bancarios')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='permisos_pendientes_bancarios')
+    centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.CASCADE, related_name='permisos_pendientes_bancarios')
+    activo = models.BooleanField(default=True)
+    otorgado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.SET_NULL, null=True, blank=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['empresa', 'usuario', 'centro_operativo'], name='uniq_permiso_pendiente_centro')]
+
+
+class PendienteBancario(models.Model):
+    TIPOS = [('Transferencia', 'Transferencia recibida'), ('Deposito', 'Depósito recibido'), ('ECheq', 'e-Cheq detectado')]
+    ESTADOS = [('Pendiente', 'Pendiente'), ('Resuelto', 'Resuelto')]
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT, related_name='pendientes_bancarios')
+    cuenta_bancaria = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT, related_name='pendientes_aplicacion')
+    centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_bancarios')
+    clave = models.UUIDField(unique=True)
+    fecha = models.DateField()
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    importe = models.DecimalField(max_digits=14, decimal_places=2)
+    referencia = models.CharField(max_length=200)
+    observaciones = models.CharField(max_length=300, blank=True)
+    estado = models.CharField(max_length=12, choices=ESTADOS, default='Pendiente')
+    creado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, related_name='pendientes_creados')
+    resuelto_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_resueltos')
+    resuelto_en = models.DateTimeField(null=True, blank=True)
+    tipo_resolucion = models.CharField(max_length=20, blank=True)
+    referencia_resolucion = models.CharField(max_length=200, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-fecha', '-creado', '-pk']
+        constraints = [models.CheckConstraint(condition=models.Q(importe__gt=0), name='pendiente_bancario_importe_positivo')]
+
+
+class EventoPendienteBancario(models.Model):
+    pendiente = models.ForeignKey('PendienteBancario', on_delete=models.PROTECT, related_name='eventos')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    accion = models.CharField(max_length=30)
+    detalle = models.CharField(max_length=300, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+
+# Auditoría de permisos de gestión, ligada a cuentas de la instalación.
+class EventoPermisoBancario(models.Model):
+    empresa = models.ForeignKey('Empresa', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.CASCADE)
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.SET_NULL, null=True)
+    concedido = models.BooleanField()
+    creado = models.DateTimeField(auto_now_add=True)

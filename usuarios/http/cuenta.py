@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.shortcuts import redirect, render
 
-from usuarios.models import PerfilUsuario, SolicitudRelacionEmpresa
+from usuarios.models import PerfilUsuario, SolicitudRelacionEmpresa, Empresa, AsignacionUsuarioEmpresa, PermisoPendienteBancarioCentro
 
 
 @login_required
@@ -19,11 +19,20 @@ def home(request):
         estado=SolicitudRelacionEmpresa.ESTADO_PENDIENTE,
     ).count()
 
+    gestion_disponible = (
+        request.user.is_superuser
+        or Empresa.objects.filter(propietario=request.user).exists()
+        or AsignacionUsuarioEmpresa.objects.filter(usuario=request.user, activo=True,
+            jerarquia__in=['admin_general','admin_centro']).exists()
+        or PermisoPendienteBancarioCentro.objects.filter(usuario=request.user, activo=True,
+            centro_operativo__activo=True).exists()
+    )
     return render(
         request,
         "usuarios/cuenta/home.html",
         {
             "solicitudes_pendientes_count": solicitudes_pendientes_count,
+            "gestion_bancaria_disponible": gestion_disponible,
         },
     )
 

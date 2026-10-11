@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 import stat
 import uuid
@@ -22,11 +22,12 @@ from .common import (
     sha256_bytes,
     validate_zip_entry_name,
 )
-from .specs import FORMAT_ID, FORMAT_VERSION, MODEL_SPECS
+from .specs import FORMAT_ID, FORMAT_VERSION, MODEL_SPECS, OPTIONAL_NEW_KEYS
 
 
+OPTIONAL_JSONS = {f"data/{name}.json" for name in OPTIONAL_NEW_KEYS}
 REQUIRED_JSONS = {"data/empresa.json", "data/usuarios.json"} | {
-    f"data/{spec.key}.json" for spec in MODEL_SPECS
+    f"data/{spec.key}.json" for spec in MODEL_SPECS if spec.key not in OPTIONAL_NEW_KEYS
 }
 
 
@@ -97,7 +98,7 @@ def inspeccionar_backup(token, usuario):
             raise BackupEmpresaError("Falta manifest.json. Sólo se admiten backups Empresa v1.")
         if not REQUIRED_JSONS.issubset(names):
             raise BackupEmpresaError("El backup está incompleto para el formato Empresa v1.")
-        unexpected = {name for name in names if name != "manifest.json" and name not in REQUIRED_JSONS and not name.startswith("files/")}
+        unexpected = {name for name in names if name != "manifest.json" and name not in (REQUIRED_JSONS | OPTIONAL_JSONS) and not name.startswith("files/")}
         if unexpected:
             raise BackupEmpresaError("El ZIP contiene componentes no previstos por Backup Empresa v1.")
 
@@ -182,8 +183,10 @@ def inspeccionar_backup(token, usuario):
         }
 
 
-def cargar_json_backup(token, path):
+def cargar_json_backup(token, path, *, optional=False):
     with zipfile.ZipFile(import_path(token), "r") as archive:
+        if optional and path not in archive.namelist():
+            return []
         return _read_json(archive, path)
 
 
@@ -222,6 +225,11 @@ def _validate_structure(archive, manifest, names):
     all_ids = set()
     for spec in MODEL_SPECS:
         path = f"data/{spec.key}.json"
+        if path in OPTIONAL_JSONS and path not in names:
+            if manifest.get("components", {}).get(spec.key) not in (None, 0):
+                raise BackupEmpresaError("El manifest declara un componente opcional ausente.")
+            componentes[spec.key] = []
+            continue
         records = _read_json(archive, path)
         if not isinstance(records, list):
             raise BackupEmpresaError(f"{path} debe contener una lista.")

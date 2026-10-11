@@ -37,3 +37,25 @@
 #cajaHistorialResultados .caja-movimiento-tabla th, #cajaHistorialResultados .caja-movimiento-tabla td { padding: 0.65rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,.25); }
 #cajaHistorialResultados .caja-movimiento-numero { text-align: right; font-variant-numeric: tabular-nums; }
 #cajaHistorialResultados .caja-movimiento-paginacion { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem; }
+
+/* Ajuste solicitado: compactación, filtros alineados y encabezado del estilo Registros. */
+#cajaHistorialPanel .caja-historial-filtros {display:grid;grid-template-columns:minmax(175px,200px) minmax(0,1fr);align-items:end;gap:12px;margin-bottom:16px;}
+#cajaHistorialPanel .caja-historial-filtros>.field{width:100%;max-width:200px;margin:0;min-width:0;}
+#cajaHistorialPanel .caja-historial-rango {display:grid;grid-template-columns:repeat(2,minmax(0,198px));align-items:end;gap:12px;min-width:0;}
+#cajaHistorialPanel .caja-historial-rango>.field{min-width:0;margin:0;}
+#cajaHistorialPanel .caja-historial-rango .input-box{width:100%;min-width:0;}
+#cajaHistorialResultados .caja-movimiento-tabla {table-layout:auto;border-collapse:collapse;width:100%;}
+#cajaHistorialResultados .caja-movimiento-tabla thead th {background:#1b2434;color:#b5c9e5;white-space:nowrap;font-weight:500;border-bottom:1px solid #334359;vertical-align:middle;}
+#cajaHistorialResultados .caja-movimiento-tabla td{vertical-align:middle;}
+#cajaHistorialResultados .caja-th-importe,#cajaHistorialResultados .caja-movimiento-numero{text-align:right;white-space:nowrap;min-width:110px;font-variant-numeric:tabular-nums;}
+#cajaHistorialResultados .caja-th-acciones,#cajaHistorialResultados .caja-celda-acciones{text-align:center;white-space:nowrap;min-width:88px;}
+#cajaHistorialResultados .caja-historial-accion{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;padding:4px;border:1px solid #3a4a60;border-radius:8px;background:#202b3b;color:#a6bedb;cursor:pointer;margin-right:4px;}
+#cajaHistorialResultados .caja-historial-accion:hover,#cajaHistorialResultados .caja-historial-accion:focus-visible{border-color:#5795ee;color:white;}
+#cajaHistorialResultados .caja-asiento-nota{display:block;font-size:11px;color:#8e9cb1;}
+#cajaCorreccionForm{margin-top:16px;border:1px solid #3d506d;border-radius:12px;background:#151f2f;padding:15px;}
+#cajaCorreccionForm[hidden],#cajaCorreccionCampos[hidden]{display:none!important;}
+#cajaCorreccionForm .caja-corr-fila{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;align-items:end;}
+#cajaCorreccionForm .field{min-width:160px;flex:1;}
+#cajaCorreccionForm .input-box{width:100%;}
+#cajaCorreccionForm .caja-corr-acciones{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+@media(max-width:670px){#cajaHistorialPanel .caja-historial-filtros{grid-template-columns:1fr;}#cajaHistorialPanel .caja-historial-rango{grid-template-columns:repeat(2,minmax(0,1fr));}}

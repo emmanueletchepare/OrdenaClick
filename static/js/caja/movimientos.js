@@ -150,5 +150,87 @@
         }
     });
 
+    function abrirCorreccion(boton) {
+        const panel = document.getElementById('cajaCorreccionForm');
+        if (!panel) { return; }
+        const form = panel.querySelector('form');
+        const accion = boton.dataset.cajaCorr;
+        form.elements.accion.value = accion;
+        form.elements.movimiento_id.value = boton.dataset.movId;
+        form.elements.caja.value = boton.dataset.movCaja;
+        form.elements.clave.value = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : '';
+        document.getElementById('cajaCorreccionTitulo').textContent = accion === 'Editar' ? 'Editar mediante corrección auditable' : 'Anular movimiento (no se borra el historial)';
+        document.getElementById('cajaCorreccionCampos').hidden = accion !== 'Editar';
+        if (accion === 'Editar') {
+            for (const [nombre, valor] of Object.entries({
+                tipo:boton.dataset.movTipo, moneda:boton.dataset.movMoneda,
+                fecha:boton.dataset.movFecha, importe:boton.dataset.movImporte,
+                concepto:boton.dataset.movConcepto
+            })) { form.elements[nombre].value = valor || ''; }
+        }
+        form.elements.motivo.value = '';
+        document.getElementById('cajaCorreccionMensaje').textContent = '';
+        document.getElementById('cajaCorreccionGuardar').disabled = false;
+        panel.hidden = false;
+        form.elements.motivo.focus();
+        panel.scrollIntoView({block:'nearest'});
+    }
+
+    async function guardarCorreccion(form) {
+        const boton = document.getElementById('cajaCorreccionGuardar');
+        if (boton.disabled) { return; }
+        boton.disabled = true;
+        const mensaje = document.getElementById('cajaCorreccionMensaje');
+        mensaje.textContent = 'Guardando corrección...';
+        const datos = {empresa_id:empresaActual(), caja_id:form.elements.caja.value,
+            accion:form.elements.accion.value, motivo:form.elements.motivo.value,
+            clave:form.elements.clave.value};
+        if (datos.accion === 'Editar') {
+            datos.nuevo = {};
+            for (const nombre of ['fecha','tipo','moneda','importe','concepto']) {
+                datos.nuevo[nombre] = form.elements[nombre].value;
+            }
+        }
+        const filtro = {caja:cajaElegida(),
+            modo:document.getElementById('cajaHistorialModo').value,
+            desde:document.getElementById('cajaHistorialDesde').value,
+            hasta:document.getElementById('cajaHistorialHasta').value};
+        try {
+            const respuesta = await fetch('/caja/movimientos/corregir/' + encodeURIComponent(form.elements.movimiento_id.value) + '/', {
+                method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json',
+                    'X-CSRFToken':form.elements.csrfmiddlewaretoken.value},body:JSON.stringify(datos)
+            });
+            const resultado = await respuesta.json();
+            if (!respuesta.ok || !resultado.ok) { throw new Error(resultado.mensaje || 'No fue posible corregir el movimiento.'); }
+            mensaje.textContent = 'Corrección registrada. Actualizando saldos e historial...';
+            if (typeof window.mostrarCaja === 'function') {
+                await window.mostrarCaja();
+                const selector = document.getElementById('cajaFiltroDisponibilidad');
+                if (selector && filtro.caja) { selector.value = filtro.caja; }
+                document.getElementById('cajaHistorialModo').value = filtro.modo;
+                document.getElementById('cajaHistorialDesde').value = filtro.desde;
+                document.getElementById('cajaHistorialHasta').value = filtro.hasta;
+                visibilidadCajas(); cargarHistorial();
+            }
+        } catch (error) {
+            mensaje.textContent = error.message + ' Los datos ingresados siguen disponibles.';
+            boton.disabled = false;
+        }
+    }
+
+    document.addEventListener('click', function (evento) {
+        const accion = evento.target.closest('[data-caja-corr]');
+        if (accion) { abrirCorreccion(accion); return; }
+        if (evento.target.closest('[data-caja-corr-cancelar]')) {
+            const panel = document.getElementById('cajaCorreccionForm');
+            if (panel) { panel.hidden = true; }
+        }
+    });
+    document.addEventListener('submit', function (evento) {
+        if (evento.target.id === 'formCorreccionCaja') {
+            evento.preventDefault(); guardarCorreccion(evento.target);
+        }
+    });
+
     window.cargarHistorialCaja = function () { visibilidadCajas(); cargarHistorial(); };
 })();

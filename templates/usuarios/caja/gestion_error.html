@@ -1,0 +1,12 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrdenaClick · Revisar datos</title><link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}"></head><body>
+<main class="gb-contenedor"><div class="gb-tarjeta"><h1>No se pudo registrar la operación</h1>
+<p role="alert">{{ mensaje }}</p><p>La operación no modificó los registros. Estos son los datos no sensibles que ingresaste:</p>
+<form method="post" action="{{ request.path }}" class="gb-filtros">
+{% csrf_token %}<input type="hidden" name="clave" value="{{ clave_nueva }}">
+{% for nombre, valor in datos.items %}
+<label>{{ nombre }}<input name="{{ nombre }}" type="text" value="{{ valor }}" maxlength="300"></label>
+{% endfor %}<button type="submit">Corregir y volver a intentar</button></form>
+<a href="{% url 'gestion_bancaria' %}?empresa={{ empresa_id|urlencode }}">Cancelar y volver a pendientes</a>
+<p>Se conservan los datos no sensibles; el identificador técnico de la operación se renueva.</p></div></main></body></html>

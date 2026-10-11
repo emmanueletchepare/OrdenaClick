@@ -54,6 +54,12 @@ from .http.caja_movimientos import (
     registrar_movimiento_caja_http,
     historial_movimientos_caja_http,
 )
+from .http.caja_correcciones import corregir_movimiento_caja_http
+from .http.gestion_bancaria import (
+    gestion_bancaria, registrar_pendiente_bancario_http,
+    resolver_pendiente_bancario_http, asignar_centro_gestion_bancaria_http,
+    clasificar_pendiente_bancario_http,
+)
 
 from .http.empresa_claves import (
     listar_gestion_claves,
@@ -729,6 +735,18 @@ urlpatterns = [
         historial_movimientos_caja_http,
         name="historial_movimientos_caja",
     ),
+
+    path("caja/movimientos/corregir/<int:movimiento_id>/", corregir_movimiento_caja_http,
+         name="corregir_movimiento_caja"),
+    path("gestion-bancaria/", gestion_bancaria, name="gestion_bancaria"),
+    path("gestion-bancaria/crear/", registrar_pendiente_bancario_http,
+         name="registrar_pendiente_bancario"),
+    path("gestion-bancaria/resolver/<int:pendiente_id>/", resolver_pendiente_bancario_http,
+         name="resolver_pendiente_bancario"),
+    path("gestion-bancaria/permisos/", asignar_centro_gestion_bancaria_http,
+         name="asignar_centro_gestion_bancaria"),
+    path("gestion-bancaria/clasificar/<int:pendiente_id>/", clasificar_pendiente_bancario_http,
+         name="clasificar_pendiente_bancario"),
 
     # =========================================
     # MOVIMIENTOS

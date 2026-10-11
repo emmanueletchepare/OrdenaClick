@@ -193,6 +193,10 @@
                 Movimiento de Caja
             </button>
 
+            <a class="sidebar-nav-btn" href="{% url 'gestion_bancaria' %}?empresa={{ empresa.pk }}">
+                Pendientes bancarios
+            </a>
+
             <button
                 type="button"
                 class="sidebar-nav-btn"
@@ -253,6 +257,30 @@
                 </div>
             </div>
             <div id="cajaHistorialResultados" aria-live="polite">Consultando movimientos...</div>
+            <div id="cajaCorreccionForm" hidden>
+                <form id="formCorreccionCaja" method="post">
+                    {% csrf_token %}
+                    <h4 id="cajaCorreccionTitulo">Corregir movimiento</h4>
+                    <p>Los registros originales se conservan. Toda corrección genera asientos auditables.</p>
+                    <input type="hidden" name="accion"><input type="hidden" name="movimiento_id">
+                    <input type="hidden" name="caja"><input type="hidden" name="clave">
+                    <label class="field"><span class="label">Motivo de la corrección</span>
+                        <input class="input-box" type="text" name="motivo" maxlength="300" minlength="6" required>
+                    </label>
+                    <div id="cajaCorreccionCampos" class="caja-corr-fila">
+                        <label class="field"><span class="label">Fecha</span><input class="input-box" type="date" name="fecha"></label>
+                        <label class="field"><span class="label">Tipo</span><select class="input-box" name="tipo"><option value="Ingreso">Ingreso</option><option value="Egreso">Egreso</option></select></label>
+                        <label class="field"><span class="label">Moneda</span><select class="input-box" name="moneda"><option value="ARS">ARS</option><option value="USD">USD</option></select></label>
+                        <label class="field"><span class="label">Importe</span><input class="input-box" type="text" name="importe" inputmode="decimal"></label>
+                        <label class="field"><span class="label">Concepto</span><input class="input-box" type="text" name="concepto" maxlength="200"></label>
+                    </div>
+                    <p role="status" aria-live="polite" id="cajaCorreccionMensaje"></p>
+                    <div class="caja-corr-acciones">
+                        <button type="submit" class="sidebar-nav-btn" id="cajaCorreccionGuardar">Confirmar corrección</button>
+                        <button type="button" class="caja-btn-secundario" data-caja-corr-cancelar>Cancelar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </section>
 

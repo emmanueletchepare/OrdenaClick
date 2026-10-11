@@ -5,6 +5,7 @@ import uuid
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db.models import Exists, OuterRef, Q
 from datetime import date, timedelta
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -12,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from usuarios.models import MovimientoCaja
+from usuarios.models import MovimientoCaja, CorreccionMovimientoCaja
 from usuarios.services.seguridad import obtener_caja_autorizada, cajas_autorizadas
 from usuarios.services.caja_movimientos import (
     ConflictoIdempotenciaCaja, registrar_movimiento_caja,
@@ -84,7 +85,11 @@ def historial_movimientos_caja_http(request):
     historial = (MovimientoCaja.objects.filter(
         empresa=empresa, caja__in=cajas, fecha__gte=desde, fecha__lte=hasta)
         .select_related('creado_por', 'caja__centro_operativo')
-        .order_by('-fecha', '-creado', '-pk'))
+        .annotate(
+            fue_corregido=Exists(CorreccionMovimientoCaja.objects.filter(original_id=OuterRef('pk'))),
+            es_asiento_correccion=Exists(CorreccionMovimientoCaja.objects.filter(
+                Q(contraasiento_id=OuterRef('pk')) | Q(reemplazo_id=OuterRef('pk')))),
+        ).order_by('-fecha', '-creado', '-pk'))
     pagina = Paginator(historial, 25).get_page(request.GET.get('pagina', 1))
     html = render_to_string('usuarios/caja/historial.html', {
         'pagina': pagina, 'mostrar_caja': mostrar_caja,

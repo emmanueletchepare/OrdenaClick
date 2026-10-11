@@ -1,20 +1,38 @@
+{% load l10n %}
 <div id="cajaHistorialTabla">
     {% if pagina.object_list %}
         <div class="caja-movimiento-tabla-contenedor">
             <table class="caja-movimiento-tabla">
                 <thead>
-                    <tr><th>Fecha</th>{% if mostrar_caja %}<th>Caja / Centro</th>{% endif %}<th>Tipo</th><th>Concepto</th><th>Moneda</th><th>Importe</th><th>Registrado por</th></tr>
+                    <tr><th>Fecha</th>{% if mostrar_caja %}<th>Caja / Centro</th>{% endif %}<th>Tipo</th><th>Concepto</th><th>Moneda</th><th class="caja-th-importe">Importe</th><th>Registrado por</th><th class="caja-th-acciones">Acciones</th></tr>
                 </thead>
                 <tbody>
                     {% for movimiento in pagina.object_list %}
                     <tr>
                         <td>{{ movimiento.fecha|date:'d/m/Y' }}</td>
                         {% if mostrar_caja %}<td>{{ movimiento.caja.nombre }} — {{ movimiento.caja.centro_operativo.nombre }}</td>{% endif %}
-                        <td>{{ movimiento.tipo }}</td>
+                        <td>{{ movimiento.tipo }}{% if movimiento.fue_corregido %}<small class="caja-asiento-nota">Corregido / anulado</small>{% endif %}{% if movimiento.es_asiento_correccion %}<small class="caja-asiento-nota">Ajuste auditable</small>{% endif %}</td>
                         <td>{{ movimiento.concepto }}</td>
                         <td>{{ movimiento.moneda }}</td>
                         <td class="caja-movimiento-numero">{{ movimiento.importe|floatformat:2 }}</td>
                         <td>{{ movimiento.creado_por.nombre_historico|default:movimiento.creado_por.username_historico }}</td>
+                        <td class="caja-celda-acciones">
+                        {% if not movimiento.cobranza_id and not movimiento.fue_corregido and not movimiento.es_asiento_correccion %}
+                            <button type="button" class="caja-historial-accion" aria-label="Editar movimiento {{ movimiento.pk }}" title="Editar con historial de corrección" data-caja-corr="Editar"
+                                data-mov-id="{{ movimiento.pk }}" data-mov-caja="{{ movimiento.caja_id }}"
+                                data-mov-tipo="{{ movimiento.tipo }}" data-mov-moneda="{{ movimiento.moneda }}"
+                                data-mov-fecha="{{ movimiento.fecha|date:'Y-m-d' }}" data-mov-importe="{{ movimiento.importe|unlocalize }}"
+                                data-mov-concepto="{{ movimiento.concepto }}">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="m15 5 4 4M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button type="button" class="caja-historial-accion" aria-label="Eliminar movimiento {{ movimiento.pk }}" title="Anular sin borrar el registro" data-caja-corr="Anular"
+                                data-mov-id="{{ movimiento.pk }}" data-mov-caja="{{ movimiento.caja_id }}">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                            </button>
+                        {% elif movimiento.cobranza_id %}
+                            <span class="caja-asiento-nota" title="Las cobranzas se rectifican en su circuito">Cobranza</span>
+                        {% else %}<span class="caja-asiento-nota">Histórico</span>{% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
