@@ -1,3 +1,5 @@
+import logging
+
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import JsonResponse
@@ -323,6 +325,11 @@ def ver_gestion_clave(request):
                 "la contraseña."
             )
         }, status=500)
+
+    logging.getLogger("ordenaclick.audit").info(
+        "empresa.clave_revelada user_id=%s empresa_id=%s clave_id=%s",
+        request.user.pk, empresa.pk, clave.pk,
+    )
 
     return JsonResponse({
 

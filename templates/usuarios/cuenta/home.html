@@ -246,6 +246,10 @@
         .logout:hover{
             opacity:1;
         }
+        /* Igual presentación que el enlace anterior, POST protegido. */
+        .logout-boton{background:none;border:0;padding:0;text-align:left;cursor:pointer;
+            font:inherit;color:#9ca3af;font-size:14px;transition:.2s;}
+        .logout:hover .logout-boton{color:#f3f4f6;}
 
         /* RESPONSIVE */
 
@@ -371,9 +375,10 @@
 
                     <!-- LOGOUT -->
 
-                    <a href="{% url 'logout' %}" class="logout">
-                        Cerrar sesión
-                    </a>
+                    <form method="post" action="{% url 'logout' %}" class="logout">
+                        {% csrf_token %}
+                        <button class="logout-boton" type="submit">Cerrar sesión</button>
+                    </form>
 
                 </div>
 

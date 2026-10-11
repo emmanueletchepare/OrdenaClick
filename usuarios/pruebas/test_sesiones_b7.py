@@ -32,7 +32,7 @@ class AuditoriaSesionesB7Tests(TestCase):
 
     def test_logout_invalida_sesion_y_home_requiere_login(self):
         self.iniciar()
-        respuesta = self.client.get(reverse('logout'))
+        respuesta = self.client.post(reverse('logout'))
         self.assertRedirects(respuesta, reverse('login'))
         self.assertNotIn('_auth_user_id', self.client.session)
         self.assertEqual(self.client.get(reverse('home')).status_code, 302)

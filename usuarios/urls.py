@@ -1,4 +1,6 @@
 from django.urls import path
+from django.contrib.auth.views import PasswordResetDoneView, PasswordResetCompleteView
+from .http.recuperacion import SolicitarRecuperacion, ConfirmarRecuperacion
 
 
 
@@ -157,6 +159,15 @@ from .http.empresa_backup import (
 from .http.documentos_privados import descargar_documento_empresa
 
 urlpatterns = [
+    path("recuperar-contrasena/", SolicitarRecuperacion.as_view(), name="recuperar_contrasena"),
+    path("recuperar-contrasena/enviado/", PasswordResetDoneView.as_view(
+        template_name="usuarios/auth/recuperacion_enviada.html"
+    ), name="recuperar_contrasena_enviada"),
+    path("recuperar-contrasena/confirmar/<uidb64>/<token>/",
+        ConfirmarRecuperacion.as_view(), name="recuperar_contrasena_confirmar"),
+    path("recuperar-contrasena/completado/", PasswordResetCompleteView.as_view(
+        template_name="usuarios/auth/recuperacion_completada.html"
+    ), name="recuperar_contrasena_completada"),
     path(
         "empresa/<int:empresa_id>/documentos/<str:campo>/",
         descargar_documento_empresa,

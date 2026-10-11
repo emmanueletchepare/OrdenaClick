@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 
@@ -27,6 +28,8 @@ from usuarios.services.backup_empresa.common import (
 from usuarios.services.seguridad import obtener_empresa_administrable
 
 
+audit = logging.getLogger("ordenaclick.audit")
+
 SESSION_KEY = "importacion_empresa_v1"
 
 
@@ -35,6 +38,8 @@ SESSION_KEY = "importacion_empresa_v1"
 def exportar_empresa_v1(request, empresa_id):
     empresa = obtener_empresa_administrable(request.user, empresa_id)
     contenido, _manifest = construir_backup_empresa(empresa)
+    audit.info("empresa.backup_export user_id=%s empresa_id=%s",
+               request.user.pk, empresa.pk)
     nombre_base = empresa.nombre_fantasia or empresa.razon_social or "empresa"
     nombre_base = safe_backup_filename(nombre_base).replace(".zip", "")
     response = HttpResponse(contenido, content_type="application/zip")
@@ -62,6 +67,7 @@ def importar_empresa_v1(request):
         messages.error(request, _validation_message(error))
         return redirect("panel_admin")
 
+    audit.info("empresa.backup_inspected user_id=%s", request.user.pk)
     request.session[SESSION_KEY] = {
         "token": token,
         "inspection": inspection,
@@ -126,6 +132,8 @@ def importar_empresa_wizard(request, paso):
             except Exception as error:
                 messages.error(request, _validation_message(error))
             else:
+                audit.info("empresa.restore_ok user_id=%s empresa_id=%s",
+                           request.user.pk, empresa.pk)
                 request.session.pop(SESSION_KEY, None)
                 request.session["empresa_id"] = empresa.pk
                 messages.success(request, "La Empresa fue restaurada correctamente desde Backup v1.")

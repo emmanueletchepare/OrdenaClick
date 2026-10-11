@@ -270,6 +270,7 @@ input:-webkit-autofill:focus{
                     <label>Usuario</label>
                     <input type="text"
                            name="username"
+                           value="{{ valores_formulario.username|default:'' }}"
                            class="input"
                            placeholder="Ingresá un usuario"
                            required>
@@ -279,6 +280,7 @@ input:-webkit-autofill:focus{
                     <label>Correo electrónico</label>
                     <input type="email"
                            name="email"
+                           value="{{ valores_formulario.email|default:'' }}"
                            class="input"
                            placeholder="correo@empresa.com"
                            required>
@@ -306,6 +308,7 @@ input:-webkit-autofill:focus{
                     <label>Nombre</label>
                     <input type="text"
                            name="nombre"
+                           value="{{ valores_formulario.nombre|default:'' }}"
                            class="input"
                            placeholder="Nombre"
                            required>
@@ -315,6 +318,7 @@ input:-webkit-autofill:focus{
                     <label>Apellido</label>
                     <input type="text"
                            name="apellido"
+                           value="{{ valores_formulario.apellido|default:'' }}"
                            class="input"
                            placeholder="Apellido"
                            required>
@@ -324,6 +328,7 @@ input:-webkit-autofill:focus{
                     <label>Teléfono personal</label>
                     <input type="text"
                            name="telefono_personal"
+                           value="{{ valores_formulario.telefono_personal|default:'' }}"
                            class="input"
                            placeholder="Teléfono personal">
                 </div>
@@ -332,6 +337,7 @@ input:-webkit-autofill:focus{
                     <label>Teléfono laboral</label>
                     <input type="text"
                            name="telefono_laboral"
+                           value="{{ valores_formulario.telefono_laboral|default:'' }}"
                            class="input"
                            placeholder="Teléfono laboral">
                 </div>
@@ -340,6 +346,7 @@ input:-webkit-autofill:focus{
                     <label>Dirección laboral</label>
                     <input type="text"
                            name="direccion_laboral"
+                           value="{{ valores_formulario.direccion_laboral|default:'' }}"
                            class="input"
                            placeholder="Dirección laboral">
                 </div>

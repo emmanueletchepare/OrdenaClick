@@ -6,6 +6,8 @@ No desplegar hasta cerrar uploads privados, backups y pruebas de producción.
 import os
 from pathlib import Path
 
+from django.utils.csp import CSP
+
 from .settings import *  # noqa: F403,F401 - hereda únicamente la configuración existente
 
 
@@ -66,3 +68,42 @@ if _media == BASE_DIR or BASE_DIR in _media.parents:
 MEDIA_ROOT = _media
 
 # El proxy/servidor no debe servir MEDIA_ROOT directamente: usar vistas autorizadas.
+
+# B12: observación CSP sin aplicar bloqueos a la UI heredada.
+MIDDLEWARE = [*MIDDLEWARE, "django.middleware.csp.ContentSecurityPolicyMiddleware"]
+SECURE_CSP_REPORT_ONLY = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF],
+    "style-src": [CSP.SELF, "https://fonts.googleapis.com"],
+    "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
+    "img-src": [CSP.SELF, "data:", "blob:"],
+    "connect-src": [CSP.SELF],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+}
+
+# El proveedor SMTP se elige en despliegue. No contratar servicios ahora.
+# Fallar temprano evita mostrar una recuperación que jamás envía correos.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = _required("ORDENACLICK_SMTP_HOST")
+EMAIL_PORT = int(os.environ.get("ORDENACLICK_SMTP_PORT", "587"))
+if EMAIL_PORT < 1 or EMAIL_PORT > 65535:
+    raise RuntimeError("ORDENACLICK_SMTP_PORT debe ser válido")
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = _required("ORDENACLICK_SMTP_USER")
+EMAIL_HOST_PASSWORD = _required("ORDENACLICK_SMTP_PASSWORD")
+DEFAULT_FROM_EMAIL = _required("ORDENACLICK_EMAIL_FROM")
+EMAIL_TIMEOUT = 10
+
+# Eventos sin contraseñas, tokens, ZIP ni contenido financiero.
+LOGGING = {
+    "version": 1, "disable_existing_loggers": False,
+    "formatters": {"audit": {"format": "%(asctime)s %(levelname)s %(message)s"}},
+    "handlers": {"audit_console": {
+        "class": "logging.StreamHandler", "formatter": "audit",
+    }},
+    "loggers": {"ordenaclick.audit": {
+        "handlers": ["audit_console"], "level": "INFO", "propagate": False,
+    }},
+}

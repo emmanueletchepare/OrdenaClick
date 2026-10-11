@@ -1,0 +1,7 @@
+Solicitaste restablecer la contraseña de OrdenaClick.
+
+Para elegir una nueva contraseña, abrí este enlace:
+{{ protocol }}://{{ domain }}{% url 'recuperar_contrasena_confirmar' uidb64=uid token=token %}
+
+El enlace vence a los 30 minutos y deja de funcionar después de usarlo.
+Si no solicitaste el cambio, ignorá este correo.

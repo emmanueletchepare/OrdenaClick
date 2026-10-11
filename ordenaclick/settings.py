@@ -185,3 +185,8 @@ GESTION_CLAVES_KEY = os.environ.get(
 # La sesión vence al cerrar completamente el navegador.
 # Al volver a abrir OrdenaClick se deberá iniciar sesión nuevamente.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# B12: el token de recuperación de cuenta vence a los 30 minutos.
+PASSWORD_RESET_TIMEOUT = 30 * 60
+# Desarrollo: enlace sólo visible en consola local; producción exige SMTP.
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

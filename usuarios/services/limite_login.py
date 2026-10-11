@@ -29,7 +29,7 @@ def _ip_o_none(value):
         return None
 
 
-def _origen(request):
+def _origen(request, *, contexto="login"):
     # Nunca aceptar una IP arbitraria del cliente por cabeceras reenviadas.
     remoto = _ip_o_none(request.META.get('REMOTE_ADDR'))
     confiables = getattr(settings, 'ORDENACLICK_LOGIN_PROXIES_CONFIABLES', ())
@@ -42,17 +42,18 @@ def _origen(request):
             remoto = origen_proxy
     # Una IP ausente o inválida comparte un bucket restrictivo, nunca libera el límite.
     remoto = remoto or 'origen-desconocido'
-    return hmac.new(settings.SECRET_KEY.encode(), remoto.encode(), hashlib.sha256).hexdigest()
+    valor = remoto if contexto == "login" else f"{contexto}:{remoto}"
+    return hmac.new(settings.SECRET_KEY.encode(), valor.encode(), hashlib.sha256).hexdigest()
 
 
-def bloqueado(request):
-    origen = _origen(request)
+def bloqueado(request, *, contexto="login"):
+    origen = _origen(request, contexto=contexto)
     item = IntentoLoginOrigen.objects.filter(origen=origen).first()
     return bool(item and item.inicio_ventana > timezone.now() - VENTANA and item.fallos >= MAX_FALLOS)
 
 
-def registrar_fallo(request):
-    origen = _origen(request)
+def registrar_fallo(request, *, contexto="login"):
+    origen = _origen(request, contexto=contexto)
     ahora = timezone.now()
     # El índice unique sobre origen garantiza una única fila entre procesos.
     # get_or_create maneja el alta concurrente; el incremento se hace en SQL.
@@ -76,5 +77,5 @@ def registrar_fallo(request):
         )
 
 
-def limpiar_exito(request):
-    IntentoLoginOrigen.objects.filter(origen=_origen(request)).delete()
+def limpiar_exito(request, *, contexto="login"):
+    IntentoLoginOrigen.objects.filter(origen=_origen(request, contexto=contexto)).delete()

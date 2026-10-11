@@ -110,8 +110,9 @@ Volver a roles
 </a>
 
 
-<a
-    href="{% url 'logout' %}"
+<form method="post" action="{% url 'logout' %}">
+{% csrf_token %}
+<button type="submit"
     class="
         sidebar-nav-btn
         sidebar-nav-danger
@@ -140,7 +141,8 @@ Volver a roles
 Salir
 </span>
 
-</a>
+</button>
+</form>
 
 </div>
 

@@ -1,13 +1,18 @@
+import logging
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.views.decorators.http import require_POST
 from django.shortcuts import redirect, render
 
 from usuarios.models import PerfilUsuario
 from usuarios.services.limite_login import bloqueado, registrar_fallo, limpiar_exito
+
+audit = logging.getLogger("ordenaclick.audit")
 
 
 def login_view(request):
@@ -22,6 +27,7 @@ def login_view(request):
         password = request.POST.get("password") or ""
 
         if bloqueado(request):
+            audit.warning("auth.login_rate_limited")
             return render(request, "usuarios/auth/login.html", {"error": "Demasiados intentos de acceso. Intentá nuevamente en unos minutos.", "username": username})
 
         user = authenticate(
@@ -32,6 +38,7 @@ def login_view(request):
 
         if user is None:
             registrar_fallo(request)
+            audit.info("auth.login_denied")
             error = "Usuario o contraseña incorrectos."
         else:
             perfil, _ = PerfilUsuario.objects.get_or_create(
@@ -49,6 +56,7 @@ def login_view(request):
                 error = "Tu cuenta está pendiente de habilitación."
             else:
                 login(request, user)
+                audit.info("auth.login_ok user_id=%s", user.pk)
                 limpiar_exito(request)
                 return redirect("home")
 
@@ -73,6 +81,20 @@ def registro_view(request):
         password2 = request.POST.get("password2") or ""
         nombre = (request.POST.get("nombre") or "").strip()
         apellido = (request.POST.get("apellido") or "").strip()
+
+        # B12: bucket de registro independiente del login, sin filtrar datos.
+        if bloqueado(request, contexto="registro"):
+            return render(request, "usuarios/auth/register.html", {
+                "error": "Demasiados intentos. Intentá nuevamente en unos minutos.",
+                "valores_formulario": {
+                    "username": username, "email": email, "nombre": nombre,
+                    "apellido": apellido,
+                    "telefono_personal": (request.POST.get("telefono_personal") or "").strip(),
+                    "telefono_laboral": (request.POST.get("telefono_laboral") or "").strip(),
+                    "direccion_laboral": (request.POST.get("direccion_laboral") or "").strip(),
+                },
+            }, status=429)
+        registrar_fallo(request, contexto="registro")
 
         if not username or not email or not password or not nombre or not apellido:
             error = "Completá todos los campos obligatorios."
@@ -119,17 +141,24 @@ def registro_view(request):
                 estado_acceso="demo"
             )
 
+            audit.info("auth.register_ok user_id=%s", user.pk)
             return redirect("login")
 
     return render(
         request,
         "usuarios/auth/register.html",
-        {"error": error}
+        {"error": error, "valores_formulario": {
+            clave: (request.POST.get(clave) or "").strip()
+            for clave in ("username", "email", "nombre", "apellido",
+                          "telefono_personal", "telefono_laboral", "direccion_laboral")
+        } if request.method == "POST" else {}}
     )
 
 
 @login_required
+@require_POST
 def logout_view(request):
     """Cierra la sesión actual y vuelve al login."""
+    audit.info("auth.logout user_id=%s", request.user.pk)
     logout(request)
     return redirect("login")

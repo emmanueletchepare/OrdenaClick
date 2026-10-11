@@ -1,0 +1,12 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contraseña actualizada — OrdenaClick</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/auth/recuperacion.css' %}"></head>
+<body><div class="login-wrapper"><div class="login-box">
+<div class="logo"><span class="ordena">Ordena</span><span class="click">click</span></div>
+<div class="title">Contraseña <span class="click">actualizada</span></div>
+<div class="subtitle">Ya podés iniciar sesión con tu nueva contraseña.</div>
+<div class="links"><a href="{% url 'login' %}">Ir a iniciar sesión</a></div>
+</div></div></body></html>

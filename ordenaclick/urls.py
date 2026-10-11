@@ -1,18 +1,7 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
-from django.conf import settings
-from django.conf.urls.static import static
-
+# El contenido empresarial no se sirve nunca como directorio /media/.
+# Descargas autorizadas: endpoints de usuarios y Backup Empresa v1.
 urlpatterns = [
-
-    path('', include('usuarios.urls')),
-
+    path("", include("usuarios.urls")),
 ]
-
-if settings.DEBUG:
-
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )

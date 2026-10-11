@@ -13,7 +13,7 @@ from usuarios.urls import urlpatterns
 
 
 class InventarioDinamicoRutasB6Tests(TestCase):
-    PUBLICAS = {"login", "registro"}
+    PUBLICAS = {"login", "registro", "recuperar_contrasena", "recuperar_contrasena_enviada", "recuperar_contrasena_confirmar", "recuperar_contrasena_completada"}
     PARAMETROS = {
         "empresa_id": 999999,
         "solicitud_id": 999999,

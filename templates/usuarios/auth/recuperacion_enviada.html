@@ -1,0 +1,12 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recuperación — OrdenaClick</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/auth/recuperacion.css' %}"></head>
+<body><div class="login-wrapper"><div class="login-box">
+<div class="logo"><span class="ordena">Ordena</span><span class="click">click</span></div>
+<div class="title">Revisá tu <span class="click">correo</span></div>
+<div class="subtitle">Si existe una cuenta habilitada con ese correo, enviamos las instrucciones. Revisá también la carpeta de correo no deseado.</div>
+<div class="links"><a href="{% url 'login' %}">Volver a iniciar sesión</a></div>
+</div></div></body></html>

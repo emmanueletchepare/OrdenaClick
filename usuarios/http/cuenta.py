@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
@@ -106,6 +108,9 @@ def modificar_usuario(request):
 
             if password:
                 update_session_auth_hash(request, request.user)
+                logging.getLogger("ordenaclick.audit").info(
+                    "auth.password_changed user_id=%s", request.user.pk,
+                )
 
             return redirect("home")
 

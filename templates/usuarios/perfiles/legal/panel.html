@@ -15,6 +15,11 @@ p{color:var(--muted);line-height:1.6;margin-bottom:28px;}
 .actions{display:flex;gap:12px;flex-wrap:wrap;}
 a{text-decoration:none;padding:12px 18px;border-radius:10px;border:1px solid #2b3447;color:var(--text);background:#151922;}
 a:hover{border-color:var(--primary);}
+/* Botón de cierre con el mismo aspecto de los enlaces de perfil. */
+.salir-perfil{text-decoration:none;padding:12px 18px;border-radius:10px;
+border:1px solid #2b3447;color:var(--text);background:#151922;
+font:inherit;cursor:pointer;}
+.salir-perfil:hover{border-color:var(--primary);}
 .primary{background:var(--primary);border-color:var(--primary);color:white;}
 </style>
 </head>
@@ -25,7 +30,7 @@ a:hover{border-color:var(--primary);}
 <p>Este perfil queda activo desde ahora. Más adelante concentrará las empresas que te hayan aceptado para asistencia legal y las herramientas legales habilitadas para cada una.</p>
 <div class="actions">
 <a href="{% url 'home' %}">Volver a perfiles</a>
-<a href="{% url 'logout' %}">Cerrar sesión</a>
+<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="salir-perfil">Cerrar sesión</button></form>
 </div>
 </div>
 </body>
