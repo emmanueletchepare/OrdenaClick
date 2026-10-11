@@ -432,6 +432,19 @@ def registrar_pago_manual_movimiento(request):
         )
 
 
+    # B10a: validar adjuntos antes de calcular huella o persistir Pagos.
+    from usuarios.services.adjuntos_financieros_b10a import (
+        validar_adjuntos_financieros,
+    )
+
+    try:
+        validar_adjuntos_financieros(request.FILES)
+    except ValueError as error:
+        return JsonResponse(
+            {"ok": False, "mensaje": str(error)},
+            status=400,
+        )
+
     clave_texto = (request.POST.get("clave_idempotencia") or "").strip()
     clave = None
     huella = None
