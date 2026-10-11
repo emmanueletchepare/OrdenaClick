@@ -314,3 +314,8 @@ Autorizacion: Fundador/superusuario conservan excepcion; Administrador general p
 Siguiente pendiente funcional: movimientos bancarios detectados por Emmanuel que precisan comprobacion y eventual recibo en sistema externo. Nicolas, Enzo, Juan, Fede u otro autorizado del Centro pueden resolverlos; no dependen de Nicolas. Administradores intervienen ante pendientes prolongados. La bandeja administrativa no concede saldos ni facultad de mover Caja.
 
 No modificar UI preexistente salvo acceso aprobado a funciones nuevas, ni romper pila `[+]`, reautenticacion vigente, aislamiento entre Empresas, backup y servicios financieros. Verificacion local de Caja 1 y commits selectivos de codigo/docs en dos pasos antes de marcar el bloque cerrado.
+
+## Caja 1 — continuidad del historial en dashboard (11/10/2026)
+Ajuste propuesto y sujeto a verificaciones locales sobre `b1bf399`: mostrar historial en el panel de Caja, dentro de **Movimientos del día**, por Hoy o Rango de fechas. Selector superior de Caja concreta o Todas (solo alcance autorizado). El formulario Movimiento de Caja no duplica el historial; consume el mismo `MovimientoCaja`. Sin migraciones. No publicar antes de pruebas y revisión.
+
+Caja 2: se aprobó una capacidad independiente de Caja, **gestión de pendientes bancarios por Centro explícitamente autorizado para cada Colaborador**. No asumir que su asignación jerárquica incluye un Centro: en Base Server el Colaborador no lo tiene. Implementar con alcance en backend, sin conceder Caja ni movimiento financiero. Pendientes no identificados: admin general; cualquier usuario autorizado del Centro puede resolver. Esta capacidad NO esta incluida en el parche UX Caja 1.

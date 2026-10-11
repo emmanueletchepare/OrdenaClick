@@ -536,3 +536,8 @@ Este capitulo actualiza la secuencia de implementacion previa. Caja ahora preced
 **Orden de Pago futura:** preparar componentes; cada responsable autorizado tilda cuando realmente confirmo la salida (efectivo/cheques/e-Cheq propio/etc.). Solo con todos los componentes confirmados pasa a **Lista para cerrar** y se avisa al creador; revision y cierre definitivo son posteriores. No crear una Orden de Compra.
 
 **Regla transversal:** lo sencillo arriba, lo seguro por debajo. Empresa/Centro/Caja validados en backend; POST+CSRF, transacciones, idempotencia, auditoria, backup y pruebas adversariales en cada bloque. No certificar concurrencia real PostgreSQL con pruebas solo SQLite.
+
+## Ajuste UX del historial de Caja / acceso bancario — 11/10/2026
+- En la portada de Caja, la sección **Movimientos del día** es el lugar principal para consultar ingresos, egresos y efectivo de cobranzas. Filtro de fecha: **Hoy / Rango de fechas**. Filtro independiente: Caja X, Caja Z o Todas, sin ampliar alcance. Paginación.
+- **Movimiento de Caja** sirve para registrar; no repetir el historial ahí. La información sigue persistida en `MovimientoCaja` y no se copia a otra tabla.
+- Autorización aprobada para **Caja 2**: un administrador general podrá asignar a Colaboradores acceso a pendientes de aplicación bancaria de Centros específicos, sin darles permisos de Caja. Administradores de Centro acceden a pendientes de su Centro; generales supervisan todos y los no clasificados. No depender de Nicolás para asignar o resolver casos. **Pendiente de programar** con administración explícita, aislamiento por Empresa, backend y pruebas.

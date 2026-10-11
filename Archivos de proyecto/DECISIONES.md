@@ -418,3 +418,7 @@ reutilizarse inicialmente en:
 - Acuerdo de descubierto (importe, vigencia, vencimiento) se configura en el ABM de Cuentas Bancarias con alertas de vencimiento.
 - Orden de Pago lista para cerrar solo cuando cada salida fue confirmada por responsable; notificar al creador. Cierre definitivo tras revision.
 - Una sola persona con autorizaciones suficientes puede realizar varias acciones, sin exigencias artificiales de actores distintos. No aflojar controles de seguridad por simplicidad visual.
+
+## Decisiones Caja — ajuste visual y pendientes bancarios (11/10/2026)
+- Historial de `MovimientoCaja` en **Movimientos del día** del dashboard, con Hoy/Rango y Caja/Todas conforme permisos backend; la pantalla Movimiento de Caja queda como formulario de alta. No duplicar ni reescribir hechos financieros.
+- Para Caja 2, el Colaborador no adquiere Centro ni capacidades de Caja por su jerarquía. Un administrador general **autorizará explicitamente Centros de gestión administrativa bancaria** por colaborador. Esta autorización permitirá ver/resolver pendientes de aplicación del Centro, no saldos ni Caja. Permiso nuevo pendiente de implementación y de pruebas adversariales.

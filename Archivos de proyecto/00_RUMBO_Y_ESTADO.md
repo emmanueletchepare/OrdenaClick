@@ -352,3 +352,8 @@ Si la respuesta es “no” a las primeras tres, probablemente no sea la tarea c
 - Luego: bandeja de transferencias/depositos y e-Cheqs pendientes de recibo/aplicacion en el sistema externo, operables por cualquier persona autorizada del Centro, no solamente Nicolas; supervisan administradores si siguen pendientes. Esta gestion no crea una segunda Cobranza.
 - Siguientes: Cartera/disponibilidad y pagos individuales, envios internos entre Cajas con recepcion/conflictos, Bancos (descubierto configurado en ABM de Cuentas Bancarias), y finalmente Orden de Pago colaborativa.
 - Todo modulo nuevo mantiene las garantias de Base Server: autorizacion backend por Empresa/Centro, CSRF, idempotencia, transacciones, aislamiento multiempresa, auditoria y Backup Empresa v1. El cierre local de Base Server no certifica despliegue publico.
+
+## Caja 1 — ajuste UX de historial (11/10/2026; cierre sujeto a prueba local)
+El listado de entradas, salidas y efectivo de cobranzas se traslada al panel principal **Movimientos del día**, con selector **Hoy / Rango de fechas**, paginacion y alcance por Caja o Todas. La pantalla **Movimiento de Caja** queda dedicada a registrar sin historial duplicado. El endpoint del listado impone Empresa y Cajas autorizadas en servidor; no modifica saldos ni migraciones.
+
+**Decisión para Caja 2:** se autoriza que Administradores generales asignen explicitamente Centros para gestionar pendientes bancarios a Colaboradores, sin conceder Caja ni saldos bancarios. Todavia no implementado en este ajuste; requiere modelo, administración, pruebas de alcance y respaldo.
