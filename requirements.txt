@@ -1,0 +1,13 @@
+# B10c: versiones verificadas en Windows / Python 3.12.10.
+# Instalacion reproducible de versiones: python -m pip install -r requirements.txt
+# Auditoria: python -m pip_audit -r requirements.txt (herramienta aparte).
+asgiref==3.11.1
+cffi==2.1.0
+cryptography==50.0.0
+Django==6.0.9
+psycopg==3.3.6
+psycopg-binary==3.3.6
+pycparser==3.0
+sqlparse==0.6.0
+typing_extensions==4.16.0
+tzdata==2026.2
