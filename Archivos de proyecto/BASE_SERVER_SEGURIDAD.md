@@ -15,6 +15,22 @@ Existe `ordenaclick/settings_production.py` como configuración separada; **no**
 
 **Precedencia de decisiones de producto:** no modificar UX, navegación, botones o flujo en nombre de la seguridad sin autorización explícita. Ante validaciones, preservar todos los datos no sensibles ingresados; no repoblar passwords. Respetar navegación contextual `[+]`. La reautenticación para revelar secretos empresariales descripta en la sección 7 es una **meta pendiente no autorizada para implementación** por decisión expresa del propietario; no introducirla unilateralmente. Se preserva el acceso especial del superusuario indicado en la sección 3.
 
+## Decisión B10a — adjuntos, fotografías y almacenamiento (10/10/2026)
+
+- Límite técnico inicial: **20 MiB por archivo** empresarial/financiero (denominado «20 MB» en la interfaz); certificados y claves ARCA: **1 MiB por archivo**.
+- Facturas y comprobantes: contemplar PDF y fotografías desde celular (futuro perfil vendedor/operativo). Admitir sólo formatos permitidos después de validar contenido real, no confiar sólo en extensión o MIME declarado. La validación profunda de formatos y su cobertura completa siguen **pendientes**.
+- Archivos en almacenamiento **privado**; en PostgreSQL conservar relaciones y metadatos de titularidad, tamaño, tipo validado, integridad, fechas y trazabilidad. Verificar autorización por Empresa en cada acceso. No almacenar permanentemente binarios de comprobantes en PostgreSQL.
+- Medición y cuota futura por **Empresa**, planes/capacidad adicional y costo de proveedor, backups, tráfico y retención: **decisiones comerciales/infraestructura pendientes**, sin valores de cuota o precios aprobados. El límite por archivo **no equivale** a cuota total.
+- La compresión/optimización automática y elección de proveedor de objetos quedan para etapa posterior. No eliminar ni bloquear consulta de documentos históricos al alcanzar una cuota: los límites comerciales futuros afectan nuevas cargas.
+- Antes de un rechazo por upload inválido, preservar campos no sensibles del formulario; no alterar visual, navegación o botones sin aprobación. No introducir límites sin control previo de persistencia parcial.
+- **B10a aún EN CURSO**: queda cubrir documentos del panel Empresa, formatos reales, rutas privadas y controles completos; Base Server no certificada.
+
+## Estado B10a — corte de continuidad 10/10/2026
+
+Publicados y confirmados en `main`: `bb04ef2` (documentos temporales de importación), `d3936a5` (pruebas de descargas privadas), `c49324d` (1 MiB para ARCA), `6f7d9d7` (20 MiB en alta/edición de Movimientos), `07691d2` (20 MiB al registrar Pago manual). El HEAD de código verificado antes de **este commit documental** fue `07691d2`; verificar nuevo HEAD tras publicación. Pruebas de cada tramo aprobadas localmente; no afirmar que eso cierre auditoría integral.
+
+Pendientes de Base Server además de B10a: backup adversarial B10b, dependencias reproducibles y auditoría de vulnerabilidades B10c, todas las rutas y capacidades/roles/Empresa, almacenamiento privado y exposición accidental por `/media/`, recuperación de cuentas, logging/auditoría sensible, proxy real, CSP, HSTS y configuración de producción, `check --deploy`, pruebas integrales de seguridad, revisión visual posterior y despliegue real. Conservar tres respaldos SQLite y el diagnóstico B9b histórico sin seguimiento.
+
 ## 1. Objetivo
 
 OrdenaClick continuará su desarrollo sobre una base pensada desde ahora como producto SaaS real, expuesto a Internet, multiusuario y multiempresa.

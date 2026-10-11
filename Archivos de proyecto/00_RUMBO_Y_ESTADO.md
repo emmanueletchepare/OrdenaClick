@@ -9,6 +9,16 @@ Este documento es el punto de entrada para entender qué es OrdenaClick, qué es
 
 **Cierre técnico B9 (10/10/2026):** B9a (`42d1cb8`): 3 pruebas de reenvíos secuenciales aprobadas. B9b (`2df790b`): idempotencia por clave única para pagos manuales, integración de envío, migración `usuarios.0042_idempotencia_pago_manual` aplicada y 4 pruebas nuevas aprobadas. B9c (`7dd9a91`): 2 pruebas de concurrencia aprobadas sobre PostgreSQL 17 real, para igual clave y para claves distintas con saldo insuficiente. **57 pruebas de regresión aprobadas en B1–B9c** (48 + 3 + 4 + 2). El diagnóstico B9b anterior (2 tests) documentó el riesgo original y no integra ese total. B9 queda cerrado en el alcance ensayado; no equivale a despliegue ni seguridad de producción certificados.
 
+## Decisión B10a — adjuntos, fotografías y almacenamiento (10/10/2026)
+
+- Límite técnico inicial: **20 MiB por archivo** empresarial/financiero (denominado «20 MB» en la interfaz); certificados y claves ARCA: **1 MiB por archivo**.
+- Facturas y comprobantes: contemplar PDF y fotografías desde celular (futuro perfil vendedor/operativo). Admitir sólo formatos permitidos después de validar contenido real, no confiar sólo en extensión o MIME declarado. La validación profunda de formatos y su cobertura completa siguen **pendientes**.
+- Archivos en almacenamiento **privado**; en PostgreSQL conservar relaciones y metadatos de titularidad, tamaño, tipo validado, integridad, fechas y trazabilidad. Verificar autorización por Empresa en cada acceso. No almacenar permanentemente binarios de comprobantes en PostgreSQL.
+- Medición y cuota futura por **Empresa**, planes/capacidad adicional y costo de proveedor, backups, tráfico y retención: **decisiones comerciales/infraestructura pendientes**, sin valores de cuota o precios aprobados. El límite por archivo **no equivale** a cuota total.
+- La compresión/optimización automática y elección de proveedor de objetos quedan para etapa posterior. No eliminar ni bloquear consulta de documentos históricos al alcanzar una cuota: los límites comerciales futuros afectan nuevas cargas.
+- Antes de un rechazo por upload inválido, preservar campos no sensibles del formulario; no alterar visual, navegación o botones sin aprobación. No introducir límites sin control previo de persistencia parcial.
+- **B10a aún EN CURSO**: queda cubrir documentos del panel Empresa, formatos reales, rutas privadas y controles completos; Base Server no certificada.
+
 ## 1. Qué es OrdenaClick
 
 OrdenaClick es una aplicación web de gestión para registrar, ordenar y anticipar la actividad económica y operativa de una persona, actividad o Empresa.
