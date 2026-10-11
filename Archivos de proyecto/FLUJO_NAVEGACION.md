@@ -338,3 +338,8 @@ ORDEN DE PAGO
 Los cheques/e-Cheqs propios no se seleccionan desde Cartera: se generan
 para el Pago y luego permanecen en su registro histórico de instrumentos
 emitidos.
+
+## Caja 1 UX + Caja 2 — navegación (11/10/2026)
+- Dashboard Caja muestra `Movimientos del día`: selector Caja o Todas autorizado + Hoy/Rango de fechas. Desde/Hasta en una misma línea; tabla compacta con encabezados del estilo Registros y acciones icono a la derecha. Editar/Eliminar abre corrección auditable debajo del listado, no elimina físicamente ni pierde datos no sensibles al fallar.
+- Botón `Movimiento de Caja` abre el formulario de alta sin historial redundante. Desde Caja se puede abrir la bandeja independiente `Pendientes bancarios` sin que un Colaborador abra el panel financiero.
+- En Inicio/Perfil Colaborador existe acceso propio a `Pendientes bancarios`. Usuario selecciona Empresa autorizada; lista pendientes propios del Centro. Administración general registra operaciones detectadas; admin general puede asignar Centros a colaboradores. Un pendiente se cierra con resultado «Ya imputado» / «Recibo generado» y referencia externa. GET no cambia estados; sin navegación `[+]` paralela o JS inline nuevo.

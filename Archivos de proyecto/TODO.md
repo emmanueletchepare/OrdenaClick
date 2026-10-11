@@ -217,3 +217,14 @@ Si no, debe esperar.
 - [ ] ABM Cuenta Bancaria: descubierto/vigencia/alerta; posicion bancaria informada y prevision de acreditaciones.
 - [ ] Orden de Pago colaborativa sobre disponibilidad real, confirmaciones individuales, aviso al creador y cierre separado.
 - [ ] Para cada etapa: validacion en backend, regresion multiempresa, reversas, Backup Empresa v1 e infraestructura PostgreSQL donde corresponda.
+
+## Caja: seguimiento de la etapa operativa (11/10/2026)
+- [ ] Verificar en entorno Django/migración `0044` bloque Caja 2 integrado y revisar UI en navegador: Desde/Hasta en línea, encabezados, alineaciones e iconos, correcciones con motivo.
+- [ ] Validar casos de permisos de Colaborador por Centro, revocación, consulta y resolución sin duplicar Caja, acceso por Empresa y Backup Empresa v1 con ZIP anterior.
+- [x] Asignar Centro a pendientes aún no clasificados mediante acción de administrador general y evento auditable, sujeto a pruebas Caja 2.
+- [ ] Cartera física/e-Cheqs, estados, reservas, depósito/salida, rechazos después de salida; no duplicar valores al pagar.
+- [ ] Traslados internos sencillos por Caja, recepción parcial y conflictos de Auditoría trazables.
+- [ ] ABM Cuentas Bancarias: acuerdo de descubierto, monto, vencimiento y alertas; previsión y rechazados.
+- [ ] Arqueo físico y conciliación de diferencias.
+- [ ] Pago individual utilizando Caja/valores disponibles; luego preparación y cierre de Órdenes de Pago.
+- [ ] Recorridos visuales/funcionales reales sin cambios no aprobados y tests PostgreSQL de concurrencia antes de despliegue.

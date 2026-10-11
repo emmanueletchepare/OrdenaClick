@@ -547,3 +547,8 @@ público: autorizar Empresa, reconsultar objetos dentro de ese contexto,
 abrir transacción, usar `select_for_update()` cuando exista competencia,
 recalcular saldo/estado dentro del bloqueo y validar nuevamente antes de
 persistir.
+
+## Caja 2 — capa administrativa independiente de Caja financiera (11/10/2026)
+`usuarios/services/pendientes_bancarios.py` centraliza permisos por Empresa/Centro/jerarquía y servicios de alta/resolución sin tocar dinero. `usuarios/http/gestion_bancaria.py` expone GET privado y POST con CSRF; el perfil Colaborador sólo ofrece acceso a pendientes de Centros concedidos, sin Caja ni saldos. Una transacción serializa por Empresa y guarda eventos e identidad histórica.
+`usuarios/services/caja_correcciones.py` implementa corrección/anulación auditables de movimientos manuales mediante contraasiento y reemplazo; niega objetos de otra Empresa/Caja, cobranzas, segundas correcciones y saldo negativo. Los cambios de saldo nunca son un UPDATE destructivo sobre `MovimientoCaja`. Nueva migración aditiva `0044` y rutas privadas registradas en `usuarios/urls.py`.
+Backup Empresa v1 registra correcciones, pendientes y eventos después de dependencias; no exporta privilegios por Centro. Importación admite antiguos v1 sin tablas opcionales nuevas, manteniendo validación de ZIP/manifiesto. No presentar pruebas SQLite como prueba de locking real PostgreSQL.

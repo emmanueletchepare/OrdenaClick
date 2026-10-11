@@ -322,3 +322,8 @@ Movimiento.
 Después de retirar una aplicación deben recalcularse total aplicado,
 saldo, estado financiero, Vencimiento y Alertas. No debe quedar un
 Vencimiento/Alerta reflejando un estado financiero anterior.
+
+## Ampliaciones Caja 2 — hechos vs. autorización (11/10/2026)
+`CorreccionMovimientoCaja`: Original único, contraasiento, reemplazo opcional, acción Editar/Anular, UUID idempotente, huella, motivo y autor histórico. MovimientoCaja no se borra. Los saldos conservan derivación de asientos; rechazar correcciones que dejarían saldo negativo.
+`PendienteBancario`: Empresa, CuentaBancaria, CentroOperativo opcional, clave UUID, fecha, tipo Transferencia/Depósito/e-Cheq detectado, importe positivo, referencia, observaciones, estado Pendiente/Resuelto, creador/resolvedor históricos, fecha y referencia de resolución. `EventoPendienteBancario`: actor/acción/timestamp. Este hecho administrativo no es `Pago`, `Cobranza`, cheque negociable ni `MovimientoCaja`.
+`PermisoPendienteBancarioCentro`: Empresa, usuario vinculado y Centro, activo/otorgante; sólo Colaborador activo puede recibirlo, admin general puede conceder/revocar. `EventoPermisoBancario`: historial de concesión/revocación. No confiere capacidades de Caja ni se importa con Backup Empresa. Permisos y cuentas externas son contexto de instalación. Los hechos (`PendienteBancario`, eventos, correcciones) sí entran en Backup Empresa v1 y la importación conserva compatibilidad con v1 anterior sin estas secciones.

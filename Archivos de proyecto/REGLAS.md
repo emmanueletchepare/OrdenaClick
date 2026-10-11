@@ -281,3 +281,9 @@ Toda funcionalidad financiera/destructiva nueva se diseña como si
 OrdenaClick ya estuviera expuesto públicamente. No confiar en saldo,
 estado, Empresa ni relaciones enviados por navegador; recalcular y
 bloquear en backend cuando exista riesgo de competencia.
+
+## Invariantes operativos de Caja y pendientes bancarios (11/10/2026)
+- No eliminar físicamente movimientos financieros: editar/anular sólo en condiciones autorizadas, con motivo, original, contraasiento y reemplazo auditables. No anular cobranzas desde una tabla genérica. Nunca permitir efectivo disponible negativo; no reutilizar claves UUID de una operación para otra.
+- Pendiente bancario es **trabajo administrativo de comprobación externa**, no ingreso de Caja, saldo bancario, Pago o Cartera. Resolver requiere comprobación real, referencia y actor; no resolver dos veces.
+- Colaborador no tiene Caja por su jerarquía ni por recibir permiso de gestión; el permiso explícito por Centro es revocable y jamás permite consultar otra Empresa o Centro. No importar autorizaciones desde backup, sólo hechos históricos portables.
+- El backend verifica cada Empresa/Centro/objeto, no confía en filtros, `data-*`, `hidden` o IDs del navegador. Mantener POST+CSRF, auditoría sin contenido sensible e idempotencia transaccional.
