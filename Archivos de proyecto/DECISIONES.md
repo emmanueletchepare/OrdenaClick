@@ -407,3 +407,14 @@ reutilizarse inicialmente en:
 - Archivos de Empresa serán privados por defecto en producción.
 - Configuración de producción se separará de desarrollo.
 - La lógica diferencial permanecerá principalmente en backend; no se adoptará ofuscación como sustituto de seguridad o protección comercial.
+
+## Decisiones cerradas para Caja operativa — 11/10/2026
+
+- CAJA antes de REGISTROS. No se implementan Ordenes de Compra; se implementaran Ordenes de Pago despues de cerrar disponibilidad real.
+- Movimientos simples de entrada/salida de efectivo sin OP. Cada uno pertenece a Caja concreta y conserva historial; saldo derivado de `MovimientoCaja` y prohibicion de egresos superiores al efectivo disponible en la moneda.
+- El selector «Todas» es solo vista para Administrador general (y propietario/superusuario). Para alta/egreso se exige una sola Caja autorizada; Administrador de Centro ve y opera exclusivamente su Centro. Colaborador no opera Caja por jerarquia.
+- Pendientes bancarios son gestion administrativa, independientes de saldo de Caja. Cualquier usuario autorizado del Centro puede resolverlos; no dependen de Nicolas. Si siguen pendientes interviene administrador. Confirmar resolucion requiere comprobar y, si falta, emitir recibo en el sistema externo.
+- Envio de efectivo o cheques entre Cajas no es egreso manual comun: tiene origen, destino, despacho, transito, recepcion, diferencia y eventual caso en Auditoria. Preservar versiones de emisor/receptor.
+- Acuerdo de descubierto (importe, vigencia, vencimiento) se configura en el ABM de Cuentas Bancarias con alertas de vencimiento.
+- Orden de Pago lista para cerrar solo cuando cada salida fue confirmada por responsable; notificar al creador. Cierre definitivo tras revision.
+- Una sola persona con autorizaciones suficientes puede realizar varias acciones, sin exigencias artificiales de actores distintos. No aflojar controles de seguridad por simplicidad visual.

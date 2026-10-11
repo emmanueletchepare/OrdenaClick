@@ -302,3 +302,15 @@ Al abrir un chat nuevo: verificar HEAD y repo limpio; continuar por el primer pu
 - **Advertencia expresamente pendiente:** `security.W004` por `SECURE_HSTS_SECONDS=0` es deliberada hasta comprobar certificado, proxy y subdominios REALES; no se silencia ni se describe como seguridad aprobada. CSP continua en modo `report-only`, sin habilitar una politica bloqueante que rompa la UI.
 - **Fuera del alcance de la comprobacion local:** despliegue real WSGI/ASGI, PostgreSQL productivo, proxy confiable, TLS y HSTS, DNS, SMTP y entregabilidad/recuperacion real, permisos de filesystem/objeto, persistencia y restauracion de backups externos cifrados, monitorizacion/retencion de logs, inspeccion de CSP y recorrido integral visual/funcional del navegador. Requieren infraestructura real, pruebas y decisiones posteriores.
 - **Continuidad:** se puede retomar REGISTROS como desarrollo funcional tras publicar el cierre B13 validado localmente; no anunciar Base Server como certificada para produccion. Permanecen intocables la estetica, botones, navegacion contextual `[+]`, historial financiero y excepcion de superusuario. Conservados los cuatro archivos historicos no rastreados.
+
+## Continuidad prioritaria: CAJA 1 — 11/10/2026
+
+La instruccion anterior «Caja no desplaza REGISTROS» quedo superada por decision expresa: ahora CAJA es el frente funcional antes de REGISTROS. El codigo base estable es `65b1ab8` (cierre B13 local). No confundir esta etapa con ordenes de compra: se trata de **Ordenes de Pago**.
+
+Primer bloque funcional Caja 1: ingresos/egresos manuales de efectivo en Caja autorizada, saldo no negativo por moneda, historial real por Caja y deduplicacion UUID. No registrar envios internos como egresos sueltos: requieren una operacion con origen, destino y recepcion. No generar pagos de REGISTROS ni recibos externos en este bloque. Los nuevos movimientos usan `MovimientoCaja`, ya incluido en Backup Empresa v1; la tabla de idempotencia es una proteccion local tecnica, no un hecho financiero exportable, siguiendo B9b.
+
+Autorizacion: Fundador/superusuario conservan excepcion; Administrador general puede elegir cualquier Caja habilitada de la Empresa o «Todas» para vistas consolidadas; Administrador de Centro solamente sus Cajas; Colaborador no opera Caja por defecto. El selector nunca otorga autoridad. Para movimientos concretos siempre se exige Caja unica.
+
+Siguiente pendiente funcional: movimientos bancarios detectados por Emmanuel que precisan comprobacion y eventual recibo en sistema externo. Nicolas, Enzo, Juan, Fede u otro autorizado del Centro pueden resolverlos; no dependen de Nicolas. Administradores intervienen ante pendientes prolongados. La bandeja administrativa no concede saldos ni facultad de mover Caja.
+
+No modificar UI preexistente salvo acceso aprobado a funciones nuevas, ni romper pila `[+]`, reautenticacion vigente, aislamiento entre Empresas, backup y servicios financieros. Verificacion local de Caja 1 y commits selectivos de codigo/docs en dos pasos antes de marcar el bloque cerrado.

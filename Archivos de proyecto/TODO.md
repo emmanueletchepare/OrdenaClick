@@ -206,3 +206,14 @@ Antes de iniciar una tarea nueva:
 > ¿Cierra un flujo Beta, corrige un riesgo real o protege una decisión arquitectónica?
 
 Si no, debe esperar.
+
+## Caja — nueva prioridad funcional (11/10/2026)
+
+- [ ] Validar localmente Caja 1: movimientos de efectivo, historial, saldos, limites, permisos Empresa/Centro/Caja, idempotencia y migracion `0043`; publicar codigo y docs selectivamente.
+- [ ] Bandeja de movimientos bancarios pendientes de aplicacion: deteccion, identificacion de Centro, recibo externo, marca de resuelto y escalamiento administrativo.
+- [ ] Cartera fisica/electronica y disponibilidad por estado/custodia/circulacion; uso de cheques existentes en pagos individuales, no duplicarlos.
+- [ ] Envio simple entre Cajas: despacho, transito, recepcion, rechazo parcial, discrepancias y caso de Auditoria.
+- [ ] Arqueo fisico y correcciones auditadas; conciliacion de diferencias sin borrar hechos.
+- [ ] ABM Cuenta Bancaria: descubierto/vigencia/alerta; posicion bancaria informada y prevision de acreditaciones.
+- [ ] Orden de Pago colaborativa sobre disponibilidad real, confirmaciones individuales, aviso al creador y cierre separado.
+- [ ] Para cada etapa: validacion en backend, regresion multiempresa, reversas, Backup Empresa v1 e infraestructura PostgreSQL donde corresponda.

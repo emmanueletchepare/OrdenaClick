@@ -518,3 +518,21 @@ MOVIMIENTOS + DOCUMENTO + ALERTAS + AUDITORÍA
 **Primero ingresamos el dinero y los valores. Después sabemos dónde
 están y si podemos disponer de ellos. Recién entonces los utilizamos
 para pagar.**
+
+## Actualizacion operativa basada en OLAFIL — 11/10/2026
+
+Este capitulo actualiza la secuencia de implementacion previa. Caja ahora precede a REGISTROS. Primero **movimientos manuales de entrada/salida y saldos**, sin Orden de Pago; luego **pendientes bancarios**, **Cartera y disponibilidad real para pagos individuales**, **envios y recepcion**, **arqueos y prevision**, y finalmente **Ordenes de Pago**.
+
+**Movimientos de Caja:** alta de efectivo con fecha, tipo, moneda, importe, concepto y Caja concreta. Ingresos de Cobranza existentes se incluyen en historial; nunca duplicar la Cobranza en formulario manual. Egresos deben respetar el saldo disponible de su moneda, con bloqueo y deduplicacion. Historial no editable ni borrable silenciosamente; correcciones futuras con contraasientos/reversiones auditadas. Cheques fisicos tienen su Cartera; operaciones bancarias su circuito.
+
+**Centros y permisos:** Olavarria/Casa Central, Tandil y Bolivar son ejemplos, no roles o nombres codificados. Admin general puede consultar todas las Cajas o filtrar por una; Admin de Centro solo su(s) Caja(s). Colaborador no opera Caja por defecto. Una persona con capacidades suficientes puede cumplir varias funciones sin pasos artificiales entre usuarios.
+
+**Pendiente bancario:** deteccion de transferencia/deposito de cliente por quien consulta los bancos; identifica posible Centro, conserva referencia y no implica una segunda Cobranza. Usuarios autorizados del Centro comprueban recibo existente, generan el recibo externo cuando falta, y marcan resuelto con quien/cuando/referencia. Cualquiera autorizado puede resolver: no depende de Nicolas. Administradores supervisan pendientes prolongados o sin Centro identificado.
+
+**Envio interno futuro:** operacion sencilla con Caja origen, Caja destino e importe/cheques; descontar origen al despachar y mantener en transito hasta recepcion. Receptor ve detalle y compara. Si discrepa, registrar ambas declaraciones sin editar silenciosamente origen, permitir conciliacion y crear caso en Auditoria con responsabilidad y cierre trazable. No marcar la diferencia como efectivo disponible en ninguno de los Centros antes de resolverla.
+
+**Bancos:** acuerdos de descubierto, importes y vencimientos se configuran en el ABM de Cuentas Bancarias y alimentan alertas. Posicion bancaria informada, acreditaciones proyectadas y efectivo de Caja no se confunden.
+
+**Orden de Pago futura:** preparar componentes; cada responsable autorizado tilda cuando realmente confirmo la salida (efectivo/cheques/e-Cheq propio/etc.). Solo con todos los componentes confirmados pasa a **Lista para cerrar** y se avisa al creador; revision y cierre definitivo son posteriores. No crear una Orden de Compra.
+
+**Regla transversal:** lo sencillo arriba, lo seguro por debajo. Empresa/Centro/Caja validados en backend; POST+CSRF, transacciones, idempotencia, auditoria, backup y pruebas adversariales en cada bloque. No certificar concurrencia real PostgreSQL con pruebas solo SQLite.
