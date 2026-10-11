@@ -56,38 +56,4 @@
         </section>
     </form>
 
-    <section class="cobranza-card" id="cajaMovimientosHistorial">
-        <div class="cobranza-card-titulo">Historial de esta Caja</div>
-        <p class="caja-movimiento-aviso">Incluye movimientos manuales y efectivo de cobranzas. No se editan ni borran desde aquí.</p>
-        {% if pagina.object_list %}
-            <div class="caja-movimiento-tabla-contenedor">
-                <table class="caja-movimiento-tabla">
-                    <thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Moneda</th><th>Importe</th><th>Registrado por</th></tr></thead>
-                    <tbody>
-                        {% for movimiento in pagina.object_list %}
-                            <tr>
-                                <td>{{ movimiento.fecha|date:'d/m/Y' }}</td>
-                                <td>{{ movimiento.tipo }}</td>
-                                <td>{{ movimiento.concepto }}</td>
-                                <td>{{ movimiento.moneda }}</td>
-                                <td class="caja-movimiento-numero">{{ movimiento.importe|floatformat:2 }}</td>
-                                <td>{{ movimiento.creado_por.nombre_historico|default:movimiento.creado_por.username_historico }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="caja-movimiento-paginacion">
-                {% if pagina.has_previous %}
-                    <button type="button" class="caja-btn-secundario" data-caja-mov-pagina="{{ pagina.previous_page_number }}">Anterior</button>
-                {% endif %}
-                <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} ({{ pagina.paginator.count }} movimientos)</span>
-                {% if pagina.has_next %}
-                    <button type="button" class="caja-btn-secundario" data-caja-mov-pagina="{{ pagina.next_page_number }}">Siguiente</button>
-                {% endif %}
-            </div>
-        {% else %}
-            <div class="empty-state">Todavía no hay movimientos de efectivo en esta Caja.</div>
-        {% endif %}
-    </section>
 </section>

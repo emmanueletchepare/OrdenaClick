@@ -55,6 +55,7 @@ def panel_caja(request):
         {
             "empresa": empresa,
             "resumenes": resumenes,
+            "fecha_hoy": timezone.localdate(),
         },
         request=request,
     )

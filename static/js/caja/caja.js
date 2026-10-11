@@ -1526,6 +1526,9 @@
                 datos.html;
 
             formatearImportesDashboardCaja();
+            if (typeof window.cargarHistorialCaja === "function") {
+                window.cargarHistorialCaja();
+            }
 
         } catch (error) {
 

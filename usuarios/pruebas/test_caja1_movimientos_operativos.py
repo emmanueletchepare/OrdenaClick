@@ -196,16 +196,20 @@ class MovimientosOperativosCaja1Tests(TestCase):
                                {'empresa': self.empresa.pk, 'caja': self.caja_central.pk})
         self.assertEqual(resp.status_code, 200)
         self.assertIn('name="csrfmiddlewaretoken"', resp.json()['html'])
-        self.assertIn('Visible central', resp.json()['html'])
-        self.assertNotIn('No visible central', resp.json()['html'])
+        self.assertNotIn('Visible central', resp.json()['html'])
+        historial = self.client.get(reverse('historial_movimientos_caja'), {
+            'empresa': self.empresa.pk, 'caja': self.caja_central.pk})
+        self.assertEqual(historial.status_code, 200)
+        self.assertIn('Visible central', historial.json()['html'])
+        self.assertNotIn('No visible central', historial.json()['html'])
 
     def test_historial_paginado(self):
         for i in range(28):
             self.post(movimiento=self.movimiento(concepto=f'Movimiento-{i}'))
         self.client.force_login(self.dueno)
-        pagina1 = self.client.get(reverse('vista_movimientos_caja'), {
+        pagina1 = self.client.get(reverse('historial_movimientos_caja'), {
             'empresa': self.empresa.pk, 'caja': self.caja_central.pk, 'pagina': 1}).json()['html']
-        pagina2 = self.client.get(reverse('vista_movimientos_caja'), {
+        pagina2 = self.client.get(reverse('historial_movimientos_caja'), {
             'empresa': self.empresa.pk, 'caja': self.caja_central.pk, 'pagina': 2}).json()['html']
         self.assertIn('Página 1 de 2', pagina1)
         self.assertIn('Página 2 de 2', pagina2)

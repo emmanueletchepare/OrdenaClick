@@ -52,6 +52,7 @@ from .http.caja import (
 from .http.caja_movimientos import (
     vista_movimientos_caja,
     registrar_movimiento_caja_http,
+    historial_movimientos_caja_http,
 )
 
 from .http.empresa_claves import (
@@ -721,6 +722,12 @@ urlpatterns = [
         "caja/movimientos/registrar/",
         registrar_movimiento_caja_http,
         name="registrar_movimiento_caja",
+    ),
+
+    path(
+        "caja/movimientos/historial/",
+        historial_movimientos_caja_http,
+        name="historial_movimientos_caja",
     ),
 
     # =========================================

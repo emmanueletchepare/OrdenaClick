@@ -225,25 +225,35 @@
     </section>
 
 
-    <section class="caja-dashboard-seccion">
-
+    <section class="caja-dashboard-seccion" id="cajaHistorialPanel">
         <div class="caja-dashboard-titulo">
             <div>
                 <h3>Movimientos del día</h3>
-
-                <span>
-                    Actividad financiera de hoy
-                </span>
+                <span>Entradas, salidas y cobranzas de las Cajas autorizadas</span>
             </div>
         </div>
-
         <div class="caja-movimientos-dia">
-            <div class="empty-state">
-                Consultá las entradas, salidas y cobranzas desde Movimiento de Caja.
-                El historial completo se filtra por Caja autorizada.
+            <div class="caja-historial-filtros">
+                <div class="field">
+                    <label class="label" for="cajaHistorialModo">Ver movimientos</label>
+                    <select class="input-box" id="cajaHistorialModo">
+                        <option value="hoy" selected>Hoy</option>
+                        <option value="rango">Rango de fechas</option>
+                    </select>
+                </div>
+                <div id="cajaHistorialRango" class="caja-historial-rango" hidden>
+                    <div class="field">
+                        <label class="label" for="cajaHistorialDesde">Desde</label>
+                        <input class="input-box" id="cajaHistorialDesde" type="date" value="{{ fecha_hoy|date:'Y-m-d' }}">
+                    </div>
+                    <div class="field">
+                        <label class="label" for="cajaHistorialHasta">Hasta</label>
+                        <input class="input-box" id="cajaHistorialHasta" type="date" value="{{ fecha_hoy|date:'Y-m-d' }}">
+                    </div>
+                </div>
             </div>
+            <div id="cajaHistorialResultados" aria-live="polite">Consultando movimientos...</div>
         </div>
-
     </section>
 
 </div>

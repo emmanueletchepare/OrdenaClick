@@ -1,0 +1,31 @@
+<div id="cajaHistorialTabla">
+    {% if pagina.object_list %}
+        <div class="caja-movimiento-tabla-contenedor">
+            <table class="caja-movimiento-tabla">
+                <thead>
+                    <tr><th>Fecha</th>{% if mostrar_caja %}<th>Caja / Centro</th>{% endif %}<th>Tipo</th><th>Concepto</th><th>Moneda</th><th>Importe</th><th>Registrado por</th></tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in pagina.object_list %}
+                    <tr>
+                        <td>{{ movimiento.fecha|date:'d/m/Y' }}</td>
+                        {% if mostrar_caja %}<td>{{ movimiento.caja.nombre }} — {{ movimiento.caja.centro_operativo.nombre }}</td>{% endif %}
+                        <td>{{ movimiento.tipo }}</td>
+                        <td>{{ movimiento.concepto }}</td>
+                        <td>{{ movimiento.moneda }}</td>
+                        <td class="caja-movimiento-numero">{{ movimiento.importe|floatformat:2 }}</td>
+                        <td>{{ movimiento.creado_por.nombre_historico|default:movimiento.creado_por.username_historico }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="caja-movimiento-paginacion">
+            {% if pagina.has_previous %}<button type="button" class="caja-btn-secundario" data-caja-historial-pagina="{{ pagina.previous_page_number }}">Anterior</button>{% endif %}
+            <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} ({{ pagina.paginator.count }} movimientos)</span>
+            {% if pagina.has_next %}<button type="button" class="caja-btn-secundario" data-caja-historial-pagina="{{ pagina.next_page_number }}">Siguiente</button>{% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state">No hay movimientos de efectivo para la Caja y las fechas seleccionadas.</div>
+    {% endif %}
+</div>

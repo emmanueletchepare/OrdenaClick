@@ -12,16 +12,28 @@
 #cajaMovimientosOperativos .caja-movimiento-mensaje {
     min-height: 1.5em; margin: 0.5rem 0; font-weight: 600;
 }
-#cajaMovimientosOperativos .caja-movimiento-tabla-contenedor { width: 100%; overflow-x: auto; }
-#cajaMovimientosOperativos .caja-movimiento-tabla {
+#cajaHistorialResultados .caja-movimiento-tabla-contenedor { width: 100%; overflow-x: auto; }
+#cajaHistorialResultados .caja-movimiento-tabla {
     width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;
 }
-#cajaMovimientosOperativos .caja-movimiento-tabla th,
-#cajaMovimientosOperativos .caja-movimiento-tabla td {
+#cajaHistorialResultados .caja-movimiento-tabla th,
+#cajaHistorialResultados .caja-movimiento-tabla td {
     border-bottom: 1px solid rgba(128, 128, 128, 0.25); padding: 0.65rem 0.5rem;
 }
-#cajaMovimientosOperativos .caja-movimiento-numero { text-align: right; font-variant-numeric: tabular-nums; }
-#cajaMovimientosOperativos .caja-movimiento-paginacion {
+#cajaHistorialResultados .caja-movimiento-numero { text-align: right; font-variant-numeric: tabular-nums; }
+#cajaHistorialResultados .caja-movimiento-paginacion {
     display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem;
 }
 #cajaMovimientosOperativos [hidden] { display: none !important; }
+
+/* Historial visible en el dashboard principal, por Caja y fechas. */
+.caja-historial-filtros { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: end; margin-bottom: 0.9rem; }
+.caja-historial-filtros .field { min-width: 170px; flex: 0 1 220px; }
+.caja-historial-filtros [hidden] { display: none !important; }
+.caja-historial-rango { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+#cajaHistorialResultados { width: 100%; }
+#cajaHistorialResultados .caja-movimiento-tabla-contenedor { width: 100%; overflow-x: auto; }
+#cajaHistorialResultados .caja-movimiento-tabla { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+#cajaHistorialResultados .caja-movimiento-tabla th, #cajaHistorialResultados .caja-movimiento-tabla td { padding: 0.65rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,.25); }
+#cajaHistorialResultados .caja-movimiento-numero { text-align: right; font-variant-numeric: tabular-nums; }
+#cajaHistorialResultados .caja-movimiento-paginacion { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem; }
