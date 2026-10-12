@@ -431,3 +431,19 @@ reutilizarse inicialmente en:
 - **Bancos:** acuerdos de descubierto (importe/vigencia/vencimiento/alerta) se configurarán en ABM Cuentas Bancarias. Posición bancaria informada, acreditaciones pendientes y descubierto no equivalen a saldo contable seguro.
 - **OP:** sólo después de Caja/Cartera y Pago individual. Reserva de terceros, preparación por responsables de efectivo/cheques/e-Cheqs propios, confirmación real de cada salida; con todas confirmadas pasa a «Lista para cerrar», aviso al creador y cierre posterior autorizado. En empresa unipersonal la misma persona puede completar varias acciones, sin rol ficticio.
 - **Cartera:** cheques físicos por Caja y e-Cheqs electrónicos separados; estados y trazabilidad de depósitos, reservas, endosos, cesiones, rechazo posterior y custodia. Cheque físico «No a la orden» no utilizable en Pago.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

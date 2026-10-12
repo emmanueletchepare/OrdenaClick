@@ -287,3 +287,19 @@ bloquear en backend cuando exista riesgo de competencia.
 - Pendiente bancario es **trabajo administrativo de comprobación externa**, no ingreso de Caja, saldo bancario, Pago o Cartera. Resolver requiere comprobación real, referencia y actor; no resolver dos veces.
 - Colaborador no tiene Caja por su jerarquía ni por recibir permiso de gestión; el permiso explícito por Centro es revocable y jamás permite consultar otra Empresa o Centro. No importar autorizaciones desde backup, sólo hechos históricos portables.
 - El backend verifica cada Empresa/Centro/objeto, no confía en filtros, `data-*`, `hidden` o IDs del navegador. Mantener POST+CSRF, auditoría sin contenido sensible e idempotencia transaccional.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

@@ -327,3 +327,19 @@ Vencimiento/Alerta reflejando un estado financiero anterior.
 `CorreccionMovimientoCaja`: Original único, contraasiento, reemplazo opcional, acción Editar/Anular, UUID idempotente, huella, motivo y autor histórico. MovimientoCaja no se borra. Los saldos conservan derivación de asientos; rechazar correcciones que dejarían saldo negativo.
 `PendienteBancario`: Empresa, CuentaBancaria, CentroOperativo opcional, clave UUID, fecha, tipo Transferencia/Depósito/e-Cheq detectado, importe positivo, referencia, observaciones, estado Pendiente/Resuelto, creador/resolvedor históricos, fecha y referencia de resolución. `EventoPendienteBancario`: actor/acción/timestamp. Este hecho administrativo no es `Pago`, `Cobranza`, cheque negociable ni `MovimientoCaja`.
 `PermisoPendienteBancarioCentro`: Empresa, usuario vinculado y Centro, activo/otorgante; sólo Colaborador activo puede recibirlo, admin general puede conceder/revocar. `EventoPermisoBancario`: historial de concesión/revocación. No confiere capacidades de Caja ni se importa con Backup Empresa. Permisos y cuentas externas son contexto de instalación. Los hechos (`PendienteBancario`, eventos, correcciones) sí entran en Backup Empresa v1 y la importación conserva compatibilidad con v1 anterior sin estas secciones.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

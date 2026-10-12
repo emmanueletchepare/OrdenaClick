@@ -552,3 +552,19 @@ persistir.
 `usuarios/services/pendientes_bancarios.py` centraliza permisos por Empresa/Centro/jerarquía y servicios de alta/resolución sin tocar dinero. `usuarios/http/gestion_bancaria.py` expone GET privado y POST con CSRF; el perfil Colaborador sólo ofrece acceso a pendientes de Centros concedidos, sin Caja ni saldos. Una transacción serializa por Empresa y guarda eventos e identidad histórica.
 `usuarios/services/caja_correcciones.py` implementa corrección/anulación auditables de movimientos manuales mediante contraasiento y reemplazo; niega objetos de otra Empresa/Caja, cobranzas, segundas correcciones y saldo negativo. Los cambios de saldo nunca son un UPDATE destructivo sobre `MovimientoCaja`. Nueva migración aditiva `0044` y rutas privadas registradas en `usuarios/urls.py`.
 Backup Empresa v1 registra correcciones, pendientes y eventos después de dependencias; no exporta privilegios por Centro. Importación admite antiguos v1 sin tablas opcionales nuevas, manteniendo validación de ZIP/manifiesto. No presentar pruebas SQLite como prueba de locking real PostgreSQL.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

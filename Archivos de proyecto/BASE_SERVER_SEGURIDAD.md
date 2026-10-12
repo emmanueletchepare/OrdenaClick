@@ -353,3 +353,19 @@ No hace falta contratar toda la infraestructura antes de cerrar Base Server. Sí
 ## Continuidad de seguridad — Caja 2 (11/10/2026)
 Frontera explícita entre dinero y trabajo: `PendienteBancario` no produce `Pago`, `MovimientoCaja`, ingreso bancario ni cheque financiero; su resolución sólo registra gestión externa. Nuevos permisos Colaborador/Centro son independientes de `caja.ver` y `caja.operar`, se verifican en servidor, se revocan y quedan auditados. Ni IDs ni parámetros amplían alcance; pendientes sin Centro permanecen bajo administración general. Editar/Eliminar en historial Caja 1 significa contraasiento con motivo/actor e idempotencia, nunca DELETE sobre operaciones, sin doble reversión ni saldo negativo. Nuevas rutas privadas HTTP requieren autenticación, POST/CSRF y pruebas de aislamiento. Backup Empresa v1 almacena hechos de pendientes/correcciones y mantiene lecturas de anteriores ZIP v1; nunca transporta permisos de instalación.
 Cierre local sujeto a suite y migración `0044`; operación en proxy/HTTPS/PostgreSQL y concurrencia real pendiente de infraestructura, en línea con cierre B13.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

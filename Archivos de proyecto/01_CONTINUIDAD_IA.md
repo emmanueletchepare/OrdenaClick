@@ -323,3 +323,19 @@ Caja 2: se aprobó una capacidad independiente de Caja, **gestión de pendientes
 ## Continuidad: Caja 2, permisos y ajustes de historial (11/10/2026)
 Base git previa `44f4b33`. Bloque Caja 2 sujeto a verificación local: modelos `PendienteBancario`, `EventoPendienteBancario`, `PermisoPendienteBancarioCentro`, `EventoPermisoBancario`, `CorreccionMovimientoCaja`; migración aditiva `0044`; vistas nuevas de gestión por Empresa/Centro; autorización **en backend**. Admin general/propietario/superusuario: todos los Centros y pendientes por identificar. Admin Centro: su Centro. Colaborador: sólo Centros expresamente concedidos por admin general; sin Caja, sin saldos. Usuario autorizado puede resolver sin depender de Nicolás. El registro de transferencia, depósito o e-Cheq detectado **no crea ingreso, Pago, recibo, ni cartera financiera**: se requiere comprobar imputación en sistema externo y dejar referencia. Eventos auditables de resolución y cambios de permisos. Formularios POST/CSRF, bloqueo transaccional/idempotencia, no asumir producción PostgreSQL comprobada en SQLite.
 Caja 1: controles de fecha alineados, encabezado/table de Registros y edición/anulación no destructiva con motivo; sólo movimientos manuales; cobranzas quedan inalterables desde el historial; se generan contraasientos y reemplazos conservando historia y no permitiendo saldo negativo. Backup v1 de hechos actualizado, ZIP antiguos v1 sin nuevas secciones admitidos, privilegios no restaurados. Tras test, commits selectivos código y MD por separado, cuatro archivos locales históricos intactos. Priorizar revisión visual manual.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

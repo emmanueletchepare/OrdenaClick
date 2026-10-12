@@ -361,3 +361,19 @@ El listado de entradas, salidas y efectivo de cobranzas se traslada al panel pri
 ## Caja 2 — Pendientes bancarios y corrección UX Caja 1 (11/10/2026)
 Bloque de Caja posterior al historial `44f4b33`. Implementación **sujeta a aprobación de migración y pruebas locales**: gestión de depósitos, transferencias y e-Cheqs observados en banco como pendientes de aplicación externa; permisos explícitos por Centro para colaboradores; resolución con referencia y actor, sin crear Pago/Cobranza ni alterar saldos. Vista de Caja 1: Desde/Hasta en paralelo, columnas y encabezados coherentes con Registros, acciones Editar/Eliminar exclusivamente sobre movimientos manuales mediante contraasiento, motivo y auditoría. Eliminar equivale a **anular contablemente**, nunca DELETE físico. Nueva migración aditiva `0044`. Backup Empresa v1 incorpora hechos nuevos, sin importar privilegios de Colaboradores; restauración compatible con ZIP v1 anteriores.
 Pendientes posteriores: traslados internos y controversias de recepción, Cartera/e-Cheqs financieros, depósitos/arqueos, descubierto desde ABM Cuenta Bancaria, disponibilidad real para Pago y luego OP colaborativas; auditoría con casos de conflicto. No certificar instalación pública.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.

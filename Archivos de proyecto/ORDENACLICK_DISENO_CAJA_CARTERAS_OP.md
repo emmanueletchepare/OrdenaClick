@@ -558,3 +558,61 @@ Tipos: transferencia recibida, depósito recibido, e-Cheq detectado. Se guarda E
 5. Arqueos: registrar físico real y diferencias frente a saldo teórico sin reescritura económica silenciosa; políticas de auditoría y resolución.
 ### Seguridad y respaldo
 Siempre Empresa/Centro/objeto en backend, POST/CSRF para cambios, transacciones/serialización e idempotencia; auditoría sin secretos, HTML escapado, no acceso de colaboradores a Caja. Backup Empresa v1 incluye hechos y eventos, no privilegios de la instalación; ZIP v1 anteriores se pueden leer sin nuevos componentes. Pruebas de concurrencia PostgreSQL e infraestructura real aún pendientes.
+
+
+## Caja 2 — revisión funcional de pendientes globales (12/10/2026)
+
+**Corrección explícita del diseño previo de Caja 2 (no volver a la bandeja por Centro).**
+Dentro de una Empresa activa, *todos los pendientes bancarios y e-Cheqs* son
+**globales dentro de esa Empresa mientras están pendientes**, aunque no se
+sepa quién pagó ni a qué Centro corresponde. Ningún selector de Empresa ni de
+Centro aparece en la consulta de pendientes. La Empresa operativa se fija en
+sesión a través de una entrada autorizada desde el entorno de esa Empresa;
+manipular parámetros de URL/POST no permite saltar a otra Empresa.
+
+- Bandeja: `Fecha | Identificación (puede estar vacía) | Importe ARS formateado | Confirmar`.
+- Confirmar abre modal: identificación real del cliente, Centro Operativo,
+  resultado (ya imputado / recibo externo realizado), referencia del recibo
+  cuando se generó. Guardar registra actor/fecha y evento; no contabiliza ni
+  crea un recibo externo. No se cierra dos veces.
+- Usuarios administrativos de Centro o colaboradores con permiso explícito
+  para gestión pueden **ver todos los pendientes globales de SU Empresa**.
+  Sólo pueden resolverlos **asignándolos a un Centro autorizado**. Admin
+  general/propietario/superusuario puede resolver hacia cualquier Centro
+  activo de la Empresa. Un colaborador sin permiso no accede. Esto NO da
+  permisos de Caja ni saldos de cuentas bancarias.
+- Tras resolver, el movimiento pasa al historial **del Centro elegido**.
+  Los resueltos se consultan según alcance del usuario; allí sí puede
+  existir filtro por Centro. No reabrir o reclasificar sin nuevo circuito de
+  auditoría aprobado. Los pendientes legados con Centro precargado se tratan
+  como globales mientras permanezcan pendientes y se fija el Centro final
+  al confirmar.
+- Registro para quien controla el banco (administración general): elegir
+  cuenta bancaria, tipo depósito/transferencia, fecha, identificación
+  opcional e importe. **Agregar fila** sólo modifica memoria del navegador;
+  íconos Editar (carga de nuevo los casilleros) y Eliminar (quita fila).
+  **Guardar todos** persiste lote atómico con idempotencia individual, sin
+  registros parciales si alguna fila falla.
+- Cargar e-Cheq: formulario separado con datos de la planilla real `Cartera
+  de E-Cheqs` B–H: titular, número de cheque, código/nombre de banco emisor,
+  importe y fecha de acreditación. Estado/historial se gestionan en el sistema.
+  Selector `A la orden` por defecto, o `No a la orden`. Guardar en lote,
+  editar y quitar filas antes de persistir. **No crear automáticamente un
+  Cheque de Cartera ni un Pago** al detectar un e-Cheq: integrar instrumento
+  y verificar recibo sin duplicación en el futuro bloque Cartera.
+- Navegación: eliminar CTA Pendientes del selector general de perfiles y de
+  accesos rápidos de Caja. Añadir en sidebar del entorno Empresa. Los
+  colaboradores habilitados eligen la Empresa fuera de Gestión Bancaria,
+  desde su entorno autorizado. `Volver` regresa al menú de origen, no al
+  selector de perfiles. Los permisos se administran exclusivamente desde
+  **Configuración de Empresa**, no junto a la bandeja.
+- Seguridad obligatoria: POST+CSRF; GET no muta; validación Empresa/sesión,
+  Centro permitido, relaciones y objetos en backend; transacción atómica;
+  idempotencia por fila; auditabilidad por identidad histórica; no exponer
+  cuentas/saldos a colaboradores; pruebas de Empresas cruzadas, Centros,
+  reintentos y backup. La migración 0045 es aditiva; Backup Empresa v1
+  serializa nuevos campos por especificación ya vigente; los permisos
+  funcionales de instalación NO forman parte del backup portable.
+- No confundir seguridad local probada con infraestructura productiva: el
+  cierre local de Base Server no certifica concurrencia real PostgreSQL ni
+  HTTPS/proxy, SMTP, políticas de retención y backup externo.

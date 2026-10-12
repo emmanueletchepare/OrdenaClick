@@ -343,3 +343,19 @@ emitidos.
 - Dashboard Caja muestra `Movimientos del día`: selector Caja o Todas autorizado + Hoy/Rango de fechas. Desde/Hasta en una misma línea; tabla compacta con encabezados del estilo Registros y acciones icono a la derecha. Editar/Eliminar abre corrección auditable debajo del listado, no elimina físicamente ni pierde datos no sensibles al fallar.
 - Botón `Movimiento de Caja` abre el formulario de alta sin historial redundante. Desde Caja se puede abrir la bandeja independiente `Pendientes bancarios` sin que un Colaborador abra el panel financiero.
 - En Inicio/Perfil Colaborador existe acceso propio a `Pendientes bancarios`. Usuario selecciona Empresa autorizada; lista pendientes propios del Centro. Administración general registra operaciones detectadas; admin general puede asignar Centros a colaboradores. Un pendiente se cierra con resultado «Ya imputado» / «Recibo generado» y referencia externa. GET no cambia estados; sin navegación `[+]` paralela o JS inline nuevo.
+
+
+## Caja 2 — revisión de pendientes globales (12/10/2026)
+
+La definición vigente es: **todos los pendientes bancarios y e-Cheqs son
+visibles globalmente dentro de la Empresa activa** para los usuarios con
+capacidad de gestión; no se asigna Centro al detectar el ingreso. Al
+confirmar en modal, el usuario identifica cliente, elige Centro de su
+alcance y registra la verificación/recibo externo; desde allí es resuelto
+**propiedad operativa de ese Centro**. Una Empresa activa nunca muestra
+otra ni ofrece selector de Empresa. La carga de depósitos/transferencias y
+la de e-Cheqs tienen formularios separados, filas temporales editables y
+Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
+disponible. Permisos de colaboradores van en Configuración de Empresa,
+no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
+`ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
