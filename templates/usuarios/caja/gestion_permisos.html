@@ -1,0 +1,13 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OrdenaClick | Configuración de permisos</title><link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}?v=3"></head>
+<body><main class="gb-contenedor"><header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div>
+<h1>Configuración de Empresa · Gestión Bancaria</h1><p>{{ empresa.razon_social }}</p></div><a class="gb-volver" href="{{ volver }}">Volver</a></header>
+<section class="gb-tarjeta"><h2>Permisos de colaboradores por Centro</h2><p class="gb-ayuda">Este permiso habilita ver pendientes globales de la Empresa y resolverlos <strong>sólo para el Centro autorizado</strong>. No habilita Caja ni saldos bancarios.</p>
+<form method="post" action="{% url 'asignar_centro_gestion_bancaria' %}" class="gb-campos gb-permisos">{% csrf_token %}
+<label>Colaborador<select name="usuario" required><option value="">Seleccionar</option>{% for usuario in colaboradores %}<option value="{{ usuario.pk }}">{{ usuario.get_full_name|default:usuario.username }}</option>{% endfor %}</select></label>
+<label>Centro<select name="centro" required><option value="">Seleccionar</option>{% for centro in centros %}<option value="{{ centro.pk }}">{{ centro.nombre }}</option>{% endfor %}</select></label>
+<label>Acción<select name="activo"><option value="1">Autorizar</option><option value="0">Revocar</option></select></label><button type="submit" class="gb-btn">Guardar permiso</button></form>
+{% if permisos %}<h3>Permisos activos</h3><div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Usuario</th><th>Centro</th></tr></thead><tbody>
+{% for p in permisos %}<tr><td>{{ p.usuario.username }}</td><td>{{ p.centro_operativo.nombre }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section></main></body></html>

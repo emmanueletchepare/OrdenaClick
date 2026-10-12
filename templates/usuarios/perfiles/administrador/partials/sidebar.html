@@ -187,6 +187,17 @@ Registros
 
 </button>
 
+<form method="post" action="{% url 'entrar_gestion_bancaria' %}" id="formEntrarGestionBancaria" class="sidebar-pendientes-empresa">
+{% csrf_token %}
+<input type="hidden" name="empresa" value="{{ empresa_actual.pk }}">
+<input type="hidden" name="origen" value="admin">
+<input type="hidden" name="destino" value="pendientes">
+<button class="sidebar-nav-btn" type="submit" data-sidebar-item>
+    <span class="sidebar-nav-icon" aria-hidden="true">▤</span>
+    <span class="sidebar-nav-text">Pendientes bancarios</span>
+</button>
+</form>
+
 <button
     id="btnSidebarCaja"
     class="sidebar-nav-btn"

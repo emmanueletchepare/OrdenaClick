@@ -29,7 +29,14 @@ font:inherit;cursor:pointer;}
 <h1>Perfil Colaborador</h1>
 <p>Acá se mostrará el listado de empresas que te hayan aceptado como colaborador. Desde esas empresas vas a poder cargar registros, pagos y utilizar los ABM habilitados para la operación.</p>
 <div class="actions">
-<a href="{% url 'gestion_bancaria' %}">Pendientes bancarios</a>
+{% for empresa in empresas_pendientes %}
+<form method="post" action="{% url 'entrar_gestion_bancaria' %}">
+{% csrf_token %}
+<input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<input type="hidden" name="origen" value="colaborador">
+<button class="salir-perfil" type="submit">Pendientes · {{ empresa.razon_social }}</button>
+</form>
+{% endfor %}
 <a href="{% url 'home' %}">Volver a perfiles</a>
 <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="salir-perfil">Cerrar sesión</button></form>
 </div>

@@ -16,3 +16,31 @@ th.gb-numero,td.gb-numero{text-align:right;white-space:nowrap;font-variant-numer
 .gb-permisos{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;font-size:13px}.gb-permisos span{border:1px solid #33455f;border-radius:8px;padding:4px 10px}
 dl{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:13px}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
 @media(max-width:640px){.gb-contenedor{padding:12px}.gb-header{display:block}.gb-tarjeta{padding:13px}.gb-filtros label{width:100%}}
+/* Caja 2 revisión: mismo lenguaje visual que las tablas de Registros/Caja. */
+[hidden]{display:none!important}.gb-contenedor{max-width:1210px}
+.gb-seccion-cabeza{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.gb-seccion-cabeza h2{margin:0}.gb-filtro,.gb-campos{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap}
+.gb-filtro label,.gb-campos label,.gb-cuenta label,.gb-dialog label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#b5c7e1;min-width:135px}
+.gb-filtro input,.gb-filtro select,.gb-campos input,.gb-campos select,.gb-cuenta select,.gb-dialog input,.gb-dialog select{
+ background:#0f141e;border:1px solid #37465d;color:#f1f5fc;padding:9px;border-radius:9px;font:inherit;max-width:100%;}
+.gb-filtro input:focus-visible,.gb-filtro select:focus-visible,.gb-campos input:focus-visible,.gb-cuenta select:focus-visible,
+.gb-dialog input:focus-visible,.gb-dialog select:focus-visible{outline:2px solid #75aaff}
+.gb-tabla{table-layout:fixed;min-width:690px}.gb-tabla th,.gb-tabla td{vertical-align:middle;padding:11px 12px}
+.gb-tabla th{background:#1b2434;border-bottom:1px solid #37465d;font-weight:500;color:#b7cbee}
+.gb-tabla td{border-top:1px solid #2c3549}.gb-tabla .gb-numero{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:175px}
+.gb-tabla .gb-accion{text-align:right;width:180px}.gb-accion small{display:block;color:#a8b9d6}
+.gb-tenue,.gb-vacio{color:#92a4c0}.gb-btn{background:#1b365b;border:1px solid #4b81c2;color:#fff;border-radius:9px;padding:10px 15px;font-weight:600;cursor:pointer;font-size:13px}
+.gb-btn:hover{border-color:#92bbf8}.gb-btn:disabled{opacity:.45;cursor:default}
+.gb-btn-sec{background:#171d2a;border-color:#424e67}.gb-btn-menor{font-weight:500;padding:6px 12px}
+.gb-pestanas{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}.gb-pestana{background:#111724;color:#a9c3e8}
+.gb-pestana.activa{background:#254b80;color:#fff}.gb-carga{display:flex;flex-direction:column;gap:15px}
+.gb-cuenta select{min-width:230px}.gb-campos{align-items:end;gap:12px}.gb-campos input{width:100%}
+.gb-depositos label:nth-child(3){min-width:235px;flex:1}.gb-echeqs label{flex:1;min-width:150px}
+.gb-campos .gb-btn{align-self:end;margin-bottom:0}.gb-icono{width:30px;height:30px;border-radius:8px;border:1px solid #355479;background:#1b3151;color:#e9f2fc;cursor:pointer;margin-left:5px}
+.gb-icono:hover{border-color:#8bb6f6}.gb-guardar{margin-top:14px}.gb-mensaje{min-height:18px;color:#afd2ff;font-size:13px}
+.gb-volver{color:#b9d6ff;border:1px solid #304a70;padding:8px 13px;border-radius:8px;white-space:nowrap}
+.gb-dialog{width:min(460px,calc(100vw - 30px));background:#171e2b;color:#f4f7fc;border:1px solid #344764;border-radius:14px;padding:24px;box-shadow:0 20px 60px #000a}
+.gb-dialog::backdrop{background:rgba(0,0,0,.65)}.gb-dialog form{display:flex;flex-direction:column;gap:12px}.gb-dialog h2{margin:0}
+.gb-dialog p{color:#abc0da;font-size:13px}.gb-dialog-acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+@media(max-width:800px){.gb-campos label{min-width:calc(50% - 12px)}.gb-tabla{min-width:670px}.gb-header{align-items:flex-start}}
+@media(max-width:500px){.gb-campos label{min-width:100%}.gb-campos .gb-btn{width:100%}}
