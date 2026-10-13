@@ -339,3 +339,55 @@ Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
 disponible. Permisos de colaboradores van en Configuración de Empresa,
 no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 `ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
+
+### Retomar Caja 2: Banco buscable, [+] y tipos de pendientes
+
+Base publicada previa: `57cd48d`. Código local preparado, NO asumir push.
+En e-Cheq, Banco emisor se elige por sugerencias del ABM activo de la Empresa;
+`[+]` invoca el alta existente de Banco desde un modal en la misma página,
+conserva la preparación del lote y vuelve con nuevo Banco elegido. En backend
+se exige ID de Banco activo de la Empresa: no se aceptan nombres libres ni
+IDs ajenos. No requiere migración; el pendiente conserva nombre histórico.
+En ambas vistas de bandeja, etiqueta de categoría + color sobrio: depósito/
+transferencia turquesa; e-Cheq violeta. No cambiar permisos ni navegación.
+Verificar `makemigrations --check`, `check`, tests, revisión en navegador y
+recién entonces commit/push código y docs por separado.
+
+### Caja 2 — e-Cheqs: formulario corregido, cuenta y ABM contextual (pendiente de pruebas)
+
+- **No confundir e-Cheq con depósito bancario**: el e-Cheq recibido pertenece al CUIT
+  de la Empresa; no requiere cuenta receptora ni crea movimiento de Caja. La cuenta
+  sólo se elige en una futura operación de depósito. Depósito/transferencia sí
+  requiere cuenta. Migración aditiva `0046` hace opcional la FK para e-Cheq;
+  protege la obligación para depósitos/transferencias, sin borrar asociaciones
+  históricas ni alterar saldos. Backup Empresa v1 conserva estos hechos.
+- Número e-Cheq: `usuarios.services.cheques.normalizar_numero_cheque` es la regla
+  canónica (únicamente dígitos, máximo ocho y relleno izquierdo: 185 → 00000185).
+  En pantalla se aplica al salir; en servidor siempre se revalida.
+- Importe: edición y presentación es-AR, por ejemplo 150 → 150,00 y 15000 →
+  15.000,00; el servidor mantiene Decimal/validación de importes positivos.
+- Se retira el N.º Banco adicional. Banco Emisor y Titular están alineados con los
+  demás casilleros: búsqueda por teclado. Banco proviene del ABM activo de la
+  Empresa y se valida por ID/Empresa. Titular sugiere Clientes activos de esa
+  Empresa, pero conserva texto libre porque el titular no necesariamente es el
+  cliente al que se le aplica el pago. El Centro y cliente definitivo se
+  identifican al **resolver**, no durante el registro.
+- `[+]` no abre modal inventado: navega al **ABM existente** de Banco/Cliente,
+  incluso con alta de Centro anidada en Clientes, y retorna a la carga de e-Cheq
+  restaurando formulario, edición y filas preparadas. El borrador temporal
+  `sessionStorage` está aislado por Empresa y pestaña; si no se puede almacenar
+  no sale de la pantalla. El servidor valida sesión Empresa y rol administrativo.
+- Se conserva el listado ya aceptado: depósitos/transferencias en turquesa,
+  e-Cheqs en violeta, estado Pendiente/Resuelto separado, modal Confirmar y
+  permisos de administración por Centro; no introducir nuevos selectores.
+- **Estado**: pendiente de tests reales, revisión visual y publicación selectiva.
+
+### Caja 2 — búsqueda, fecha, auditoría y Designar perfiles (12/10/2026)
+
+- **Bandeja global por Empresa activa:** se mantiene el alcance global de Pendientes; una vez resuelto, el Centro limita la consulta de Resueltos. Nuevo buscador incremental por Titular / Cliente, importe en es-AR y número del e-Cheq. La consulta filtra en servidor *antes* de paginar y siempre por Empresa; el filtro Centro sólo aparece en Resueltos. Las monedas e importes de los listados se muestran con miles mediante punto y decimales mediante coma; el formato lo asegura `usuarios.templatetags.caja_importes.importe_ar` y no depende del locale de Django.
+- **e-Cheq:** la fecha de acreditación no puede superar los 30 días de antigüedad en el momento de la carga; UI `min` y validación de backend, sin reinterpretar registros históricos. Se mantienen e-Cheq sin cuenta receptora (migración 0046), banco emisor proveniente del ABM, ocho dígitos en número, monto es-AR y condición A la orden / No a la orden.
+- **Depósitos/transferencias y e-Cheqs:** campo `Titular / Cliente` con búsqueda entre Clientes activos de la Empresa, `[+]` hacia ABM existente y vuelta conservando ambas listas temporales, datos y edición. El titular puede quedar sin identificar al detectar un depósito; la identificación real y el Centro quedan definidos al resolver.
+- **Corrección de errores:** movimiento Pendiente sólo editable por quien lo registró o administración general, con motivo obligatorio, antes/después persistente, actor histórico e idempotencia UUID. No modifica Caja ni crea recibos/pagos. Para un movimiento ya Resuelto no se altera ningún dato financiero ni la imputación externa: el generador, resolvedor o administración general con alcance pueden **abrir una incidencia de auditoría** con motivo. El registro queda sin cambiar; incidencias abiertas visibles a administración general en Configuración de permisos. El procedimiento definitivo de resolución de incidencias se decidirá cuando se implemente Auditoría completa, sin editar silenciosamente resueltos.
+- **Configuración de accesos:** el acceso a los permisos de Gestión Bancaria pasa de botón independiente en Configuración a **Configuración → Designar perfiles**, junto con relaciones. La pantalla de permisos conserva la validación administración general/propietario/superusuario; asigna Centro(s) a colaboradores, sin conceder Caja ni saldos, sin cambiar jerarquías estructurales. Permisos NO viajan en Backup Empresa v1.
+- **Persistencia / backup:** migración aditiva `0047_revision_auditada_pendiente_bancario` y `RevisionPendienteBancario` para edición o incidencia, snapshots JSON antes/después, motivo, creador y estado. Backup Empresa v1 incluye esta nueva entidad como componente opcional, y serializa JSON como objeto para permitir su restauración; respaldos antiguos sin este componente siguen aceptados. Auditoría de permisos de usuarios permanece fuera del respaldo portable.
+- **Seguridad:** POST+CSRF, verificación Empresa activa y roles/centro en backend, GET sólo lectura, transacción y bloqueo para evitar revisiones simultáneas, no cruce entre Empresas. Comprobar al ejecutar las pruebas locales y luego la disposición visual; no dar por aceptado lo no comprobado. Base Server aprobado localmente no implica certificado de producción para PostgreSQL, proxy/TLS o backups remotos.
