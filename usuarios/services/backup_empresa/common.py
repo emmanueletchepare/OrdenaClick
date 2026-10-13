@@ -49,6 +49,8 @@ def serialize_scalar(value):
         return value.isoformat()
     if isinstance(value, uuid.UUID):
         return str(value)
+    if isinstance(value, (dict, list)):
+        return value
     if isinstance(value, (str, int, float, bool)):
         return value
     return str(value)

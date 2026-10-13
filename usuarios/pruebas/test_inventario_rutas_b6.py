@@ -23,6 +23,7 @@ class InventarioDinamicoRutasB6Tests(TestCase):
         "accion": "aceptar",
         "paso": "empresa",
         "campo": "estatuto",
+        "tipo": "bancos",
     }
 
     def rutas_privadas(self):

@@ -4,12 +4,12 @@ Los tests utilizan una BD de prueba descartable; no afectan la Caja real.
 """
 import json
 import uuid
-from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.test import Client, TestCase
+from django.utils import timezone
 from django.urls import reverse
 
 from usuarios.models import (
@@ -50,7 +50,7 @@ class MovimientosOperativosCaja1Tests(TestCase):
     @staticmethod
     def movimiento(**kwargs):
         return {
-            'fecha': date.today().isoformat(), 'tipo': 'Ingreso',
+            'fecha': timezone.localdate().isoformat(), 'tipo': 'Ingreso',
             'moneda': 'ARS', 'importe': '100.00', 'concepto': 'Entrada manual',
             'clave_idempotencia': str(uuid.uuid4()), **kwargs,
         }

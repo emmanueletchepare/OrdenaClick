@@ -10,4 +10,10 @@
 <label>Acción<select name="activo"><option value="1">Autorizar</option><option value="0">Revocar</option></select></label><button type="submit" class="gb-btn">Guardar permiso</button></form>
 {% if permisos %}<h3>Permisos activos</h3><div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Usuario</th><th>Centro</th></tr></thead><tbody>
 {% for p in permisos %}<tr><td>{{ p.usuario.username }}</td><td>{{ p.centro_operativo.nombre }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+<section class="gb-tarjeta"><h2>Incidencias para auditoría</h2>
+<p class="gb-ayuda">Un resuelto no se modifica silenciosamente: se conserva el movimiento original y el motivo informado. Las incidencias abiertas requieren revisión administrativa.</p>
+{% if incidencias %}<div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Fecha</th><th>Tipo / Referencia</th><th>Informó</th><th>Motivo</th></tr></thead><tbody>
+{% for item in incidencias %}<tr><td>{{ item.creado|date:'d/m/Y H:i' }}</td><td>{{ item.pendiente.get_tipo_display }} · {{ item.pendiente.referencia }}</td><td>{{ item.actor.nombre_historico|default:item.actor.username_historico }}</td><td>{{ item.motivo }}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<p class="gb-ayuda">Sin incidencias abiertas.</p>{% endif %}
 </section></main></body></html>

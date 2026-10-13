@@ -5,7 +5,7 @@ recibos o Pagos. Los permisos funcionales jamás conceden capacidad de Caja.
 """
 import logging
 import re
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
@@ -15,12 +15,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from usuarios.models import (
-    AsignacionUsuarioEmpresa, CentroOperativo, CuentaBancaria, Empresa,
+    AsignacionUsuarioEmpresa, Banco, CentroOperativo, CuentaBancaria, Empresa,
     EventoPendienteBancario, EventoPermisoBancario, PendienteBancario,
     PermisoPendienteBancarioCentro,
 )
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.identidades import obtener_identidad_usuario_empresa
+from usuarios.services.cheques import normalizar_numero_cheque
 
 LOG = logging.getLogger('ordenaclick.audit')
 MAX_LOTE = 80
@@ -110,9 +111,14 @@ def _normalizar_fila(empresa, datos, cuenta_id, clase):
         raise ValueError('Fila de carga inválida.')
     if 'centro' in datos and datos['centro'] not in (None, ''):
         raise ValueError('El Centro se determina al resolver, no al detectar el movimiento.')
-    cuenta = CuentaBancaria.objects.filter(pk=cuenta_id, empresa=empresa, activo=True).first()
-    if cuenta is None:
-        raise ValueError('Seleccione una cuenta bancaria de esta Empresa.')
+    cuenta = None
+    if clase == 'bancos':
+        cuenta = CuentaBancaria.objects.filter(pk=cuenta_id, empresa=empresa, activo=True).first()
+        if cuenta is None:
+            raise ValueError('Seleccione una cuenta bancaria de esta Empresa.')
+    elif clase == 'echeqs':
+        if cuenta_id not in (None, ''):
+            raise ValueError('Un e-Cheq detectado no debe vincularse a una cuenta bancaria receptora.')
     try:
         clave = UUID(datos.get('clave', ''))
     except (TypeError, AttributeError, ValueError) as exc:
@@ -131,10 +137,21 @@ def _normalizar_fila(empresa, datos, cuenta_id, clase):
     elif clase == 'echeqs':
         tipo = 'ECheq'
         titular = _texto(datos.get('titular', ''), 'Titular', 200, obligatorio=True)
-        numero = _texto(datos.get('numero', ''), 'Número de e-Cheq', 80, obligatorio=True)
-        banco = _texto(datos.get('banco', ''), 'Banco emisor', 150, obligatorio=True)
-        codigo = _texto(datos.get('codigo_banco', ''), 'Código de banco', 12)
+        numero = normalizar_numero_cheque(datos.get('numero', ''))
+
+        # El banco emisor es un ABM de la Empresa, no texto libre enviado por el navegador.
+        try:
+            banco_id = int(datos.get('banco_id'))
+        except (ValueError, TypeError) as exc:
+            raise ValueError('Seleccione un banco registrado de esta Empresa.') from exc
+        emisor = Banco.objects.filter(pk=banco_id, empresa=empresa, activo=True).first()
+        if emisor is None:
+            raise ValueError('Seleccione un banco registrado de esta Empresa.')
+        banco = emisor.nombre  # Snapshot histórico: no cambia si luego se renombra el ABM.
+        codigo = ''  # Campo legado: no se pide código de banco en la carga de e-Cheq.
         acreditacion = _fecha(datos.get('acreditacion'), 'fecha de acreditación')
+        if acreditacion < timezone.localdate() - timedelta(days=30):
+            raise ValueError('La fecha de acreditación de un e-Cheq no puede tener más de 30 días de antigüedad.')
         fecha = _fecha(datos.get('fecha', acreditacion.isoformat()))
         condicion = datos.get('condicion', 'Orden')
         if condicion not in ('Orden', 'NoOrden'):
@@ -173,7 +190,7 @@ def registrar_lote(*, usuario, empresa_id, cuenta_id, clase, filas):
             anterior = PendienteBancario.objects.filter(clave=fila['clave']).first()
             if anterior is not None:
                 if anterior.empresa_id != empresa.pk or anterior.creado_por_id != identidad.pk or any(
-                    anterior.cuenta_bancaria_id != valor.pk if campo == 'cuenta_bancaria' else
+                    anterior.cuenta_bancaria_id != (valor.pk if valor is not None else None) if campo == 'cuenta_bancaria' else
                     getattr(anterior, campo) != valor
                     for campo, valor in fila.items() if campo != 'clave'
                 ):

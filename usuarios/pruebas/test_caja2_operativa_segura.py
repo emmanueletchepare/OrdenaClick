@@ -39,6 +39,8 @@ class Caja2SeguridadTests(TestCase):
         cls.caja_tandil=Caja.objects.create(empresa=cls.empresa,centro_operativo=cls.tandil,nombre='Sucursal')
         cls.banco=Banco.objects.create(empresa=cls.empresa,nombre='Banco Prueba')
         cls.otro_banco=Banco.objects.create(empresa=cls.otra_empresa,nombre='Otro Banco')
+        cls.emisor_bbva=Banco.objects.create(empresa=cls.empresa,nombre='BBVA')
+        cls.emisor_galicia=Banco.objects.create(empresa=cls.empresa,nombre='GALICIA')
         cls.cuenta=CuentaBancaria.objects.create(empresa=cls.empresa,banco=cls.banco,nombre='Cuenta corriente',tipo_cuenta='CuentaCorriente')
         cls.cuenta_ajena=CuentaBancaria.objects.create(empresa=cls.otra_empresa,banco=cls.otro_banco,nombre='Ajena',tipo_cuenta='CuentaCorriente')
         for user,rol,centro in ((cls.general,'admin_general',None),(cls.centro_admin,'admin_centro',cls.tandil),(cls.colaborador,'colaborador',None)):
@@ -53,7 +55,8 @@ class Caja2SeguridadTests(TestCase):
 
     def lote(self, filas=None, clase='bancos', cuenta=None):
         return self.client.post(reverse('registrar_lote_bancario'), data=json.dumps({
-            'clase':clase,'cuenta': (cuenta or self.cuenta).pk,'filas':filas if filas is not None else [self.fila()]
+            'clase':clase,'cuenta': cuenta.pk if cuenta is not None else (None if clase == 'echeqs' else self.cuenta.pk),
+            'filas':filas if filas is not None else [self.fila()]
         }),content_type='application/json')
 
     def conceder(self, activo='1', usuario=None, centro=None, admin=None):
@@ -172,16 +175,16 @@ class Caja2SeguridadTests(TestCase):
     def test_echeq_conserva_datos_y_condicion_por_defecto(self):
         self.activar()
         datos={'clave':str(uuid.uuid4()),'titular':'PROVEEDOR PRUEBA','numero':'12345',
-            'codigo_banco':'17','banco':'BBVA','importe':'10000.00','acreditacion':date.today().isoformat()}
+            'codigo_banco':'17','banco':'BBVA','banco_id':self.emisor_bbva.pk,'importe':'10000.00','acreditacion':date.today().isoformat()}
         self.assertEqual(self.lote([datos],clase='echeqs').status_code,200)
         p=PendienteBancario.objects.get()
-        self.assertEqual((p.tipo,p.echeq_condicion,p.echeq_banco_nombre,p.echeq_numero),('ECheq','Orden','BBVA','12345'))
+        self.assertEqual((p.tipo,p.echeq_condicion,p.echeq_banco_nombre,p.echeq_numero),('ECheq','Orden','BBVA','00012345'))
         self.assertFalse(Cheque.objects.exists())
         self.assertFalse(MovimientoCaja.objects.exists())
 
     def test_echeq_no_a_la_orden_y_reintento_diferente(self):
         self.activar()
-        datos={'clave':str(uuid.uuid4()),'titular':'X','numero':'46','banco':'GALICIA',
+        datos={'clave':str(uuid.uuid4()),'titular':'X','numero':'46','banco':'GALICIA','banco_id':self.emisor_galicia.pk,
             'importe':'100.00','acreditacion':date.today().isoformat(),'condicion':'NoOrden'}
         self.assertEqual(self.lote([datos],clase='echeqs').status_code,200)
         self.assertEqual(PendienteBancario.objects.get().echeq_condicion,'NoOrden')
@@ -189,10 +192,82 @@ class Caja2SeguridadTests(TestCase):
 
     def test_echeq_condicion_invalidada_no_persiste(self):
         self.activar()
-        datos={'clave':str(uuid.uuid4()),'titular':'X','numero':'99','banco':'BANCO',
+        datos={'clave':str(uuid.uuid4()),'titular':'X','numero':'99','banco':'BBVA','banco_id':self.emisor_bbva.pk,
             'importe':'100.00','acreditacion':date.today().isoformat(),'condicion':'Libre'}
         self.assertEqual(self.lote([datos],clase='echeqs').status_code,400)
         self.assertFalse(PendienteBancario.objects.exists())
+
+    def test_banco_echeq_requiere_abm_propio_no_texto_libre(self):
+        self.activar()
+        datos={'clave':str(uuid.uuid4()), 'titular':'Titular', 'numero':'110',
+               'banco':'BANCO INVENTADO', 'importe':'1000.00',
+               'acreditacion':date.today().isoformat()}
+        self.assertEqual(self.lote([datos], clase='echeqs').status_code,400)
+        self.assertFalse(PendienteBancario.objects.exists())
+
+    def test_banco_echeq_de_otra_empresa_rechazado(self):
+        self.activar()
+        datos={'clave':str(uuid.uuid4()), 'titular':'Titular', 'numero':'110',
+               'banco':'Otro Banco', 'banco_id':self.otro_banco.pk,
+               'importe':'1000.00', 'acreditacion':date.today().isoformat()}
+        self.assertEqual(self.lote([datos], clase='echeqs').status_code,400)
+        self.assertFalse(PendienteBancario.objects.exists())
+
+    def test_banco_echeq_inactivo_rechazado(self):
+        self.activar()
+        banco=Banco.objects.create(empresa=self.empresa,nombre='BANCO DESACTIVADO',activo=False)
+        datos={'clave':str(uuid.uuid4()), 'titular':'Titular', 'numero':'110',
+               'banco':'BANCO DESACTIVADO', 'banco_id':banco.pk,
+               'importe':'1000.00', 'acreditacion':date.today().isoformat()}
+        self.assertEqual(self.lote([datos], clase='echeqs').status_code,400)
+        self.assertFalse(PendienteBancario.objects.exists())
+
+    def test_banco_echeq_nombre_servidor_no_del_navegador(self):
+        self.activar()
+        datos={'clave':str(uuid.uuid4()), 'titular':'Titular', 'numero':'110',
+               'banco':'NOMBRE FALSO', 'banco_id':self.emisor_bbva.pk,
+               'importe':'1000.00', 'acreditacion':date.today().isoformat()}
+        self.assertEqual(self.lote([datos], clase='echeqs').status_code,200)
+        self.assertEqual(PendienteBancario.objects.get().echeq_banco_nombre,'BBVA')
+
+    def test_bandeja_categoria_visual_y_bancos_solo_empresa(self):
+        self.activar()
+        self.assertEqual(self.lote([self.fila()], clase='bancos').status_code,200)
+        echeq={'clave':str(uuid.uuid4()), 'titular':'PRUEBA', 'numero':'120',
+               'banco':'BBVA','banco_id':self.emisor_bbva.pk,'importe':'200.00',
+               'acreditacion':date.today().isoformat()}
+        self.assertEqual(self.lote([echeq], clase='echeqs').status_code,200)
+        html=self.client.get(reverse('gestion_bancaria')).content.decode()
+        self.assertIn('gb-registro-banco',html)
+        self.assertIn('gb-registro-echeq',html)
+        self.assertIn('>Transferencia</span>',html)
+        self.assertIn('>e-Cheq</span>',html)
+        self.assertIn('id="gbBancosEmisores"',html)
+        self.assertIn('data-id="'+str(self.emisor_bbva.pk)+'"',html)
+        self.assertNotIn('value="Otro Banco"',html)
+        self.assertIn(reverse('abm_contextual_echeq', args=['bancos']),html)
+
+    def test_alta_banco_contextual_reutiliza_abm_y_no_expone_otros(self):
+        self.activar()
+        response=self.client.post(reverse('guardar_banco'),{
+            'empresa':self.empresa.pk, 'nombre':'Banco Nuevo'})
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.json()['ok'])
+        banco=Banco.objects.get(pk=response.json()['banco']['id'])
+        self.assertEqual((banco.empresa_id,banco.nombre),(self.empresa.pk,'BANCO NUEVO'))
+        html=self.client.get(reverse('gestion_bancaria')).content.decode()
+        self.assertIn('value="BANCO NUEVO"',html)
+        response=self.client.post(reverse('guardar_banco'),{
+            'empresa':self.otra_empresa.pk, 'nombre':'Acceso indebido'})
+        self.assertEqual(response.status_code,403)
+        self.assertFalse(Banco.objects.filter(nombre='ACCESO INDEBIDO').exists())
+
+    def test_bandeja_colaborador_no_expone_abm_bancos(self):
+        self.conceder()
+        self.activar(self.colaborador,origen='colaborador')
+        html=self.client.get(reverse('gestion_bancaria')).content.decode()
+        self.assertNotIn('id="gbBancosEmisores"',html)
+        self.assertNotIn('gbFormAltaBanco',html)
 
     def test_lote_cuenta_ajena_no_persiste(self):
         self.activar()
@@ -316,3 +391,46 @@ class Caja2SeguridadTests(TestCase):
         c=Client(enforce_csrf_checks=True);c.force_login(self.dueno)
         self.assertEqual(c.post(url, data=json.dumps({'empresa_id':self.empresa.pk}), content_type='application/json').status_code,403)
         self.assertEqual(MovimientoCaja.objects.count(),1)
+
+
+    # Regresiones de la captura: e-Cheq no es depósito a cuenta.
+
+    def test_echeq_sin_cuenta_y_numero_normalizado(self):
+        self.activar()
+        fila = {'clave': str(uuid.uuid4()), 'titular': 'Titular prueba',
+            'numero': '185', 'banco_id': self.banco.pk, 'banco': self.banco.nombre,
+            'importe': '15.000,00', 'acreditacion': date.today().isoformat()}
+        respuesta = self.lote([fila], clase='echeqs', cuenta=self.cuenta)
+        self.assertEqual(respuesta.status_code, 400)  # Rechaza recepción ficticia
+        self.assertFalse(PendienteBancario.objects.exists())
+        respuesta = self.client.post(reverse('registrar_lote_bancario'),
+            data=json.dumps({'clase': 'echeqs', 'cuenta': None, 'filas': [fila]}),
+            content_type='application/json')
+        self.assertEqual(respuesta.status_code, 200, respuesta.content)
+        p = PendienteBancario.objects.get()
+        self.assertIsNone(p.cuenta_bancaria_id)
+        self.assertEqual(p.echeq_numero, '00000185')
+        self.assertEqual(p.importe, Decimal('15000.00'))
+        self.assertFalse(Cheque.objects.exists())
+
+    def test_echeq_numero_invalido_bloquea_lote(self):
+        self.activar()
+        valido = {'clave': str(uuid.uuid4()), 'titular': 'Titular prueba',
+            'numero': '8', 'banco_id': self.banco.pk, 'importe': '150,00',
+            'acreditacion': date.today().isoformat()}
+        invalido = {**valido, 'clave': str(uuid.uuid4()), 'numero': '123456789'}
+        r = self.client.post(reverse('registrar_lote_bancario'),
+            data=json.dumps({'clase': 'echeqs', 'cuenta': None, 'filas': [valido, invalido]}),
+            content_type='application/json')
+        self.assertEqual(r.status_code, 400)
+        self.assertFalse(PendienteBancario.objects.exists())
+
+    def test_abm_contextual_real_autorizado_solo_general(self):
+        self.activar()
+        for tipo, titulo in [('bancos', 'Bancos'), ('clientes', 'Clientes')]:
+            r = self.client.get(reverse('abm_contextual_echeq', args=[tipo]))
+            self.assertEqual(r.status_code, 200, r.content)
+            self.assertIn(titulo, r.content.decode())
+            self.assertIn('Volver', r.content.decode())
+        self.activar(self.centro_admin)
+        self.assertEqual(self.client.get(reverse('abm_contextual_echeq', args=['bancos'])).status_code, 403)

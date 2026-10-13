@@ -740,10 +740,6 @@ function mostrarSubmenu(tipo){
                 Designar perfiles
             </button>
 
-            <button type="button" class="module-card" id="btnPermisosBancariosConfig">
-                Permisos de pendientes bancarios
-            </button>
-
         `;
 
     }
@@ -773,18 +769,6 @@ function mostrarSubmenu(tipo){
 
         inicializarNavegacionEstructuraOperativa();
 
-    }
-
-    if(tipo === "configuracion"){
-        const boton = document.getElementById("btnPermisosBancariosConfig");
-        if(boton){
-            boton.addEventListener("click", function(){
-                const formulario = document.getElementById("formEntrarGestionBancaria");
-                if(!formulario){ return; }
-                formulario.elements.destino.value = "permisos";
-                formulario.submit();
-            });
-        }
     }
 
 

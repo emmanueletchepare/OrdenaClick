@@ -44,3 +44,56 @@ dl{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:13px}dt{color:
 .gb-dialog p{color:#abc0da;font-size:13px}.gb-dialog-acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 @media(max-width:800px){.gb-campos label{min-width:calc(50% - 12px)}.gb-tabla{min-width:670px}.gb-header{align-items:flex-start}}
 @media(max-width:500px){.gb-campos label{min-width:100%}.gb-campos .gb-btn{width:100%}}
+
+/* Caja 2: categoria visual del pendiente, no estados de vencimiento. */
+.gb-registro-banco{background:rgba(36,147,157,.055)}
+.gb-registro-echeq{background:rgba(151,115,224,.075)}
+.gb-registro-banco td:first-child{box-shadow:inset 3px 0 #348b92}
+.gb-registro-echeq td:first-child{box-shadow:inset 3px 0 #9d7be0}
+.gb-registro-banco:hover{background:rgba(36,147,157,.10)}
+.gb-registro-echeq:hover{background:rgba(151,115,224,.13)}
+.gb-tipo{display:inline-block;font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.01em;
+ border-radius:6px;padding:3px 7px;margin:0 0 5px;border:1px solid transparent;white-space:nowrap}
+.gb-registro-banco .gb-tipo{background:rgba(37,142,151,.14);border-color:rgba(89,188,193,.38);color:#a3e2e3}
+.gb-registro-echeq .gb-tipo{background:rgba(153,109,211,.17);border-color:rgba(178,142,237,.45);color:#ddc7ff}
+.gb-banco-emisor{min-width:190px;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 42px;
+ column-gap:8px;row-gap:2px;align-items:end}
+.gb-banco-emisor>label{min-width:0}.gb-banco-emisor input{width:100%}
+.gb-banco-mas{width:42px;min-height:38px;white-space:nowrap;padding:7px 0;align-self:end}
+.gb-banco-ayuda{grid-column:1/-1;color:var(--muted);font-size:11px}
+@media(max-width:500px){.gb-banco-emisor{min-width:100%}}
+
+/* e-Cheq: misma fila y las mismas convenciones de Carga Simple. */
+.gb-campos.gb-echeqs{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end}
+.gb-echeqs>label,.gb-echeqs>.gb-relacion{min-width:0;width:100%;flex:auto}
+.gb-echeqs>label input,.gb-echeqs>label select{width:100%;min-width:0}
+.gb-relacion{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:end;min-width:0}
+.gb-relacion>label{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.gb-relacion input{width:100%;min-width:0}
+.gb-contexto-mas{min-width:44px;height:39px;display:flex;justify-content:center;align-items:center;padding:0;white-space:nowrap;text-decoration:none}
+.gb-contexto-mas:hover{text-decoration:none}
+.gb-banco-emisor .gb-banco-ayuda{display:none}
+.gb-echeqs>label:has(select[name="condicion"]){grid-column:1 / 5}
+.gb-echeqs>[data-agregar]{grid-column:5;min-width:0;width:100%}
+@media(max-width:1030px){.gb-campos.gb-echeqs{grid-template-columns:repeat(3,minmax(0,1fr))}.gb-echeqs>label:has(select[name="condicion"]){grid-column:1 / 3}.gb-echeqs>[data-agregar]{grid-column:3}}
+@media(max-width:680px){.gb-campos.gb-echeqs{grid-template-columns:repeat(2,minmax(0,1fr))}.gb-echeqs>label:has(select[name="condicion"]){grid-column:1 / 2}.gb-echeqs>[data-agregar]{grid-column:2}}
+@media(max-width:420px){.gb-campos.gb-echeqs{grid-template-columns:1fr}.gb-echeqs>label:has(select[name="condicion"]),.gb-echeqs>[data-agregar]{grid-column:1}}
+/* ABM contextual reutiliza la tarjeta real de los maestros. */
+.gb-abm-real .card{background:#171c26;border:1px solid #2c3549;border-radius:15px;padding:24px}
+.gb-abm-real .input-box,.gb-abm-real input,.gb-abm-real select{background:#0f141e;color:#f1f5fc;border:1px solid #37465d;border-radius:9px;padding:10px;font:inherit;max-width:100%}
+.gb-abm-real .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.gb-abm-real .field-full{grid-column:1 / -1}
+.gb-abm-real .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.gb-abm-real .action-btn,.gb-abm-real .guardar{background:#1b365b;color:#fff;border:1px solid #4b81c2;border-radius:9px;padding:10px 15px;cursor:pointer}
+.gb-abm-real .guardar{font-weight:700}
+@media(max-width:640px){.gb-abm-real .form-grid{grid-template-columns:1fr}}
+
+/* Ajuste Caja 2: filtros, ABM Cliente y rectificación auditada. */
+.gb-filtro input[type="search"]{min-width:240px;max-width:360px;}
+.gb-accion .gb-corregir{margin-left:7px;background:transparent;border-color:#46536b;}
+.gb-accion .gb-corregir:hover{background:#26334c;}
+.gb-dialog #gbRevisionCampos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.gb-dialog #gbRevisionCampos[hidden],.gb-dialog #gbRevisionEcheq[hidden]{display:none;}
+.gb-dialog #gbRevisionEcheq{display:contents;}
+.gb-dialog #gbRevisionEcheq label{min-width:0;}
+@media(max-width:760px){.gb-filtro input[type="search"]{min-width:0;width:100%;}.gb-dialog #gbRevisionCampos{grid-template-columns:1fr;}}

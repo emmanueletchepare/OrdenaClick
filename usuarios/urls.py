@@ -55,8 +55,9 @@ from .http.caja_movimientos import (
     historial_movimientos_caja_http,
 )
 from .http.caja_correcciones import corregir_movimiento_caja_http
+from .http.revisiones_pendientes_bancarios import revisar_pendiente_http
 from .http.gestion_bancaria import (
-    gestion_bancaria, entrar_gestion_bancaria,
+    gestion_bancaria, entrar_gestion_bancaria, abm_contextual_echeq,
     registrar_lote_bancario_http, registrar_pendiente_bancario_http,
     resolver_pendiente_bancario_http, asignar_centro_gestion_bancaria_http,
     clasificar_pendiente_bancario_http, configurar_permisos_bancarios,
@@ -740,10 +741,12 @@ urlpatterns = [
     path("caja/movimientos/corregir/<int:movimiento_id>/", corregir_movimiento_caja_http,
          name="corregir_movimiento_caja"),
     path("gestion-bancaria/", gestion_bancaria, name="gestion_bancaria"),
+    path("gestion-bancaria/abm/<str:tipo>/", abm_contextual_echeq, name="abm_contextual_echeq"),
     path("gestion-bancaria/entrar/", entrar_gestion_bancaria,
          name="entrar_gestion_bancaria"),
     path("gestion-bancaria/lote/", registrar_lote_bancario_http,
          name="registrar_lote_bancario"),
+    path("gestion-bancaria/revisar/<int:pendiente_id>/", revisar_pendiente_http, name="revisar_pendiente_bancario"),
     path("gestion-bancaria/configuracion/", configurar_permisos_bancarios,
          name="configurar_permisos_bancarios"),
     path("gestion-bancaria/crear/", registrar_pendiente_bancario_http,

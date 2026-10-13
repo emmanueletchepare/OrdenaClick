@@ -3390,7 +3390,7 @@ class PendienteBancario(models.Model):
     TIPOS = [('Transferencia', 'Transferencia recibida'), ('Deposito', 'Depósito recibido'), ('ECheq', 'e-Cheq detectado')]
     ESTADOS = [('Pendiente', 'Pendiente'), ('Resuelto', 'Resuelto')]
     empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT, related_name='pendientes_bancarios')
-    cuenta_bancaria = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT, related_name='pendientes_aplicacion')
+    cuenta_bancaria = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_aplicacion')
     centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_bancarios')
     clave = models.UUIDField(unique=True)
     fecha = models.DateField()
@@ -3417,7 +3417,29 @@ class PendienteBancario(models.Model):
 
     class Meta:
         ordering = ['-fecha', '-creado', '-pk']
-        constraints = [models.CheckConstraint(condition=models.Q(importe__gt=0), name='pendiente_bancario_importe_positivo')]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(importe__gt=0), name='pendiente_bancario_importe_positivo'),
+            models.CheckConstraint(condition=models.Q(tipo='ECheq') | models.Q(cuenta_bancaria__isnull=False), name='pendiente_banco_cuenta_requerida'),
+        ]
+
+
+
+
+class RevisionPendienteBancario(models.Model):
+    """Hecho de auditoría: cambio previo a resolución o incidencia posterior."""
+    pendiente = models.ForeignKey('PendienteBancario', on_delete=models.PROTECT, related_name='revisiones')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    clave = models.UUIDField(unique=True)
+    tipo = models.CharField(max_length=24, choices=[('Editado', 'Edición auditada'), ('Incidencia', 'Error informado')])
+    estado = models.CharField(max_length=16, default='Aplicado')
+    motivo = models.CharField(max_length=300)
+    anterior = models.JSONField(default=dict)
+    nuevo = models.JSONField(default=dict)
+    contenido = models.JSONField(default=dict)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
 
 
 class EventoPendienteBancario(models.Model):

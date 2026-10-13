@@ -61,6 +61,18 @@
             {% for relacion in roles_funcionales %}<article class="relation-card"><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
         </div>
     </section>
+
+    <section class="card">
+        <div class="card-title-row"><div><p class="section-kicker">Permisos funcionales</p><h2>Gestión de pendientes bancarios</h2></div></div>
+        <p class="subtitle">Asignar y revocar Centros para colaboradores, sin habilitar Caja ni saldos.</p>
+        <form method="post" action="{% url 'entrar_gestion_bancaria' %}">
+            {% csrf_token %}
+            <input type="hidden" name="empresa" value="{{ empresa.pk }}">
+            <input type="hidden" name="origen" value="admin">
+            <input type="hidden" name="destino" value="permisos">
+            <button type="submit" class="btn">Configurar permisos por Centro</button>
+        </form>
+    </section>
 </main>
 <script src="{% static 'js/relaciones/relaciones.js' %}?v=1"></script>
 </body>

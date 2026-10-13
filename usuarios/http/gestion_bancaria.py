@@ -1,9 +1,15 @@
 """Pendientes globales DE LA EMPRESA ACTIVA, sin selector interempresas."""
 import json
+from decimal import Decimal, InvalidOperation
 import uuid
 from urllib.parse import urlencode
+from datetime import timedelta
+
+from django.db.models import Q, CharField
+from django.db.models.functions import Cast
 
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -14,8 +20,8 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from usuarios.models import (AsignacionUsuarioEmpresa, CentroOperativo, CuentaBancaria,
-    PendienteBancario, PermisoPendienteBancarioCentro)
+from usuarios.models import (AsignacionUsuarioEmpresa, Banco, Cliente, CentroOperativo, CuentaBancaria,
+    PendienteBancario, PermisoPendienteBancarioCentro, RevisionPendienteBancario)
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.pendientes_bancarios import (
     alcance_pendientes, cambiar_permiso, registrar_lote, resolver_pendiente,
@@ -86,15 +92,74 @@ def gestion_bancaria(request):
         if not centros.filter(pk=centro_pk).exists():
             return HttpResponseForbidden('Centro no autorizado.')
         pendientes = pendientes.filter(centro_operativo_id=centro_pk)
-    pendientes = pendientes.select_related('resuelto_por', 'centro_operativo').order_by('-fecha', '-creado', '-pk')
+    buscar = (request.GET.get('buscar') or '').strip()[:80]
+    if buscar:
+        # Se filtra en SQL antes de paginar, sin limitarse a la página visible.
+        pendientes = pendientes.annotate(importe_busqueda=Cast('importe', CharField()))
+        condiciones = (Q(identificacion__icontains=buscar)
+            | Q(referencia__icontains=buscar)
+            | Q(echeq_numero__icontains=buscar)
+            | Q(echeq_titular__icontains=buscar))
+        numero = buscar.replace(' ', '').replace('$', '')
+        if ',' in numero:
+            numero = numero.replace('.', '').replace(',', '.')
+        elif numero.count('.') > 1 or (numero.count('.') == 1 and len(numero.split('.')[-1]) == 3):
+            numero = numero.replace('.', '')
+        if numero and all(c in '0123456789.' for c in numero):
+            condiciones |= Q(importe_busqueda__icontains=numero)
+            try:
+                valor = Decimal(numero)
+                if valor.is_finite() and valor >= 0:
+                    condiciones |= Q(importe=valor)
+            except (InvalidOperation, ValueError):
+                pass
+        pendientes = pendientes.filter(condiciones)
+    pendientes = pendientes.select_related('resuelto_por', 'creado_por', 'centro_operativo').order_by('-fecha', '-creado', '-pk')
     pagina = Paginator(pendientes, 25).get_page(request.GET.get('pagina', 1))
     es_general = centros_habilitados is None
     cuentas = CuentaBancaria.objects.filter(empresa=empresa, activo=True).select_related('banco').order_by('nombre') if es_general else []
+    bancos_emisores = Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre') if es_general else []
+    clientes_titulares = Cliente.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if es_general else []
     return render(request, 'usuarios/caja/gestion_bancaria.html', {
         'empresa': empresa, 'pagina': pagina, 'estado': estado,
         'centro_filtro': centro_filtro, 'centros': centros, 'cuentas': cuentas,
+        'bancos_emisores': bancos_emisores, 'clientes_titulares': clientes_titulares,
         'es_general': es_general, 'fecha_hoy': timezone.localdate(),
-        'volver': _volver(request),
+        'volver': _volver(request), 'usuario_id': request.user.pk,
+        'buscar': buscar, 'fecha_minima_echeq': timezone.localdate() - timedelta(days=30),
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def abm_contextual_echeq(request, tipo):
+    """ABM real desde e-Cheq, limitado a la Empresa activa y capacidad general.
+
+    Reusa los mismos fragmentos Bancos/Clientes que el panel Administrador.
+    La navegación al ABM y su retorno no conceden Caja ni crean un e-Cheq.
+    """
+    if tipo not in ('bancos', 'clientes'):
+        return HttpResponseForbidden('ABM no permitido.')
+    try:
+        empresa, alcance = _empresa_activa(request)
+        if alcance is not None:
+            raise PermissionDenied('Sólo administración general puede usar este ABM.')
+    except (PermissionDenied, TypeError, ValueError):
+        return HttpResponseForbidden('ABM de Empresa no autorizado.')
+    if tipo == 'bancos':
+        datos = {'empresa': empresa, 'bancos': Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre')}
+        contenido = render_to_string('usuarios/maestros/bancos.html', datos, request=request)
+    else:
+        datos = {
+            'empresa': empresa,
+            'clientes': Cliente.objects.filter(empresa=empresa, activo=True).select_related('centro_operativo').order_by('centro_operativo__nombre', 'numero_cliente'),
+            'centros_operativos': CentroOperativo.objects.filter(empresa=empresa, activo=True).order_by('nombre'),
+        }
+        contenido = render_to_string('usuarios/maestros/clientes.html', datos, request=request)
+    return render(request, 'usuarios/caja/abm_contextual_echeq.html', {
+        'empresa': empresa, 'tipo': tipo, 'contenido_abm': contenido,
+        'volver': reverse('gestion_bancaria'), 'usuario_id': request.user.pk,
     })
 
 
@@ -171,7 +236,11 @@ def configurar_permisos_bancarios(request):
     return render(request, 'usuarios/caja/gestion_permisos.html', {
         'empresa': empresa, 'colaboradores': colaboradores,
         'centros': CentroOperativo.objects.filter(empresa=empresa, activo=True).order_by('nombre'),
-        'permisos': permisos, 'volver': _volver(request),
+        'permisos': permisos,
+        'incidencias': RevisionPendienteBancario.objects.filter(
+            pendiente__empresa=empresa, tipo='Incidencia', estado='Abierto'
+        ).select_related('pendiente','actor').order_by('-creado')[:100],
+        'volver': _volver(request),
     })
 
 

@@ -40,4 +40,16 @@
             {% for relacion in roles_funcionales %}<article><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
         </div>
     </section>
+
+    <section class="config-relaciones__card">
+        <div class="config-relaciones__titulo"><div><p>Permisos funcionales</p><h3>Gestión de pendientes bancarios</h3></div></div>
+        <p class="config-relaciones__subtitulo">Autorizá o revocá los Centros en los que cada colaborador puede resolver pendientes. No concede acceso a Caja ni a saldos bancarios.</p>
+        <form method="post" action="{% url 'entrar_gestion_bancaria' %}" class="config-relaciones__form">
+            {% csrf_token %}
+            <input type="hidden" name="empresa" value="{{ empresa.pk }}">
+            <input type="hidden" name="origen" value="admin">
+            <input type="hidden" name="destino" value="permisos">
+            <div class="config-relaciones__acciones"><button type="submit">Configurar permisos por Centro</button></div>
+        </form>
+    </section>
 </section>
