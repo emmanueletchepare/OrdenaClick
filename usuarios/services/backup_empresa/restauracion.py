@@ -207,6 +207,18 @@ class RestauradorEmpresaV1:
                 continue
             content = leer_archivo_backup(self.token, metadata["path"])
             filename = safe_backup_filename(metadata.get("original_name") or field_name)
+            # Nómina: al restaurar, validar bytes e integridad antes de escribir
+            # un documento privado; no fiarse del nombre de un archivo ZIP.
+            if spec.key == 'documentos_empleados':
+                from usuarios.services.nomina import archivo_validado
+                from django.core.exceptions import ValidationError
+                try:
+                    extension, digest = archivo_validado(ContentFile(content))
+                except ValidationError as error:
+                    raise BackupEmpresaError('Documento de Nómina inválido en el respaldo.') from error
+                if digest != obj.sha256:
+                    raise BackupEmpresaError('Integridad de documento de Nómina no coincide.')
+                obj._extension_verificada = extension
             file_value = getattr(obj, field_name)
             file_value.save(filename, ContentFile(content), save=False)
             self.created_files.append(file_value.name)

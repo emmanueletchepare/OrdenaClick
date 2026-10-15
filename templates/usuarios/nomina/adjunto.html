@@ -1,0 +1,13 @@
+<div class="nm-adjunto">
+  <div class="nm-adjunto-titulo">{{ titulo }}</div>
+  {% for doc in documentos %}
+    {% if doc.tipo == tipo %}
+      <p class="nm-adjunto-meta">Archivo cargado: {{ doc.nombre_original }} · {{ doc.creado|date:'d/m/Y' }}</p>
+      <a class="nm-boton nm-secundario nm-adjunto-ver" href="{% url 'descargar_documento_nomina' empresa.pk doc.pk %}" target="_blank" rel="noopener noreferrer">Ver archivo</a>
+    {% endif %}
+  {% endfor %}
+  <label class="nm-file-btn">
+    <span class="nm-file-text">📄 Adjuntar archivo</span>
+    <input type="file" name="{{ campo }}" accept=".pdf,.jpg,.jpeg,.png">
+  </label>
+</div>

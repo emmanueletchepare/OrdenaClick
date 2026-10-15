@@ -675,6 +675,7 @@ async function cargarProximosVencimientos(
         mostrarTablaProximosVencimientos(
             datos.movimientos
         );
+        mostrarAlertasLicenciasNomina(datos.licencias_nomina || []);
 
     }catch(error){
 
@@ -1369,4 +1370,33 @@ function mostrarTablaProximosVencimientos(
         }
     );
 
+}
+
+
+/* Alertas laborales: sin mezclar documentos con importes financieros. */
+function mostrarAlertasLicenciasNomina(alertas) {
+    if (!Array.isArray(alertas) || !alertas.length) return;
+    const contenedor = document.getElementById('tablaProximosVencimientos');
+    if (!contenedor) return;
+    const seccion = document.createElement('section');
+    seccion.className = 'nm-licencias-pendientes';
+    const titulo = document.createElement('h3');
+    titulo.textContent = 'Licencias de conducir que requieren atención';
+    seccion.appendChild(titulo);
+    for (const dato of alertas) {
+        const linea = document.createElement('p');
+        linea.textContent = String(dato.nombre || '') + ' · vence ' +
+            formatearFechaVencimiento(String(dato.vence || ''));
+        seccion.appendChild(linea);
+    }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Abrir Nómina de Empleados';
+    btn.className = 'nm-abrir-desde-alertas';
+    btn.addEventListener('click', () => {
+        if (typeof mostrarSubmenu === 'function') mostrarSubmenu('herramientas');
+        document.getElementById('btnNominaEmpleados')?.click();
+    });
+    seccion.appendChild(btn);
+    contenedor.appendChild(seccion);
 }

@@ -1,0 +1,105 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrdenaClick · Nómina de Empleados</title>
+<link rel="stylesheet" href="{% static 'css/nomina/nomina.css' %}?v=2">
+<script src="{% static 'js/nomina/nomina.js' %}?v=2" defer></script>
+</head><body><main class="nm-raiz" id="nmRaiz" data-empresa="{{ empresa.pk }}" data-vista="{{ vista }}">
+<header class="nm-cabecera"><div><h1>Nómina de Empleados</h1><p>{{ empresa.razon_social }}</p></div>
+{% if vista != 'listado' %}<a class="nm-boton nm-secundario" href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}">Volver al listado</a>{% endif %}</header>
+{% if vista == 'listado' %}
+<div class="nm-barra"><form method="get" class="nm-filtros"><input type="hidden" name="empresa" value="{{ empresa.pk }}">
+<label>Buscar<input type="search" name="buscar" value="{{ buscar }}" placeholder="Nombre, CUIL o legajo" maxlength="80"></label>
+<label>Centro Operativo<select name="centro"><option value="">Todos</option>{% for c in centros %}<option value="{{ c.pk }}" {% if centro_filtro == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></label>
+<button type="submit" class="nm-boton nm-secundario">Buscar</button></form>
+<a class="nm-boton nm-primario" href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}&nuevo=1">+ Registrar</a></div>
+{% if alertas %}<section class="nm-alertas"><h2>Licencias que requieren atención</h2><p>El aviso puede reconocerse sin cambiar el vencimiento.</p>
+{% for alerta in alertas %}<div class="nm-alerta-fila"><span>{{ alerta.empleado.nombre_apellido }} · vence {{ alerta.fecha_vencimiento|date:'d/m/Y' }}</span>
+<form method="post" action="{% url 'nomina_reconocer_licencia' empresa.pk alerta.empleado.pk %}">{% csrf_token %}<button class="nm-boton nm-secundario" type="submit">Reconocer aviso</button></form></div>{% endfor %}</section>{% endif %}
+<section class="nm-grupo nm-activos"><header><h2>Empleados activos</h2><strong>{{ activos|length }}</strong></header>
+<div class="nm-listado"><table><thead><tr><th>Legajo</th><th>Nombre y apellido</th><th>Centro Operativo</th><th>Licencia de conducir</th><th></th></tr></thead><tbody>
+{% for e in activos %}<tr><td>{{ e.legajo }}</td><td>{{ e.nombre_apellido }}</td><td>{{ e.centro_operativo.nombre|default:'—' }}</td><td>{{ e.fecha_vencimiento_licencia|date:'d/m/Y'|default:'—' }}</td>
+<td><a href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}&empleado={{ e.pk }}">Abrir ficha</a></td></tr>
+{% empty %}<tr><td colspan="5">No hay empleados activos para este filtro.</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="nm-grupo nm-inactivos"><header><h2>Empleados inactivos</h2><strong>{{ inactivos|length }}</strong></header>
+<div class="nm-listado"><table><thead><tr><th>Legajo</th><th>Nombre y apellido</th><th>Centro Operativo</th><th>Desvinculación</th><th></th></tr></thead><tbody>
+{% for e in inactivos %}<tr><td>{{ e.legajo }}</td><td>{{ e.nombre_apellido }}</td><td>{{ e.centro_operativo.nombre|default:'—' }}</td><td>{{ e.fecha_desvinculacion|date:'d/m/Y' }}</td>
+<td><a href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}&empleado={{ e.pk }}">Ver historial</a></td></tr>
+{% empty %}<tr><td colspan="5">No hay empleados inactivos para este filtro.</td></tr>{% endfor %}</tbody></table></div></section>
+{% elif vista == 'ficha' %}
+<div class="nm-ficha-cabecera"><h2>{% if empleado %}{{ empleado.nombre_apellido }}{% else %}Registrar empleado{% endif %}</h2>
+{% if empleado %}<span class="nm-etiqueta {% if empleado.activo %}nm-vigente{% else %}nm-baja{% endif %}">{% if empleado.activo %}Activo{% else %}Inactivo{% endif %}</span>{% endif %}</div>
+{% if empleado and not empleado.activo %}<p class="nm-nota nm-nota-inactivo">Ficha histórica sin edición. Desvinculación: {{ empleado.fecha_desvinculacion|date:'d/m/Y' }}. Motivo: {{ empleado.motivo_desvinculacion }}</p>{% endif %}
+{% if form.errors %}<section class="nm-error" role="alert">Revisá los campos marcados. {{ form.non_field_errors }}</section>{% endif %}
+<form method="post" enctype="multipart/form-data" action="{% if empleado %}{% url 'nomina_editar_empleado' empresa.pk empleado.pk %}{% else %}{% url 'nomina_registrar_empleado' empresa.pk %}{% endif %}" id="nmFormulario" class="nm-formulario">
+{% csrf_token %}
+<fieldset {% if empleado and not empleado.activo %}disabled{% endif %}><legend>Datos personales</legend>
+<div class="nm-grid">
+<label>CUIL {{ form.cuil }}{{ form.cuil.errors }}</label><label>Nombre y Apellido {{ form.nombre_apellido }}{{ form.nombre_apellido.errors }}</label>
+<label>Fecha de nacimiento {{ form.fecha_nacimiento }}{{ form.fecha_nacimiento.errors }}</label><label>Número de legajo {{ form.legajo }}{{ form.legajo.errors }}</label>
+<label class="nm-ancho">Dirección {{ form.direccion }}{{ form.direccion.errors }}</label>
+<label>Teléfono personal {{ form.telefono_personal }}{{ form.telefono_personal.errors }}</label>
+<label>Mail personal {{ form.mail_personal }}{{ form.mail_personal.errors }}</label>
+<label>Vto. Licencia de conducir {{ form.fecha_vencimiento_licencia }}{{ form.fecha_vencimiento_licencia.errors }}</label>
+<label>Contacto de emergencia · Nombre {{ form.emergencia_nombre }}{{ form.emergencia_nombre.errors }}</label>
+<label>Contacto de emergencia · Teléfono {{ form.emergencia_telefono }}{{ form.emergencia_telefono.errors }}</label>
+</div>
+<div class="nm-adjuntos">
+{% include 'usuarios/nomina/adjunto.html' with titulo='DNI frente' campo='dni_frente' tipo='DNIFrente' %}
+{% include 'usuarios/nomina/adjunto.html' with titulo='DNI dorso' campo='dni_dorso' tipo='DNIDorso' %}
+{% include 'usuarios/nomina/adjunto.html' with titulo='Licencia de conducir' campo='licencia_archivo' tipo='Licencia' %}
+</div>
+</fieldset>
+<fieldset {% if empleado and not empleado.activo %}disabled{% endif %}><legend>Datos laborales</legend><div class="nm-grid">
+<label>Fecha de ingreso {{ form.fecha_ingreso }}{{ form.fecha_ingreso.errors }}</label>
+<div class="nm-con-mas"><label>Centro Operativo {{ form.centro_operativo }}{{ form.centro_operativo.errors }}</label><button type="button" class="nm-mas" data-nomina-abm="centros" title="Abrir ABM de Centros Operativos y volver a esta ficha">[+]</button></div>
+<div class="nm-con-mas"><label>Vehículo asignado {{ form.vehiculo }}{{ form.vehiculo.errors }}</label><button type="button" class="nm-mas" data-nomina-abm="recursos" title="Abrir Recursos Operativos y volver a esta ficha">[+]</button></div>
+<label>Cuenta sueldo (CBU) {{ form.cbu }}{{ form.cbu.errors }}</label>
+<div class="nm-con-mas"><label>Banco {{ form.banco }}{{ form.banco.errors }}</label><button type="button" class="nm-mas" data-nomina-abm="bancos" title="Abrir Bancos y volver a esta ficha">[+]</button></div>
+<label>Tipo de contratación {{ form.tipo_contratacion }}{{ form.tipo_contratacion.errors }}</label>
+<label>Mail laboral {{ form.mail_laboral }}{{ form.mail_laboral.errors }}</label>
+<label>Teléfono laboral {{ form.telefono_laboral }}{{ form.telefono_laboral.errors }}</label>
+</div><div class="nm-adjuntos">
+{% include 'usuarios/nomina/adjunto.html' with titulo='Clave de Alta Temprana - CAT' campo='cat_archivo' tipo='CAT' %}
+{% include 'usuarios/nomina/adjunto.html' with titulo='Preocupacional' campo='preocupacional_archivo' tipo='Preocupacional' %}
+</div>
+<p class="nm-ayuda">Documentación privada. Los [+] abren el ABM existente dentro de Herramientas y regresan a esta ficha sin perder lo cargado.</p></fieldset>
+{% if not empleado or empleado.activo %}<div class="nm-acciones"><button type="submit" class="nm-boton nm-primario">Guardar</button>
+{% if empleado %}<a class="nm-boton nm-secundario" href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}&empleado={{ empleado.pk }}&seccion=casos">Abrir caso / Historial de casos</a>{% endif %}</div>{% endif %}
+</form>
+{% if empleado %}
+<section class="nm-seccion"><h2>Documentación incorporada</h2><div class="nm-listado"><table><thead><tr><th>Documento</th><th>Fecha</th><th>Acceso privado</th></tr></thead><tbody>
+{% for doc in documentos %}<tr><td>{{ doc.get_tipo_display }}</td><td>{{ doc.creado|date:'d/m/Y H:i' }}</td><td><a href="{% url 'descargar_documento_nomina' empresa.pk doc.pk %}">Descargar</a></td></tr>
+{% empty %}<tr><td colspan="3">No hay archivos incorporados.</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="nm-seccion"><h2>Historial laboral</h2><div class="nm-listado"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+{% for ev in eventos %}<tr><td>{{ ev.creado|date:'d/m/Y H:i' }}</td><td>{{ ev.accion }}</td><td>{{ ev.detalle }}</td></tr>
+{% empty %}<tr><td colspan="3">Sin eventos todavía.</td></tr>{% endfor %}</tbody></table></div></section>
+{% if empleado.activo %}<section class="nm-seccion nm-peligro"><h2>Desvincular empleado</h2><p>La desvinculación conserva la ficha y los antecedentes, pero cancela el aviso de licencia.</p>
+<form method="post" action="{% url 'nomina_desvincular_empleado' empresa.pk empleado.pk %}" class="nm-formulario nm-baja-form" id="nmBajaForm">{% csrf_token %}
+<div class="nm-grid"><label>Fecha efectiva<input name="fecha" type="date" required value="{{ hoy|date:'Y-m-d' }}"></label>
+<label>Motivo<input name="motivo" minlength="8" maxlength="300" required></label></div>
+<label class="nm-confirmacion"><input type="checkbox" required> Confirmo la desvinculación de este empleado.</label>
+<button type="submit" class="nm-boton nm-boton-rojo">Desvincular</button></form></section>{% endif %}
+{% endif %}
+{% elif vista == 'casos' %}
+<div class="nm-ficha-cabecera"><h2>Casos e historial · {{ empleado.nombre_apellido }}</h2><a class="nm-boton nm-secundario" href="{% url 'nomina_empleados' %}?empresa={{ empresa.pk }}&empleado={{ empleado.pk }}">Volver a ficha</a></div>
+<section class="nm-seccion"><h2>Abrir caso</h2>
+<form method="post" enctype="multipart/form-data" action="{% url 'nomina_crear_caso' empresa.pk empleado.pk %}" class="nm-formulario">{% csrf_token %}
+<div class="nm-grid"><label>Tipo de caso<select name="categoria" required><option value="">Seleccionar</option>
+<option value="Apercibimiento">Apercibimiento</option><option value="Despido">Despido</option><option value="BajaARCA">Baja ARCA</option><option value="Aportes">Constancia de aportes</option><option value="Juicio">Juicio / reclamo laboral</option><option value="Otro">Otro</option></select></label>
+<label>Fecha<input type="date" name="fecha" value="{{ hoy|date:'Y-m-d' }}" required></label></div>
+<label>Descripción<textarea name="descripcion" required minlength="8" maxlength="3000" rows="3"></textarea></label>
+<label>Documento adjunto (opcional)<input name="caso_archivo" type="file" accept=".pdf,.jpg,.jpeg,.png"></label>
+<button type="submit" class="nm-boton nm-primario">Abrir caso</button></form></section>
+{% for caso in casos %}<section class="nm-seccion"><div class="nm-ficha-cabecera"><h2>{{ caso.get_categoria_display }} · {{ caso.fecha|date:'d/m/Y' }}</h2><span class="nm-etiqueta">{{ caso.estado }}</span></div>
+<p>{{ caso.descripcion }}</p><div class="nm-listado"><table><thead><tr><th>Fecha</th><th>Actuación</th></tr></thead><tbody>
+{% for a in caso.actuaciones.all %}<tr><td>{{ a.fecha|date:'d/m/Y' }}</td><td>{{ a.detalle }}</td></tr>{% endfor %}</tbody></table></div>
+{% for doc in caso.documentos.all %}<p class="nm-adjunto-link"><a href="{% url 'descargar_documento_nomina' empresa.pk doc.pk %}">Descargar documento ({{ doc.creado|date:'d/m/Y' }})</a></p>{% endfor %}
+{% if caso.estado == 'Abierto' %}<form method="post" enctype="multipart/form-data" class="nm-formulario nm-actuacion" action="{% url 'nomina_actuar_caso' empresa.pk empleado.pk caso.pk %}">{% csrf_token %}
+<div class="nm-grid"><label>Fecha de actuación<input type="date" name="fecha" value="{{ hoy|date:'Y-m-d' }}" required></label>
+<label>Adjunto (opcional)<input type="file" name="caso_archivo" accept=".pdf,.jpg,.jpeg,.png"></label></div>
+<label>Detalle<textarea name="detalle" required minlength="8" maxlength="3000" rows="2"></textarea></label>
+<label class="nm-confirmacion"><input type="checkbox" name="cerrar" value="1"> Cerrar el caso con esta actuación</label>
+<button class="nm-boton nm-secundario" type="submit">Registrar actuación</button></form>{% endif %}</section>
+{% empty %}<p class="nm-ayuda">Todavía no hay casos asociados a este empleado.</p>{% endfor %}
+{% endif %}
+</main></body></html>

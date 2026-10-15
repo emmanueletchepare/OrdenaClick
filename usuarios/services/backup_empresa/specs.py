@@ -58,6 +58,12 @@ MODEL_SPECS = (
     ModelSpec("cheques", models.Cheque, "empresa"),
     ModelSpec("vencimientos", models.Vencimiento, "empresa"),
     ModelSpec("alertas", models.Alerta, "vencimiento__empresa"),
+    ModelSpec("empleados", models.Empleado, "empresa"),
+    ModelSpec("eventos_empleados", models.EventoEmpleado, "empleado__empresa"),
+    ModelSpec("alertas_licencia_empleados", models.AlertaLicenciaEmpleado, "empleado__empresa"),
+    ModelSpec("casos_empleados", models.CasoEmpleado, "empleado__empresa"),
+    ModelSpec("actuaciones_casos_empleados", models.ActuacionCasoEmpleado, "caso__empleado__empresa"),
+    ModelSpec("documentos_empleados", models.DocumentoEmpleado, "empleado__empresa"),
 )
 
 SPEC_BY_KEY = {spec.key: spec for spec in MODEL_SPECS}
@@ -67,4 +73,4 @@ FORMAT_ID = "ordenaclick_empresa"
 FORMAT_VERSION = 1
 
 # Componentes adicionales de Caja 2: opcionales al leer un Backup v1 anterior.
-OPTIONAL_NEW_KEYS = frozenset({"correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq"})
+OPTIONAL_NEW_KEYS = frozenset({"correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq", "empleados", "eventos_empleados", "alertas_licencia_empleados", "casos_empleados", "actuaciones_casos_empleados", "documentos_empleados"})

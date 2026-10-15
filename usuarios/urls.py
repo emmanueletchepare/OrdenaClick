@@ -57,6 +57,9 @@ from .http.caja_movimientos import (
 from .http.caja_correcciones import corregir_movimiento_caja_http
 from .http.revisiones_pendientes_bancarios import revisar_pendiente_http
 from .http.estados_echeq import estado_echeq_detalle, estado_echeq_registrar
+from .http.nomina import (nomina_empleados, guardar_empleado, desvincular_empleado,
+    reconocer_licencia, crear_caso, actuar_caso, descargar_documento_nomina,
+    opciones_nomina)
 from .http.gestion_bancaria import (
     gestion_bancaria, entrar_gestion_bancaria, abm_contextual_echeq,
     registrar_lote_bancario_http, registrar_pendiente_bancario_http,
@@ -741,6 +744,16 @@ urlpatterns = [
 
     path("caja/movimientos/corregir/<int:movimiento_id>/", corregir_movimiento_caja_http,
          name="corregir_movimiento_caja"),
+    # Nómina: autorización real por Empresa en cada GET/POST/descarga.
+    path('nomina/', nomina_empleados, name='nomina_empleados'),
+    path('nomina/empresa/<int:empresa_id>/registrar/', guardar_empleado, name='nomina_registrar_empleado'),
+    path('nomina/empresa/<int:empresa_id>/empleado/<int:empleado_id>/guardar/', guardar_empleado, name='nomina_editar_empleado'),
+    path('nomina/empresa/<int:empresa_id>/empleado/<int:empleado_id>/desvincular/', desvincular_empleado, name='nomina_desvincular_empleado'),
+    path('nomina/empresa/<int:empresa_id>/empleado/<int:empleado_id>/reconocer-licencia/', reconocer_licencia, name='nomina_reconocer_licencia'),
+    path('nomina/empresa/<int:empresa_id>/empleado/<int:empleado_id>/casos/', crear_caso, name='nomina_crear_caso'),
+    path('nomina/empresa/<int:empresa_id>/empleado/<int:empleado_id>/casos/<int:caso_id>/actuar/', actuar_caso, name='nomina_actuar_caso'),
+    path('nomina/empresa/<int:empresa_id>/documento/<int:documento_id>/', descargar_documento_nomina, name='descargar_documento_nomina'),
+    path('nomina/empresa/<int:empresa_id>/opciones/', opciones_nomina, name='nomina_opciones'),
     path("gestion-bancaria/", gestion_bancaria, name="gestion_bancaria"),
     path("gestion-bancaria/echeq/<int:pendiente_id>/estado/", estado_echeq_detalle,
          name="estado_echeq_detalle"),

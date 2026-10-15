@@ -708,6 +708,10 @@ function mostrarSubmenu(tipo){
                 Gestión de claves
             </button>
 
+            <button type="button" class="module-card" id="btnNominaEmpleados">
+                Nómina de Empleados
+            </button>
+
         `;
 
     }

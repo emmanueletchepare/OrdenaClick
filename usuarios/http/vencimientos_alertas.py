@@ -2,13 +2,15 @@ from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied
 
 from usuarios.services.financiero import (
     estado_vencimiento_movimiento,
     movimientos_con_saldo_pendiente,
     movimientos_en_alerta,
 )
-from usuarios.services.seguridad import obtener_empresa_autorizada
+from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empresa_administrable
+from usuarios.services.nomina import alertas_pendientes
 
 
 @login_required
@@ -48,6 +50,15 @@ def estado_llamador_alertas(request):
         )
         .exists()
     )
+
+    # Las licencias sólo pueden activar el llamador para perfiles con permiso
+    # real de Nómina; no filtrar su existencia a otros usuarios.
+    if not mostrar_llamador:
+        try:
+            obtener_empresa_administrable(request.user, empresa.pk)
+            mostrar_llamador = alertas_pendientes(empresa, date.today()).exists()
+        except PermissionDenied:
+            pass
 
     return JsonResponse(
         {
@@ -285,9 +296,22 @@ def listar_proximos_vencimientos(request):
             }
         )
 
+    licencias_nomina = []
+    if periodo == 'alertas':
+        try:
+            obtener_empresa_administrable(request.user, empresa.pk)
+            licencias_nomina = [
+                {'empleado_id': a.empleado_id, 'nombre': a.empleado.nombre_apellido,
+                 'vence': a.fecha_vencimiento.isoformat()}
+                for a in alertas_pendientes(empresa, hoy)
+            ]
+        except PermissionDenied:
+            pass
+
     return JsonResponse(
         {
             "ok": True,
+            "licencias_nomina": licencias_nomina,
             "periodo": periodo,
             "fecha_desde": (
                 fecha_desde.isoformat()

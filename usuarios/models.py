@@ -3478,3 +3478,119 @@ class EventoPermisoBancario(models.Model):
     actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.SET_NULL, null=True)
     concedido = models.BooleanField()
     creado = models.DateTimeField(auto_now_add=True)
+
+# Nómina de Empleados: la autorización permanece separada de los datos portables.
+class Empleado(models.Model):
+    CONTRATACIONES = [('Completa', 'Jornada completa'), ('Media', 'Media jornada')]
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT, related_name='empleados')
+    cuil = models.CharField(max_length=11)
+    nombre_apellido = models.CharField(max_length=200)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    legajo = models.CharField(max_length=30)
+    direccion = models.CharField(max_length=250, blank=True)
+    telefono_personal = models.CharField(max_length=60, blank=True)
+    mail_personal = models.EmailField(blank=True)
+    mail_laboral = models.EmailField(blank=True)
+    telefono_laboral = models.CharField(max_length=60, blank=True)
+    fecha_vencimiento_licencia = models.DateField(null=True, blank=True)
+    emergencia_nombre = models.CharField(max_length=150, blank=True)
+    emergencia_telefono = models.CharField(max_length=60, blank=True)
+    fecha_ingreso = models.DateField()
+    centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.PROTECT, related_name='empleados', null=True, blank=True)
+    vehiculo = models.ForeignKey('RecursoOperativo', on_delete=models.PROTECT, related_name='empleados_asignados', null=True, blank=True)
+    cbu = models.CharField(max_length=22, blank=True)
+    banco = models.ForeignKey('Banco', on_delete=models.PROTECT, null=True, blank=True, related_name='empleados')
+    tipo_contratacion = models.CharField(max_length=10, choices=CONTRATACIONES, default='Completa')
+    activo = models.BooleanField(default=True)
+    fecha_desvinculacion = models.DateField(null=True, blank=True)
+    motivo_desvinculacion = models.CharField(max_length=300, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['nombre_apellido', 'pk']
+        constraints = [
+            models.UniqueConstraint(fields=['empresa', 'cuil'], name='nomina_cuil_empresa_unico'),
+            models.UniqueConstraint(fields=['empresa', 'legajo'], name='nomina_legajo_empresa_unico'),
+        ]
+
+    def __str__(self):
+        return self.nombre_apellido
+
+
+class EventoEmpleado(models.Model):
+    empleado = models.ForeignKey('Empleado', on_delete=models.PROTECT, related_name='eventos')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    accion = models.CharField(max_length=40)
+    detalle = models.CharField(max_length=300, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['creado', 'pk']
+
+
+class AlertaLicenciaEmpleado(models.Model):
+    empleado = models.OneToOneField('Empleado', on_delete=models.PROTECT, related_name='alerta_licencia')
+    fecha_vencimiento = models.DateField()
+    fecha_aviso = models.DateField()
+    reconocida_en = models.DateTimeField(null=True, blank=True)
+    cancelada_en = models.DateTimeField(null=True, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+
+class CasoEmpleado(models.Model):
+    CATEGORIAS = [
+        ('Apercibimiento', 'Apercibimiento'), ('Despido', 'Despido'),
+        ('BajaARCA', 'Baja ARCA'), ('Aportes', 'Constancia de aportes'),
+        ('Juicio', 'Juicio / reclamo laboral'), ('Otro', 'Otro'),
+    ]
+    empleado = models.ForeignKey('Empleado', on_delete=models.PROTECT, related_name='casos')
+    categoria = models.CharField(max_length=25, choices=CATEGORIAS)
+    fecha = models.DateField()
+    descripcion = models.TextField(max_length=3000)
+    estado = models.CharField(max_length=10, choices=[('Abierto', 'Abierto'), ('Cerrado', 'Cerrado')], default='Abierto')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha', '-pk']
+
+
+class ActuacionCasoEmpleado(models.Model):
+    caso = models.ForeignKey('CasoEmpleado', on_delete=models.PROTECT, related_name='actuaciones')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    fecha = models.DateField()
+    detalle = models.TextField(max_length=3000)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha', 'creado', 'pk']
+
+
+def ruta_documento_nomina(instance, nombre):
+    """Ruta privada opaca, sin nombre, CUIL ni legajo en el archivo."""
+    import uuid as _uuid
+    extension = getattr(instance, '_extension_verificada', None)
+    if extension not in ('.pdf', '.jpg', '.png'):
+        raise ValueError('El documento no fue validado.')
+    return f'nomina/empresa_{instance.empleado.empresa_id}/empleado_{instance.empleado_id}/{_uuid.uuid4().hex}{extension}'
+
+
+class DocumentoEmpleado(models.Model):
+    TIPOS = [
+        ('DNIFrente', 'DNI frente'), ('DNIDorso', 'DNI dorso'),
+        ('Licencia', 'Licencia de conducir'), ('CAT', 'Clave de Alta Temprana - CAT'),
+        ('Preocupacional', 'Preocupacional'), ('Caso', 'Documento de caso'),
+    ]
+    empleado = models.ForeignKey('Empleado', on_delete=models.PROTECT, related_name='documentos')
+    caso = models.ForeignKey('CasoEmpleado', on_delete=models.PROTECT, related_name='documentos', null=True, blank=True)
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    archivo = models.FileField(upload_to=ruta_documento_nomina)
+    nombre_original = models.CharField(max_length=150)
+    sha256 = models.CharField(max_length=64)
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']

@@ -1,6 +1,6 @@
 # Nómina de Empleados y gestión de accesos — diseño funcional (14/10/2026)
 
-**Estado: diseño acordado / pendiente de implementación.** No existe todavía un módulo de Nómina ni un gestor general de permisos granulares. Esta especificación no autoriza migraciones, habilitación de accesos ni cambios al circuito de Alertas sin nueva revisión, pruebas y aceptación visual. Prioridad y calendario sujetos a la Beta.
+**Estado: diseño acordado; primera etapa de implementación propuesta en Casa, pendiente de pruebas y aprobación visual.** No existe todavía un módulo de Nómina ni un gestor general de permisos granulares. Esta especificación no autoriza migraciones, habilitación de accesos ni cambios al circuito de Alertas sin nueva revisión, pruebas y aceptación visual. Prioridad y calendario sujetos a la Beta.
 
 ## 1. Nómina en el panel de OrdenaClick
 
@@ -14,7 +14,7 @@
 ### Datos personales
 
 - **CUIL**; **Nombre y Apellido**; **Fecha de nacimiento**; **Número de legajo**.
-- **Dirección**; **Teléfono personal**; **Mail personal** y **Mail laboral** (el segundo campo «Mail» de la propuesta).
+- **Dirección**; **Teléfono personal**; **Mail personal**. Los contactos provistos por el empleador van en Datos laborales.
 - **Vencimiento de licencia de conducir**.
 - **Contacto de emergencia:** Nombre y Teléfono.
 - Adjuntos diferenciados: **[Subir DNI frente]**, **[Subir DNI dorso]** y **[Subir Licencia de conducir]**.
@@ -22,6 +22,7 @@
 ### Datos laborales
 
 - **Fecha de ingreso**.
+- **Mail laboral** y **Teléfono laboral**, asignados por el empleador y separados del contacto personal.
 - **Centro Operativo**: selector de Centros autorizados de la Empresa más **[+]** al ABM existente.
 - **Vehículo asignado**: recurso operativo de tipo **Vehículo** de esa Empresa, más **[+]** a Recursos Operativos; no crear un catálogo paralelo.
 - **Cuenta sueldo (CBU)** y **Banco**: selector de Bancos de la Empresa más **[+]** al ABM existente. Registrar el CBU como dato confidencial, sin convertirlo en cuenta bancaria de la Empresa ni generar movimientos.
@@ -66,4 +67,32 @@
 
 **Primera versión propuesta:** listado activos/inactivos, ficha, adjuntos privados, altas/correcciones/desvinculación auditadas, historial de casos básico y alertas de licencia integradas a backend.
 
-**Abierto antes de construir:** matriz completa de permisos y responsables de concesión; alcance por Centro; regla de reingreso y unicidad; permisos de archivos/casos sensibles; política exacta de fechas y avisos; validación documental, retención y backup; UX de navegación. No dar por implementado ni por probado lo aquí diseñado.
+**Abierto tras la primera etapa:** gestor granular, reingresos, permisos documentales/Legal, privacidad/retención, revisión de alertas generales y aceptación UX. No dar por aprobado sin pruebas y revisión.
+
+
+## Etapa de implementación 0049 (pendiente de ejecutar en Casa)
+
+La primera etapa monta el acceso en **Herramientas → Nómina de Empleados**.
+Incluye ficha, documentos privados, historial y casos, alerta de licencia con
+anticipación de **un mes calendario** (ajustando el último día cuando no existe),
+reconocimiento de aviso y cancelación por desvinculación. La licencia vencida
+no cambia el estado laboral. La campana y el listado Alertas pueden incluir
+avisos laborales **sin mezclar saldos financieros**.
+
+**Permisos transitorios:** lectura/escritura y descargas restringidas a
+propietario, superusuario o Administración General, hasta implementar el gestor
+por capacidades granulares. No se conceden permisos implícitos a Centro,
+colaboradores o Legal. Una futura secretaria/administrativo podrá subir
+archivos mediante permisos explícitos, todavía no disponibles.
+
+**Reglas conservadoras:** CUIL válido y legajo únicos por Empresa, incluso
+inactivos. Sin reactivación automatizada; requiere diseño posterior. Documentos
+versionados (no reemplazo destructivo), expediente cronológico, copia dentro del
+Backup Empresa v1 como nuevas secciones opcionales para backups anteriores.
+Los `[+]` abren el ABM existente dentro del mismo panel, sin desmontar la
+ficha ni perder los documentos aún seleccionados. Volver restaura la posición
+y los campos; si el ABM registró un elemento nuevo, se preselecciona.
+Revisión visual y pruebas de navegación pendientes de aceptación.
+**Esta etapa no configura accesos, liquidaciones, ARCA, medicina laboral ni
+avisos por correo.** La política general de alertas y la revisión de seguridad
+integral siguen abiertas.

@@ -1,0 +1,4 @@
+#ocNominaFrame.oc-nomina-frame{display:block;width:100%;border:0;border-radius:12px;min-height:620px;background:#0f1115;}
+.oc-nomina-retorno{display:flex;align-items:center;justify-content:flex-start;margin:10px 0 16px;gap:10px}
+.oc-nomina-retorno-boton{border:1px solid #445676;border-radius:9px;background:#1b2638;color:#f0f5ff;padding:10px 16px;font:600 13px Inter,Arial,sans-serif;cursor:pointer}
+.oc-nomina-retorno-boton:hover,.oc-nomina-retorno-boton:focus-visible{border-color:#7aaffe;background:#26374f}
