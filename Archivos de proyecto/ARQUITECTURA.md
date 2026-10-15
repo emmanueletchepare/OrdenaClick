@@ -576,3 +576,13 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - Separar ficha, documentos privados, casos/historial y avisos de licencia: vistas HTTP controlan acceso; servicios definen transiciones, permisos, auditoría y desactivación de alertas al desvincular; JS/CSS sólo UX, siempre externos.
 - La autorización futura distinguirá jerarquía, rol funcional, Empresa/Centro y capacidad por operación; un usuario administrativo podrá archivar documentos sin permiso financiero ni facultades legales. No sustituir ni ampliar los permisos actuales hasta revisión explícita.
 - **Diseño, no implementación**: esquema, retención, pruebas y backup pendientes. Ver `NOMINA_EMPLEADOS_Y_ACCESOS.md`.
+
+## Arquitectura transversal — panel compartido y autorización por capacidad (15/10/2026)
+
+**No duplicar el panel Administrador para Colaborador.** Reusar vistas/templates, JS/CSS de módulos, sidebar, navegación y ABM cuando la arquitectura lo permita; factorizar únicamente lo imprescindible, sin refactors masivos. Cada nueva función de Administrador debe estar preparada para una posible capacidad granular de Colaborador, aunque esté inhabilitada inicialmente. La autorización sigue en servicios y HTTP backend; no depende del menú visible.
+
+**Separación a conservar:** identidad/rol/jerarquía, Empresa activa, Centro permitido, capacidad por módulo/acción y sensibilidad del dato. Modelo de permisos futuro centralizado y auditable, denegación por defecto, sin autorización implícita de Caja/finanzas/Nómina ni portabilidad de concesiones de usuarios en backups de Empresa. Deben existir tests de denegación mediante URL directa y de revocación, además de pruebas visuales. Reaprovechar reglas ya existentes para Pendientes en vez de crear otro sistema independiente.
+
+**Evolución controlada de Caja 2:** tabla de precarga de e-Cheqs como revisión editable antes del guardado atómico, validación de importe positiva/Decimal es-AR en UI de Agregar/Editar y validación definitiva backend; mensajes por fila/campo con estado temporal preservado. Causa concreta del rechazo actual **aún no diagnosticada** y desarrollo **no autorizado** mientras el usuario sigue evaluando casos reales.
+
+**Continuidad:** Nómina 0049/0050 y e-Cheq 0048 publicados; 35 pruebas dirigidas aprobadas en Oficina. Ver `CONTINUIDAD_OPERATIVA_20261015.md`.

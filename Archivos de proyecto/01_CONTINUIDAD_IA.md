@@ -1,4 +1,6 @@
 # 01_CONTINUIDAD_IA.md — Instrucciones para continuar OrdenaClick en otro chat
+> **LEER EL CORTE 15/10/2026:** `CONTINUIDAD_OPERATIVA_20261015.md` y la sección final de este documento prevalecen sobre estados históricos. Código sincronizado hasta `902cdeb`; Colaborador y nuevas mejoras e-Cheq siguen pendientes.
+
 
 ## LEER PRIMERO
 
@@ -400,3 +402,17 @@ recién entonces commit/push código y docs por separado.
 - Vencimiento de licencia: aviso un mes antes mientras el empleado esté activo; **licencia vencida NO desvincula**, **desvincular SÍ desactiva alertas del empleado** conservando historia.
 - **Permisos sin decidir definitivamente:** gestión de accesos por usuario, lista de capacidades con interruptores, autorización auditable por Empresa/Centro; colaborador/administrativo/secretaria/contador puede archivar documentación sin ser jerárquico ni obtener Caja o facultades sensibles. No conceder accesos nuevos por inferencia.
 - Navegación `[+]` a ABM existentes con regreso al borrador/scroll; modales en zona visible. Datos personales, médicos y laborales privados con controles backend y backup compatibles. Código publicado previo: `e5ace71` (Estado e historial e-Cheqs, pruebas 67); este bloque no contiene implementación de Nómina ni Alertas.
+
+## Corte de continuidad prioritario — 15/10/2026, Oficina
+
+**No comenzar desde cero.** Código Casa/GitHub/Oficina alineado en `902cdeb`, previo estado Oficina `b89ff5a`. Backup SQLite de Oficina fuera de repo verificado mediante `sqlite3.backup` e integridad; migraciones usuarios `0048`/`0049`/`0050` aplicadas; 35 pruebas de regresión aprobadas en Oficina (también Casa). Antiguos cambios locales Oficina Caja 2 inconclusos guardados en `stash@{0}`: **no recuperar ni eliminar automáticamente**. Comprobar estado Git antes de trabajar.
+
+**Estado actualizado:** Caja 2 y Nómina existen en código. Nómina bajo **Herramientas**, mail y teléfono laboral separados de contactos personales; gestor granular no implementado; el usuario expresó conformidad visual general en Oficina («Están todos bien»); no dejó detalle separado de cada recorrido `[+]`. Las frases de este documento de 10–14/10 que las describen «futuras» ya no expresan el estado vigente.
+
+**Capturas / observaciones de uso real e-Cheq (SIN implementar aún):** en tabla de precarga/revisión separar Número e-Cheq y Titular; sumar Fecha acreditación; guardado de lote arroja «El importe no es válido» sin identificar ni resaltar dónde. Validar al Agregar y editar, conservar el lote si falla y revisar parseo de `126.785,71` sin asumir causa. Seguir tomando notas hasta que el usuario autorice abordar los cambios juntos.
+
+**Colaborador:** casi idéntico al panel Administrador en experiencia e infraestructura, **con menos funciones según permisos**. No duplicar panel ni ABM; diseñar cada nueva función admin pensando en posible habilitación a Colaborador. Preparar permisos por usuario/módulo/acción para futuro panel de accesos, siempre aplicados en backend según Empresa/Centro y denegados por defecto. Primer caso para probar: Pendientes bancarios con datos reales; todavía falta desarrollar el acceso funcional Colaborador. Nómina sensible sigue restringida.
+
+**Entrega de cambios cuando se autoricen:** revisar código actual y componentes reales antes de crear un helper `.py` descargable a raíz junto a `manage.py`, con preflight exacto, backup externo verificado, escritura atómica/rollback, pruebas y revisión visual. No retocar otros módulos ni copiar carpetas enteras, no `git add .`, `reset --hard` o `stash pop`. Tras verificación, **commit selectivo y push** como trabajo en desarrollo: GitHub es continuidad Casa/Oficina, no requisito de aceptación final.
+
+**Documento completo de relevo:** `CONTINUIDAD_OPERATIVA_20261015.md` (incluye contexto de Casa/Oficina, rutas, SQLite, seguridad, navegación `[+]` LIFO, estética, permisos y criterios de helpers). Leerlo antes de sugerir implementación o hacer preguntas ya resueltas.

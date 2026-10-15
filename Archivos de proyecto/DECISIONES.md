@@ -507,3 +507,14 @@ e-Cheq), no sólo con color. No cambiar alcances por Empresa/Centro.
 - Alerta de licencia desde un mes antes; licencia vencida **no causa desvinculación**; desvincular **desactiva alertas activas asociadas al empleado** y conserva auditoría. Política precisa de aviso e integración al motor: por implementar.
 - Revisión de perfiles/capacidades de todos los usuarios **sigue pendiente**. Se diseñará un gestor simple por usuario con interruptores de acceso, controles backend, ámbitos Empresa/Centro y permisos granulares para archivar documentos sin ser jerárquico. No introducir por ahora concesiones nuevas ni sustituir relaciones vigentes.
 - Detalle y límites en `NOMINA_EMPLEADOS_Y_ACCESOS.md`.
+
+## Decisiones vigentes — uso real, Colaborador y desarrollos nuevos (15/10/2026)
+
+1. **No programar todavía las observaciones de e-Cheqs**: se acumulan durante pruebas con datos reales, luego se define un bloque integral.
+2. En la **precarga de e-Cheqs**, el listado previo a Guardar todos es de **revisión/corrección**: Número e-Cheq y Titular/Cliente ocupan columnas separadas; se agrega Fecha de acreditación. Mantener Banco, Condición, Importe y Acciones con estética existente.
+3. **Errores de importe**: evitar incorporar borradores inválidos al pulsar Agregar y validar también en Editar y backend. Si el guardado final falla, indicar la fila y campo, resaltar/focalizar y mantener todo el lote sin alta parcial. Antes de cambiar parser, diagnosticar valor real y formato es-AR; la causa observada sigue abierta.
+4. **Colaborador reutiliza el panel Administrador**, navegación, formularios y componentes; solo cambia la **capacidad y alcance autorizados**. No construir un panel paralelo o duplicar lógica y, al crear futuras funciones admin, prever que puedan habilitarse selectivamente a Colaborador. Reutilizar código no equivale a conceder permisos.
+5. El **gestor de accesos** futuro centralizará capacidades por usuario y acción, ámbito Empresa/Centro, conceder/revocar auditado. Backend decide; denegar por defecto; no otorgar Nómina sensible, Caja o administración por la sola etiqueta Colaborador ni exportar autorizaciones vigentes en Backup Empresa.
+6. Primer escenario candidato de Colaborador: **Pendientes bancarios**, con datos reales y acceso acotado por permisos; implementar y probar solo al autorizar el bloque.
+
+**Estado publicado conocido:** `902cdeb`; 35 tests de regresión aprobados en Oficina. Estas decisiones nuevas corrigen la referencia histórica a Nómina/Colaborador como proyectos sin código, pero no declaran terminado el gestor granular ni pruebas individuales de cada recorrido visual de Nómina. Detalle: `CONTINUIDAD_OPERATIVA_20261015.md`.

@@ -1,6 +1,6 @@
 # Nómina de Empleados y gestión de accesos — diseño funcional (14/10/2026)
 
-**Estado: diseño acordado; primera etapa de implementación propuesta en Casa, pendiente de pruebas y aprobación visual.** No existe todavía un módulo de Nómina ni un gestor general de permisos granulares. Esta especificación no autoriza migraciones, habilitación de accesos ni cambios al circuito de Alertas sin nueva revisión, pruebas y aceptación visual. Prioridad y calendario sujetos a la Beta.
+**Estado actualizado al 15/10/2026:** Nómina **implementada y publicada en `902cdeb`** (migraciones `0049` y `0050`, 35 pruebas dirigidas OK en Casa y Oficina), con conformidad visual general del usuario en Oficina, sin desglose por cada flujo `[+]`. **El gestor general de permisos granulares no está implementado.** El resto de la especificación documenta el diseño y sus pendientes; cambios nuevos requieren revisión, pruebas y aceptación visual. Este párrafo reemplaza el estado histórico del 14/10.
 
 ## 1. Nómina en el panel de OrdenaClick
 
@@ -96,3 +96,13 @@ Revisión visual y pruebas de navegación pendientes de aceptación.
 **Esta etapa no configura accesos, liquidaciones, ARCA, medicina laboral ni
 avisos por correo.** La política general de alertas y la revisión de seguridad
 integral siguen abiertas.
+
+## Estado implementado y vínculo con Colaborador — 15/10/2026
+
+**Publicado:** migraciones `0049` Nómina y `0050` Teléfono laboral dentro de `902cdeb`. En Casa y Oficina 35 pruebas dirigidas aprobadas, y en Oficina ambas migraciones se aplicaron tras respaldo. Módulo ubicado en **Herramientas → Nómina de Empleados** con alta/ficha/casos/documentación y alertas conforme al alcance de la primera versión; las secciones que hablan de «implementación futura» se conservan como historia de diseño, no describen el estado actual.
+
+**Contactos:** mail personal y teléfono personal en Datos personales; **mail laboral y teléfono laboral** en Datos laborales. CUIL con inserción visual de guiones, persistencia normalizada de 11 dígitos y validación de control. Campo Teléfono laboral opcional creado aditivamente. Archivos con botones del patrón «Adjuntar archivo» de Empresa. El usuario dio conformidad general de la pantalla en Oficina («Están todos bien»), sin describir la prueba individual de los tres `[+]`; nunca asumir pasos no confirmados solo por tests.
+
+**Colaborador y accesos:** la ficha de Nómina actual es restringida; Colaborador NO accede por tener un panel compartido ni por poder usar Pendientes bancarios. Al diseñar el futuro gestor por usuario/acción, contemplar **ver Nómina, registrar, editar, adjuntar, descargar, datos sensibles, casos y desvincular** como capacidades distintas, sujetas a legitimidad, Empresa/Centro, privacidad médica/judicial y backend. El panel de usuario puede ser compartido con Administrador, pero no las autorizaciones. No añadir permisos ni mover documentos privados hasta su revisión específica.
+
+**Continuidad:** `CONTINUIDAD_OPERATIVA_20261015.md`.

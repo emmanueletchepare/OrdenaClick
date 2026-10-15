@@ -305,3 +305,32 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - [ ] Integrar al motor de Alertas aviso de **licencia un mes antes** para empleados activos; licencia vencida **no** desvincula. Definir regla exacta de fechas, reconocimiento/campana y renovación.
 - [ ] Validar seguridad de documentos, permisos, retornos `[+]`/scroll, exportación/restauración por Empresa y regresión antes de publicar. **Módulo no implementado**.
 - Especificación: `NOMINA_EMPLEADOS_Y_ACCESOS.md`. Mantener prioridades actuales de Beta; no confundir diseño futuro con tarea terminada.
+
+## Pendientes surgidos en operación real — 15/10/2026
+
+**FASE ACTUAL: RECOLECCIÓN DE OBSERVACIONES. NO DESARROLLAR HASTA ORDEN EXPRESA DEL USUARIO.** La lista no revoca otras prioridades estructurales.
+
+### Caja 2 — revisión de lote e-Cheqs
+
+- [ ] Separar **Número e-Cheq** de **Titular / Cliente** en columnas distintas del listado de precarga.
+- [ ] Mostrar **Fecha de acreditación** de cada e-Cheq en ese mismo listado de revisión.
+- [ ] Investigar error «El importe no es válido. El lote permanece en pantalla para reintentar.» al Guardar todos; determinar registro/valor real y si existe fallo de formato es-AR, sin asumirlo.
+- [ ] Validar importes al **Agregar**, al **Editar** y en backend; si hay error, informar fila/campo, resaltar/dirigir foco y conservar todos los renglones; mantener guardado atómico y seguridad.
+- [ ] Completar pruebas unitarias, regresión Caja/finanzas y pruebas visuales con datos seguros, siguiendo la estética actual; no alterar movimientos reales sin permiso.
+
+### Colaborador / Permisos
+
+- [ ] Diseñar reutilización del **mismo panel Administrador**: sidebar, navegaciones, módulos y ABM con capacidades filtradas; **no duplicar panel**.
+- [ ] Auditar roles/capacidades existentes, Empresa/Centro y permisos backend; matriz mínima por módulo/acción, denegación por defecto, revocación y auditoría, preparada para futuro Panel de Permisos/Accesos.
+- [ ] Primer circuito controlado: Colaborador habilitado a **Pendientes bancarios**, probado con permisos correctos sin otorgar Caja/saldos ni datos de otras Empresas/Centros.
+- [ ] Incluir consideración explícita de Colaborador en **cada nuevo desarrollo del panel Administrador**, aunque todavía no se habilite a ese perfil.
+- [ ] Probar ruta directa, GET/POST, cambios de Empresa, rol, alcance Centro, permisos revocados y seguridad de documentos.
+
+### Estado de cierre a preservar
+
+- [x] Oficina sincronizada con Casa/GitHub en `902cdeb` (corte 15/10).
+- [x] Respaldo SQLite de Oficina íntegro antes de migrar; migraciones `0048`–`0050` aplicadas.
+- [x] 35 tests dirigidos verdes en Casa y Oficina.
+- [ ] Detalle individual de recorridos `[+]` de Nómina; ya hubo conformidad general del usuario, sin acta paso a paso.
+
+**Relevo:** `CONTINUIDAD_OPERATIVA_20261015.md`. Los ítems históricos que aún indiquen «implementar Nómina desde cero» son obsoletos: revisar código antes de trabajar.

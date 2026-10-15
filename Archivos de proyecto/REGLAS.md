@@ -312,3 +312,14 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - Documentos DNI, CBU, **Clave de Alta Temprana - CAT**, preocupacional y casos en **almacenamiento privado**; verificar autorización incluso para descargar, y proteger especialmente documentación médica/judicial.
 - `[+]` usa ABM existentes y regreso contextual con formulario/scroll conservados. Las alertas nacen/caducan por reglas backend; no resolverlo ocultando botones ni por frontend.
 - Toda esta sección es **invariante de diseño futuro**. La matriz de accesos es **pendiente de decisión y pruebas**, no se presume que los actuales roles ya la satisfacen. Ver `NOMINA_EMPLEADOS_Y_ACCESOS.md`.
+
+## Regla adicional obligatoria — Administrador / Colaborador y helpers (15/10/2026)
+
+- **Una sola base de panel y UX:** Colaborador debe reutilizar panel, navegación, módulos y ABM de Administrador. Un nuevo desarrollo de Administrador debe contemplar desde su diseño la posible habilitación granular a Colaborador; no duplicar implementación ni habilitar automáticamente derechos por reutilizar vistas.
+- **Capacidades comprobadas en backend:** comprobar usuario, Empresa activa, Centro permitido y acción autorizada en cada GET/POST/descarga; interfaz filtra accesos, pero la seguridad no se limita a esconder botones. No extender permisos sensibles o financieros por rol sin decisión expresa. Permisos de usuario no viajan como concesiones activas en Backup Empresa.
+- **Recorrido contextual:** `[+]` abre ABM existente en mismo panel; retorno apilado LIFO con formulario/scroll/selección intactos. Un Colaborador con permiso de usar un módulo no gana por ello permiso para administrar su ABM invocado por `[+]`: resolver caso permitido/denegado manteniendo contexto y sin rutas huérfanas. Preservar sidebar, tipografía, CSS y patrones ya aprobados; no JS/CSS inline nuevos.
+- **Helpers descargables:** entregar un `.py` ejecutable desde raíz, preflight ajustado a clase/función específica y HEAD, rechazo sin cambios cuando el contexto diverja, copia verificable fuera del repo, escritura atómica/rollback y comandos exactos de pruebas/visual. No repetir la detección errónea por buscar `telefono_laboral` globalmente cuando existía en otro modelo.
+- **Trabajo entre computadoras:** commits selectivos y push tras una validación razonable aunque la feature siga declarada «en desarrollo»; no bloquear la sincronización por tareas visuales no terminadas. Nunca stage de helpers de instalación, bases SQLite o secretos; nunca `git add .`, `reset --hard`, sobrescritura indiscriminada ni `stash pop` silencioso.
+- **Uso real:** mientras el usuario solo registra defectos de e-Cheqs, no implementar; acumular observaciones y resolver juntas cuando lo apruebe. Validaciones deben anticiparse a la tabla y, si falla el lote, señalar registro exacto y conservar borradores sin persistencia parcial.
+
+Ver relevo completo en `CONTINUIDAD_OPERATIVA_20261015.md`.

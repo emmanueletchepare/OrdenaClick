@@ -1,4 +1,6 @@
 # OrdenaClick — Rumbo y estado actual
+> **ACTUALIZACIÓN VIGENTE (15/10/2026):** el corte operativo de esta fecha está al final y en `CONTINUIDAD_OPERATIVA_20261015.md`. Nómina y Caja 2 ya tienen implementación publicada (`902cdeb`); las descripciones anteriores son históricas.
+
 
 **Última actualización:** 10/10/2026
 **Objetivo operativo:** llegar a una Beta usable, estable y segura durante noviembre de 2026.
@@ -436,3 +438,13 @@ Estado: cambio preparado para pruebas Django y aceptación visual antes de publi
 - **Nueva necesidad transversal:** gestor de accesos por usuario con capacidades ON/OFF auditadas. Puede autorizarse a personal administrativo a archivar documentación sin jerarquía alta ni acceso implícito a Caja, datos sensibles o casos jurídicos. **Permisos/roles siguen pendientes de revisión integral.**
 - **CAT:** el documento de alta se denomina **Clave de Alta Temprana - CAT**. La desvinculación inactiva al empleado y **desactiva sus alertas activas**, conservando hechos e historia; licencia vencida **no** implica desvinculación.
 - **No implementado:** ninguna migración, alta, permiso ni alerta de Nómina surge de esta decisión documental. Especificación: `NOMINA_EMPLEADOS_Y_ACCESOS.md`. Estado de código previamente publicado para este corte: `e5ace71`; el siguiente commit sería exclusivamente documental si se aprueba.
+
+## Corte operativo verificado — 15/10/2026 (Casa → Oficina)
+
+**Código vigente verificado:** GitHub `main` `902cdeb` y Oficina sincronizada mediante fast-forward desde `b89ff5a`. Nómina y avances de Caja 2 **están implementados en el alcance publicado**; no seguir tratándolos como propuestas futuras. Se aplicaron migraciones `usuarios.0048`, `.0049`, `.0050` en Oficina, previa copia SQLite consistente y verificada fuera del repositorio. Suite dirigida de 35 pruebas aprobada tanto en Casa como en Oficina. Esto no equivale a aceptación visual integral ni a Beta de producción.
+
+**Prioridad inmediata acordada:** observar Caja 2 / precarga de e-Cheqs con movimientos reales, anotar hallazgos **sin programar todavía**, y diseñar perfil **Colaborador** como el **mismo panel Administrador con funciones restringidas**, no un panel paralelo. Cada función futura de Administrador debe ser habilitable a Colaborador si sus permisos lo autorizan. El futuro gestor de accesos por usuario/acción será el punto de configuración; hoy NO concede privilegios automáticamente.
+
+**Hallazgos reales pendientes:** separar columnas Número e-Cheq y Titular; agregar Fecha de acreditación a la revisión previa; error de importe al «Guardar todos» no identifica fila ni campo y llega demasiado tarde: validar en Agregar/Editar, señalizar registro problemático, conservar lote, comprobar formato es-AR antes de diagnosticar. Estado: **observaciones, sin desarrollo aprobado**.
+
+**Continuidad íntegra y reglas de trabajo:** leer `CONTINUIDAD_OPERATIVA_20261015.md` y las secciones fechadas 15/10/2026 de los documentos rectores. La documentación de fechas anteriores conserva valor histórico pero queda reemplazada cuando indica otro estado de implementación.

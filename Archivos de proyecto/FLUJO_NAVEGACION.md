@@ -367,3 +367,22 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - En ficha, **[+] Centro / [+] Vehículo (Recurso Operativo) / [+] Banco** navega a maestros existentes y vuelve restaurando datos y ubicación de desplazamiento. Al cerrar modales, conservar foco y zona visible como se aprobó en Pendientes.
 - Configuración → **Designar perfiles / futuro Gestor de accesos** → usuario → lista de capacidades con interruptores simples; no activar facultades nuevas sin revisar controles del servidor, identidad, Centro/Empresa y auditoría.
 - Vista y recorridos son **propuestos**, no pantallas ya creadas. Detalle: `NOMINA_EMPLEADOS_Y_ACCESOS.md`.
+
+## Administrador y Colaborador — mismo panel con autorizaciones distintas (15/10/2026)
+
+**Decisión aprobada:** Colaborador no es otra aplicación ni un panel visualmente distinto; tiene prácticamente la misma experiencia que Administrador, usando los mismos menús, ABM, vistas y patrones. **Solo aparecen y funcionan** módulos/acciones con permiso explícito en la Empresa/Centro correspondiente. En cada nueva pantalla Administrador diseñar desde el inicio esa posible habilitación, sin privilegiar Colaborador por defecto.
+
+```text
+Login → Selección de rol → Selección de Empresa autorizada
+    → Panel compartido (aspecto y navegación Administrador)
+        ├─ Menú y pantalla con capacidad concedida
+        │   └─ [ + ] → ABM EXISTENTE en el mismo panel
+        │       └─ Volver LIFO → formulario intacto, scroll, registro preseleccionado
+        └─ Sin capacidad → sin menú/acción y backend deniega URL directa
+```
+
+**Primer circuito previsto para probar:** Colaborador → Pendientes bancarios, conforme a permisos de módulo y operación. Acceso a Pendientes **no equivale a Caja, saldos, aprobación universal ni Nómina**. La bandeja visible se limita a la Empresa activa y reglas de alcance vigentes; resolver selecciona Centro autorizado según reglas de Caja 2. No construir un botón especial o pantalla paralela si ya existe el circuito admin.
+
+**Observación UX de la precarga e-Cheqs, aún no desarrollada:** el listado temporal es herramienta de revisión: columnas independientes Número e-Cheq, Titular, Banco, Fecha de acreditación, Condición, Importe, Acciones. Validar antes de Agregar; ante error al Guardar todos identificar y enfocar fila/campo, conservar el lote completo.
+
+**Estado:** implementación de permisos granulares y Colaborador pendiente. El circuito Nómina bajo Herramientas está en código desde `902cdeb`, y el usuario indicó conformidad visual general de la revisión en Oficina, sin desglose por cada `[+]`. Referencia: `CONTINUIDAD_OPERATIVA_20261015.md`.
