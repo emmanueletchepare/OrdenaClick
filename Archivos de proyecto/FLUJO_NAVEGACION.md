@@ -359,3 +359,11 @@ Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
 disponible. Permisos de colaboradores van en Configuración de Empresa,
 no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 `ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
+
+
+## Flujo previsto — Nómina y permisos granulares (14/10/2026)
+
+- Panel de Empresa → **Nómina de Empleados** → listado Activos (verde) / Inactivos (rojo), estilo Próximos vencimientos → **[Registrar]** o abrir ficha → **[Guardar] / [Desvincular] / [Abrir caso]**, según capacidad.
+- En ficha, **[+] Centro / [+] Vehículo (Recurso Operativo) / [+] Banco** navega a maestros existentes y vuelve restaurando datos y ubicación de desplazamiento. Al cerrar modales, conservar foco y zona visible como se aprobó en Pendientes.
+- Configuración → **Designar perfiles / futuro Gestor de accesos** → usuario → lista de capacidades con interruptores simples; no activar facultades nuevas sin revisar controles del servidor, identidad, Centro/Empresa y auditoría.
+- Vista y recorridos son **propuestos**, no pantallas ya creadas. Detalle: `NOMINA_EMPLEADOS_Y_ACCESOS.md`.

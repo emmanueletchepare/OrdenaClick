@@ -568,3 +568,11 @@ Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
 disponible. Permisos de colaboradores van en Configuración de Empresa,
 no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 `ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
+
+
+## Módulo futuro — Nómina y gestión granular de permisos (14/10/2026)
+
+- Diseñar **Nómina de Empleados** como módulo por Empresa que reutiliza Centro Operativo, Recursos Operativos (Vehículo), Banco y motor de Vencimientos/Alertas, sin duplicar ABM ni crear movimientos financieros.
+- Separar ficha, documentos privados, casos/historial y avisos de licencia: vistas HTTP controlan acceso; servicios definen transiciones, permisos, auditoría y desactivación de alertas al desvincular; JS/CSS sólo UX, siempre externos.
+- La autorización futura distinguirá jerarquía, rol funcional, Empresa/Centro y capacidad por operación; un usuario administrativo podrá archivar documentos sin permiso financiero ni facultades legales. No sustituir ni ampliar los permisos actuales hasta revisión explícita.
+- **Diseño, no implementación**: esquema, retención, pruebas y backup pendientes. Ver `NOMINA_EMPLEADOS_Y_ACCESOS.md`.

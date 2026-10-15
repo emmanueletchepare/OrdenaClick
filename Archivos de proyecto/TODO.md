@@ -294,3 +294,14 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - **Configuración de accesos:** el acceso a los permisos de Gestión Bancaria pasa de botón independiente en Configuración a **Configuración → Designar perfiles**, junto con relaciones. La pantalla de permisos conserva la validación administración general/propietario/superusuario; asigna Centro(s) a colaboradores, sin conceder Caja ni saldos, sin cambiar jerarquías estructurales. Permisos NO viajan en Backup Empresa v1.
 - **Persistencia / backup:** migración aditiva `0047_revision_auditada_pendiente_bancario` y `RevisionPendienteBancario` para edición o incidencia, snapshots JSON antes/después, motivo, creador y estado. Backup Empresa v1 incluye esta nueva entidad como componente opcional, y serializa JSON como objeto para permitir su restauración; respaldos antiguos sin este componente siguen aceptados. Auditoría de permisos de usuarios permanece fuera del respaldo portable.
 - **Seguridad:** POST+CSRF, verificación Empresa activa y roles/centro en backend, GET sólo lectura, transacción y bloqueo para evitar revisiones simultáneas, no cruce entre Empresas. Comprobar al ejecutar las pruebas locales y luego la disposición visual; no dar por aceptado lo no comprobado. Base Server aprobado localmente no implica certificado de producción para PostgreSQL, proxy/TLS o backups remotos.
+
+
+## Producto futuro — Nómina de Empleados y revisión transversal de accesos (14/10/2026)
+
+- [ ] Diseñar/revisar la **matriz de accesos por usuario**: jerarquías, roles, Empresa/Centro, permisos por acción y documentación; proponer lista con interruptores y concesión/revocación auditadas. **No** otorgar privilegios nuevos por defecto.
+- [ ] Diseñar Nómina en el panel: **Activos verde / Inactivos rojo** como Próximos vencimientos, **[Registrar]**, consulta por CUIL/nombre/legajo/Centro.
+- [ ] Implementar ficha personal y laboral, Centro `[+]`, Vehículo-Recurso `[+]`, Banco `[+]`, CBU, contrato, DNI frente/dorso, licencia, **Clave de Alta Temprana - CAT** y preocupacional con archivos privados.
+- [ ] Implementar **Guardar/Desvincular/Abrir caso** con cronología auditable, antecedentes legales y restricciones de acceso; baja conserva historia e **inactiva todas las alertas activas asociadas al empleado**.
+- [ ] Integrar al motor de Alertas aviso de **licencia un mes antes** para empleados activos; licencia vencida **no** desvincula. Definir regla exacta de fechas, reconocimiento/campana y renovación.
+- [ ] Validar seguridad de documentos, permisos, retornos `[+]`/scroll, exportación/restauración por Empresa y regresión antes de publicar. **Módulo no implementado**.
+- Especificación: `NOMINA_EMPLEADOS_Y_ACCESOS.md`. Mantener prioridades actuales de Beta; no confundir diseño futuro con tarea terminada.

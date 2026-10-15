@@ -343,3 +343,11 @@ Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
 disponible. Permisos de colaboradores van en Configuración de Empresa,
 no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 `ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
+
+
+## Modelo conceptual futuro — Nómina / casos / permisos por usuario (14/10/2026)
+
+- Propuesta **no migrada**: Empleado vinculado a Empresa, con CUIL/legajo, estado laboral, identidad personal, datos de contacto, Centro, Vehículo de Recursos Operativos, Banco/CBU, contrato y fechas; adjuntos privados tipificados, incluido **CAT (Clave de Alta Temprana)**.
+- Historia inmutable de cambios/desvinculación y casos/actuaciones (apercibimiento, despido, Baja ARCA, aportes, juicio) con actor, fecha y documentos; futuras lecturas de Legal con permisos separados.
+- Vencimiento de licencia → alerta de empleado activo un mes antes. **Desvinculación desactiva alertas activas de ese empleado** conservando historia; vencimiento no cambia estado laboral.
+- Gestor futuro de capacidades usuario/Empresa/Centro con concesiones auditadas y revocables, separado de jerarquías y roles; **esquema y portabilidad pendientes de revisión**. No añadir modelos ni permisos hasta diseño y pruebas. Ver `NOMINA_EMPLEADOS_Y_ACCESOS.md`.

@@ -303,3 +303,12 @@ Guardado atómico de lote. E-Cheq `A la orden` por defecto; `No a la orden`
 disponible. Permisos de colaboradores van en Configuración de Empresa,
 no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 `ORDENACLICK_DISENO_CAJA_CARTERAS_OP.md` para el detalle completo.
+
+
+## Reglas para futura Nómina de Empleados (14/10/2026)
+
+- No confundir **activo/inactivo laboral** con **licencia vigente/vencida**. Vencer licencia no desvincula; **desvincular anula/desactiva avisos activos del empleado**, sin borrar antecedentes ni alertas históricas.
+- Al dar de alta, editar, archivar, consultar documentos, desvincular y gestionar casos, comprobar **Empresa/Centro/capacidad por operación en backend**, con auditoría y mínimo privilegio. Un administrativo autorizado a subir documentos no gana Caja, pagos, facultad de desvincular ni acceso indiscriminado a datos médicos o legales.
+- Documentos DNI, CBU, **Clave de Alta Temprana - CAT**, preocupacional y casos en **almacenamiento privado**; verificar autorización incluso para descargar, y proteger especialmente documentación médica/judicial.
+- `[+]` usa ABM existentes y regreso contextual con formulario/scroll conservados. Las alertas nacen/caducan por reglas backend; no resolverlo ocultando botones ni por frontend.
+- Toda esta sección es **invariante de diseño futuro**. La matriz de accesos es **pendiente de decisión y pruebas**, no se presume que los actuales roles ya la satisfacen. Ver `NOMINA_EMPLEADOS_Y_ACCESOS.md`.
