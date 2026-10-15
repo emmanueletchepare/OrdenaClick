@@ -2,11 +2,12 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OrdenaClick | Pendientes de aplicación</title>
-<link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}?v=10">
 <script src="{% static 'js/caja/pendientes.js' %}?v=7" defer></script>
 <link rel="stylesheet" href="{% static 'css/caja/pendientes_en_panel.css' %}?v=1">
-<script src="{% static 'js/caja/pendientes_en_panel.js' %}?v=1" defer></script>
-<script src="{% static 'js/caja/pendientes_acciones.js' %}?v=5" defer></script></head>
+<script src="{% static 'js/caja/pendientes_en_panel.js' %}?v=2" defer></script>
+<script src="{% static 'js/caja/pendientes_acciones.js' %}?v=7" defer></script>
+<script src="{% static 'js/caja/estados_echeq.js' %}?v=1" defer></script></head>
 <body><main class="gb-contenedor" id="gbRaiz" data-empresa="{{ empresa.pk }}" data-usuario="{{ usuario_id }}">
 <header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div><h1>Pendientes de aplicación</h1>
 <p>{{ empresa.razon_social }} · Los movimientos sin resolver son globales únicamente dentro de esta Empresa.</p></div>
@@ -50,7 +51,7 @@
 <div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>e-Cheq / Titular</th><th>Banco</th><th>Condición</th><th class="gb-numero">Importe</th><th class="gb-accion">Acciones</th></tr></thead><tbody id="gbListaEcheqs"><tr><td colspan="5" class="gb-vacio">Sin e-Cheqs agregados.</td></tr></tbody></table></div>
 <button class="gb-btn gb-guardar" data-guardar-lote="echeqs" disabled type="button">Guardar todos</button>
 <p class="gb-mensaje" data-mensaje-lote="echeqs" role="status" aria-live="polite"></p></div>
-<p class="gb-ayuda">Las filas se editan o quitan antes de guardar. Nada se registra hasta «Guardar todos». Esta bandeja no genera recibos ni incorpora automáticamente instrumentos a Cartera.</p>
+<p class="gb-ayuda">Las filas se editan o quitan antes de guardar. Nada se registra hasta «Guardar todos». Al guardar, cada e-Cheq ingresa a la cartera virtual; esta bandeja no genera recibos ni movimientos de Caja.</p>
 </section>
 {% endif %}
 <section class="gb-tarjeta" id="bandejaPendientes">
@@ -70,7 +71,7 @@
 <td class="gb-accion">{% if estado == 'Pendiente' %}<button type="button" class="gb-btn gb-btn-menor" data-confirmar-pendiente="{{ pendiente.pk }}" data-identificacion="{{ pendiente.identificacion }}">Confirmar</button>
 {% else %}<span>{{ pendiente.centro_operativo.nombre }}</span><small>{{ pendiente.resuelto_por.nombre_historico|default:pendiente.resuelto_por.username_historico }} · {{ pendiente.resuelto_en|date:'d/m/Y H:i' }}</small>{% endif %}
 {% if es_general or pendiente.creado_por.usuario_id == usuario_id or pendiente.resuelto_por.usuario_id == usuario_id %}
-<button class="gb-btn gb-btn-menor gb-corregir" type="button" data-revisar-pendiente="{{ pendiente.pk }}" data-estado="{{ pendiente.estado }}" data-fecha="{{ pendiente.fecha|date:'Y-m-d' }}" data-tipo="{{ pendiente.tipo }}" data-identificacion="{{ pendiente.identificacion }}" data-importe="{{ pendiente.importe }}" data-numero="{{ pendiente.echeq_numero }}" data-titular="{{ pendiente.echeq_titular }}" data-banco="{{ pendiente.echeq_banco_nombre }}" title="{% if pendiente.estado == 'Pendiente' %}Editar con auditoría{% else %}Informar error para auditoría{% endif %}">{% if pendiente.estado == 'Pendiente' %}Editar{% else %}Auditoría{% endif %}</button>{% endif %}</td></tr>
+<button class="gb-btn gb-btn-menor gb-corregir" type="button" data-revisar-pendiente="{{ pendiente.pk }}" data-estado="{{ pendiente.estado }}" data-fecha="{{ pendiente.fecha|date:'Y-m-d' }}" data-tipo="{{ pendiente.tipo }}" data-identificacion="{{ pendiente.identificacion }}" data-importe="{{ pendiente.importe }}" data-numero="{{ pendiente.echeq_numero }}" data-titular="{{ pendiente.echeq_titular }}" data-banco="{{ pendiente.echeq_banco_nombre }}" title="{% if pendiente.estado == 'Pendiente' %}Editar con auditoría{% else %}Informar error para auditoría{% endif %}">{% if pendiente.estado == 'Pendiente' %}Editar{% else %}Auditoría{% endif %}</button>{% endif %}{% if es_general and pendiente.tipo == 'ECheq' %}<button type="button" class="gb-btn gb-btn-menor" data-estado-echeq="{{ pendiente.pk }}">Estado e historial</button>{% endif %}</td></tr>
 {% empty %}<tr><td colspan="5" class="gb-vacio">No hay movimientos para esta consulta.</td></tr>{% endfor %}</tbody></table></div>
 <div class="gb-paginacion">{% if pagina.has_previous %}<a href="?estado={{ estado }}{% if centro_filtro %}&centro={{ centro_filtro }}{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}&pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
 <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
@@ -101,5 +102,22 @@
 <p class="gb-mensaje" id="gbRevisionError" role="status" aria-live="polite"></p>
 <div class="gb-dialog-acciones"><button class="gb-btn" type="submit" id="gbRevisionEnviar">Guardar corrección</button>
 <button class="gb-btn gb-btn-sec" type="button" id="gbCancelarRevision">Cancelar</button></div>
+</form></dialog>
+
+<dialog id="gbModalEstadoEcheq" class="gb-dialog gb-estado-dialog" aria-labelledby="gbEstadoTitulo">
+<form id="gbFormEstadoEcheq" method="post" autocomplete="off">{% csrf_token %}
+<h2 id="gbEstadoTitulo">Estado e historial</h2>
+<p id="gbEstadoInstrumento"></p>
+<p><strong>Estado actual:</strong> <span id="gbEstadoActual">En cartera</span></p>
+<input type="hidden" name="clave">
+<label>Registrar acción<select name="estado" required><option value="">Seleccionar acción</option></select></label>
+<label>Fecha de la acción<input name="fecha" type="date" required max="{{ fecha_hoy|date:'Y-m-d' }}"></label>
+<label>Observaciones<textarea name="observaciones" rows="2" maxlength="300" placeholder="Motivo o referencia (opcional)"></textarea></label>
+<div class="gb-dialog-acciones"><button class="gb-btn" type="submit" id="gbGuardarEstado" disabled>Registrar estado</button></div>
+<p class="gb-mensaje" id="gbEstadoMensaje" role="status" aria-live="polite"></p>
+<h3>Historial cronológico</h3>
+<div class="gb-estado-historial"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Detalle</th></tr></thead>
+<tbody id="gbEstadoHistorial"></tbody></table></div>
+<div class="gb-dialog-acciones"><button class="gb-btn gb-btn-sec" type="button" id="gbCerrarEstado">Cerrar</button></div>
 </form></dialog>
 </body></html>

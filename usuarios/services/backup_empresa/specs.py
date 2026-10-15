@@ -54,6 +54,7 @@ MODEL_SPECS = (
     ModelSpec("pendientes_bancarios", models.PendienteBancario, "empresa"),
     ModelSpec("eventos_pendientes_bancarios", models.EventoPendienteBancario, "pendiente__empresa"),
     ModelSpec("revisiones_pendientes_bancarios", models.RevisionPendienteBancario, "pendiente__empresa"),
+    ModelSpec("estados_cartera_echeq", models.EventoEstadoECheq, "pendiente__empresa"),
     ModelSpec("cheques", models.Cheque, "empresa"),
     ModelSpec("vencimientos", models.Vencimiento, "empresa"),
     ModelSpec("alertas", models.Alerta, "vencimiento__empresa"),
@@ -66,4 +67,4 @@ FORMAT_ID = "ordenaclick_empresa"
 FORMAT_VERSION = 1
 
 # Componentes adicionales de Caja 2: opcionales al leer un Backup v1 anterior.
-OPTIONAL_NEW_KEYS = frozenset({"correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios"})
+OPTIONAL_NEW_KEYS = frozenset({"correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq"})

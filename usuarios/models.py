@@ -3407,6 +3407,10 @@ class PendienteBancario(models.Model):
         ('NoOrden', 'No a la orden')], default='Orden')
     observaciones = models.CharField(max_length=300, blank=True)
     estado = models.CharField(max_length=12, choices=ESTADOS, default='Pendiente')
+    estado_cartera = models.CharField(max_length=16, default='EnCartera', choices=[
+        ('EnCartera', 'En cartera'), ('Rechazado', 'Rechazado'),
+        ('Devuelto', 'Devuelto'), ('Vencido', 'Vencido'),
+    ])
     creado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, related_name='pendientes_creados')
     resuelto_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_resueltos')
     resuelto_en = models.DateTimeField(null=True, blank=True)
@@ -3448,6 +3452,22 @@ class EventoPendienteBancario(models.Model):
     accion = models.CharField(max_length=30)
     detalle = models.CharField(max_length=300, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
+
+
+class EventoEstadoECheq(models.Model):
+    """Evento inmutable de cartera virtual (no altera Pago ni Caja)."""
+    pendiente = models.ForeignKey('PendienteBancario', on_delete=models.PROTECT,
+                                  related_name='estados_cartera')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    clave = models.UUIDField(unique=True)
+    estado_anterior = models.CharField(max_length=16)
+    estado_nuevo = models.CharField(max_length=16)
+    fecha = models.DateField()
+    observaciones = models.CharField(max_length=300, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['creado', 'pk']
 
 
 # Auditoría de permisos de gestión, ligada a cuentas de la instalación.

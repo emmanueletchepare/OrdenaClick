@@ -119,3 +119,30 @@ dl{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:13px}dt{color:
 .gb-menu-opcion { display:block; width:100%; padding:10px 12px; background:transparent;
   border:0; color:#eaf0f9; font:inherit; text-align:left; border-radius:6px; cursor:pointer; }
 .gb-menu-opcion:hover,.gb-menu-opcion:focus-visible { background:#26334c; }
+
+/* Acciones de cartera virtual y modal pequeño, sin alterar tamaños de fila. */
+#bandejaPendientes .gb-acciones-preparadas > button[data-estado-echeq] {display:none;}
+.gb-menu-desplegable {width:178px;}
+.gb-estado-dialog {width:min(550px,calc(100vw - 30px));}
+.gb-estado-dialog textarea {background:#0f141e;border:1px solid #37465d;color:#f1f5fc;
+  padding:9px;border-radius:9px;font:inherit;width:100%;max-width:100%;resize:vertical;}
+.gb-estado-dialog h3 {font-size:15px;font-weight:600;margin:5px 0;}
+.gb-estado-historial {max-height:220px;overflow-y:auto;overflow-x:hidden;border:1px solid #344764;border-radius:9px;}
+.gb-estado-historial table {width:100%;min-width:0;table-layout:fixed;font-size:13px;}
+.gb-estado-historial th,.gb-estado-historial td {padding:8px 7px;white-space:normal;overflow-wrap:anywhere;}
+.gb-estado-historial th:nth-child(1){width:20%;}
+.gb-estado-historial th:nth-child(2){width:23%;}
+.gb-estado-historial th:nth-child(3){width:25%;}
+.gb-estado-historial th:nth-child(4){width:32%;}
+
+/* Pendientes embebidos: diálogo centrado en el área visible de .main. */
+body.gb-en-panel .gb-dialog[open] {
+  position:fixed;
+  inset:auto;
+  margin:0;
+  transform:translate(-50%, -50%);
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+}
+.gb-menu-desplegable {overflow-y:auto; overscroll-behavior:contain;}
