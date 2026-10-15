@@ -97,3 +97,25 @@ dl{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:13px}dt{color:
 .gb-dialog #gbRevisionEcheq{display:contents;}
 .gb-dialog #gbRevisionEcheq label{min-width:0;}
 @media(max-width:760px){.gb-filtro input[type="search"]{min-width:0;width:100%;}.gb-dialog #gbRevisionCampos{grid-template-columns:1fr;}}
+
+/* Sólo la bandeja de resultados; mantiene paginación y tamaños de fuente. */
+#bandejaPendientes .gb-tabla-contenedor { max-height: 660px; overflow-y: auto; overflow-x: hidden; }
+#bandejaPendientes .gb-tabla { width: 100%; table-layout: fixed; }
+#bandejaPendientes .gb-tabla th { position: sticky; top: 0; z-index: 1; background: #1b2637; }
+#bandejaPendientes .gb-tabla th:nth-child(1) { width: 12%; }
+#bandejaPendientes .gb-tabla th:nth-child(2) { width: 23%; }
+#bandejaPendientes .gb-tabla th:nth-child(3) { width: 28%; }
+#bandejaPendientes .gb-tabla th:nth-child(4) { width: 15%; }
+#bandejaPendientes .gb-tabla th:nth-child(5) { width: 22%; }
+#bandejaPendientes .gb-tabla td { overflow-wrap: anywhere; }
+
+/* Menú de acciones: idéntica altura de filas; menú fuera del scroll vertical. */
+#bandejaPendientes .gb-acciones-preparadas > button[data-confirmar-pendiente],
+#bandejaPendientes .gb-acciones-preparadas > button[data-revisar-pendiente] { display:none; }
+#bandejaPendientes .gb-abrir-acciones { min-width:38px; font-size:20px; line-height:1; }
+.gb-menu-desplegable { position:fixed; z-index:4000; width:150px; padding:5px; background:#171c26;
+  border:1px solid #46536b; border-radius:10px; box-shadow:0 10px 24px #0009; }
+.gb-menu-desplegable[hidden] { display:none; }
+.gb-menu-opcion { display:block; width:100%; padding:10px 12px; background:transparent;
+  border:0; color:#eaf0f9; font:inherit; text-align:left; border-radius:6px; cursor:pointer; }
+.gb-menu-opcion:hover,.gb-menu-opcion:focus-visible { background:#26334c; }

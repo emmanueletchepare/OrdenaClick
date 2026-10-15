@@ -1,0 +1,10 @@
+/* Sólo en panel operativo; no modifica el modo independiente del Colaborador. */
+#ocPendientesFrame { display: block; width: 100%; border: 0; }
+body.gb-en-panel { overflow-x: hidden; }
+body.gb-en-panel .gb-contenedor { max-width: none; width: 100%; margin: 0; padding: 0 2px 8px; }
+body.gb-en-panel .gb-volver { display: none; }
+body.gb-en-panel .gb-marca { display: none; }
+body.gb-en-panel .gb-filtro input[type="search"] { min-width: 0; max-width: 260px; }
+body.gb-en-panel .gb-tabla-contenedor { max-width: 100%; }
+body.gb-en-panel #bandejaPendientes .gb-tabla td { overflow: hidden; text-overflow: ellipsis; }
+body.gb-en-panel .gb-tarjeta { min-width: 0; }

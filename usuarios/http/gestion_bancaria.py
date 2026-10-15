@@ -17,6 +17,7 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
@@ -68,6 +69,7 @@ def entrar_gestion_bancaria(request):
 @login_required
 @never_cache
 @require_GET
+@xframe_options_sameorigin
 def gestion_bancaria(request):
     try:
         empresa, centros_habilitados = _empresa_activa(request)
@@ -133,6 +135,7 @@ def gestion_bancaria(request):
 @login_required
 @never_cache
 @require_GET
+@xframe_options_sameorigin
 def abm_contextual_echeq(request, tipo):
     """ABM real desde e-Cheq, limitado a la Empresa activa y capacidad general.
 
