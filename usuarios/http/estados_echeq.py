@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
-from usuarios.services.estados_echeq import consultar_estado, registrar_estado
+from usuarios.services.estados_echeq import consultar_estado, registrar_estado, regularizar_rechazo_historico
 from usuarios.services.pendientes_bancarios import alcance_pendientes
 
 
@@ -42,4 +42,19 @@ def estado_echeq_registrar(request, pendiente_id):
         return JsonResponse({'ok': False, 'mensaje': 'No está autorizado.'}, status=403)
     except ValueError as exc:
         return JsonResponse({'ok': False, 'mensaje': str(exc)}, status=400)
+    return JsonResponse({'ok': True, 'creada': creada})
+
+
+@login_required
+@never_cache
+@require_POST
+def estado_echeq_regularizar_rechazo(request, pendiente_id):
+    try:
+        empresa = _empresa(request)
+        creada = regularizar_rechazo_historico(
+            usuario=request.user, empresa_id=empresa.pk, pendiente_id=pendiente_id)
+    except PermissionDenied:
+        return JsonResponse({'ok': False, 'mensaje': 'No está autorizado.'}, status=403)
+    except (TypeError, ValueError) as error:
+        return JsonResponse({'ok': False, 'mensaje': str(error)}, status=400)
     return JsonResponse({'ok': True, 'creada': creada})

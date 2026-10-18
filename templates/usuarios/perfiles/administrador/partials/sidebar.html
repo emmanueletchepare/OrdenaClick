@@ -13,7 +13,7 @@ Ordena<span>click</span>
 <div class="user-box">
 
 <div class="user-label">
-Administrador conectado
+{% if acceso_restringido %}Acceso a empresas{% else %}Administrador conectado{% endif %}
 </div>
 
 <div class="user-name">
@@ -23,6 +23,64 @@ Administrador conectado
 </div>
 
 
+{% if acceso_restringido %}
+<div class="menu" id="menu-principal">
+    {% if empresa_actual %}
+        {% if puede_ver_pendientes %}
+        <form method="post" action="{% url 'entrar_gestion_bancaria' %}" id="formEntrarGestionBancaria" class="sidebar-pendientes-empresa">
+            {% csrf_token %}
+            <input type="hidden" name="empresa" value="{{ empresa_actual.pk }}">
+            <input type="hidden" name="origen" value="colaborador">
+            <input type="hidden" name="destino" value="pendientes">
+            <button type="submit" class="sidebar-nav-btn" data-sidebar-item>
+                <span class="sidebar-nav-icon" aria-hidden="true">▤</span>
+                <span class="sidebar-nav-text">Pendientes bancarios</span>
+            </button>
+        </form>
+        {% endif %}
+        {% if puede_gestion_claves %}
+        <details class="oc-sidebar-grupo" data-oc-grupo="herramientas">
+          <summary class="sidebar-nav-btn" data-sidebar-item><span class="sidebar-nav-icon">▣</span><span class="sidebar-nav-text">Herramientas</span></summary>
+          <div class="oc-sidebar-hijos">
+            <button type="button" class="sidebar-nav-btn" data-oc-modulo="claves">Gestión de claves</button>
+          </div>
+        </details>
+        {% endif %}
+        {% if puede_ver_abms %}
+        <details class="oc-sidebar-grupo" data-oc-grupo="abms">
+          <summary class="sidebar-nav-btn" data-sidebar-item><span class="sidebar-nav-icon">▦</span><span class="sidebar-nav-text">ABMs</span></summary>
+          <div class="oc-sidebar-hijos">
+            {% if abms_estructura %}
+              <div class="oc-sidebar-subtitulo">Estructura Operativa</div>
+              {% for abm in abms_estructura %}
+                <button type="button" class="sidebar-nav-btn" data-oc-modulo="{{ abm.codigo }}">{{ abm.nombre }}</button>
+              {% endfor %}
+            {% endif %}
+            {% if abms_finanzas %}
+              <div class="oc-sidebar-subtitulo">Finanzas y medios de pago</div>
+              {% for abm in abms_finanzas %}
+                <button type="button" class="sidebar-nav-btn" data-oc-modulo="{{ abm.codigo }}">{{ abm.nombre }}</button>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </details>
+        {% endif %}
+        <div class="sidebar-separator"></div>
+        <a href="{% url 'panel_administrar' %}" class="sidebar-nav-btn sidebar-nav-secondary">Cambiar empresa</a>
+    {% else %}
+        <div class="sidebar-nav-text">Seleccionar empresa</div>
+        {% for empresa in empresas %}
+            <a class="sidebar-company-btn oc-empresa-vinculo {% if empresa.etiqueta_acceso == 'Colaborador' %}oc-empresa-colabora{% else %}oc-empresa-administra{% endif %}" href="{% url 'panel_administrar' %}?empresa={{ empresa.pk }}">
+                <span class="oc-empresa-nombre">{{ empresa.nombre_fantasia|default:empresa.razon_social }}</span>
+                <small class="oc-empresa-rol">{{ empresa.etiqueta_acceso }}</small>
+            </a>
+        {% empty %}
+            <div class="sidebar-empty">No tenés empresas asignadas.</div>
+        {% endfor %}
+    {% endif %}
+    <a href="{% url 'home' %}" class="sidebar-nav-btn sidebar-nav-secondary">Volver al inicio</a>
+</div>
+{% else %}
 {% if not empresa_actual %}
 
 <div
@@ -157,11 +215,12 @@ Salir
 >
 
 
-<button
+<details class="oc-sidebar-grupo" data-oc-grupo="registros">
+<summary
     class="sidebar-nav-btn"
-    type="button"
+
     data-sidebar-item
-    onclick="mostrarSubmenu('registros')"
+
 >
 
 <span class="sidebar-nav-icon">
@@ -185,7 +244,15 @@ Salir
 Registros
 </span>
 
-</button>
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-comprobantes" >Comprobantes</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-obligaciones" >Obligaciones</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Carga Planificada</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Registrar Pago</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Modificar / Eliminar</button>
+</div>
+</details>
 
 <form method="post" action="{% url 'entrar_gestion_bancaria' %}" id="formEntrarGestionBancaria" class="sidebar-pendientes-empresa">
 {% csrf_token %}
@@ -197,6 +264,8 @@ Registros
     <span class="sidebar-nav-text">Pendientes bancarios</span>
 </button>
 </form>
+
+
 
 <button
     id="btnSidebarCaja"
@@ -393,11 +462,12 @@ Balance
 <div class="sidebar-separator"></div>
 
 
-<button
+<details class="oc-sidebar-grupo" data-oc-grupo="herramientas">
+<summary
     class="sidebar-nav-btn"
-    type="button"
+
     data-sidebar-item
-    onclick="mostrarSubmenu('herramientas')"
+
 >
 
 <span class="sidebar-nav-icon">
@@ -422,14 +492,20 @@ Balance
 Herramientas
 </span>
 
-</button>
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="claves" >Gestión de claves</button>
+<button type="button" id="btnNominaEmpleados" class="sidebar-nav-btn">Nómina de Empleados</button>
+</div>
+</details>
 
 
-<button
+<details class="oc-sidebar-grupo" data-oc-grupo="abms">
+<summary
     class="sidebar-nav-btn"
-    type="button"
+
     data-sidebar-item
-    onclick="mostrarSubmenu('abms')"
+
 >
 
 <span class="sidebar-nav-icon">
@@ -449,18 +525,29 @@ Herramientas
 ABMs
 </span>
 
-</button>
+</summary>
+<div class="oc-sidebar-hijos">
+<div class="oc-sidebar-subtitulo">Estructura Operativa</div>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-centros" >Centros Operativos</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-recursos" >Recursos Operativos</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-proveedores" >Proveedores</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-tipos" >Tipos de gastos</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-clientes" >Clientes</button>
+<div class="oc-sidebar-subtitulo">Finanzas y medios de pago</div>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-bancos" >Bancos</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-cuentas" >Cuentas Bancarias</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-tarjetas" >Tarjetas</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-retenciones" >Retenciones</button>
+</div>
+</details>
 
 
-<button
+<details class="oc-sidebar-grupo" data-oc-grupo="configuracion">
+<summary
     class="sidebar-nav-btn"
-    type="button"
+
     data-sidebar-item
-    onclick="
-        mostrarSubmenu(
-            'configuracion'
-        )
-    "
+
 >
 
 <span class="sidebar-nav-icon">
@@ -508,19 +595,24 @@ ABMs
 Configuración
 </span>
 
-</button>
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="modificar-empresa" >Modificar Empresa</button>
+<button type="button" id="btn-designar-perfiles" class="sidebar-nav-btn" data-designar-perfiles-url="{% url 'gestionar_relaciones_empresa' empresa_actual.pk %}">Designar perfiles</button>
+<button type="button" class="sidebar-nav-btn" data-oc-gestion-accesos-url="{% url 'gestion_accesos_colaborador' empresa_actual.pk %}">Gestión de accesos</button>
+</div>
+</details>
 
 
 <div class="sidebar-separator"></div>
 
 
-<button
-    type="button"
+<a
+    href="{% url 'panel_administrar' %}"
     class="
         sidebar-nav-btn
         sidebar-nav-secondary
     "
-    onclick="mostrarEmpresas()"
 >
 
 <span class="sidebar-nav-icon">
@@ -539,7 +631,7 @@ Configuración
 Cambiar empresa
 </span>
 
-</button>
+</a>
 
 
 <a
@@ -582,7 +674,7 @@ Volver al inicio
 {% for empresa in empresas %}
 
 <a
-    href="?empresa={{ empresa.id }}"
+    href="{% url 'panel_administrar' %}?empresa={{ empresa.id }}"
     class="sidebar-company-btn"
 >
 
@@ -621,6 +713,7 @@ Volver
 </button>
 
 </div>
+{% endif %}
 
 </div>
 

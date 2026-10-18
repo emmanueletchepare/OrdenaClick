@@ -146,3 +146,34 @@ body.gb-en-panel .gb-dialog[open] {
   overscroll-behavior:contain;
 }
 .gb-menu-desplegable {overflow-y:auto; overscroll-behavior:contain;}
+
+/* Selección de instrumentos para salida; conserva la identidad visual de Caja 2. */
+.gb-salida-elegido{outline:1px solid #6a9edb;outline-offset:-1px;background:rgba(54,107,179,.14)}
+.gb-salida-switch{position:relative;display:inline-flex;align-items:center;width:39px;height:22px;cursor:pointer}
+.gb-salida-switch input{position:absolute;opacity:0;width:39px;height:22px;cursor:pointer}
+.gb-salida-switch span{width:39px;height:22px;border-radius:15px;background:#35435b;border:1px solid #63758f;transition:background .15s}
+.gb-salida-switch span:before{content:'';display:block;background:#e6eefb;border-radius:50%;width:16px;height:16px;margin:2px;transition:transform .15s}
+.gb-salida-switch input:checked+span{background:#315f9e}
+.gb-salida-switch input:checked+span:before{transform:translateX(17px)}
+.gb-salida-switch input:focus-visible+span{outline:2px solid #8dbaff}
+
+/* Salidas e-Cheq: condición legal, sin incluir acción en su etiqueta. */
+.gb-condicion-orden{color:#a7ccff;border:1px solid #476da3;border-radius:7px;padding:4px 9px;background:rgba(55,110,178,.12);white-space:nowrap}
+.gb-condicion-noorden{color:#e9c68e;border:1px solid #8b6b40;border-radius:7px;padding:4px 9px;background:rgba(163,120,58,.13);white-space:nowrap}
+[data-salida-totales]{padding:14px 16px;border:1px solid #3d5476;border-radius:9px;background:#1a2639;color:#edf3ff;font-size:14px;font-weight:700;line-height:1.8}
+
+/* Salidas e-Cheq: condición legal, sin incluir acción en su etiqueta. */
+.gb-condicion-orden{color:#a7ccff;border:1px solid #476da3;border-radius:7px;padding:4px 9px;background:rgba(55,110,178,.12);white-space:nowrap}
+.gb-condicion-noorden{color:#e9c68e;border:1px solid #8b6b40;border-radius:7px;padding:4px 9px;background:rgba(163,120,58,.13);white-space:nowrap}
+[data-salida-totales]{padding:14px 16px;border:1px solid #3d5476;border-radius:9px;background:#1a2639;color:#edf3ff;font-size:14px;font-weight:700;line-height:1.8}
+
+/* Precarga: ubicar visualmente la fila y el campo rechazados por Django. */
+#gbListaEcheqs tr.gb-precarga-error,#gbListaBancos tr.gb-precarga-error{outline:1px solid #ca5e64;outline-offset:-1px}
+#gbListaEcheqs .gb-precarga-campo-error,#gbListaBancos .gb-precarga-campo-error{box-shadow:inset 0 0 0 2px #ca5e64}
+
+/* Solo rechazo confirmado: rojo según el lenguaje visual de la bandeja. */
+.gb-registro-rechazado{background:rgba(174,56,66,.105)}
+.gb-registro-rechazado td:first-child{box-shadow:inset 3px 0 #d4696f}
+.gb-registro-rechazado:hover{background:rgba(174,56,66,.155)}
+.gb-registro-rechazado .gb-tipo{background:rgba(177,58,66,.18);border-color:rgba(221,112,117,.55);color:#ffb6b9}
+.gb-rechazo-etiqueta{color:#ffb6b9;font-weight:600}

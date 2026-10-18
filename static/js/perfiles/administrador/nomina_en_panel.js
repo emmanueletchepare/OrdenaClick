@@ -33,8 +33,44 @@
     const frame = frameNomina();
     if (!frame || e.source !== frame.contentWindow) return;
     const alto = Number(e.data.alto);
-    if (Number.isFinite(alto)) frame.height = String(Math.max(620, Math.min(15000, alto)));
+    if (Number.isFinite(alto) && alto >= 620 && alto <= 30000) {
+      const nuevoAlto = String(Math.ceil(alto));
+      if (frame.height !== nuevoAlto) frame.height = nuevoAlto;
+    }
   });
+
+  // Foto inmutable de la posición ANTES de que el ABM cambie el panel.
+  // Capturar todos los ancestros, incluidos los que estaban en scroll=0:
+  // el ABM puede desplazar luego un contenedor que inicialmente estaba arriba.
+  function capturarPosicion(frame) {
+    const contenedores = [];
+    let nodo = frame.parentElement;
+    while (nodo) {
+      contenedores.push({nodo, arriba: nodo.scrollTop, izquierda: nodo.scrollLeft});
+      nodo = nodo.parentElement;
+    }
+    const documento = document.scrollingElement;
+    if (documento && !contenedores.some(p => p.nodo === documento)) {
+      contenedores.push({nodo: documento, arriba: documento.scrollTop,
+        izquierda: documento.scrollLeft});
+    }
+    return {contenedores, paginaX: window.scrollX, paginaY: window.scrollY,
+      fichaY: frame.contentWindow?.scrollY || 0};
+  }
+
+  function restaurarPosicion(estado) {
+    if (!estado.posicion) return;
+    // Primero recuperar geometría externa. No enfocar controles del ABM.
+    for (const posicion of estado.posicion.contenedores) {
+      if (posicion.nodo.isConnected) {
+        posicion.nodo.scrollTop = posicion.arriba;
+        posicion.nodo.scrollLeft = posicion.izquierda;
+      }
+    }
+    window.scrollTo(estado.posicion.paginaX, estado.posicion.paginaY);
+    try { estado.frame.contentWindow.scrollTo(0, estado.posicion.fichaY); }
+    catch (_) { /* iframe preservado, pero no accesible */ }
+  }
 
   function restaurarPantalla(estado) {
     for (const [nombre, funcion] of Object.entries(estado.funcionesVolver)) {
@@ -44,15 +80,14 @@
     estado.barra.remove();
     estado.contenido.id = 'contenido-operativo';
     estado.contenido.style.display = estado.displayAnterior;
-    const panel = document.querySelector('.main');
-    if (panel) panel.scrollTop = estado.scrollPanel;
-    window.scrollTo(0, estado.scrollPagina);
-    try { estado.frame.contentWindow.scrollTo(0, estado.scrollFicha); } catch (_) { /* marco cerrado */ }
+    // Restaurar después de recuperar el DOM y después del ajuste de altura
+    // del iframe. No mover ni recrear la ficha (podría perder adjuntos).
+    restaurarPosicion(estado);
     requestAnimationFrame(() => {
-      if (panel) panel.scrollTop = estado.scrollPanel;
-      window.scrollTo(0, estado.scrollPagina);
-      try { estado.frame.contentWindow.scrollTo(0, estado.scrollFicha); } catch (_) { /* marco cerrado */ }
+      restaurarPosicion(estado);
+      requestAnimationFrame(() => restaurarPosicion(estado));
     });
+    setTimeout(() => restaurarPosicion(estado), 120);
   }
 
   async function salirABM(seleccionar = true) {
@@ -73,6 +108,8 @@
       const nuevos = opciones.filter(o => !estado.antes.has(String(o.id)));
       const valorNuevo = nuevos.length === 1 ? String(nuevos[0].id) : null;
       estado.frame.contentWindow?.OrdenaClickNominaActualizarSelect?.(estado.campo, opciones, valorNuevo);
+      // La actualización del select puede alterar la altura de la ficha.
+      requestAnimationFrame(() => restaurarPosicion(estado));
     } catch (error) {
       console.error('Nómina: opciones del ABM', error);
       alert('Volviste a Nómina, pero no se pudieron actualizar las opciones. Conservamos la ficha sin cambios.');
@@ -112,9 +149,7 @@
     retorno = {
       tipo, campo: opcion.campo, empresa, frame, contenido, barra, abm: host,
       displayAnterior: contenido.style.display,
-      scrollPanel: panel ? panel.scrollTop : 0,
-      scrollPagina: window.scrollY,
-      scrollFicha: frame.contentWindow?.scrollY || 0,
+      posicion: capturarPosicion(frame),
       antes: new Set([...select.options].map(o => o.value).filter(Boolean)),
       funcionesVolver, cerrando: false,
     };

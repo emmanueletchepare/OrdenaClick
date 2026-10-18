@@ -3186,6 +3186,10 @@ class GestionClave(models.Model):
         related_name="claves"
     )
 
+    # Credenciales heredadas tienen creador NULL: solo administración general.
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                   null=True, blank=True, related_name='claves_creadas')
+
     nombre = models.CharField(
         max_length=150
     )
@@ -3410,6 +3414,7 @@ class PendienteBancario(models.Model):
     estado_cartera = models.CharField(max_length=16, default='EnCartera', choices=[
         ('EnCartera', 'En cartera'), ('Rechazado', 'Rechazado'),
         ('Devuelto', 'Devuelto'), ('Vencido', 'Vencido'),
+        ('Depositado', 'Depositado'), ('Endosado', 'Endosado'), ('Cedido', 'Cedido'),
     ])
     creado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, related_name='pendientes_creados')
     resuelto_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, null=True, blank=True, related_name='pendientes_resueltos')
@@ -3468,6 +3473,31 @@ class EventoEstadoECheq(models.Model):
 
     class Meta:
         ordering = ['creado', 'pk']
+
+
+class OperacionSalidaECheq(models.Model):
+    """Confirmación inmutable de un lote de salida de cartera virtual."""
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT, related_name='salidas_echeq')
+    clave = models.UUIDField(unique=True)
+    tipo = models.CharField(max_length=12, choices=[('Depositar', 'Depositar'), ('EndosarCeder', 'Endosar / Ceder')])
+    cuenta = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT, null=True, blank=True)
+    proveedor = models.ForeignKey('Proveedor', on_delete=models.PROTECT, null=True, blank=True)
+    banco_destino = models.ForeignKey('Banco', on_delete=models.PROTECT, null=True, blank=True)
+    destino = models.CharField(max_length=200, blank=True)
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+
+
+class ItemSalidaECheq(models.Model):
+    operacion = models.ForeignKey('OperacionSalidaECheq', on_delete=models.PROTECT, related_name='items')
+    pendiente = models.OneToOneField('PendienteBancario', on_delete=models.PROTECT, related_name='salida_echeq')
+    accion = models.CharField(max_length=12, choices=[('Depositado', 'Depositado'), ('Endosado', 'Endosado'), ('Cedido', 'Cedido')])
+    importe = models.DecimalField(max_digits=14, decimal_places=2)
+    numero = models.CharField(max_length=80)
+    creado = models.DateTimeField(auto_now_add=True)
 
 
 # Auditoría de permisos de gestión, ligada a cuentas de la instalación.
@@ -3594,3 +3624,6 @@ class DocumentoEmpleado(models.Model):
 
     class Meta:
         ordering = ['-creado', '-pk']
+
+# Permisos: registro Django desde módulo específico.
+from .models_accesos import PermisoAccesoColaborador, EventoPermisoAccesoColaborador

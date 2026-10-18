@@ -11,8 +11,10 @@
   const actual = document.getElementById('gbEstadoActual');
   const historial = document.getElementById('gbEstadoHistorial');
   const guardar = document.getElementById('gbGuardarEstado');
+  const regularizar = document.getElementById('gbRegularizarRechazo');
   let instrumentoId = null;
   let cargando = false;
+  let actualizarBandeja = false;
 
   function informar(texto) { mensaje.textContent = texto; }
   function urlDetalle(id) { return '/gestion-bancaria/echeq/' + encodeURIComponent(id) + '/estado/'; }
@@ -25,6 +27,7 @@
     selector.appendChild(neutra);
     for (const nombre of data.acciones) selector.appendChild(new Option(nombre, nombre));
     guardar.disabled = data.acciones.length === 0;
+    regularizar.hidden = !data.regularizar_rechazo;
     fecha.max = data.fecha_hoy;
     fecha.value = data.fecha_hoy;
     formulario.elements.observaciones.value = '';
@@ -62,10 +65,31 @@
     informar('Cargando historial...');
     historial.replaceChildren();
     guardar.disabled = true;
+    regularizar.hidden = true;
     modal.showModal();
     cargar(id).then(() => informar('')).catch(error => informar(error.message));
   });
   document.getElementById('gbCerrarEstado').addEventListener('click', () => modal.close());
+  modal.addEventListener('close', () => { if (actualizarBandeja) window.location.reload(); });
+  regularizar.addEventListener('click', async () => {
+    if (!instrumentoId || cargando || !window.confirm('¿Pasar este e-Cheq rechazado a Resueltos? El rechazo y su historial se conservarán.')) return;
+    cargando = true;
+    regularizar.disabled = true;
+    informar('Regularizando rechazo anterior...');
+    try {
+      const token = formulario.querySelector('[name="csrfmiddlewaretoken"]')?.value;
+      const resp = await fetch('/gestion-bancaria/echeq/' + encodeURIComponent(instrumentoId) + '/regularizar-rechazo/', {
+        method:'POST', credentials:'same-origin', cache:'no-store',
+        headers:{'X-CSRFToken':token || ''}
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error(data.mensaje || 'No se pudo cerrar el rechazo.');
+      await cargar(instrumentoId);
+      actualizarBandeja = true;
+      informar('Rechazo en Resueltos, con historial conservado.');
+    } catch (error) { informar(error.message || 'No se pudo regularizar.'); }
+    finally { cargando = false; regularizar.disabled = false; }
+  });
   formulario.addEventListener('input', function (ev) {
     if (!cargando && ev.target.name !== 'clave') formulario.elements.clave.value = '';
   });
@@ -81,6 +105,7 @@
     informar('Registrando acción...');
     if (!formulario.elements.clave.value) formulario.elements.clave.value = window.crypto.randomUUID();
     try {
+      const accionGuardada = selector.value;
       const response = await fetch(urlGuardar(instrumentoId), {
         method: 'POST', credentials: 'same-origin', cache: 'no-store',
         body: new FormData(formulario),
@@ -89,6 +114,7 @@
       if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No se pudo registrar la acción.');
       await cargar(instrumentoId);
       formulario.elements.clave.value = '';
+      if (accionGuardada === 'Rechazado') actualizarBandeja = true;
       informar('Acción registrada y auditada.');
     } catch (error) {
       informar(error.message || 'Error de conexión. Verificá el historial antes de reintentar.');

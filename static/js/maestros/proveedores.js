@@ -469,9 +469,7 @@ async function guardarProveedor(){
                     headers: {
 
                         "X-CSRFToken":
-                            obtenerCookie(
-                                "csrftoken"
-                            )
+                            (document.querySelector("#gbAbmCsrf [name=csrfmiddlewaretoken]")?.value || obtenerCookie("csrftoken"))
 
                     },
 

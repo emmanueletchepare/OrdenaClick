@@ -518,3 +518,13 @@ e-Cheq), no sólo con color. No cambiar alcances por Empresa/Centro.
 6. Primer escenario candidato de Colaborador: **Pendientes bancarios**, con datos reales y acceso acotado por permisos; implementar y probar solo al autorizar el bloque.
 
 **Estado publicado conocido:** `902cdeb`; 35 tests de regresión aprobados en Oficina. Estas decisiones nuevas corrigen la referencia histórica a Nómina/Colaborador como proyectos sin código, pero no declaran terminado el gestor granular ni pruebas individuales de cada recorrido visual de Nómina. Detalle: `CONTINUIDAD_OPERATIVA_20261015.md`.
+
+
+### Decisión PDF institucional (15/10/2026)
+
+Se aprueba el membrete OrdenaClick para detalles bancarios y futuros comprobantes conforme a `ESTANDAR_DOCUMENTOS_PDF.md`.
+
+
+### Decisión PDF institucional (15/10/2026)
+
+Se aprueba el membrete OrdenaClick para detalles bancarios y futuros comprobantes conforme a `ESTANDAR_DOCUMENTOS_PDF.md`.

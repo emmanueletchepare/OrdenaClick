@@ -2,6 +2,36 @@
      MAIN
 ========================= -->
 
+{% if acceso_restringido %}
+<main class="main">
+    <div class="topbar">
+        <div class="title" id="titulo-panel">
+            {% if empresa_actual %}
+                {{ empresa_actual.nombre_fantasia|default:empresa_actual.razon_social }}
+            {% else %}
+                Seleccionar empresa
+            {% endif %}
+        </div>
+    </div>
+    <div id="panel-empresa">
+        <div id="submenu-dinamico" class="modules"></div>
+        <div id="contenido-operativo">
+            <div class="empty-state">
+                {% if empresa_actual %}
+                    {% if puede_ver_pendientes %}
+                        Seleccioná Pendientes bancarios desde el menú lateral.
+                    {% else %}
+                        Todavía no tenés módulos habilitados en esta Empresa.
+                    {% endif %}
+                {% else %}
+                    Elegí una empresa desde la barra lateral.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div id="bloque-alta-empresa" hidden></div>
+</main>
+{% else %}
 <main class="main">
 
 <div class="topbar">
@@ -745,3 +775,4 @@ Eliminar Empresa
 </div>
 
 </main>
+{% endif %}

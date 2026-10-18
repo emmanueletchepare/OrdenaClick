@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -22,11 +23,11 @@ def listar_cuentas_bancarias(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.cuentas',
+        )
     empresa = contexto.empresa
 
     cuentas = CuentaBancaria.objects.filter(
@@ -152,11 +153,11 @@ def guardar_cuenta_bancaria(request):
             "mensaje": "Seleccione una moneda válida."
         })
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.cuentas',
+        )
     empresa = contexto.empresa
 
     try:
@@ -243,11 +244,11 @@ def modificar_cuenta_bancaria(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.cuentas',
+        )
     empresa = contexto.empresa
 
     cuenta_id = request.POST.get(
@@ -404,11 +405,11 @@ def eliminar_cuenta_bancaria(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.cuentas',
+        )
     empresa = contexto.empresa
 
     cuenta_id = request.POST.get(
@@ -458,11 +459,11 @@ def reactivar_cuenta_bancaria(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.cuentas',
+        )
     empresa = contexto.empresa
 
     cuenta_id = request.POST.get(

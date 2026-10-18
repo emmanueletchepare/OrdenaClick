@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -53,11 +54,11 @@ def listar_tipos_gasto(request):
         "empresa"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.tipos',
+        ).empresa
 
     tipos_gasto = (
         TipoGasto.objects
@@ -135,11 +136,11 @@ def guardar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.tipos',
+        ).empresa
 
     if not nombre:
 
@@ -258,11 +259,11 @@ def modificar_tipo_gasto(request):
         request.POST.get("descripcion") or ""
     ).strip()
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.tipos',
+        ).empresa
 
     if not nombre:
 
@@ -369,11 +370,11 @@ def eliminar_tipo_gasto(request):
         "tipo_gasto"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.tipos',
+        ).empresa
 
     try:
 
@@ -424,11 +425,11 @@ def reactivar_tipo_gasto(request):
         "tipo_gasto"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.tipos',
+        ).empresa
 
     try:
 

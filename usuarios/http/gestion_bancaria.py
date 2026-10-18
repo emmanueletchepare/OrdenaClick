@@ -21,11 +21,11 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from usuarios.models import (AsignacionUsuarioEmpresa, Banco, Cliente, CentroOperativo, CuentaBancaria,
+from usuarios.models import (AsignacionUsuarioEmpresa, Banco, Cliente, CentroOperativo, CuentaBancaria, Proveedor,
     PendienteBancario, PermisoPendienteBancarioCentro, RevisionPendienteBancario)
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.pendientes_bancarios import (
-    alcance_pendientes, cambiar_permiso, registrar_lote, resolver_pendiente,
+    alcance_pendientes, cambiar_permiso, registrar_lote, resolver_pendiente, ErrorFilaPendiente,
 )
 
 
@@ -121,11 +121,13 @@ def gestion_bancaria(request):
     es_general = centros_habilitados is None
     cuentas = CuentaBancaria.objects.filter(empresa=empresa, activo=True).select_related('banco').order_by('nombre') if es_general else []
     bancos_emisores = Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre') if es_general else []
+    proveedores_salida = Proveedor.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if es_general else []
     clientes_titulares = Cliente.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if es_general else []
     return render(request, 'usuarios/caja/gestion_bancaria.html', {
         'empresa': empresa, 'pagina': pagina, 'estado': estado,
         'centro_filtro': centro_filtro, 'centros': centros, 'cuentas': cuentas,
         'bancos_emisores': bancos_emisores, 'clientes_titulares': clientes_titulares,
+        'proveedores_salida': proveedores_salida,
         'es_general': es_general, 'fecha_hoy': timezone.localdate(),
         'volver': _volver(request), 'usuario_id': request.user.pk,
         'buscar': buscar, 'fecha_minima_echeq': timezone.localdate() - timedelta(days=30),
@@ -142,7 +144,7 @@ def abm_contextual_echeq(request, tipo):
     Reusa los mismos fragmentos Bancos/Clientes que el panel Administrador.
     La navegación al ABM y su retorno no conceden Caja ni crean un e-Cheq.
     """
-    if tipo not in ('bancos', 'clientes'):
+    if tipo not in ('bancos', 'clientes', 'proveedores'):
         return HttpResponseForbidden('ABM no permitido.')
     try:
         empresa, alcance = _empresa_activa(request)
@@ -153,6 +155,9 @@ def abm_contextual_echeq(request, tipo):
     if tipo == 'bancos':
         datos = {'empresa': empresa, 'bancos': Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre')}
         contenido = render_to_string('usuarios/maestros/bancos.html', datos, request=request)
+    elif tipo == 'proveedores':
+        datos = {'empresa':empresa, 'proveedores':Proveedor.objects.filter(empresa=empresa).order_by('razon_social')}
+        contenido = render_to_string('usuarios/maestros/proveedores.html', datos, request=request)
     else:
         datos = {
             'empresa': empresa,
@@ -181,6 +186,9 @@ def registrar_lote_bancario_http(request):
             cuenta_id=datos.get('cuenta'), clase=datos.get('clase'), filas=datos.get('filas'))
     except PermissionDenied:
         return JsonResponse({'ok': False, 'mensaje': 'No tiene autorización.'}, status=403)
+    except ErrorFilaPendiente as error:
+        return JsonResponse({'ok': False, 'mensaje': str(error),
+                             'fila': error.fila, 'campo': error.campo}, status=400)
     except (ValueError, UnicodeDecodeError, json.JSONDecodeError, TypeError) as error:
         return JsonResponse({'ok': False, 'mensaje': str(error)}, status=400)
     return JsonResponse({'ok': True, 'ids': ids})

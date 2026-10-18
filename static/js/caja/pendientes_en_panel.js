@@ -6,6 +6,16 @@
   const marco = window.frameElement;
   const panel = marco.closest('.main') || window.parent.document.scrollingElement;
 
+  // El JS de precarga no se inicializa para Colaborador. Filtrado GET común.
+  // No interceptar los controles de una precarga que ya tiene su manejador.
+  if (!document.getElementById('cargaBancaria')) {
+    document.addEventListener('change', function (e) {
+      if (e.target.matches('.gb-filtro select') && e.target.form) {
+        e.target.form.requestSubmit();
+      }
+    });
+  }
+
   // Las coordenadas pertenecen al iframe, pero los límites son la porción
   // visible del panel, no los miles de píxeles de alto del iframe.
   function areaVisible() {

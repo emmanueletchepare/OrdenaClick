@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -16,11 +17,11 @@ def listar_centros_operativos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.centros',
+        )
     empresa = contexto.empresa
 
     centros = CentroOperativo.objects.filter(
@@ -54,11 +55,11 @@ def listar_centros_operativos(request):
 @require_POST
 def guardar_centro_operativo(request):
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        request.POST.get("empresa"),
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            request.POST.get("empresa"),
+            'abm.centros',
+        )
     empresa = contexto.empresa
 
     nombre = (
@@ -120,11 +121,11 @@ def modificar_centro_operativo(request):
     centro_id = request.POST.get("centro")
     empresa_id = request.POST.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.centros',
+        )
     empresa = contexto.empresa
 
     nombre = (
@@ -212,11 +213,11 @@ def eliminar_centro_operativo(request):
     centro_id = request.POST.get("centro")
     empresa_id = request.POST.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.centros',
+        )
     empresa = contexto.empresa
 
     try:

@@ -1,0 +1,4 @@
+.oc-acceso-form{display:flex;flex-direction:column;gap:12px;margin-top:18px}.oc-acceso-grupo{border:1px solid #34445e;border-radius:10px;padding:12px 15px}.oc-acceso-grupo summary{cursor:pointer;font-weight:600}.oc-acceso-hijos{padding:12px 0 4px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.oc-acceso-hijos label{display:flex;gap:9px;align-items:center;font-size:13px}.oc-acceso-form input[type=checkbox]{accent-color:#3b82f6}.oc-acceso-form button{align-self:flex-start}
+/* Dentro de Administrar ya existe un sidebar y una cabecera de Empresa. */
+html.oc-accesos-en-panel .gb-header{display:none;}
+html.oc-accesos-en-panel .gb-contenedor{padding-top:10px;}

@@ -23,13 +23,29 @@
       window.scrollTo(0, v.scrollFrame || 0);
     } catch (_) { /* sin sesión */ }
   }
+  // El panel padre es quien desplaza la ficha integrada. Medir ambos nodos
+  // evita que un cambio de altura deje un segundo scroll dentro del iframe.
+  let ultimoAltoEnviado = 0;
   function avisarAlto() {
-    if (marco && window.parent !== window) {
-      parent.postMessage({tipo: 'oc-nomina-alto', alto: Math.max(620, document.documentElement.scrollHeight)}, location.origin);
-    }
+    if (!marco || window.parent === window) return;
+    // Medir el contenido, no la altura del viewport del iframe: incluir
+    // este último produciría un crecimiento repetido del propio iframe.
+    const contenido = Math.max(raiz.offsetTop + raiz.scrollHeight,
+      raiz.getBoundingClientRect().bottom + window.scrollY);
+    const alto = Math.max(620, Math.ceil(contenido) + 12);
+    if (alto === ultimoAltoEnviado) return;
+    ultimoAltoEnviado = alto;
+    parent.postMessage({tipo: 'oc-nomina-alto', alto}, location.origin);
   }
-  window.addEventListener('load', () => { avisarAlto(); requestAnimationFrame(restaurar); });
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(avisarAlto).observe(document.body);
+  window.addEventListener('load', () => {
+    avisarAlto();
+    requestAnimationFrame(() => { avisarAlto(); restaurar(); });
+  });
+  if (typeof ResizeObserver !== 'undefined') {
+    const observar = new ResizeObserver(avisarAlto);
+    observar.observe(document.body);
+    observar.observe(raiz);
+  }
   document.addEventListener('change', avisarAlto);
 
   // Misma regla de CUIT: 11 dígitos almacenados, 13 caracteres con guiones en pantalla.

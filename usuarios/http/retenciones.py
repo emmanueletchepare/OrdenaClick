@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -23,11 +24,11 @@ def listar_retenciones(request):
     )
 
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.retenciones',
+        )
     empresa = contexto.empresa
 
 
@@ -113,11 +114,11 @@ def guardar_retencion(request):
         })
 
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.retenciones',
+        )
     empresa = contexto.empresa
 
 
@@ -217,11 +218,11 @@ def modificar_retencion(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.retenciones',
+        )
     empresa = contexto.empresa
 
     retencion_id = request.POST.get(
@@ -335,11 +336,11 @@ def eliminar_retencion(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.retenciones',
+        )
     empresa = contexto.empresa
 
     retencion_id = request.POST.get(
@@ -393,11 +394,11 @@ def reactivar_retencion(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.retenciones',
+        )
     empresa = contexto.empresa
 
     retencion_id = request.POST.get(

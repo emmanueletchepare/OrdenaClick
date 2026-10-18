@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import JsonResponse
@@ -96,11 +97,11 @@ def listar_recursos_operativos(request):
     )
 
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.recursos',
+        )
     empresa = contexto.empresa
 
 
@@ -233,11 +234,11 @@ def guardar_recurso_operativo(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.recursos',
+        )
     empresa = contexto.empresa
 
 
@@ -414,11 +415,11 @@ def modificar_recurso_operativo(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.recursos',
+        )
     empresa = contexto.empresa
 
 
@@ -589,11 +590,11 @@ def eliminar_recurso_operativo(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.recursos',
+        )
     empresa = contexto.empresa
 
     try:
@@ -669,11 +670,11 @@ def reactivar_recurso_operativo(request):
         "empresa"
     )
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.recursos',
+        )
     empresa = contexto.empresa
 
 

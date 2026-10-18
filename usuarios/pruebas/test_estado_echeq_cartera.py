@@ -64,14 +64,17 @@ class CarteraVirtualECheqTests(TestCase):
         from usuarios.models import Cheque
         self.assertEqual(Cheque.objects.count(), 0)
 
-    def test_registrar_rechazo_audita_y_no_resuelve_administrativamente(self):
+    def test_registrar_rechazo_audita_y_resuelve_en_misma_transaccion(self):
         p = self.crear()
         self.activar()
         r = self.guardar(p)
         self.assertEqual(r.status_code, 200, r.content)
         p.refresh_from_db()
         self.assertEqual(p.estado_cartera, 'Rechazado')
-        self.assertEqual(p.estado, 'Pendiente')
+        self.assertEqual(p.estado, 'Resuelto')
+        self.assertEqual(p.tipo_resolucion, 'Rechazado')
+        self.assertEqual(p.resuelto_por.usuario_id, self.dueno.pk)
+        self.assertIsNotNone(p.resuelto_en)
         e = EventoEstadoECheq.objects.get(pendiente=p)
         self.assertEqual(e.estado_anterior, 'EnCartera')
         self.assertEqual(e.estado_nuevo, 'Rechazado')
@@ -90,6 +93,8 @@ class CarteraVirtualECheqTests(TestCase):
             'estado_nuevo', flat=True)), ['Rechazado', 'Devuelto'])
         p.refresh_from_db()
         self.assertEqual(p.estado_cartera, 'Devuelto')
+        self.assertEqual(p.estado, 'Resuelto')
+        self.assertEqual(p.tipo_resolucion, 'Rechazado')
 
     def test_no_admite_repetir_estado_ni_mutar_devuelto(self):
         p = self.crear()
@@ -147,3 +152,50 @@ class CarteraVirtualECheqTests(TestCase):
 
     def test_backup_incluye_estados(self):
         self.assertIn('estados_cartera_echeq', SPEC_BY_KEY)
+
+    def test_rechazado_en_resueltos_rojo_y_no_en_pendientes(self):
+        p = self.crear()
+        self.activar()
+        self.assertEqual(self.guardar(p).status_code, 200)
+        pendientes = self.client.get(reverse('gestion_bancaria') + '?estado=Pendiente')
+        self.assertNotContains(pendientes, p.echeq_numero)
+        resueltos = self.client.get(reverse('gestion_bancaria') + '?estado=Resuelto')
+        self.assertContains(resueltos, p.echeq_numero)
+        self.assertContains(resueltos, 'gb-registro-rechazado')
+        self.assertContains(resueltos, 'Rechazado')
+
+    def test_regularizacion_legacy_exige_rechazo_auditado_y_permiso(self):
+        p = self.crear()
+        self.activar()
+        from usuarios.models import EventoPendienteBancario
+        url = reverse('estado_echeq_regularizar_rechazo', args=[p.pk])
+        self.assertEqual(self.client.post(url).status_code, 400)
+        # Simular registro histórico con rechazo auditado, sin pasar por el servicio nuevo.
+        from usuarios.services.identidades import obtener_identidad_usuario_empresa
+        actor = obtener_identidad_usuario_empresa(empresa=self.e, usuario=self.dueno)
+        p.estado_cartera = 'Rechazado'
+        p.save(update_fields=['estado_cartera'])
+        EventoEstadoECheq.objects.create(pendiente=p, actor=actor, clave=uuid4(),
+            estado_anterior='EnCartera', estado_nuevo='Rechazado',
+            fecha=timezone.localdate(), observaciones='Rechazo histórico')
+        self.assertEqual(self.client.get(self.detalle(p)).json()['regularizar_rechazo'], True)
+        antes = EventoPendienteBancario.objects.filter(pendiente=p).count()
+        respuesta = self.client.post(url)
+        self.assertEqual(respuesta.status_code, 200, respuesta.content)
+        self.assertTrue(respuesta.json()['creada'])
+        p.refresh_from_db()
+        self.assertEqual((p.estado, p.tipo_resolucion), ('Resuelto', 'Rechazado'))
+        self.assertEqual(EventoPendienteBancario.objects.filter(pendiente=p).count(), antes + 1)
+        self.assertEqual(self.client.post(url).json()['creada'], False)
+        self.assertEqual(EventoPendienteBancario.objects.filter(pendiente=p).count(), antes + 1)
+        self.assertEqual(self.client.get(self.detalle(p)).json()['regularizar_rechazo'], False)
+
+    def test_colaborador_no_regulariza_rechazo_historico(self):
+        p = self.crear()
+        p.estado_cartera = 'Rechazado'
+        p.save(update_fields=['estado_cartera'])
+        self.activar(self.colab)
+        respuesta = self.client.post(reverse('estado_echeq_regularizar_rechazo', args=[p.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+        p.refresh_from_db()
+        self.assertEqual(p.estado, 'Pendiente')

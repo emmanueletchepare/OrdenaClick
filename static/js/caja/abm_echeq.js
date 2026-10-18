@@ -9,6 +9,10 @@ const usuarioABMEcheq = raizABMEcheq?.dataset.usuario || '';
 const vueltaABMEcheq = raizABMEcheq?.dataset.regreso || '/gestion-bancaria/';
 let formularioClienteConservado = null;
 function regresarAlEcheq(tipo, nombre) {
+    if (tipo === 'proveedores' && nombre) {
+        try {sessionStorage.setItem('ordenaclick.echeq.salida.proveedor.'+usuarioABMEcheq+'.'+empresaABMEcheq,String(nombre));}
+        catch (_) {alert('No se pudo guardar el proveedor nuevo.'); return;}
+    }
     if (tipo && nombre) {
         try {
             sessionStorage.setItem(`ordenaclick.echeq.abm.regreso.${usuarioABMEcheq}.${empresaABMEcheq}`,
@@ -59,5 +63,18 @@ async function volverDesdeABMCentrosOperativos() {
     origenABM='echeq';
     if (typeof actualizarCentroOperativoDelCliente==='function') await actualizarCentroOperativoDelCliente();
 }
+async function mostrarABMProveedores() {
+    if (ultimoProveedorCreado?.id) {
+        regresarAlEcheq('proveedores', ultimoProveedorCreado.id);
+        return;
+    }
+    const r = await fetch(`/listar-proveedores/?empresa=${encodeURIComponent(empresaABMEcheq)}`, {credentials:'same-origin'});
+    if (!r.ok) {alert('No fue posible actualizar el ABM de Proveedores.'); return;}
+    const data = await r.json();
+    raizABMEcheq.innerHTML = data.html;
+    iniciarABMProveedores();
+}
+function volverDesdeABMProveedores() { regresarAlEcheq(); }
+if(raizABMEcheq?.dataset.tipo==='proveedores') iniciarABMProveedores();
 if(raizABMEcheq?.dataset.tipo==='bancos') iniciarABMBancos();
 if(raizABMEcheq?.dataset.tipo==='clientes') iniciarABMClientes();

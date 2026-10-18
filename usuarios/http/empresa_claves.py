@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 
 from usuarios.models import GestionClave
-from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.accesos_colaborador import permiso_claves
 from usuarios.seguridad_claves import cifrar_clave, descifrar_clave
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -116,15 +116,14 @@ def listar_gestion_claves(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     claves = GestionClave.objects.filter(
         empresa=empresa,
         activo=True
-    ).order_by(
+    )
+    if solo_propias: claves = claves.filter(creado_por=request.user)
+    claves = claves.order_by(
         "nombre"
     )
 
@@ -156,10 +155,7 @@ def guardar_gestion_clave(request):
         "empresa"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     datos = datos_gestion_clave_request(
         request
@@ -187,6 +183,9 @@ def guardar_gestion_clave(request):
     )
 
     if existente:
+
+        if solo_propias and existente.creado_por_id != request.user.pk:
+            return JsonResponse({"ok": False, "mensaje": "El nombre de credencial no está disponible."})
 
         if existente.activo:
 
@@ -240,6 +239,7 @@ def guardar_gestion_clave(request):
     clave = GestionClave.objects.create(
 
         empresa=empresa,
+        creado_por=request.user,
 
         nombre=datos["nombre"],
 
@@ -290,14 +290,13 @@ def ver_gestion_clave(request):
         "clave"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     try:
 
-        clave = GestionClave.objects.get(
+        claves_accesibles = GestionClave.objects.filter(empresa=empresa)
+        if solo_propias: claves_accesibles = claves_accesibles.filter(creado_por=request.user)
+        clave = claves_accesibles.get(
             id=clave_id,
             empresa=empresa,
             activo=True
@@ -386,14 +385,13 @@ def modificar_gestion_clave(request):
         "clave"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     try:
 
-        clave = GestionClave.objects.get(
+        claves_accesibles = GestionClave.objects.filter(empresa=empresa)
+        if solo_propias: claves_accesibles = claves_accesibles.filter(creado_por=request.user)
+        clave = claves_accesibles.get(
             id=clave_id,
             empresa=empresa,
             activo=True
@@ -543,14 +541,13 @@ def eliminar_gestion_clave(request):
         "clave"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     try:
 
-        clave = GestionClave.objects.get(
+        claves_accesibles = GestionClave.objects.filter(empresa=empresa)
+        if solo_propias: claves_accesibles = claves_accesibles.filter(creado_por=request.user)
+        clave = claves_accesibles.get(
             id=clave_id,
             empresa=empresa,
             activo=True
@@ -595,14 +592,13 @@ def reactivar_gestion_clave(request):
         "clave"
     )
 
-    empresa = obtener_empresa_administrable(
-        request.user,
-        empresa_id,
-    )
+    empresa, solo_propias = permiso_claves(request.user, empresa_id)
 
     try:
 
-        clave = GestionClave.objects.get(
+        claves_accesibles = GestionClave.objects.filter(empresa=empresa)
+        if solo_propias: claves_accesibles = claves_accesibles.filter(creado_por=request.user)
+        clave = claves_accesibles.get(
             id=clave_id,
             empresa=empresa,
             activo=False

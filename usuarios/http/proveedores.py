@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 import re
 
 from django.core.exceptions import ValidationError
@@ -142,11 +143,11 @@ def listar_proveedores(request):
         "empresa"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.proveedores',
+        ).empresa
 
     proveedores = Proveedor.objects.filter(
         empresa=empresa,
@@ -199,11 +200,11 @@ def guardar_proveedor(request):
         "empresa"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.proveedores',
+        ).empresa
 
     datos = datos_proveedor_request(
         request
@@ -316,11 +317,11 @@ def modificar_proveedor(request):
         "proveedor"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.proveedores',
+        ).empresa
 
     try:
 
@@ -411,11 +412,11 @@ def eliminar_proveedor(request):
         "proveedor"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.proveedores',
+        ).empresa
 
     try:
 
@@ -462,11 +463,11 @@ def reactivar_proveedor(request):
         "proveedor"
     )
 
-    empresa = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    ).empresa
+    empresa = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.proveedores',
+        ).empresa
 
     try:
 

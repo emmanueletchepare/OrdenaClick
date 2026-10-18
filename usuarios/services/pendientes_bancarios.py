@@ -27,6 +27,26 @@ LOG = logging.getLogger('ordenaclick.audit')
 MAX_LOTE = 80
 
 
+class ErrorFilaPendiente(ValueError):
+    """Validación de precarga: ubicación explícita sin guardar filas parciales."""
+    def __init__(self, fila, campo, mensaje):
+        self.fila = fila  # Número visible, desde 1.
+        self.campo = campo
+        super().__init__(f'Fila {fila} · {campo}: {mensaje}')
+
+
+def _campo_error_fila(mensaje):
+    texto = str(mensaje).casefold()
+    for clave, campo in (('importe', 'importe'), ('banco', 'banco'),
+                         ('acreditación', 'acreditacion'), ('acreditacion', 'acreditacion'),
+                         ('fecha', 'acreditacion'), ('número', 'numero'),
+                         ('numero', 'numero'), ('titular', 'titular'),
+                         ('condición', 'condicion')):
+        if clave in texto:
+            return campo
+    return 'fila'
+
+
 def alcance_pendientes(usuario, empresa_id):
     """(Empresa, None = administración general; frozenset = Centros resolubles).
 
@@ -178,7 +198,21 @@ def registrar_lote(*, usuario, empresa_id, cuenta_id, clase, filas):
     if not isinstance(filas, list) or not 1 <= len(filas) <= MAX_LOTE:
         raise ValueError(f'La carga admite entre 1 y {MAX_LOTE} filas.')
     # Validación global antes de persistir.
-    normalizadas = [_normalizar_fila(empresa, fila, cuenta_id, clase) for fila in filas]
+    normalizadas = []
+    for numero_fila, fila in enumerate(filas, 1):
+        try:
+            # Reconocer específicamente el error de importe, que se detectaba
+            # demasiado tarde y sin identificar el instrumento.
+            if isinstance(fila, dict):
+                try:
+                    importe_positivo(fila.get('importe'))
+                except ValueError as error:
+                    raise ErrorFilaPendiente(numero_fila, 'importe', str(error)) from error
+            normalizadas.append(_normalizar_fila(empresa, fila, cuenta_id, clase))
+        except ErrorFilaPendiente:
+            raise
+        except ValueError as error:
+            raise ErrorFilaPendiente(numero_fila, _campo_error_fila(error), str(error)) from error
     claves = [fila['clave'] for fila in normalizadas]
     if len(claves) != len(set(claves)):
         raise ValueError('Un mismo identificador aparece dos veces en la carga.')

@@ -112,6 +112,8 @@
             gap:15px;
         }
 
+        .roles .btn-administrar{grid-column:1 / -1;}
+
         .btn{
             height:52px;
 
@@ -260,7 +262,7 @@
             }
 
             .roles{
-                grid-template-columns:1fr;
+                grid-template-columns:1fr 1fr;
             }
 
         }
@@ -295,7 +297,7 @@
             </div>
 
             <div class="subtitle">
-                Seleccioná el rol con el que querés operar dentro del sistema.
+                Elegí el área de trabajo. En Administrar se reúnen tus empresas, según el acceso que tengas en cada una.
             </div>
 
             {% if solicitudes_pendientes_count %}
@@ -309,24 +311,16 @@
 
             <div class="roles">
 
-                <a href="{% url 'seleccionar_perfil' 'administrador' %}" class="btn">
-                    Administrador
-                </a>
-
-                <a href="{% url 'seleccionar_perfil' 'colaborador' %}" class="btn">
-                    Colaborador
-                </a>
-
-                <a href="{% url 'seleccionar_perfil' 'contable' %}" class="btn">
-                    Contable
+                <a href="{% url 'seleccionar_perfil' 'administrador' %}" class="btn btn-administrar">
+                    Administrar
                 </a>
 
                 <a href="{% url 'seleccionar_perfil' 'legal' %}" class="btn">
                     Legal
                 </a>
 
-                <a href="{% url 'seleccionar_perfil' 'relaciones' %}" class="btn relations-role">
-                    Relaciones
+                <a href="{% url 'seleccionar_perfil' 'contable' %}" class="btn">
+                    Contable
                 </a>
 
 
@@ -354,6 +348,8 @@
             <div class="footer">
 
                 <div class="footer-links">
+
+                    <a href="{% url 'panel_relaciones' %}">Relaciones y solicitudes</a>
 
                     <a href="{% url 'modificar_usuario' %}">
                         Modificar mis datos

@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 import re
 
 from django.contrib.auth.decorators import login_required
@@ -152,10 +153,10 @@ def listar_clientes(request):
             exigir_capacidad_empresa,
         )
 
-        empresa = exigir_capacidad_empresa(
+        empresa = exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         ).empresa
 
     except PermissionDenied:
@@ -249,10 +250,10 @@ def autocompletar_cliente_arca(request):
             CAPACIDAD_EMPRESA_ADMINISTRAR,
             exigir_capacidad_empresa,
         )
-        exigir_capacidad_empresa(
+        exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         )
     except PermissionDenied:
         return JsonResponse({
@@ -333,10 +334,10 @@ def guardar_cliente(request):
             exigir_capacidad_empresa,
         )
 
-        empresa = exigir_capacidad_empresa(
+        empresa = exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         ).empresa
     except PermissionDenied:
         return JsonResponse({
@@ -477,10 +478,10 @@ def modificar_cliente(request):
             exigir_capacidad_empresa,
         )
 
-        empresa = exigir_capacidad_empresa(
+        empresa = exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         ).empresa
     except PermissionDenied:
         return JsonResponse({
@@ -602,10 +603,10 @@ def eliminar_cliente(request):
             exigir_capacidad_empresa,
         )
 
-        empresa = exigir_capacidad_empresa(
+        empresa = exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         ).empresa
     except PermissionDenied:
         return JsonResponse({
@@ -657,10 +658,10 @@ def reactivar_cliente(request):
             exigir_capacidad_empresa,
         )
 
-        empresa = exigir_capacidad_empresa(
+        empresa = exigir_abm(
             request.user,
             empresa_id,
-            CAPACIDAD_EMPRESA_ADMINISTRAR,
+            'abm.clientes',
         ).empresa
     except PermissionDenied:
         return JsonResponse({

@@ -2,6 +2,7 @@
     'use strict';
     const lotes = {bancos: [], echeqs: []};
     const edicion = {bancos: null, echeqs: null};
+    const errorFila = {bancos: null, echeqs: null};
     let guardando = false;
     const $ = (selector, base=document) => base.querySelector(selector);
     const campos = {
@@ -79,7 +80,7 @@
             sessionStorage.removeItem(borradorClave);
             const regreso = JSON.parse(sessionStorage.getItem(regresoClave) || 'null');
             sessionStorage.removeItem(regresoClave);
-            if (regreso && regreso.empresa === empresa && regreso.nombre) {
+            if (regreso && regreso.empresa === empresa && regreso.nombre && regreso.tipo !== 'proveedores') {
                 const destino = sessionStorage.getItem(destinoClave) || 'echeqs';
                 sessionStorage.removeItem(destinoClave);
                 const formulario = $('#gbCarga' + (destino === 'bancos' ? 'Bancos' : 'Echeqs'));
@@ -119,21 +120,31 @@
     function render(clase) {
         const tabla = $(clase === 'bancos' ? '#gbListaBancos' : '#gbListaEcheqs');
         tabla.replaceChildren();
-        const ncols = clase === 'bancos' ? 4 : 5;
+        const ncols = clase === 'bancos' ? 4 : 7;
         if (!lotes[clase].length) {
             const fila = elemento('tr'); const celda = elemento('td', 'Sin movimientos agregados.', 'gb-vacio');
             celda.colSpan = ncols; fila.append(celda); tabla.append(fila);
         }
         lotes[clase].forEach((item, indice) => {
             const tr = elemento('tr');
+            const error = errorFila[clase];
+            if (error && error.indice === indice) tr.classList.add('gb-precarga-error');
             const datos = clase === 'bancos' ? [
                 item.fecha, item.identificacion || 'Sin identificar', `$ ${formatoImporte(item.importe)}`
             ] : [
-                `${item.numero} · ${item.titular}`, item.banco,
+                item.numero, item.titular, item.banco,
+                item.acreditacion ? item.acreditacion.split('-').reverse().join('/') : '—',
                 item.condicion === 'NoOrden' ? 'No a la orden' : 'A la orden',
                 `$ ${formatoImporte(item.importe)}`
             ];
             datos.forEach((v, i) => tr.append(elemento('td', v, i === datos.length - 1 ? 'gb-numero' : '')));
+            if (error && error.indice === indice) {
+                const columnas = clase === 'echeqs' ?
+                    {numero:0,titular:1,banco:2,acreditacion:3,condicion:4,importe:5} :
+                    {fecha:0,identificacion:1,importe:2};
+                const columna = columnas[error.campo];
+                if (columna !== undefined) tr.children[columna].classList.add('gb-precarga-campo-error');
+            }
             const td = elemento('td', null, 'gb-accion');
             for (const [accion, icono, titulo] of [['editar', '✎', 'Editar fila'], ['eliminar', '×', 'Eliminar fila']]) {
                 const b = elemento('button', icono, 'gb-icono');
@@ -158,6 +169,24 @@
         id.value = coincidente ? coincidente.dataset.id : '';
         return !!coincidente;
     }
+    // Acepta sólo las formas de importe ya admitidas por el servicio Django.
+    // No redondear aquí: una entrada inválida debe corregirse, no mutarse.
+    function validarImportePrecarga(input) {
+        const original = input.value.trim();
+        let decimal = original;
+        if (/^[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?$/.test(original)) {
+            decimal = original.replace(/\./g, '').replace(',', '.');
+        } else if (/^[0-9]+,[0-9]{1,2}$/.test(original)) {
+            decimal = original.replace(',', '.');
+        } else if (!/^[0-9]+(?:\.[0-9]{1,2})?$/.test(original)) {
+            input.setCustomValidity('Importe inválido. Usá, por ejemplo, 126.785,71.');
+            return false;
+        }
+        const numero = Number(decimal);
+        const valido = Number.isFinite(numero) && numero > 0 && numero < 1000000000000;
+        input.setCustomValidity(valido ? '' : 'El importe debe ser positivo y menor a un billón.');
+        return valido;
+    }
     function agregar(clase, form) {
         if (clase === 'echeqs' && !actualizarBancoSeleccionado(form)) {
             form.elements.banco.setCustomValidity('Elegí un banco registrado o crealo con [+].');
@@ -165,6 +194,7 @@
             return;
         }
         if (clase === 'echeqs') normalizarNumeroEcheq(form.elements.numero);
+        if (!validarImportePrecarga(form.elements.importe)) {form.reportValidity();return;}
         normalizarImporteInput(form.elements.importe);
         if (!form.reportValidity()) return;
         const fila = {};
@@ -177,6 +207,7 @@
             lotes[clase][edicion[clase]] = fila;
             edicion[clase] = null;
         }
+        errorFila[clase] = null;
         // La cuenta no se borra; se comparte entre todas las filas del lote.
         for (const campo of campos[clase]) {
             if (campo === 'fecha') continue;
@@ -205,6 +236,7 @@
         const cuenta = clase === 'bancos' ? form.elements.cuenta.value : null;
         const mensaje = $(`[data-mensaje-lote="${clase}"]`);
         if (clase === 'bancos' && !cuenta) {mensaje.textContent = 'Seleccioná la cuenta bancaria antes de guardar.'; return;}
+        errorFila[clase] = null;
         guardando = true; render(clase); mensaje.textContent = 'Guardando el lote...';
         try {
             const response = await fetch('/gestion-bancaria/lote/', {
@@ -213,7 +245,12 @@
                 body:JSON.stringify({clase, cuenta, filas:lotes[clase]})
             });
             const data = await response.json();
-            if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No se pudo guardar el lote.');
+            if (!response.ok || !data.ok) {
+                if (Number.isInteger(data.fila) && data.fila > 0 && data.fila <= lotes[clase].length) {
+                    errorFila[clase] = {indice:data.fila - 1, campo:data.campo || 'fila'};
+                }
+                throw new Error(data.mensaje || 'No se pudo guardar el lote.');
+            }
             lotes[clase] = []; edicion[clase] = null;
             mensaje.textContent = `${data.ids.length} movimiento(s) guardados correctamente.`;
             render(clase);
@@ -227,6 +264,7 @@
         if (form) form.addEventListener('submit', ev => {
             ev.preventDefault();
             if (clase === 'echeqs') normalizarNumeroEcheq(form.elements.numero);
+            if (!validarImportePrecarga(form.elements.importe)) {form.reportValidity();return;}
             normalizarImporteInput(form.elements.importe);
             if (form.reportValidity()) agregar(clase, form);
         });
@@ -243,7 +281,8 @@
     }
     for (const formulario of ['gbCargaBancos','gbCargaEcheqs']) {
         const input = $('#' + formulario).elements.importe;
-        input.addEventListener('blur', () => normalizarImporteInput(input));
+        input.addEventListener('input', () => {input.setCustomValidity('');});
+        input.addEventListener('blur', () => {if (validarImportePrecarga(input)) normalizarImporteInput(input);});
     }
     document.querySelectorAll('[data-abrir-abm]').forEach(enlace => {
         enlace.addEventListener('click', evento => {
@@ -304,6 +343,7 @@
             } else {
                 lotes[clase].splice(indice, 1);
                 if (edicion[clase] !== null) edicion[clase] = null;
+                errorFila[clase] = null;
                 render(clase);
             }
         }

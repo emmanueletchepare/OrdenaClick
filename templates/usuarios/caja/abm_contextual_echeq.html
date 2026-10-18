@@ -1,18 +1,21 @@
 {% load static %}
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OrdenaClick · ABM {% if tipo == 'bancos' %}Bancos{% else %}Clientes{% endif %}</title>
+<title>OrdenaClick · ABM {% if tipo == 'bancos' %}Bancos{% elif tipo == 'proveedores' %}Proveedores{% else %}Clientes{% endif %}</title>
 <link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}?v=6">
 <script src="{% static 'js/maestros/bancos.js' %}?v=2" defer></script>
 <script src="{% static 'js/maestros/clientes.js' %}?v=1" defer></script>
+<script src="{% static 'js/maestros/proveedores.js' %}?v=1" defer></script>
 <script src="{% static 'js/maestros/centros_operativos.js' %}?v=5" defer></script>
-<script src="{% static 'js/caja/abm_echeq.js' %}?v=1" defer></script>
+<script src="{% static 'js/caja/abm_echeq.js' %}?v=2" defer></script>
+<script src="{% static 'js/caja/pendientes_en_panel.js' %}?v=2" defer></script>
 </head><body><main class="gb-contenedor">
 <header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div>
-<h1>{% if tipo == 'bancos' %}Bancos{% else %}Clientes{% endif %} · ABM</h1>
+<h1>{% if tipo == 'bancos' %}Bancos{% elif tipo == 'proveedores' %}Proveedores{% else %}Clientes{% endif %} · ABM</h1>
 <p>{{ empresa.razon_social }} · Volverás a la carga de e-Cheqs sin perder el borrador.</p></div>
 <a class="gb-volver" href="{{ volver }}">Volver a e-Cheqs</a></header>
 <input type="hidden" id="empresaActiva" value="{{ empresa.pk }}">
+<div id="gbAbmCsrf" hidden>{% csrf_token %}</div>
 <section class="gb-abm-real" id="contenido-operativo" data-tipo="{{ tipo }}" data-regreso="{{ volver }}" data-empresa="{{ empresa.pk }}" data-usuario="{{ usuario_id }}">
 {{ contenido_abm|safe }}
 </section>

@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="{% static 'css/caja/pendientes_en_panel.css' %}?v=1">
 <script src="{% static 'js/caja/pendientes_en_panel.js' %}?v=2" defer></script>
 <script src="{% static 'js/caja/pendientes_acciones.js' %}?v=7" defer></script>
-<script src="{% static 'js/caja/estados_echeq.js' %}?v=1" defer></script></head>
+<script src="{% static 'js/caja/estados_echeq.js' %}?v=1" defer></script>
+<script src="{% static 'js/caja/salidas_echeq.js' %}?v=3" defer></script></head>
 <body><main class="gb-contenedor" id="gbRaiz" data-empresa="{{ empresa.pk }}" data-usuario="{{ usuario_id }}">
 <header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div><h1>Pendientes de aplicación</h1>
 <p>{{ empresa.razon_social }} · Los movimientos sin resolver son globales únicamente dentro de esta Empresa.</p></div>
@@ -16,7 +17,9 @@
 <section class="gb-tarjeta" id="cargaBancaria">
 <div class="gb-seccion-cabeza"><h2>Cargar movimientos detectados</h2></div>
 <div class="gb-pestanas"><button type="button" class="gb-btn gb-pestana activa" data-tipo-carga="bancos">Cargar depósitos / transferencias</button>
-<button type="button" class="gb-btn gb-pestana" data-tipo-carga="echeqs">Cargar e-Cheq</button></div>
+<button type="button" class="gb-btn gb-pestana" data-tipo-carga="echeqs">Cargar e-Cheq</button>
+<button type="button" class="gb-btn gb-pestana" data-tipo-carga="endosos">Endosar / Ceder</button>
+<button type="button" class="gb-btn gb-pestana" data-tipo-carga="salida_deposito">Depositar</button></div>
 <div data-pantalla-carga="bancos">
 <form id="gbCargaBancos" class="gb-carga" autocomplete="off">{% csrf_token %}
 <div class="gb-cuenta"><label>Cuenta bancaria<select name="cuenta" required><option value="">Seleccionar cuenta</option>{% for cuenta in cuentas %}<option value="{{ cuenta.pk }}">{{ cuenta.banco.nombre }} · {{ cuenta.nombre }}</option>{% endfor %}</select></label></div>
@@ -48,9 +51,23 @@
 <label>Fecha acreditación<input type="date" name="acreditacion" min="{{ fecha_minima_echeq|date:'Y-m-d' }}" required></label>
 <label>Condición<select name="condicion"><option value="Orden" selected>A la orden</option><option value="NoOrden">No a la orden</option></select></label>
 <button class="gb-btn" type="submit" data-agregar>Agregar</button></div></form>
-<div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>e-Cheq / Titular</th><th>Banco</th><th>Condición</th><th class="gb-numero">Importe</th><th class="gb-accion">Acciones</th></tr></thead><tbody id="gbListaEcheqs"><tr><td colspan="5" class="gb-vacio">Sin e-Cheqs agregados.</td></tr></tbody></table></div>
+<div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Número e-Cheq</th><th>Titular / Cliente</th><th>Banco</th><th>Fecha acreditación</th><th>Condición</th><th class="gb-numero">Importe</th><th class="gb-accion">Acciones</th></tr></thead><tbody id="gbListaEcheqs"><tr><td colspan="7" class="gb-vacio">Sin e-Cheqs agregados.</td></tr></tbody></table></div>
 <button class="gb-btn gb-guardar" data-guardar-lote="echeqs" disabled type="button">Guardar todos</button>
 <p class="gb-mensaje" data-mensaje-lote="echeqs" role="status" aria-live="polite"></p></div>
+<dialog id="gbPdfSalidaDialogo" class="gb-dialog" aria-labelledby="gbPdfSalidaTitulo"><h2 id="gbPdfSalidaTitulo">Detalle para gestión bancaria</h2><p>¿Desea generar un PDF con el detalle?</p><div class="gb-dialog-acciones"><button type="button" class="gb-btn gb-btn-sec" id="gbPdfSalidaCancelar">Cancelar</button><button type="button" class="gb-btn" id="gbPdfSalidaAceptar">Aceptar</button></div></dialog>
+<div data-pantalla-carga="endosos" hidden class="gb-carga" data-salida="EndosarCeder">
+<div class="gb-campos"><label>Proveedor<input type="search" data-salida-proveedor-buscar list="gbProveedoresSalida" autocomplete="off" placeholder="Escribí para buscar proveedor" required><input type="hidden" data-salida-proveedor><datalist id="gbProveedoresSalida">{% for proveedor in proveedores_salida %}<option value="{{ proveedor.razon_social }}" data-id="{{ proveedor.pk }}"></option>{% endfor %}</datalist></label>
+<a class="gb-btn gb-contexto-mas" href="{% url 'abm_contextual_echeq' 'proveedores' %}" data-abrir-abm="proveedores" data-destino-abm="endosos" title="Agregar proveedor">[+]</a>
+<label>Banco de destino<select data-salida-banco required><option value="">Seleccionar banco</option>{% for banco in bancos_emisores %}<option value="{{ banco.pk }}">{{ banco.nombre }}</option>{% endfor %}</select></label>
+<label>Cuenta / CBU / Destino<input type="text" data-salida-destino maxlength="80" placeholder="Identificación de destino" required></label></div>
+<div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Seleccionar</th><th>e-Cheq / Titular</th><th>Acreditación</th><th>Condición</th><th class="gb-numero">Importe</th></tr></thead><tbody data-salida-filas="EndosarCeder"></tbody></table></div>
+<p class="gb-ayuda" data-salida-totales="EndosarCeder">Cheques a endosar: $ 0,00 · Cheques a ceder: $ 0,00 · Total operación: $ 0,00</p>
+<button type="button" class="gb-btn" data-salida-confirmar="EndosarCeder">Confirmar endoso / cesión</button><p class="gb-mensaje" data-salida-mensaje="EndosarCeder" role="status"></p></div>
+<div data-pantalla-carga="salida_deposito" hidden class="gb-carga" data-salida="Depositar">
+<div class="gb-cuenta"><label>Cuenta propia para depósito<select data-salida-cuenta required><option value="">Seleccionar cuenta</option>{% for cuenta in cuentas %}<option value="{{ cuenta.pk }}">{{ cuenta.banco.nombre }} · {{ cuenta.nombre }}</option>{% endfor %}</select></label></div>
+<div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Seleccionar</th><th>e-Cheq / Titular</th><th>Acreditación</th><th>Condición</th><th class="gb-numero">Importe</th></tr></thead><tbody data-salida-filas="Depositar"></tbody></table></div>
+<p class="gb-ayuda" data-salida-totales="Depositar">Total depósito: $ 0,00</p>
+<button type="button" class="gb-btn" data-salida-confirmar="Depositar">Confirmar depósito</button><p class="gb-mensaje" data-salida-mensaje="Depositar" role="status"></p></div>
 <p class="gb-ayuda">Las filas se editan o quitan antes de guardar. Nada se registra hasta «Guardar todos». Al guardar, cada e-Cheq ingresa a la cartera virtual; esta bandeja no genera recibos ni movimientos de Caja.</p>
 </section>
 {% endif %}
@@ -63,9 +80,9 @@
 {% for centro in centros %}<option value="{{ centro.pk }}" {% if centro_filtro == centro.pk|stringformat:'s' %}selected{% endif %}>{{ centro.nombre }}</option>{% endfor %}
 </select></label>{% endif %}<label>Buscar<input type="search" name="buscar" id="gbBuscarPendientes" value="{{ buscar }}" placeholder="Cliente, importe o N.º e-Cheq" autocomplete="off" maxlength="80" aria-label="Buscar movimientos"></label></form></div>
 <div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Fecha</th><th>Movimiento / Instrumento</th><th>Titular / Cliente</th><th class="gb-numero">Importe</th><th class="gb-accion">{% if estado == 'Pendiente' %}Acción{% else %}Centro / Responsable{% endif %}</th></tr></thead>
-<tbody>{% for pendiente in pagina.object_list %}<tr class="{% if pendiente.tipo == 'ECheq' %}gb-registro-echeq{% else %}gb-registro-banco{% endif %}"><td>{{ pendiente.fecha|date:'d/m/Y' }}</td>
+<tbody>{% for pendiente in pagina.object_list %}<tr class="{% if pendiente.tipo == 'ECheq' %}{% if pendiente.estado_cartera == 'Rechazado' %}gb-registro-rechazado{% else %}gb-registro-echeq{% endif %}{% else %}gb-registro-banco{% endif %}"><td>{{ pendiente.fecha|date:'d/m/Y' }}</td>
 <td><span class="gb-tipo" aria-label="Tipo de operación">{% if pendiente.tipo == 'ECheq' %}e-Cheq{% elif pendiente.tipo == 'Deposito' %}Depósito{% else %}Transferencia{% endif %}</span>
-{% if pendiente.tipo == 'ECheq' %}{{ pendiente.echeq_numero }}{% elif pendiente.referencia and pendiente.referencia != 'Sin identificar' and pendiente.referencia != pendiente.identificacion %}{{ pendiente.referencia }}{% else %}<span class="gb-tenue">—</span>{% endif %}</td>
+{% if pendiente.tipo == 'ECheq' %}{{ pendiente.echeq_numero }}{% if pendiente.estado_cartera == 'Rechazado' %}<small class="gb-rechazo-etiqueta">Rechazado</small>{% endif %}{% elif pendiente.referencia and pendiente.referencia != 'Sin identificar' and pendiente.referencia != pendiente.identificacion %}{{ pendiente.referencia }}{% else %}<span class="gb-tenue">—</span>{% endif %}</td>
 <td>{% if pendiente.tipo == 'ECheq' and pendiente.echeq_titular %}{{ pendiente.echeq_titular }}{% elif pendiente.identificacion %}{{ pendiente.identificacion }}{% else %}<span class="gb-tenue">Sin identificar</span>{% endif %}</td>
 <td class="gb-numero">$ {{ pendiente.importe|importe_ar }}</td>
 <td class="gb-accion">{% if estado == 'Pendiente' %}<button type="button" class="gb-btn gb-btn-menor" data-confirmar-pendiente="{{ pendiente.pk }}" data-identificacion="{{ pendiente.identificacion }}">Confirmar</button>
@@ -113,7 +130,8 @@
 <label>Registrar acción<select name="estado" required><option value="">Seleccionar acción</option></select></label>
 <label>Fecha de la acción<input name="fecha" type="date" required max="{{ fecha_hoy|date:'Y-m-d' }}"></label>
 <label>Observaciones<textarea name="observaciones" rows="2" maxlength="300" placeholder="Motivo o referencia (opcional)"></textarea></label>
-<div class="gb-dialog-acciones"><button class="gb-btn" type="submit" id="gbGuardarEstado" disabled>Registrar estado</button></div>
+<div class="gb-dialog-acciones"><button class="gb-btn" type="submit" id="gbGuardarEstado" disabled>Registrar estado</button>
+<button class="gb-btn gb-btn-sec" type="button" id="gbRegularizarRechazo" hidden>Pasar rechazo a Resueltos</button></div>
 <p class="gb-mensaje" id="gbEstadoMensaje" role="status" aria-live="polite"></p>
 <h3>Historial cronológico</h3>
 <div class="gb-estado-historial"><table><thead><tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Detalle</th></tr></thead>

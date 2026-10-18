@@ -586,3 +586,13 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 **Evolución controlada de Caja 2:** tabla de precarga de e-Cheqs como revisión editable antes del guardado atómico, validación de importe positiva/Decimal es-AR en UI de Agregar/Editar y validación definitiva backend; mensajes por fila/campo con estado temporal preservado. Causa concreta del rechazo actual **aún no diagnosticada** y desarrollo **no autorizado** mientras el usuario sigue evaluando casos reales.
 
 **Continuidad:** Nómina 0049/0050 y e-Cheq 0048 publicados; 35 pruebas dirigidas aprobadas en Oficina. Ver `CONTINUIDAD_OPERATIVA_20261015.md`.
+
+
+### Generación de documentos PDF (15/10/2026)
+
+Servicio reutilizable `usuarios/services/documentos_pdf.py`; logo en `static/branding/ordenaclick_logo_horizontal.png`; PDF generado desde operaciones confirmadas y autorizadas.
+
+
+### Generación de documentos PDF (15/10/2026)
+
+Servicio reutilizable `usuarios/services/documentos_pdf.py`; logo en `static/branding/ordenaclick_logo_horizontal.png`; PDF generado desde operaciones confirmadas y autorizadas.

@@ -323,3 +323,13 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - **Uso real:** mientras el usuario solo registra defectos de e-Cheqs, no implementar; acumular observaciones y resolver juntas cuando lo apruebe. Validaciones deben anticiparse a la tabla y, si falla el lote, señalar registro exacto y conservar borradores sin persistencia parcial.
 
 Ver relevo completo en `CONTINUIDAD_OPERATIVA_20261015.md`.
+
+
+### Estándar institucional de PDF (15/10/2026)
+
+Los PDFs institucionales nuevos deben ajustarse a `ESTANDAR_DOCUMENTOS_PDF.md` y usar el logo versionado; no cambiar el diseño sin aprobación.
+
+
+### Estándar institucional de PDF (15/10/2026)
+
+Los PDFs institucionales nuevos deben ajustarse a `ESTANDAR_DOCUMENTOS_PDF.md` y usar el logo versionado; no cambiar el diseño sin aprobación.

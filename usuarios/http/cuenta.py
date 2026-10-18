@@ -32,8 +32,8 @@ def home(request):
 def seleccionar_perfil(request, perfil):
     """Dirige al panel correspondiente al perfil elegido."""
     destinos = {
-        "administrador": "panel_admin",
-        "colaborador": "panel_colaborador",
+        "administrador": "panel_administrar",
+        "colaborador": "panel_administrar",
         "contable": "panel_contable",
         "legal": "panel_legal",
         "relaciones": "panel_relaciones",

@@ -5,6 +5,8 @@ from .http.recuperacion import SolicitarRecuperacion, ConfirmarRecuperacion
 
 
 from .http.administrador import panel_admin
+from .http.administrar_unificado import panel_administrar
+from .http.accesos_colaborador import gestion_accesos
 from .http.empresa_legado import (
     exportar_empresa,
     eliminar_empresa,
@@ -56,7 +58,8 @@ from .http.caja_movimientos import (
 )
 from .http.caja_correcciones import corregir_movimiento_caja_http
 from .http.revisiones_pendientes_bancarios import revisar_pendiente_http
-from .http.estados_echeq import estado_echeq_detalle, estado_echeq_registrar
+from .http.estados_echeq import estado_echeq_detalle, estado_echeq_registrar, estado_echeq_regularizar_rechazo
+from .http.salidas_echeq import listar_salidas, confirmar_salida, pdf_salida, pdf_salida
 from .http.nomina import (nomina_empleados, guardar_empleado, desvincular_empleado,
     reconocer_licencia, crear_caso, actuar_caso, descargar_documento_nomina,
     opciones_nomina)
@@ -255,6 +258,9 @@ urlpatterns = [
         baja_usuario,
         name='baja_usuario'
     ),
+
+    path('administrar/', panel_administrar, name='panel_administrar'),
+    path('administrar/accesos/<int:empresa_id>/', gestion_accesos, name='gestion_accesos_colaborador'),
 
     path(
         'panel-admin/',
@@ -755,10 +761,16 @@ urlpatterns = [
     path('nomina/empresa/<int:empresa_id>/documento/<int:documento_id>/', descargar_documento_nomina, name='descargar_documento_nomina'),
     path('nomina/empresa/<int:empresa_id>/opciones/', opciones_nomina, name='nomina_opciones'),
     path("gestion-bancaria/", gestion_bancaria, name="gestion_bancaria"),
+    path("gestion-bancaria/salidas/", listar_salidas, name="echeq_salidas_listar"),
+    path("gestion-bancaria/salidas/confirmar/", confirmar_salida, name="echeq_salidas_confirmar"),
+    path("gestion-bancaria/salidas/<int:operacion_id>/pdf/", pdf_salida, name="echeq_salida_pdf"),
+    path("gestion-bancaria/salidas/<int:operacion_id>/pdf/", pdf_salida, name="echeq_salida_pdf"),
     path("gestion-bancaria/echeq/<int:pendiente_id>/estado/", estado_echeq_detalle,
          name="estado_echeq_detalle"),
     path("gestion-bancaria/echeq/<int:pendiente_id>/registrar-estado/", estado_echeq_registrar,
          name="estado_echeq_registrar"),
+    path("gestion-bancaria/echeq/<int:pendiente_id>/regularizar-rechazo/", estado_echeq_regularizar_rechazo,
+         name="estado_echeq_regularizar_rechazo"),
     path("gestion-bancaria/abm/<str:tipo>/", abm_contextual_echeq, name="abm_contextual_echeq"),
     path("gestion-bancaria/entrar/", entrar_gestion_bancaria,
          name="entrar_gestion_bancaria"),

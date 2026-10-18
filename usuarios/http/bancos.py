@@ -1,3 +1,4 @@
+from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -14,11 +15,11 @@ from usuarios.services.capacidades import (
 @require_POST
 def guardar_banco(request):
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        request.POST.get("empresa"),
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            request.POST.get("empresa"),
+            'abm.bancos',
+        )
     empresa = contexto.empresa
 
     nombre = (
@@ -68,11 +69,11 @@ def listar_bancos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.bancos',
+        )
     empresa = contexto.empresa
 
     bancos = Banco.objects.filter(
@@ -119,11 +120,11 @@ def modificar_banco(request):
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.bancos',
+        )
     empresa = contexto.empresa
 
     nombre = (
@@ -175,11 +176,11 @@ def eliminar_banco(request):
     banco_id = request.POST.get("banco")
     empresa_id = request.POST.get("empresa")
 
-    contexto = exigir_capacidad_empresa(
-        request.user,
-        empresa_id,
-        CAPACIDAD_EMPRESA_ADMINISTRAR,
-    )
+    contexto = exigir_abm(
+            request.user,
+            empresa_id,
+            'abm.bancos',
+        )
     empresa = contexto.empresa
 
     try:
