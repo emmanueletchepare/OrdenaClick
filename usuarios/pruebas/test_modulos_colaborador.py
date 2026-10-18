@@ -26,9 +26,10 @@ class ModulosColaboradorTests(TestCase):
         self.client.force_login(self.colab)
         response=self.client.get(reverse('panel_administrar'),{'empresa':self.e.pk})
         self.assertEqual(response.status_code,200)
-        self.assertContains(response,'data-oc-modulo="proveedores"')
-        self.assertNotContains(response,'data-oc-modulo="bancos"')
+        self.assertContains(response,'data-oc-sidebar-accion="abm-proveedores"')
+        self.assertNotContains(response,'data-oc-sidebar-accion="abm-bancos"')
         self.assertNotContains(response,'Gestion de claves')
+        self.assertContains(response,'Seleccioná una función desde el menú lateral.')
     def test_claves_anteriores_no_se_asignan_solas(self):
         # No transferimos automáticamente secretos históricos sin dueño.
         self.assertTrue(GestionClave._meta.get_field('creado_por').null)

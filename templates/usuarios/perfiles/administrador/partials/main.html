@@ -2,8 +2,8 @@
      MAIN
 ========================= -->
 
-{% if acceso_restringido %}
 <main class="main">
+{% if acceso_restringido %}
     <div class="topbar">
         <div class="title" id="titulo-panel">
             {% if empresa_actual %}
@@ -18,8 +18,8 @@
         <div id="contenido-operativo">
             <div class="empty-state">
                 {% if empresa_actual %}
-                    {% if puede_ver_pendientes %}
-                        Seleccioná Pendientes bancarios desde el menú lateral.
+                    {% if puede_ver_pendientes or puede_ver_abms or puede_gestion_claves %}
+                        Seleccioná una función desde el menú lateral.
                     {% else %}
                         Todavía no tenés módulos habilitados en esta Empresa.
                     {% endif %}
@@ -30,9 +30,7 @@
         </div>
     </div>
     <div id="bloque-alta-empresa" hidden></div>
-</main>
 {% else %}
-<main class="main">
 
 <div class="topbar">
 
@@ -774,5 +772,5 @@ Eliminar Empresa
 
 </div>
 
-</main>
 {% endif %}
+</main>

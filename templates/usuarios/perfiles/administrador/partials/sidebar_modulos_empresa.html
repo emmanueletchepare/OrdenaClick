@@ -1,0 +1,427 @@
+{% comment %}Fuente única del menú de empresa. Los permisos filtran sin cambiar jerarquía.{% endcomment %}
+{% if not acceso_restringido %}
+<details class="oc-sidebar-grupo" data-oc-grupo="registros">
+<summary
+    class="sidebar-nav-btn"
+
+    data-sidebar-item
+
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="4"
+        y="3"
+        width="16"
+        height="18"
+        rx="2"
+    ></rect>
+    <path d="M8 8h8"></path>
+    <path d="M8 12h8"></path>
+    <path d="M8 16h5"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Registros
+</span>
+
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-comprobantes" >Comprobantes</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-obligaciones" >Obligaciones</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Carga Planificada</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Registrar Pago</button>
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Modificar / Eliminar</button>
+</div>
+</details>
+{% endif %}
+
+{% if not acceso_restringido or puede_ver_pendientes %}
+<form method="post" action="{% url 'entrar_gestion_bancaria' %}" id="formEntrarGestionBancaria" class="sidebar-pendientes-empresa">
+{% csrf_token %}
+<input type="hidden" name="empresa" value="{{ empresa_actual.pk }}">
+<input type="hidden" name="origen" value="{% if acceso_restringido %}colaborador{% else %}admin{% endif %}">
+<input type="hidden" name="destino" value="pendientes">
+<button class="sidebar-nav-btn" type="submit" data-sidebar-item>
+    <span class="sidebar-nav-icon" aria-hidden="true">▤</span>
+    <span class="sidebar-nav-text">Pendientes bancarios</span>
+</button>
+</form>
+{% endif %}
+
+
+
+{% if not acceso_restringido %}
+<button
+    id="btnSidebarCaja"
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+>
+
+    <span class="sidebar-nav-icon">
+
+        <svg viewBox="0 0 24 24">
+            <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+            ></rect>
+            <path d="M3 10h18"></path>
+            <path d="M7 15h4"></path>
+        </svg>
+
+    </span>
+
+    <span class="sidebar-nav-text">
+        Caja
+    </span>
+
+</button>
+
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Dashboard')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="3"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="14"
+        y="3"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="3"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+    <rect
+        x="14"
+        y="14"
+        width="7"
+        height="7"
+        rx="1"
+    ></rect>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Dashboard
+</span>
+
+</button>
+
+
+<details class="oc-sidebar-grupo" data-oc-grupo="vencimientos">
+<summary class="sidebar-nav-btn" data-sidebar-item>
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <rect
+        x="3"
+        y="5"
+        width="18"
+        height="16"
+        rx="2"
+    ></rect>
+    <path d="M8 3v4"></path>
+    <path d="M16 3v4"></path>
+    <path d="M3 10h18"></path>
+    <path d="M12 14v3"></path>
+    <path d="M12 17h2"></path>
+</svg>
+
+</span>
+<span class="sidebar-nav-text">Próximos vencimientos</span>
+</summary>
+<div class="oc-sidebar-hijos">
+    <button type="button" id="btnProximosVencimientos" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-alertas">Acción inmediata</button>
+    <details class="oc-sidebar-subgrupo" data-oc-subgrupo="vencimientos-periodos">
+        <summary class="sidebar-nav-btn">Vencimientos</summary>
+        <div class="oc-sidebar-hijos">
+            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-hoy">Hoy</button>
+            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-semana">Esta semana</button>
+            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-rango">Rango de fechas</button>
+        </div>
+    </details>
+</div>
+</details>
+
+
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Reportes')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 20V10"></path>
+    <path d="M10 20V4"></path>
+    <path d="M16 20v-7"></path>
+    <path d="M22 20H2"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Reportes
+</span>
+
+</button>
+
+
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="
+        mostrarContenido(
+            'Estado de Resultados'
+        )
+    "
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 19V9"></path>
+    <path d="M10 19V5"></path>
+    <path d="M16 19v-7"></path>
+    <path d="M3 19h18"></path>
+    <path d="M18 8l2-2"></path>
+    <path d="M20 6v4"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Estado de Resultados
+</span>
+
+</button>
+
+
+<button
+    class="sidebar-nav-btn"
+    type="button"
+    data-sidebar-item
+    onclick="mostrarContenido('Balance')"
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M12 3v18"></path>
+    <path d="M5 6h14"></path>
+    <path d="M7 6l-4 7h8L7 6z"></path>
+    <path d="M17 6l-4 7h8l-4-7z"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Balance
+</span>
+
+</button>
+
+
+<div class="sidebar-separator"></div>
+{% endif %}
+
+
+{% if not acceso_restringido or puede_gestion_claves %}
+<details class="oc-sidebar-grupo" data-oc-grupo="herramientas">
+<summary
+    class="sidebar-nav-btn"
+
+    data-sidebar-item
+
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path
+        d="
+            M14.7 6.3
+            a4 4 0 0 0-5 5
+            L3 18
+            l3 3
+            6.7-6.7
+            a4 4 0 0 0 5-5
+        "
+    ></path>
+    <path d="M15 4l5 5"></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Herramientas
+</span>
+
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="claves" >Gestión de claves</button>
+{% if not acceso_restringido %}
+<button type="button" id="btnNominaEmpleados" class="sidebar-nav-btn">Nómina de Empleados</button>
+{% endif %}
+</div>
+</details>
+{% endif %}
+
+
+{% if not acceso_restringido or puede_ver_abms %}
+<details class="oc-sidebar-grupo" data-oc-grupo="abms">
+<summary
+    class="sidebar-nav-btn"
+
+    data-sidebar-item
+
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M4 7h16"></path>
+    <path d="M4 12h16"></path>
+    <path d="M4 17h16"></path>
+    <circle cx="7" cy="7" r="1"></circle>
+    <circle cx="12" cy="12" r="1"></circle>
+    <circle cx="17" cy="17" r="1"></circle>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+ABMs
+</span>
+
+</summary>
+<div class="oc-sidebar-hijos">
+{% if not acceso_restringido or abms_estructura %}
+<div class="oc-sidebar-subtitulo">Estructura Operativa</div>
+{% endif %}
+{% if not acceso_restringido or 'centros' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-centros" >Centros Operativos</button>
+{% endif %}
+{% if not acceso_restringido or 'recursos' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-recursos" >Recursos Operativos</button>
+{% endif %}
+{% if not acceso_restringido or 'proveedores' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-proveedores" >Proveedores</button>
+{% endif %}
+{% if not acceso_restringido or 'tipos' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-tipos" >Tipos de gastos</button>
+{% endif %}
+{% if not acceso_restringido or 'clientes' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-clientes" >Clientes</button>
+{% endif %}
+{% if not acceso_restringido or abms_finanzas %}
+<div class="oc-sidebar-subtitulo">Finanzas y medios de pago</div>
+{% endif %}
+{% if not acceso_restringido or 'bancos' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-bancos" >Bancos</button>
+{% endif %}
+{% if not acceso_restringido or 'cuentas' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-cuentas" >Cuentas Bancarias</button>
+{% endif %}
+{% if not acceso_restringido or 'tarjetas' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-tarjetas" >Tarjetas</button>
+{% endif %}
+{% if not acceso_restringido or 'retenciones' in abms_codigos %}
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="abm-retenciones" >Retenciones</button>
+{% endif %}
+</div>
+</details>
+{% endif %}
+
+
+{% if not acceso_restringido %}
+<details class="oc-sidebar-grupo" data-oc-grupo="configuracion">
+<summary
+    class="sidebar-nav-btn"
+
+    data-sidebar-item
+
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <circle
+        cx="12"
+        cy="12"
+        r="3"
+    ></circle>
+    <path
+        d="
+            M19.4 15
+            a1.7 1.7 0 0 0 .3 1.9
+            l.1.1-2 3.4-.2-.1
+            a1.7 1.7 0 0 0-2-.1
+            1.7 1.7 0 0 0-1 .9
+            V21h-4v-.1
+            a1.7 1.7 0 0 0-1-.9
+            1.7 1.7 0 0 0-2 .1
+            l-.2.1-2-3.4.1-.1
+            a1.7 1.7 0 0 0 .3-1.9
+            1.7 1.7 0 0 0-1.5-1
+            H4v-4h.1
+            a1.7 1.7 0 0 0 1.5-1
+            1.7 1.7 0 0 0-.3-1.9
+            l-.1-.1 2-3.4.2.1
+            a1.7 1.7 0 0 0 2 .1
+            1.7 1.7 0 0 0 1-.9
+            V3h4v.1
+            a1.7 1.7 0 0 0 1 .9
+            1.7 1.7 0 0 0 2-.1
+            l.2-.1 2 3.4-.1.1
+            a1.7 1.7 0 0 0-.3 1.9
+            1.7 1.7 0 0 0 1.5 1
+            h.1v4h-.1
+            a1.7 1.7 0 0 0-1.3 1.2
+        "
+    ></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Configuración
+</span>
+
+</summary>
+<div class="oc-sidebar-hijos">
+<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="modificar-empresa" >Modificar Empresa</button>
+<button type="button" id="btn-designar-perfiles" class="sidebar-nav-btn" data-designar-perfiles-url="{% url 'gestionar_relaciones_empresa' empresa_actual.pk %}">Designar perfiles</button>
+<button type="button" class="sidebar-nav-btn" data-oc-gestion-accesos-url="{% url 'gestion_accesos_colaborador' empresa_actual.pk %}">Gestión de accesos</button>
+</div>
+</details>
+{% endif %}

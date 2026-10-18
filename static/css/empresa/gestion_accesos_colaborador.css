@@ -2,3 +2,11 @@
 /* Dentro de Administrar ya existe un sidebar y una cabecera de Empresa. */
 html.oc-accesos-en-panel .gb-header{display:none;}
 html.oc-accesos-en-panel .gb-contenedor{padding-top:10px;}
+
+/* En Administrar: no presentar segunda cabecera ni desbordar el panel central. */
+html.oc-accesos-en-panel, html.oc-accesos-en-panel body { max-width:100%; overflow-x:hidden; }
+html.oc-accesos-en-panel .gb-contenedor { box-sizing:border-box; width:100%; max-width:100%; padding:12px 8px 20px; margin:0; }
+html.oc-accesos-en-panel .gb-tarjeta { min-width:0; max-width:100%; overflow:hidden; }
+html.oc-accesos-en-panel .oc-acceso-hijos { grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr)); min-width:0; }
+html.oc-accesos-en-panel .oc-acceso-hijos label { min-width:0; overflow-wrap:anywhere; }
+html.oc-accesos-en-panel .oc-acceso-grupo { min-width:0; }

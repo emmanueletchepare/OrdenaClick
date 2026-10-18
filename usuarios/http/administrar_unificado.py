@@ -92,6 +92,7 @@ def panel_administrar(request):
             'puede_ver_pendientes': pendientes,
             'puede_gestion_claves':claves, 'puede_ver_abms': bool(autorizados),
             'abms_autorizados':autorizados,
+            'abms_codigos':[a['codigo'] for a in autorizados],
             'abms_estructura':[a for a in autorizados if a['codigo'] in ('centros','recursos','proveedores','tipos','clientes')],
             'abms_finanzas':[a for a in autorizados if a['codigo'] in ('bancos','cuentas','tarjetas','retenciones')],
         })

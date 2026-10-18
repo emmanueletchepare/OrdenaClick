@@ -55,11 +55,11 @@
 >
 
 <link rel="stylesheet" href="{% static 'css/caja/pendientes_en_panel.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/perfiles/administrador/panel_unificado.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/perfiles/administrador/panel_unificado.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/nomina/nomina_en_panel.css' %}?v=2">
 </head>
 
-<body>
+<body data-acceso-restringido="{{ acceso_restringido|yesno:'1,0' }}">
 
 <input
 type="hidden"
@@ -89,7 +89,7 @@ value="{{ empresa_actual.id }}">
 <script src="{% static 'js/maestros/tarjetas.js' %}?v=1"></script>
 <script src="{% static 'js/maestros/retenciones.js' %}?v=1"></script>
 <script src="{% static 'js/empresa/gestion_claves.js' %}?v=3"></script>
-<script src="{% static 'js/perfiles/administrador/panel_modulos_colaborador.js' %}?v=1" defer></script>
+{# Navegación común: sidebar_acordeon.js; el controlador paralelo queda retirado. #}
 {% endif %}
 
 {% else %}
@@ -160,6 +160,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="{% static 'js/perfiles/administrador/pendientes_en_panel.js' %}?v=1" defer></script>
 <script src="{% static 'js/perfiles/administrador/nomina_en_panel.js' %}?v=50" defer></script>
 {% endif %}
-<script src="{% static 'js/perfiles/administrador/sidebar_acordeon.js' %}?v=1" defer></script>
+<script src="{% static 'js/perfiles/administrador/sidebar_acordeon.js' %}?v=3" defer></script>
 </body>
 </html>
