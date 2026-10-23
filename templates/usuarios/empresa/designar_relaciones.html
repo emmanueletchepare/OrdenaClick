@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Designar perfiles | OrdenaClick</title>
-    <link rel="stylesheet" href="{% static 'css/relaciones/relaciones.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/relaciones/relaciones.css' %}?v=2">
 </head>
 <body>
 <main class="relations-shell">
@@ -57,8 +57,41 @@
         <div class="card-title-row"><div><p class="section-kicker">Activos</p><h2>Personas vinculadas</h2></div></div>
         <div class="relation-grid">
             <article class="relation-card"><span>Administrador</span><strong>{{ empresa.propietario.username }}</strong><small>Fundador · no requiere asignación</small></article>
-            {% for relacion in jerarquias %}<article class="relation-card"><span>{{ relacion.get_jerarquia_display }}</span><strong>{{ relacion.usuario.username }}</strong>{% if relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}</article>{% endfor %}
-            {% for relacion in roles_funcionales %}<article class="relation-card"><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
+            {% for relacion in jerarquias %}
+            <article class="relation-card">
+                <span>{{ relacion.get_jerarquia_display }}{% if not relacion.activo %} · Revocado{% endif %}</span>
+                <strong>{{ relacion.usuario.username }}</strong>
+                {% if relacion.activo and relacion.jerarquia == 'admin_centro' %}
+                <form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion>
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="centros">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <small>Centros habilitados</small>
+                    {% for centro in centros %}
+                    <label class="relation-centro-opcion"><input type="checkbox" name="centros" value="{{ centro.pk }}" {% if centro.pk in relacion.centros_autorizados_ids %}checked{% endif %}> {{ centro.nombre }}</label>
+                    {% endfor %}
+                    <button type="submit">Guardar centros</button>
+                </form>
+                {% elif relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}
+                {% if relacion.activo %}
+                <form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion class="oc-vinculo-revocar">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="revocar_jerarquia">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <button type="submit">Revocar relación</button>
+                </form>
+                {% endif %}
+            </article>
+            {% endfor %}
+            {% for relacion in roles_funcionales %}<article class="relation-card">
+                <span>{{ relacion.get_rol_display }}{% if not relacion.activo %} · Revocado{% endif %}</span>
+                <strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small>
+                {% if relacion.activo %}<form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion class="oc-vinculo-revocar">
+                    {% csrf_token %}<input type="hidden" name="accion" value="revocar_funcional">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <button type="submit">Revocar rol</button>
+                </form>{% endif %}
+            </article>{% endfor %}
         </div>
     </section>
 
@@ -74,6 +107,6 @@
         </form>
     </section>
 </main>
-<script src="{% static 'js/relaciones/relaciones.js' %}?v=1"></script>
+<script src="{% static 'js/relaciones/relaciones.js' %}?v=2"></script>
 </body>
 </html>

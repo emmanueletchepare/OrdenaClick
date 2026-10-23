@@ -15,4 +15,14 @@
         role.addEventListener('change', syncCenter);
         syncCenter();
     }
+
+    // Confirmación en la vista independiente; la autorización la decide el servidor.
+    document.querySelectorAll('[data-oc-gestionar-asignacion]').forEach(form => {
+        form.addEventListener('submit', event => {
+            if(form.querySelector('[name="accion"]')?.value.startsWith('revocar') &&
+               !window.confirm('¿Revocar esta relación y sus accesos?')){
+                event.preventDefault();
+            }
+        });
+    });
 })();

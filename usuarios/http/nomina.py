@@ -19,6 +19,7 @@ from usuarios.models import (AlertaLicenciaEmpleado, ActuacionCasoEmpleado, Banc
 from usuarios.services.identidades import obtener_identidad_usuario_empresa
 from usuarios.services.nomina import acceso_nomina, alertas_pendientes, archivo_validado, evento, sincronizar_alerta
 from usuarios.services.nomina_forms import EmpleadoForm
+from usuarios.services.alcance_nomina import alcance_nomina, restringir_nomina, comprobar_centro_nomina
 
 
 def _empresa(request, empresa_id):
@@ -28,9 +29,19 @@ def _empresa(request, empresa_id):
         raise PermissionDenied('No tenés autorización para Nómina en esta Empresa.')
 
 
-def _empleado(empresa, empleado_id):
-    return get_object_or_404(Empleado.objects.select_related('centro_operativo', 'vehiculo', 'banco'),
-                             empresa=empresa, pk=empleado_id)
+def _empleado(empresa, empleado_id, usuario):
+    queryset = restringir_nomina(Empleado.objects.select_related(
+        'centro_operativo', 'vehiculo', 'banco'),usuario,empresa.pk)
+    return get_object_or_404(queryset, empresa=empresa, pk=empleado_id)
+
+
+def _centros(request, empresa):
+    return alcance_nomina(request.user, empresa.pk)[1]
+
+
+def _form(empresa, request, *args, **kwargs):
+    return EmpleadoForm(*args, empresa=empresa,
+                        centros_permitidos=_centros(request, empresa), **kwargs)
 
 
 def _volver(empresa, empleado=None, seccion=None):
@@ -92,7 +103,7 @@ def _limpiar_documentos(nombres):
 def nomina_empleados(request):
     empresa = _empresa(request, request.GET.get('empresa'))
     empleado_id = request.GET.get('empleado')
-    empleado = _empleado(empresa, empleado_id) if empleado_id else None
+    empleado = _empleado(empresa, empleado_id, request.user) if empleado_id else None
     nuevo = request.GET.get('nuevo') == '1'
     seccion = request.GET.get('seccion', '')
     if empleado and seccion == 'casos':
@@ -102,7 +113,7 @@ def nomina_empleados(request):
             'hoy': timezone.localdate(),
         })
     if empleado or nuevo:
-        form = EmpleadoForm(empresa=empresa, instance=empleado)
+        form = _form(empresa, request, instance=empleado)
         docs = empleado.documentos.filter(caso__isnull=True).select_related('actor') if empleado else []
         eventos = empleado.eventos.select_related('actor') if empleado else []
         return render(request, 'usuarios/nomina/nomina.html', {
@@ -110,7 +121,7 @@ def nomina_empleados(request):
             'documentos': docs, 'eventos': eventos, 'hoy': timezone.localdate(),
         })
     buscar = (request.GET.get('buscar') or '').strip()[:80]
-    qs = Empleado.objects.filter(empresa=empresa).select_related('centro_operativo')
+    qs = restringir_nomina(Empleado.objects.filter(empresa=empresa).select_related('centro_operativo'),request.user,empresa.pk)
     if buscar:
         from django.db.models import Q
         qs = qs.filter(Q(nombre_apellido__icontains=buscar) | Q(cuil__icontains=buscar) | Q(legajo__icontains=buscar))
@@ -120,15 +131,15 @@ def nomina_empleados(request):
             centro_id = int(centro)
         except (TypeError, ValueError):
             raise PermissionDenied('Centro inválido.')
-        if not CentroOperativo.objects.filter(pk=centro_id, empresa=empresa).exists():
-            raise PermissionDenied('Centro no autorizado.')
+        comprobar_centro_nomina(request.user,empresa.pk,centro_id)
         qs = qs.filter(centro_operativo_id=centro_id)
     return render(request, 'usuarios/nomina/nomina.html', {
         'empresa': empresa, 'vista': 'listado',
         'activos': qs.filter(activo=True), 'inactivos': qs.filter(activo=False),
         'buscar': buscar, 'centro_filtro': centro,
-        'centros': CentroOperativo.objects.filter(empresa=empresa, activo=True),
-        'alertas': alertas_pendientes(empresa),
+        'centros': CentroOperativo.objects.filter(empresa=empresa, activo=True).filter(
+            pk__in=_centros(request,empresa)) if _centros(request,empresa) is not None else CentroOperativo.objects.filter(empresa=empresa,activo=True),
+        'alertas': restringir_nomina(alertas_pendientes(empresa),request.user,empresa.pk, 'empleado__centro_operativo_id'),
     })
 
 
@@ -138,10 +149,10 @@ def nomina_empleados(request):
 @xframe_options_sameorigin
 def guardar_empleado(request, empresa_id, empleado_id=None):
     empresa = _empresa(request, empresa_id)
-    empleado = _empleado(empresa, empleado_id) if empleado_id else None
+    empleado = _empleado(empresa, empleado_id, request.user) if empleado_id else None
     if empleado and not empleado.activo:
         return HttpResponseForbidden('Una ficha desvinculada es histórica; no se modifica.')
-    form = EmpleadoForm(request.POST, empresa=empresa, instance=empleado)
+    form = _form(empresa, request, request.POST, instance=empleado)
     if not form.is_valid():
         return render(request, 'usuarios/nomina/nomina.html', {
             'empresa': empresa, 'vista': 'ficha', 'form': form, 'empleado': empleado,
@@ -212,6 +223,7 @@ def desvincular_empleado(request, empresa_id, empleado_id):
         empleado = Empleado.objects.select_for_update().filter(pk=empleado_id, empresa=empresa).first()
         if not empleado:
             raise Http404('Empleado inexistente.')
+        comprobar_centro_nomina(request.user,empresa.pk,empleado.centro_operativo_id)
         if not empleado.activo:
             return JsonResponse({'ok': False, 'mensaje': 'El empleado ya está desvinculado.'}, status=409)
         if fecha < empleado.fecha_ingreso:
@@ -235,6 +247,7 @@ def reconocer_licencia(request, empresa_id, empleado_id):
         empleado = Empleado.objects.select_for_update().filter(pk=empleado_id, empresa=empresa, activo=True).first()
         if not empleado:
             raise Http404('Empleado no disponible.')
+        comprobar_centro_nomina(request.user,empresa.pk,empleado.centro_operativo_id)
         alerta = AlertaLicenciaEmpleado.objects.select_for_update().filter(
             empleado=empleado, cancelada_en__isnull=True, reconocida_en__isnull=True,
             fecha_aviso__lte=timezone.localdate(),
@@ -252,7 +265,7 @@ def reconocer_licencia(request, empresa_id, empleado_id):
 @require_POST
 def crear_caso(request, empresa_id, empleado_id):
     empresa = _empresa(request, empresa_id)
-    empleado = _empleado(empresa, empleado_id)
+    empleado = _empleado(empresa, empleado_id, request.user)
     categoria = request.POST.get('categoria', '')
     fecha_s = request.POST.get('fecha', '')
     detalle = (request.POST.get('descripcion') or '').strip()
@@ -288,7 +301,7 @@ def crear_caso(request, empresa_id, empleado_id):
 @require_POST
 def actuar_caso(request, empresa_id, empleado_id, caso_id):
     empresa = _empresa(request, empresa_id)
-    empleado = _empleado(empresa, empleado_id)
+    empleado = _empleado(empresa, empleado_id, request.user)
     detalle = (request.POST.get('detalle') or '').strip()
     cerrar = request.POST.get('cerrar') == '1'
     if not 8 <= len(detalle) <= 3000:
@@ -330,7 +343,9 @@ def actuar_caso(request, empresa_id, empleado_id, caso_id):
 @require_GET
 def descargar_documento_nomina(request, empresa_id, documento_id):
     empresa = _empresa(request, empresa_id)
-    doc = get_object_or_404(DocumentoEmpleado.objects.select_related('empleado'), pk=documento_id, empleado__empresa=empresa)
+    docs = restringir_nomina(DocumentoEmpleado.objects.select_related('empleado'),request.user,empresa.pk,
+                             'empleado__centro_operativo_id')
+    doc = get_object_or_404(docs, pk=documento_id, empleado__empresa=empresa)
     try:
         doc.archivo.open('rb')
     except (ValueError, OSError):
@@ -350,8 +365,11 @@ def descargar_documento_nomina(request, empresa_id, documento_id):
 @require_GET
 def opciones_nomina(request, empresa_id):
     empresa = _empresa(request, empresa_id)
+    centros = CentroOperativo.objects.filter(empresa=empresa, activo=True)
+    ids = _centros(request,empresa)
+    if ids is not None: centros = centros.filter(pk__in=ids)
     return JsonResponse({'ok': True,
-        'centro_operativo': list(CentroOperativo.objects.filter(empresa=empresa, activo=True).values('id','nombre')),
+        'centro_operativo': list(centros.values('id','nombre')),
         'vehiculo': list(RecursoOperativo.objects.filter(empresa=empresa, activo=True, tipo_recurso='Vehiculo').values('id','nombre')),
         'banco': list(Banco.objects.filter(empresa=empresa, activo=True).values('id','nombre')),
     })

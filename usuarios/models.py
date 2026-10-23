@@ -3627,3 +3627,68 @@ class DocumentoEmpleado(models.Model):
 
 # Permisos: registro Django desde módulo específico.
 from .models_accesos import PermisoAccesoColaborador, EventoPermisoAccesoColaborador
+
+class CentroAdicionalAdministrador(models.Model):
+    """Centros adicionales de un Administrador de Centro; el centro principal no se reemplaza."""
+    asignacion = models.ForeignKey(
+        'AsignacionUsuarioEmpresa', on_delete=models.PROTECT,
+        related_name='centros_adicionales',
+    )
+    centro_operativo = models.ForeignKey(
+        'CentroOperativo', on_delete=models.PROTECT,
+        related_name='asignaciones_adicionales',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=['asignacion', 'centro_operativo'],
+            name='uniq_centro_adicional_admin',
+        )]
+
+    def clean(self):
+        """Impide asignaciones cruzadas y centros no autorizables."""
+        super().clean()
+        if not self.asignacion_id or not self.centro_operativo_id:
+            return
+        a = self.asignacion
+        c = self.centro_operativo
+        if (a.jerarquia != 'admin_centro' or a.empresa_id != c.empresa_id
+                or not c.activo or a.centro_operativo_id == c.pk):
+            raise ValidationError('El centro adicional debe ser válido, distinto y de la misma Empresa.')
+
+
+class EventoGestionAsignacion(models.Model):
+    """Registro auditable de cambio de centros o revocación de relación."""
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                related_name='eventos_asignacion_recibidos')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                              related_name='eventos_asignacion_realizados')
+    accion = models.CharField(max_length=48)
+    detalle = models.JSONField(default=dict)
+    creado = models.DateTimeField(auto_now_add=True)
+
+class PermisoNominaCentro(models.Model):
+    """Acceso de Nómina por Centro; nunca otorga privilegios de Caja."""
+    id = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT,
+                                 related_name='permisos_nomina_centros')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                 related_name='permisos_nomina_centros')
+    centro_operativo = models.ForeignKey('CentroOperativo', on_delete=models.PROTECT,
+                                         related_name='permisos_nomina')
+    activo = models.BooleanField(default=True)
+    otorgado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                      related_name='permisos_nomina_concedidos')
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['empresa','usuario','centro_operativo'],
+                                                 name='uniq_permiso_nomina_por_centro')]
+
+    def clean(self):
+        super().clean()
+        if self.empresa_id and self.centro_operativo_id and self.empresa_id != self.centro_operativo.empresa_id:
+            raise ValidationError('El Centro no pertenece a esta Empresa.')

@@ -11,6 +11,7 @@ from django.utils import timezone
 from usuarios.models import AlertaLicenciaEmpleado, EventoEmpleado
 from usuarios.services.identidades import obtener_identidad_usuario_empresa
 from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.alcance_nomina import alcance_nomina
 
 DOCUMENTOS = {"DNIFrente", "DNIDorso", "Licencia", "CAT", "Preocupacional", "Caso"}
 MAX_DOCUMENTO = 20 * 1024 * 1024
@@ -18,7 +19,7 @@ MAX_DOCUMENTO = 20 * 1024 * 1024
 
 def acceso_nomina(usuario, empresa_id):
     """Acceso transitorio de mínimo privilegio, hasta la matriz granular aprobada."""
-    return obtener_empresa_administrable(usuario, empresa_id)
+    return alcance_nomina(usuario, empresa_id)[0]
 
 
 def mes_anterior(fecha):

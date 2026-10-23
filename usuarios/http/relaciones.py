@@ -14,6 +14,7 @@ from usuarios.services.relaciones import (
     resolver_solicitud_relacion,
 )
 from usuarios.services.seguridad import obtener_empresa_administrable
+from usuarios.services.gestionar_asignaciones import guardar_centros_asignacion, revocar_relacion
 
 
 @login_required
@@ -71,22 +72,38 @@ def gestionar_relaciones_empresa(request, empresa_id):
     )
 
     if request.method == "POST":
+        accion = request.POST.get("accion", "solicitar")
         try:
-            solicitud = crear_solicitud_relacion(
-                solicitante=request.user,
-                empresa_id=empresa.id,
-                identificador_usuario=request.POST.get("usuario"),
-                rol=request.POST.get("rol"),
-                centro_id=request.POST.get("centro_operativo") or None,
-                mensaje=request.POST.get("mensaje") or "",
-            )
-        except ValidationError as error:
-            messages.error(request, " ".join(error.messages))
+            if accion == "solicitar":
+                solicitud = crear_solicitud_relacion(
+                    solicitante=request.user,
+                    empresa_id=empresa.id,
+                    identificador_usuario=request.POST.get("usuario"),
+                    rol=request.POST.get("rol"),
+                    centro_id=request.POST.get("centro_operativo") or None,
+                    mensaje=request.POST.get("mensaje") or "",
+                )
+                aviso = f"Solicitud enviada a {solicitud.usuario_destino.username}."
+            elif accion == "centros":
+                guardar_centros_asignacion(
+                    actor=request.user, empresa_id=empresa.id,
+                    asignacion_id=request.POST.get("asignacion"),
+                    centros=request.POST.getlist("centros"),
+                )
+                aviso = "Centros autorizados actualizados y auditados."
+            elif accion in ("revocar_jerarquia", "revocar_funcional"):
+                revocar_relacion(
+                    actor=request.user, empresa_id=empresa.id,
+                    relacion_id=request.POST.get("asignacion"),
+                    tipo="jerarquia" if accion == "revocar_jerarquia" else "funcional",
+                )
+                aviso = "Relación revocada y auditada."
+            else:
+                raise ValidationError("Operación no reconocida.")
+        except (ValidationError, PermissionDenied, ValueError) as error:
+            messages.error(request, " ".join(getattr(error, "messages", [str(error)])))
         else:
-            messages.success(
-                request,
-                f"Solicitud enviada a {solicitud.usuario_destino.username}.",
-            )
+            messages.success(request, aviso)
             if not es_fragmento:
                 return redirect("gestionar_relaciones_empresa", empresa_id=empresa.id)
 
@@ -108,7 +125,11 @@ def gestionar_relaciones_empresa(request, empresa_id):
         .select_related("usuario")
         .order_by("usuario__username", "rol")
     )
-    centros = empresa.centros.filter(activo=True).order_by("nombre")
+    centros = list(empresa.centros.filter(activo=True).order_by("nombre"))
+    # Presentar el alcance guardado sin asumir una sola sucursal.
+    from usuarios.services.alcances_centros import centros_activos_de_asignacion
+    for relacion in jerarquias:
+        relacion.centros_autorizados_ids = centros_activos_de_asignacion(relacion)
     contexto = {
         "empresa": empresa,
         "pendientes": pendientes,

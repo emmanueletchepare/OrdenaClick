@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from usuarios.models import AsignacionUsuarioEmpresa, Empresa
+from usuarios.models import AsignacionUsuarioEmpresa, Empresa, RolFuncionalUsuarioEmpresa
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.pendientes_bancarios import alcance_pendientes
 from usuarios.services.accesos_colaborador import puede
@@ -34,7 +34,8 @@ def empresas_para_administrar(usuario):
     else:
         empresas = Empresa.objects.filter(
             Q(propietario=usuario) |
-            Q(asignaciones_usuarios__usuario=usuario, asignaciones_usuarios__activo=True)
+            Q(asignaciones_usuarios__usuario=usuario, asignaciones_usuarios__activo=True) |
+            Q(roles_funcionales_usuarios__usuario=usuario, roles_funcionales_usuarios__activo=True)
         ).distinct().order_by('nombre_fantasia', 'razon_social')
     # Etiquetas solo de presentación; la autorización de entrada se recalcula.
     lista = list(empresas)
@@ -43,11 +44,14 @@ def empresas_para_administrar(usuario):
             usuario=usuario, activo=True, empresa_id__in=[e.pk for e in lista]
         )
     }
+    # No anunciar 'Administrar' al rol funcional hasta que tenga acceso real.
+    lista = [e for e in lista if (usuario.is_superuser or e.propietario_id == usuario.pk
+             or e.pk in asignaciones or puede(usuario,e.pk,'nomina.total'))]
     for empresa in lista:
         if usuario.is_superuser or empresa.propietario_id == usuario.pk:
             empresa.etiqueta_acceso = 'Administrador'
         else:
-            empresa.etiqueta_acceso = ETIQUETAS.get(asignaciones.get(empresa.pk), 'Acceso restringido')
+            empresa.etiqueta_acceso = ETIQUETAS.get(asignaciones.get(empresa.pk), 'Rol funcional')
     return lista
 
 
@@ -70,11 +74,14 @@ def panel_administrar(request):
             return HttpResponseForbidden('No tenés acceso a esta Empresa.')
         if contexto.es_superusuario or contexto.es_propietario:
             return redirect(reverse('panel_admin') + '?empresa=' + str(contexto.empresa.pk))
-        if contexto.jerarquia not in ETIQUETAS:
+        solo_funcional = contexto.jerarquia is None and bool(contexto.roles_funcionales)
+        if contexto.jerarquia not in ETIQUETAS and not (
+            solo_funcional and puede(request.user,contexto.empresa.pk,'nomina.total')):
             return HttpResponseForbidden('Esta relación no habilita el área Administrar.')
         try:
             alcance_pendientes(request.user, contexto.empresa.pk)
-            pendientes = True
+            from usuarios.services.permisos_bancarios_accion import permitido
+            pendientes = permitido(request.user, contexto.empresa.pk, 'pendientes.ver')
         except PermissionDenied:
             pendientes = False
         abms = (
@@ -85,12 +92,23 @@ def panel_administrar(request):
         autorizados=[{'codigo':nombre,'nombre':etiqueta} for nombre,etiqueta in abms
                      if puede(request.user,contexto.empresa.pk,'abm.'+nombre)]
         claves=puede(request.user,contexto.empresa.pk,'claves.propias')
+        nomina=puede(request.user,contexto.empresa.pk,'nomina.total')
+        caja=puede(request.user,contexto.empresa.pk,'caja.total')
+        vencimientos=puede(request.user,contexto.empresa.pk,'vencimientos.ver')
+        registros={c:puede(request.user,contexto.empresa.pk,c) for c in (
+            'registros.ver','registros.crear','registros.editar','registros.obligaciones')}
+        puede_comprobantes=any(registros[c] for c in ('registros.ver','registros.crear','registros.editar'))
         return render(request, 'usuarios/perfiles/administrador/panel.html', {
             'empresa_actual': contexto.empresa,
             'empresas': empresas,
             'acceso_restringido': True,
             'puede_ver_pendientes': pendientes,
-            'puede_gestion_claves':claves, 'puede_ver_abms': bool(autorizados),
+            'puede_gestion_claves':claves, 'puede_ver_nomina':nomina,
+            'puede_ver_caja':caja, 'puede_ver_vencimientos':vencimientos,
+            'puede_ver_registros':any(registros.values()),
+            'puede_ver_comprobantes':puede_comprobantes,
+            'puede_ver_obligaciones':registros['registros.obligaciones'],
+            'puede_ver_abms': bool(autorizados),
             'abms_autorizados':autorizados,
             'abms_codigos':[a['codigo'] for a in autorizados],
             'abms_estructura':[a for a in autorizados if a['codigo'] in ('centros','recursos','proveedores','tipos','clientes')],

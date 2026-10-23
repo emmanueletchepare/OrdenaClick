@@ -11,9 +11,9 @@ from usuarios.services.identidades import obtener_identidad_usuario_empresa
 
 
 def cartera(*, usuario, empresa_id):
+    from usuarios.services.permisos_bancarios_accion import exigir
+    exigir(usuario,empresa_id,'pendientes.salidas')
     empresa, alcance = alcance_pendientes(usuario, empresa_id)
-    if alcance is not None:
-        raise PermissionDenied('La disposición de e-Cheqs exige administración general.')
     valores = PendienteBancario.objects.filter(empresa=empresa, tipo='ECheq', estado_cartera='EnCartera').order_by('echeq_fecha_acreditacion', 'pk')
     return empresa, valores
 

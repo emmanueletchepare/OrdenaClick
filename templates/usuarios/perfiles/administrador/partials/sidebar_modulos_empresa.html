@@ -1,5 +1,5 @@
 {% comment %}Fuente única del menú de empresa. Los permisos filtran sin cambiar jerarquía.{% endcomment %}
-{% if not acceso_restringido %}
+{% if not acceso_restringido or puede_ver_registros %}
 <details class="oc-sidebar-grupo" data-oc-grupo="registros">
 <summary
     class="sidebar-nav-btn"
@@ -31,8 +31,8 @@ Registros
 
 </summary>
 <div class="oc-sidebar-hijos">
-<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-comprobantes" >Comprobantes</button>
-<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-obligaciones" >Obligaciones</button>
+{% if not acceso_restringido or puede_ver_comprobantes %}<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-comprobantes" >Comprobantes</button>{% endif %}
+{% if not acceso_restringido or puede_ver_obligaciones %}<button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-obligaciones" >Obligaciones</button>{% endif %}
 <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Carga Planificada</button>
 <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Registrar Pago</button>
 <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="registros-no-disponible" disabled title="Función aún no disponible">Modificar / Eliminar</button>
@@ -55,7 +55,7 @@ Registros
 
 
 
-{% if not acceso_restringido %}
+{% if not acceso_restringido or puede_ver_caja %}
 <button
     id="btnSidebarCaja"
     class="sidebar-nav-btn"
@@ -84,7 +84,9 @@ Registros
     </span>
 
 </button>
+{% endif %}
 
+{% if not acceso_restringido %}
 <button
     class="sidebar-nav-btn"
     type="button"
@@ -134,6 +136,8 @@ Dashboard
 </button>
 
 
+{% endif %}
+{% if not acceso_restringido or puede_ver_vencimientos %}
 <details class="oc-sidebar-grupo" data-oc-grupo="vencimientos">
 <summary class="sidebar-nav-btn" data-sidebar-item>
 <span class="sidebar-nav-icon">
@@ -168,8 +172,9 @@ Dashboard
     </details>
 </div>
 </details>
+{% endif %}
 
-
+{% if not acceso_restringido %}
 <button
     class="sidebar-nav-btn"
     type="button"
@@ -255,7 +260,7 @@ Balance
 {% endif %}
 
 
-{% if not acceso_restringido or puede_gestion_claves %}
+{% if not acceso_restringido or puede_gestion_claves or puede_ver_nomina %}
 <details class="oc-sidebar-grupo" data-oc-grupo="herramientas">
 <summary
     class="sidebar-nav-btn"
@@ -288,8 +293,10 @@ Herramientas
 
 </summary>
 <div class="oc-sidebar-hijos">
+{% if not acceso_restringido or puede_gestion_claves %}
 <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="claves" >Gestión de claves</button>
-{% if not acceso_restringido %}
+{% endif %}
+{% if not acceso_restringido or puede_ver_nomina %}
 <button type="button" id="btnNominaEmpleados" class="sidebar-nav-btn">Nómina de Empleados</button>
 {% endif %}
 </div>

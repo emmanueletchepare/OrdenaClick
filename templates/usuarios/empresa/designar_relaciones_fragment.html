@@ -36,8 +36,41 @@
         <div class="config-relaciones__titulo"><div><p>Activos</p><h3>Personas vinculadas</h3></div></div>
         <div class="config-relaciones__grid">
             <article><span>Administrador</span><strong>{{ empresa.propietario.username }}</strong><small>Fundador · no requiere asignación</small></article>
-            {% for relacion in jerarquias %}<article><span>{{ relacion.get_jerarquia_display }}</span><strong>{{ relacion.usuario.username }}</strong>{% if relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}</article>{% endfor %}
-            {% for relacion in roles_funcionales %}<article><span>{{ relacion.get_rol_display }}</span><strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small></article>{% endfor %}
+            {% for relacion in jerarquias %}
+            <article>
+                <span>{{ relacion.get_jerarquia_display }}{% if not relacion.activo %} · Revocado{% endif %}</span>
+                <strong>{{ relacion.usuario.username }}</strong>
+                {% if relacion.activo and relacion.jerarquia == 'admin_centro' %}
+                <form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion>
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="centros">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <small>Centros habilitados</small>
+                    {% for centro in centros %}
+                    <label class="config-relaciones__centro-opcion"><input type="checkbox" name="centros" value="{{ centro.pk }}" {% if centro.pk in relacion.centros_autorizados_ids %}checked{% endif %}> {{ centro.nombre }}</label>
+                    {% endfor %}
+                    <button type="submit">Guardar centros</button>
+                </form>
+                {% elif relacion.centro_operativo %}<small>{{ relacion.centro_operativo.nombre }}</small>{% endif %}
+                {% if relacion.activo %}
+                <form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion class="oc-vinculo-revocar">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="revocar_jerarquia">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <button type="submit">Revocar relación</button>
+                </form>
+                {% endif %}
+            </article>
+            {% endfor %}
+            {% for relacion in roles_funcionales %}<article>
+                <span>{{ relacion.get_rol_display }}{% if not relacion.activo %} · Revocado{% endif %}</span>
+                <strong>{{ relacion.usuario.username }}</strong><small>Rol funcional</small>
+                {% if relacion.activo %}<form method="post" action="{% url 'gestionar_relaciones_empresa' empresa.id %}" data-oc-gestionar-asignacion class="oc-vinculo-revocar">
+                    {% csrf_token %}<input type="hidden" name="accion" value="revocar_funcional">
+                    <input type="hidden" name="asignacion" value="{{ relacion.pk }}">
+                    <button type="submit">Revocar rol</button>
+                </form>{% endif %}
+            </article>{% endfor %}
         </div>
     </section>
 

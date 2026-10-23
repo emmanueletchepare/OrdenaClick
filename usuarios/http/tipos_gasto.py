@@ -1,4 +1,5 @@
 from usuarios.services.accesos_colaborador import exigir_abm
+from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 from django.db import transaction
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -54,7 +55,7 @@ def listar_tipos_gasto(request):
         "empresa"
     )
 
-    empresa = exigir_abm(
+    empresa = exigir_abm_o_registro(
             request.user,
             empresa_id,
             'abm.tipos',

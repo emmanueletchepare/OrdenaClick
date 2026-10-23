@@ -1,4 +1,5 @@
 from usuarios.services.accesos_colaborador import exigir_abm
+from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 import re
 
 from django.core.exceptions import ValidationError
@@ -143,7 +144,7 @@ def listar_proveedores(request):
         "empresa"
     )
 
-    empresa = exigir_abm(
+    empresa = exigir_abm_o_registro(
             request.user,
             empresa_id,
             'abm.proveedores',

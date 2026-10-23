@@ -82,10 +82,17 @@
             sincronizarCentro(contenedor);
         }
 
-        const form = contenedor.querySelector("[data-form-solicitud-relacion]");
-        if(form){
+        const formularios = contenedor.querySelectorAll(
+            "[data-form-solicitud-relacion], [data-oc-gestionar-asignacion]"
+        );
+        formularios.forEach(function(form){
             form.addEventListener("submit", async function(event){
                 event.preventDefault();
+                if(form.hasAttribute('data-oc-gestionar-asignacion') &&
+                   form.querySelector('[name="accion"]')?.value.startsWith('revocar') &&
+                   !window.confirm('¿Revocar esta relación y sus accesos?')){
+                    return;
+                }
 
                 const boton = form.querySelector('button[type="submit"]');
                 if(boton){
@@ -104,7 +111,7 @@
                     );
 
                     if(!respuesta.ok){
-                        throw new Error("No se pudo enviar la solicitud.");
+                        throw new Error("No se pudo guardar el cambio.");
                     }
 
                     contenedor.innerHTML = await respuesta.text();
@@ -112,13 +119,13 @@
                     inicializarFragmento(contenedor);
                 }catch(error){
                     console.error(error);
-                    alert("No se pudo enviar la solicitud.");
+                    alert("No se pudo guardar el cambio.");
                     if(boton){
                         boton.disabled = false;
                     }
                 }
             });
-        }
+        });
     }
 
     async function cargarDesignarPerfiles(url){

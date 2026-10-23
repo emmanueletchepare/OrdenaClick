@@ -1,4 +1,4 @@
-﻿import json
+import json
 import re
 
 from datetime import datetime
@@ -49,9 +49,7 @@ def guardar_movimiento(request):
         crear_pago_validado_movimiento,
         validar_pago_movimiento,
     )
-    from usuarios.services.seguridad import (
-        obtener_empresa_autorizada,
-    )
+    from usuarios.services.alcance_registros import empresa_registros, comprobar_centro, comprobar_movimiento, impedir_pagos_delegados
 
     if request.method != "POST":
 
@@ -191,10 +189,9 @@ def guardar_movimiento(request):
         # EMPRESA
         # =========================================
 
-        empresa = obtener_empresa_autorizada(
-            request.user,
-            empresa_id,
-        )
+        empresa = empresa_registros(request.user,empresa_id,'registros.crear')
+        comprobar_centro(request.user,empresa,centro_operativo_id)
+        impedir_pagos_delegados(request.user,empresa,request.POST)
 
         # =========================================
         # PREVISIÃ“N DE PAGO
@@ -1444,9 +1441,7 @@ def actualizar_movimiento(request):
         validar_pago_movimiento,
     )
 
-    from usuarios.services.seguridad import (
-        obtener_empresa_autorizada,
-    )
+    from usuarios.services.alcance_registros import empresa_registros, comprobar_centro, comprobar_movimiento, impedir_pagos_delegados
 
 
     if request.method != "POST":
@@ -1549,10 +1544,10 @@ def actualizar_movimiento(request):
         )
 
 
-    empresa = obtener_empresa_autorizada(
-        request.user,
-        empresa_id,
-    )
+    empresa = empresa_registros(request.user,empresa_id,'registros.editar')
+    comprobar_movimiento(request.user,empresa,movimiento_id)
+    comprobar_centro(request.user,empresa,request.POST.get('centro_operativo'))
+    impedir_pagos_delegados(request.user,empresa,request.POST)
 
 
     tipo_gasto_id = (
@@ -2541,6 +2536,9 @@ def actualizar_movimiento(request):
             }
         )
 
+
+    except PermissionDenied:
+        raise
 
     except Exception as error:
 

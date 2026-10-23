@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from usuarios.models import Movimiento, Proveedor
-from usuarios.services.seguridad import obtener_empresa_autorizada
+from usuarios.services.alcance_registros import empresa_registros, comprobar_movimiento
 
 
 @login_required
@@ -111,10 +111,8 @@ def verificar_comprobante_duplicado(request):
         )
 
 
-    empresa = obtener_empresa_autorizada(
-        request.user,
-        empresa_id,
-    )
+    empresa = empresa_registros(request.user,empresa_id,
+                                ('registros.ver','registros.crear','registros.editar'))
 
 
     proveedor = Proveedor.objects.filter(
@@ -225,10 +223,8 @@ def obtener_movimiento_edicion(request):
         )
 
 
-    empresa = obtener_empresa_autorizada(
-        request.user,
-        empresa_id,
-    )
+    empresa = empresa_registros(request.user,empresa_id,
+                                ('registros.ver','registros.crear','registros.editar'))
 
 
     movimiento = (
@@ -249,6 +245,8 @@ def obtener_movimiento_edicion(request):
     )
 
 
+    if movimiento:
+        comprobar_movimiento(request.user,empresa,movimiento.pk)
     if not movimiento:
 
         return JsonResponse(

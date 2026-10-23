@@ -184,6 +184,17 @@ def resolver_solicitud_relacion(*, usuario, solicitud_id, accion):
             )
             asignacion.full_clean()
             asignacion.save()
+            # Una nueva invitación reemplaza el alcance previo, nunca lo acumula.
+            asignacion.centros_adicionales.all().delete()
+            # Una reaceptación no revive permisos de una relación anterior.
+            from usuarios.models import PermisoAccesoColaborador, PermisoPendienteBancarioCentro
+            PermisoAccesoColaborador.objects.filter(empresa=empresa, usuario=usuario, activo=True).update(activo=False)
+            PermisoPendienteBancarioCentro.objects.filter(empresa=empresa, usuario=usuario, activo=True).update(activo=False)
+            from usuarios.models import PermisoNominaCentro
+            PermisoNominaCentro.objects.filter(empresa=empresa, usuario=usuario, activo=True).update(activo=False)
+            from usuarios.models import EventoGestionAsignacion
+            EventoGestionAsignacion.objects.create(empresa=empresa, usuario=usuario, actor=solicitud.solicitada_por,
+                accion='aceptar_relacion', detalle={'jerarquia':rol,'centro':getattr(solicitud.centro_operativo,'pk',None)})
         else:
             rol_funcional, _ = RolFuncionalUsuarioEmpresa.objects.get_or_create(
                 empresa=empresa,

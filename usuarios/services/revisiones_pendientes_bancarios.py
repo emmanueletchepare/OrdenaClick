@@ -25,6 +25,8 @@ def _snapshot(p):
     }
 
 def revisar_pendiente(*, usuario, empresa_id, pendiente_id, clave, motivo, datos):
+    from usuarios.services.permisos_bancarios_accion import exigir
+    exigir(usuario,empresa_id,'pendientes.editar')
     empresa, alcance = alcance_pendientes(usuario, empresa_id)
     motivo = _texto(motivo, 'Motivo de revisión', 300, obligatorio=True)
     if len(motivo) < 8:

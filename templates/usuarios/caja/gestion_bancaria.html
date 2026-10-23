@@ -13,14 +13,14 @@
 <header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div><h1>Pendientes de aplicación</h1>
 <p>{{ empresa.razon_social }} · Los movimientos sin resolver son globales únicamente dentro de esta Empresa.</p></div>
 <a class="gb-volver" href="{{ volver }}">Volver</a></header>
-{% if es_general %}
+{% if puede_cargar or puede_salidas %}
 <section class="gb-tarjeta" id="cargaBancaria">
 <div class="gb-seccion-cabeza"><h2>Cargar movimientos detectados</h2></div>
-<div class="gb-pestanas"><button type="button" class="gb-btn gb-pestana activa" data-tipo-carga="bancos">Cargar depósitos / transferencias</button>
+<div class="gb-pestanas">{% if puede_cargar %}<button type="button" class="gb-btn gb-pestana activa" data-tipo-carga="bancos">Cargar depósitos / transferencias</button>
 <button type="button" class="gb-btn gb-pestana" data-tipo-carga="echeqs">Cargar e-Cheq</button>
-<button type="button" class="gb-btn gb-pestana" data-tipo-carga="endosos">Endosar / Ceder</button>
-<button type="button" class="gb-btn gb-pestana" data-tipo-carga="salida_deposito">Depositar</button></div>
-<div data-pantalla-carga="bancos">
+{% endif %}{% if puede_salidas %}<button type="button" class="gb-btn gb-pestana{% if not puede_cargar %} activa{% endif %}" data-tipo-carga="endosos">Endosar / Ceder</button>
+<button type="button" class="gb-btn gb-pestana" data-tipo-carga="salida_deposito">Depositar</button>{% endif %}</div>
+{% if puede_cargar %}<div data-pantalla-carga="bancos">
 <form id="gbCargaBancos" class="gb-carga" autocomplete="off">{% csrf_token %}
 <div class="gb-cuenta"><label>Cuenta bancaria<select name="cuenta" required><option value="">Seleccionar cuenta</option>{% for cuenta in cuentas %}<option value="{{ cuenta.pk }}">{{ cuenta.banco.nombre }} · {{ cuenta.nombre }}</option>{% endfor %}</select></label></div>
 <div class="gb-campos gb-depositos"><label>Tipo<select name="tipo"><option value="Transferencia">Transferencia</option><option value="Deposito">Depósito</option></select></label>
@@ -54,8 +54,8 @@
 <div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Número e-Cheq</th><th>Titular / Cliente</th><th>Banco</th><th>Fecha acreditación</th><th>Condición</th><th class="gb-numero">Importe</th><th class="gb-accion">Acciones</th></tr></thead><tbody id="gbListaEcheqs"><tr><td colspan="7" class="gb-vacio">Sin e-Cheqs agregados.</td></tr></tbody></table></div>
 <button class="gb-btn gb-guardar" data-guardar-lote="echeqs" disabled type="button">Guardar todos</button>
 <p class="gb-mensaje" data-mensaje-lote="echeqs" role="status" aria-live="polite"></p></div>
-<dialog id="gbPdfSalidaDialogo" class="gb-dialog" aria-labelledby="gbPdfSalidaTitulo"><h2 id="gbPdfSalidaTitulo">Detalle para gestión bancaria</h2><p>¿Desea generar un PDF con el detalle?</p><div class="gb-dialog-acciones"><button type="button" class="gb-btn gb-btn-sec" id="gbPdfSalidaCancelar">Cancelar</button><button type="button" class="gb-btn" id="gbPdfSalidaAceptar">Aceptar</button></div></dialog>
-<div data-pantalla-carga="endosos" hidden class="gb-carga" data-salida="EndosarCeder">
+{% endif %}{% if puede_salidas %}<dialog id="gbPdfSalidaDialogo" class="gb-dialog" aria-labelledby="gbPdfSalidaTitulo"><h2 id="gbPdfSalidaTitulo">Detalle para gestión bancaria</h2><p>¿Desea generar un PDF con el detalle?</p><div class="gb-dialog-acciones"><button type="button" class="gb-btn gb-btn-sec" id="gbPdfSalidaCancelar">Cancelar</button><button type="button" class="gb-btn" id="gbPdfSalidaAceptar">Aceptar</button></div></dialog>
+<div data-pantalla-carga="endosos" {% if puede_cargar %}hidden{% endif %} class="gb-carga" data-salida="EndosarCeder">
 <div class="gb-campos"><label>Proveedor<input type="search" data-salida-proveedor-buscar list="gbProveedoresSalida" autocomplete="off" placeholder="Escribí para buscar proveedor" required><input type="hidden" data-salida-proveedor><datalist id="gbProveedoresSalida">{% for proveedor in proveedores_salida %}<option value="{{ proveedor.razon_social }}" data-id="{{ proveedor.pk }}"></option>{% endfor %}</datalist></label>
 <a class="gb-btn gb-contexto-mas" href="{% url 'abm_contextual_echeq' 'proveedores' %}" data-abrir-abm="proveedores" data-destino-abm="endosos" title="Agregar proveedor">[+]</a>
 <label>Banco de destino<select data-salida-banco required><option value="">Seleccionar banco</option>{% for banco in bancos_emisores %}<option value="{{ banco.pk }}">{{ banco.nombre }}</option>{% endfor %}</select></label>
@@ -68,7 +68,7 @@
 <div class="gb-tabla-contenedor"><table class="gb-tabla"><thead><tr><th>Seleccionar</th><th>e-Cheq / Titular</th><th>Acreditación</th><th>Condición</th><th class="gb-numero">Importe</th></tr></thead><tbody data-salida-filas="Depositar"></tbody></table></div>
 <p class="gb-ayuda" data-salida-totales="Depositar">Total depósito: $ 0,00</p>
 <button type="button" class="gb-btn" data-salida-confirmar="Depositar">Confirmar depósito</button><p class="gb-mensaje" data-salida-mensaje="Depositar" role="status"></p></div>
-<p class="gb-ayuda">Las filas se editan o quitan antes de guardar. Nada se registra hasta «Guardar todos». Al guardar, cada e-Cheq ingresa a la cartera virtual; esta bandeja no genera recibos ni movimientos de Caja.</p>
+{% endif %}<p class="gb-ayuda">Las filas se editan o quitan antes de guardar. Nada se registra hasta «Guardar todos». Al guardar, cada e-Cheq ingresa a la cartera virtual; esta bandeja no genera recibos ni movimientos de Caja.</p>
 </section>
 {% endif %}
 <section class="gb-tarjeta" id="bandejaPendientes">
@@ -85,10 +85,10 @@
 {% if pendiente.tipo == 'ECheq' %}{{ pendiente.echeq_numero }}{% if pendiente.estado_cartera == 'Rechazado' %}<small class="gb-rechazo-etiqueta">Rechazado</small>{% endif %}{% elif pendiente.referencia and pendiente.referencia != 'Sin identificar' and pendiente.referencia != pendiente.identificacion %}{{ pendiente.referencia }}{% else %}<span class="gb-tenue">—</span>{% endif %}</td>
 <td>{% if pendiente.tipo == 'ECheq' and pendiente.echeq_titular %}{{ pendiente.echeq_titular }}{% elif pendiente.identificacion %}{{ pendiente.identificacion }}{% else %}<span class="gb-tenue">Sin identificar</span>{% endif %}</td>
 <td class="gb-numero">$ {{ pendiente.importe|importe_ar }}</td>
-<td class="gb-accion">{% if estado == 'Pendiente' %}<button type="button" class="gb-btn gb-btn-menor" data-confirmar-pendiente="{{ pendiente.pk }}" data-identificacion="{{ pendiente.identificacion }}">Confirmar</button>
+<td class="gb-accion">{% if estado == 'Pendiente' %}{% if puede_resolver %}<button type="button" class="gb-btn gb-btn-menor" data-confirmar-pendiente="{{ pendiente.pk }}" data-identificacion="{{ pendiente.identificacion }}">Confirmar</button>{% endif %}
 {% else %}<span>{{ pendiente.centro_operativo.nombre }}</span><small>{{ pendiente.resuelto_por.nombre_historico|default:pendiente.resuelto_por.username_historico }} · {{ pendiente.resuelto_en|date:'d/m/Y H:i' }}</small>{% endif %}
-{% if es_general or pendiente.creado_por.usuario_id == usuario_id or pendiente.resuelto_por.usuario_id == usuario_id %}
-<button class="gb-btn gb-btn-menor gb-corregir" type="button" data-revisar-pendiente="{{ pendiente.pk }}" data-estado="{{ pendiente.estado }}" data-fecha="{{ pendiente.fecha|date:'Y-m-d' }}" data-tipo="{{ pendiente.tipo }}" data-identificacion="{{ pendiente.identificacion }}" data-importe="{{ pendiente.importe }}" data-numero="{{ pendiente.echeq_numero }}" data-titular="{{ pendiente.echeq_titular }}" data-banco="{{ pendiente.echeq_banco_nombre }}" title="{% if pendiente.estado == 'Pendiente' %}Editar con auditoría{% else %}Informar error para auditoría{% endif %}">{% if pendiente.estado == 'Pendiente' %}Editar{% else %}Auditoría{% endif %}</button>{% endif %}{% if es_general and pendiente.tipo == 'ECheq' %}<button type="button" class="gb-btn gb-btn-menor" data-estado-echeq="{{ pendiente.pk }}">Estado e historial</button>{% endif %}</td></tr>
+{% if puede_editar %}{% if es_general or pendiente.creado_por.usuario_id == usuario_id or pendiente.resuelto_por.usuario_id == usuario_id %}
+<button class="gb-btn gb-btn-menor gb-corregir" type="button" data-revisar-pendiente="{{ pendiente.pk }}" data-estado="{{ pendiente.estado }}" data-fecha="{{ pendiente.fecha|date:'Y-m-d' }}" data-tipo="{{ pendiente.tipo }}" data-identificacion="{{ pendiente.identificacion }}" data-importe="{{ pendiente.importe }}" data-numero="{{ pendiente.echeq_numero }}" data-titular="{{ pendiente.echeq_titular }}" data-banco="{{ pendiente.echeq_banco_nombre }}" title="{% if pendiente.estado == 'Pendiente' %}Editar con auditoría{% else %}Informar error para auditoría{% endif %}">{% if pendiente.estado == 'Pendiente' %}Editar{% else %}Auditoría{% endif %}</button>{% endif %}{% endif %}{% if puede_estado and pendiente.tipo == 'ECheq' %}<button type="button" class="gb-btn gb-btn-menor" data-estado-echeq="{{ pendiente.pk }}">Estado e historial</button>{% endif %}</td></tr>
 {% empty %}<tr><td colspan="5" class="gb-vacio">No hay movimientos para esta consulta.</td></tr>{% endfor %}</tbody></table></div>
 <div class="gb-paginacion">{% if pagina.has_previous %}<a href="?estado={{ estado }}{% if centro_filtro %}&centro={{ centro_filtro }}{% endif %}{% if buscar %}&buscar={{ buscar|urlencode }}{% endif %}&pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
 <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>

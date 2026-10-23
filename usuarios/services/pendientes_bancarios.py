@@ -20,6 +20,7 @@ from usuarios.models import (
     PermisoPendienteBancarioCentro,
 )
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
+from usuarios.services.alcances_centros import centros_activos_de_usuario
 from usuarios.services.identidades import obtener_identidad_usuario_empresa
 from usuarios.services.cheques import normalizar_numero_cheque
 
@@ -58,10 +59,10 @@ def alcance_pendientes(usuario, empresa_id):
     if contexto.es_superusuario or contexto.es_propietario or contexto.jerarquia == 'admin_general':
         return empresa, None
     if contexto.jerarquia == 'admin_centro':
-        pk = contexto.centro_operativo_id
-        if not pk or not CentroOperativo.objects.filter(pk=pk, empresa=empresa, activo=True).exists():
+        centros = centros_activos_de_usuario(usuario, empresa)
+        if not centros:
             raise PermissionDenied('Centro no autorizado.')
-        return empresa, frozenset({pk})
+        return empresa, centros
     if contexto.jerarquia == 'colaborador':
         centros = frozenset(PermisoPendienteBancarioCentro.objects.filter(
             empresa=empresa, usuario=usuario, activo=True,
@@ -69,6 +70,12 @@ def alcance_pendientes(usuario, empresa_id):
         ).values_list('centro_operativo_id', flat=True))
         if centros:
             return empresa, centros
+    # Consultar la bandeja global NO requiere poder confirmar en un Centro.
+    from usuarios.services.permisos_bancarios_accion import permitido
+    if any(permitido(usuario,empresa.pk,c) for c in (
+        'pendientes.ver','pendientes.crear','pendientes.editar',
+        'pendientes.resolver','pendientes.estado','pendientes.salidas')):
+        return empresa, frozenset()
     raise PermissionDenied('No tiene permisos para gestionar pendientes bancarios.')
 
 
@@ -192,9 +199,9 @@ def _normalizar_fila(empresa, datos, cuenta_id, clase):
 
 def registrar_lote(*, usuario, empresa_id, cuenta_id, clase, filas):
     """Lote atómico, idempotencia por fila, sin filas parciales ni saldos."""
+    from usuarios.services.permisos_bancarios_accion import exigir
+    exigir(usuario,empresa_id,'pendientes.crear')
     empresa, alcance = alcance_pendientes(usuario, empresa_id)
-    if alcance is not None:
-        raise PermissionDenied('Sólo administración general registra movimientos detectados.')
     if not isinstance(filas, list) or not 1 <= len(filas) <= MAX_LOTE:
         raise ValueError(f'La carga admite entre 1 y {MAX_LOTE} filas.')
     # Validación global antes de persistir.
@@ -254,6 +261,8 @@ def registrar_pendiente(*, usuario, empresa_id, datos):
 
 def resolver_pendiente(*, usuario, empresa_id, pendiente_id, centro_id,
                        identificacion, tipo_resolucion, referencia):
+    from usuarios.services.permisos_bancarios_accion import exigir
+    exigir(usuario,empresa_id,'pendientes.resolver')
     empresa, alcance = alcance_pendientes(usuario, empresa_id)
     centro = exigir_centro(centro_id, alcance, empresa)
     identificacion = _texto(identificacion, 'Identificación del cliente', 200, obligatorio=True)

@@ -158,7 +158,10 @@ class CarteraVirtualECheqTests(TestCase):
         self.activar()
         self.assertEqual(self.guardar(p).status_code, 200)
         pendientes = self.client.get(reverse('gestion_bancaria') + '?estado=Pendiente')
-        self.assertNotContains(pendientes, p.echeq_numero)
+        self.assertEqual(pendientes.status_code, 200)
+        self.assertFalse(any(
+            fila.pk == p.pk for fila in pendientes.context['pagina'].object_list
+        ), 'Un e-Cheq rechazado no debe aparecer en la tabla de Pendientes')
         resueltos = self.client.get(reverse('gestion_bancaria') + '?estado=Resuelto')
         self.assertContains(resueltos, p.echeq_numero)
         self.assertContains(resueltos, 'gb-registro-rechazado')

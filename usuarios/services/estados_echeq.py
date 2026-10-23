@@ -30,9 +30,13 @@ ETIQUETAS = {'EnCartera': 'En cartera', 'Rechazado': 'Rechazado',
 
 
 def _autorizar(usuario, empresa_id, pendiente_id, *, escritura=False):
+    from usuarios.services.permisos_bancarios_accion import exigir, permitido
+    if escritura:
+        exigir(usuario,empresa_id,'pendientes.estado')
+    elif not (permitido(usuario,empresa_id,'pendientes.estado')
+              or permitido(usuario,empresa_id,'pendientes.ver')):
+        raise PermissionDenied('Consulta de instrumento no autorizada.')
     empresa, alcance = alcance_pendientes(usuario, empresa_id)
-    if escritura and alcance is not None:
-        raise PermissionDenied('Sólo administración general puede cambiar estados de e-Cheqs.')
     p = PendienteBancario.objects.filter(pk=pendiente_id, empresa=empresa, tipo='ECheq').first()
     if p is None:
         raise PermissionDenied('Instrumento no autorizado.')
@@ -48,6 +52,8 @@ def _actor(actor):
 def consultar_estado(*, usuario, empresa_id, pendiente_id):
     empresa, p = _autorizar(usuario, empresa_id, pendiente_id)
     _, alcance = alcance_pendientes(usuario, empresa.pk)
+    from usuarios.services.permisos_bancarios_accion import permitido
+    permiso_estado = permitido(usuario,empresa.pk,'pendientes.estado')
     eventos = []
     for e in EventoPendienteBancario.objects.filter(pendiente=p, accion__in=['Creado', 'Resuelto']).select_related('actor'):
         eventos.append((e.creado, e.pk, 'A', {
@@ -79,10 +85,10 @@ def consultar_estado(*, usuario, empresa_id, pendiente_id):
         'titular': p.echeq_titular,
         'estado': p.estado_cartera,
         'gestion': p.estado,
-        'regularizar_rechazo': (alcance is None and p.estado == 'Pendiente'
+        'regularizar_rechazo': (permiso_estado and p.estado == 'Pendiente'
                                and p.estado_cartera == 'Rechazado'),
         'estado_texto': ETIQUETAS[p.estado_cartera],
-        'acciones': [a for a in TRANSICIONES[p.estado_cartera] if a != 'Vencido' or (p.echeq_fecha_acreditacion and timezone.localdate() >= p.echeq_fecha_acreditacion + timedelta(days=30))] if alcance is None else [],
+        'acciones': [a for a in TRANSICIONES[p.estado_cartera] if a != 'Vencido' or (p.echeq_fecha_acreditacion and timezone.localdate() >= p.echeq_fecha_acreditacion + timedelta(days=30))] if permiso_estado else [],
         'fecha_hoy': timezone.localdate().isoformat(),
         'historial': [e[3] for e in eventos],
     }

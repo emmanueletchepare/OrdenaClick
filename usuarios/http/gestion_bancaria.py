@@ -24,6 +24,7 @@ from django.views.decorators.http import require_GET, require_POST
 from usuarios.models import (AsignacionUsuarioEmpresa, Banco, Cliente, CentroOperativo, CuentaBancaria, Proveedor,
     PendienteBancario, PermisoPendienteBancarioCentro, RevisionPendienteBancario)
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
+from usuarios.services.permisos_bancarios_accion import permitido as permiso_bancario, exigir as exigir_bancario
 from usuarios.services.pendientes_bancarios import (
     alcance_pendientes, cambiar_permiso, registrar_lote, resolver_pendiente, ErrorFilaPendiente,
 )
@@ -51,6 +52,7 @@ def entrar_gestion_bancaria(request):
     """Entrada explícita desde la Empresa elegida fuera del módulo."""
     try:
         empresa, _ = alcance_pendientes(request.user, request.POST.get('empresa'))
+        exigir_bancario(request.user,empresa.pk,'pendientes.ver')
     except (PermissionDenied, TypeError, ValueError):
         return HttpResponseForbidden('No tiene permiso para ingresar a esta Empresa.')
     origen = request.POST.get('origen')
@@ -75,6 +77,12 @@ def gestion_bancaria(request):
         empresa, centros_habilitados = _empresa_activa(request)
     except (PermissionDenied, ValueError, TypeError):
         return HttpResponseForbidden('No tiene una Empresa activa autorizada.')
+    exigir_bancario(request.user,empresa.pk,'pendientes.ver')
+    puede_cargar=permiso_bancario(request.user,empresa.pk,'pendientes.crear')
+    puede_salidas=permiso_bancario(request.user,empresa.pk,'pendientes.salidas')
+    puede_editar=permiso_bancario(request.user,empresa.pk,'pendientes.editar')
+    puede_resolver=permiso_bancario(request.user,empresa.pk,'pendientes.resolver')
+    puede_estado=permiso_bancario(request.user,empresa.pk,'pendientes.estado')
     estado = request.GET.get('estado', 'Pendiente')
     if estado not in ('Pendiente', 'Resuelto'):
         return HttpResponseForbidden('Filtro inválido.')
@@ -119,16 +127,19 @@ def gestion_bancaria(request):
     pendientes = pendientes.select_related('resuelto_por', 'creado_por', 'centro_operativo').order_by('-fecha', '-creado', '-pk')
     pagina = Paginator(pendientes, 25).get_page(request.GET.get('pagina', 1))
     es_general = centros_habilitados is None
-    cuentas = CuentaBancaria.objects.filter(empresa=empresa, activo=True).select_related('banco').order_by('nombre') if es_general else []
-    bancos_emisores = Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre') if es_general else []
-    proveedores_salida = Proveedor.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if es_general else []
-    clientes_titulares = Cliente.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if es_general else []
+    cuentas = CuentaBancaria.objects.filter(empresa=empresa, activo=True).select_related('banco').order_by('nombre') if (puede_cargar or puede_salidas) else []
+    bancos_emisores = Banco.objects.filter(empresa=empresa, activo=True).order_by('nombre') if (puede_cargar or puede_salidas) else []
+    proveedores_salida = Proveedor.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if puede_salidas else []
+    clientes_titulares = Cliente.objects.filter(empresa=empresa, activo=True).order_by('razon_social') if puede_cargar else []
     return render(request, 'usuarios/caja/gestion_bancaria.html', {
         'empresa': empresa, 'pagina': pagina, 'estado': estado,
         'centro_filtro': centro_filtro, 'centros': centros, 'cuentas': cuentas,
         'bancos_emisores': bancos_emisores, 'clientes_titulares': clientes_titulares,
         'proveedores_salida': proveedores_salida,
-        'es_general': es_general, 'fecha_hoy': timezone.localdate(),
+        'es_general': es_general,
+        'puede_cargar':puede_cargar,'puede_salidas':puede_salidas,
+        'puede_editar':puede_editar,'puede_resolver':puede_resolver,
+        'puede_estado':puede_estado,'fecha_hoy': timezone.localdate(),
         'volver': _volver(request), 'usuario_id': request.user.pk,
         'buscar': buscar, 'fecha_minima_echeq': timezone.localdate() - timedelta(days=30),
     })

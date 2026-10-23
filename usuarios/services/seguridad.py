@@ -1,6 +1,7 @@
 from django.core.exceptions import PermissionDenied
 
 from usuarios.models import AsignacionUsuarioEmpresa, Empresa
+from usuarios.services.alcances_centros import centros_activos_de_asignacion
 
 
 JERARQUIAS_ADMINISTRACION_EMPRESA = {
@@ -173,7 +174,7 @@ def obtener_centro_autorizado(
     if (
         asignacion.jerarquia
         == AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO
-        and asignacion.centro_operativo_id == centro.id
+        and centro.id in centros_activos_de_asignacion(asignacion)
     ):
         return empresa, centro
 
@@ -242,14 +243,13 @@ def cajas_autorizadas(
     if (
         asignacion.jerarquia
         == AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO
-        and asignacion.centro_operativo_id
     ):
-        return (
-            empresa,
-            cajas.filter(
-                centro_operativo_id=asignacion.centro_operativo_id,
-            ),
-        )
+        from usuarios.services.accesos_colaborador import puede
+        if not puede(usuario, empresa.pk, 'caja.total'):
+            raise PermissionDenied('Caja no habilitada por Administración general.')
+        centros = centros_activos_de_asignacion(asignacion)
+        if centros:
+            return empresa, cajas.filter(centro_operativo_id__in=centros)
 
     raise PermissionDenied(
         "No tiene autorización para operar sobre Caja."

@@ -156,7 +156,7 @@
         limpiarMenuSuperior();
         return;
       }
-      if (document.body.dataset.accesoRestringido === '1') return;
+      if (document.body.dataset.accesoRestringido === '1' && !document.getElementById('btnProximosVencimientos')) return;
       const botones = {
         'vencimientos-hoy': 'btnVencimientosHoy',
         'vencimientos-semana': 'btnVencimientosSemana',

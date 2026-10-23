@@ -10,3 +10,11 @@ html.oc-accesos-en-panel .gb-tarjeta { min-width:0; max-width:100%; overflow:hid
 html.oc-accesos-en-panel .oc-acceso-hijos { grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr)); min-width:0; }
 html.oc-accesos-en-panel .oc-acceso-hijos label { min-width:0; overflow-wrap:anywhere; }
 html.oc-accesos-en-panel .oc-acceso-grupo { min-width:0; }
+/* Nómina: bloque nuevo dentro de la tarjeta actual, sin modificar sidebar. */
+.oc-nomina-centros{border:1px solid #273344;border-radius:11px;padding:12px 15px;margin:14px 0;color:inherit}
+.oc-nomina-centros legend{padding:0 8px;font-weight:700}
+.oc-nomina-centros p{font-size:13px;opacity:.82;margin:6px 0 10px}
+.oc-nomina-centros label{display:inline-flex;align-items:center;gap:8px;margin:8px 14px 4px 0;font-size:13px}
+/* Módulos visibles pero no concedibles: texto informativo, NUNCA casilla bloqueada. */
+.oc-acceso-hijos .oc-acceso-informativo{font-size:13px;color:#cbd5e1;line-height:1.4}
+.oc-acceso-hijos .oc-acceso-informativo small{display:block;color:#94a3b8;margin-top:2px}

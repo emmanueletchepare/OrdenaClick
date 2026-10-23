@@ -23,7 +23,7 @@ class EmpleadoForm(forms.ModelForm):
             'fecha_ingreso': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
         }
 
-    def __init__(self, *args, empresa, **kwargs):
+    def __init__(self, *args, empresa, centros_permitidos=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.empresa = empresa
         # Modelo: 11 dígitos; pantalla: 13 caracteres con guiones, como CUIT.
@@ -40,7 +40,10 @@ class EmpleadoForm(forms.ModelForm):
         self.fields['centro_operativo'].required = True
         self.fields['centro_operativo'].required = True
         self.fields['centro_operativo'].required = True
-        self.fields['centro_operativo'].queryset = CentroOperativo.objects.filter(empresa=empresa, activo=True)
+        centros = CentroOperativo.objects.filter(empresa=empresa, activo=True)
+        if centros_permitidos is not None:
+            centros = centros.filter(pk__in=centros_permitidos)
+        self.fields['centro_operativo'].queryset = centros
         self.fields['vehiculo'].queryset = RecursoOperativo.objects.filter(empresa=empresa, activo=True, tipo_recurso='Vehiculo')
         self.fields['banco'].queryset = Banco.objects.filter(empresa=empresa, activo=True)
         for name in ('centro_operativo', 'vehiculo', 'banco'):

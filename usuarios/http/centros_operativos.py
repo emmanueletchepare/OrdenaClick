@@ -1,4 +1,5 @@
 from usuarios.services.accesos_colaborador import exigir_abm
+from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -17,7 +18,7 @@ def listar_centros_operativos(request):
 
     empresa_id = request.GET.get("empresa")
 
-    contexto = exigir_abm(
+    contexto = exigir_abm_o_registro(
             request.user,
             empresa_id,
             'abm.centros',
@@ -29,6 +30,8 @@ def listar_centros_operativos(request):
         activo=True
     ).order_by("nombre")
 
+    from usuarios.services.lectura_maestros_registros import limitar_centros
+    centros = limitar_centros(centros,request.user,empresa)
     html = render_to_string(
         "usuarios/maestros/centros_operativos.html",
         {

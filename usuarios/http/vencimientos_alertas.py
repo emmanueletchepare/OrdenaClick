@@ -11,6 +11,10 @@ from usuarios.services.financiero import (
 )
 from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empresa_administrable
 from usuarios.services.nomina import alertas_pendientes
+from usuarios.services.accesos_colaborador import exigir, puede
+from usuarios.services.alcances_centros import centros_activos_de_usuario
+from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
+from usuarios.services.alcance_nomina import restringir_nomina
 
 
 @login_required
@@ -38,25 +42,23 @@ def estado_llamador_alertas(request):
             status=400,
         )
 
-    empresa = obtener_empresa_autorizada(
-        request.user,
-        empresa_id,
-    )
+    empresa = exigir(request.user, empresa_id, 'vencimientos.ver')
+    contexto = obtener_contexto_capacidades_empresa(request.user, empresa.pk)
+    centros_permitidos = (centros_activos_de_usuario(request.user,empresa)
+                          if contexto.jerarquia == 'admin_centro' else None)
 
-    mostrar_llamador = (
-        movimientos_en_alerta(
-            empresa=empresa,
-            fecha_referencia=date.today(),
-        )
-        .exists()
-    )
+    movimientos = movimientos_en_alerta(empresa=empresa,fecha_referencia=date.today())
+    if centros_permitidos is not None:
+        movimientos = movimientos.filter(centro_operativo_id__in=centros_permitidos)
+    mostrar_llamador = movimientos.exists()
 
     # Las licencias sólo pueden activar el llamador para perfiles con permiso
     # real de Nómina; no filtrar su existencia a otros usuarios.
     if not mostrar_llamador:
         try:
-            obtener_empresa_administrable(request.user, empresa.pk)
-            mostrar_llamador = alertas_pendientes(empresa, date.today()).exists()
+            alertas = restringir_nomina(alertas_pendientes(empresa,date.today()),request.user,
+                                       empresa.pk,'empleado__centro_operativo_id')
+            mostrar_llamador = alertas.exists()
         except PermissionDenied:
             pass
 
@@ -102,10 +104,10 @@ def listar_proximos_vencimientos(request):
             status=400,
         )
 
-    empresa = obtener_empresa_autorizada(
-        request.user,
-        empresa_id,
-    )
+    empresa = exigir(request.user, empresa_id, 'vencimientos.ver')
+    contexto = obtener_contexto_capacidades_empresa(request.user, empresa.pk)
+    centros_permitidos = (centros_activos_de_usuario(request.user,empresa)
+                          if contexto.jerarquia == 'admin_centro' else None)
 
     hoy = date.today()
 
@@ -244,6 +246,8 @@ def listar_proximos_vencimientos(request):
             status=400,
         )
 
+    if centros_permitidos is not None:
+        movimientos = movimientos.filter(centro_operativo_id__in=centros_permitidos)
     datos = []
 
     for movimiento in movimientos:
@@ -299,11 +303,12 @@ def listar_proximos_vencimientos(request):
     licencias_nomina = []
     if periodo == 'alertas':
         try:
-            obtener_empresa_administrable(request.user, empresa.pk)
+            alertas = restringir_nomina(alertas_pendientes(empresa,hoy),request.user,
+                                       empresa.pk,'empleado__centro_operativo_id')
             licencias_nomina = [
                 {'empleado_id': a.empleado_id, 'nombre': a.empleado.nombre_apellido,
                  'vence': a.fecha_vencimiento.isoformat()}
-                for a in alertas_pendientes(empresa, hoy)
+                for a in alertas
             ]
         except PermissionDenied:
             pass

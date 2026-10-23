@@ -12,3 +12,9 @@ body{min-height:100vh;background:var(--bg);font-family:Inter,Arial,sans-serif;co
 @media(max-width:800px){.relations-header,.request-row{flex-direction:column;align-items:stretch}.relation-grid,.relation-form{grid-template-columns:1fr}.relation-form .full{grid-column:auto}.request-actions{justify-content:flex-end}}
 
 .relation-link{margin-top:6px;color:#93c5fd;text-decoration:none;font-size:13px;font-weight:700}.relation-link:hover{color:#fff}
+
+/* Gestión de asignaciones: misma estética de tarjetas de Relaciones. */
+.relation-card form[data-oc-gestionar-asignacion]{margin-top:8px;display:block}
+.relation-card .relation-centro-opcion{display:flex;align-items:center;gap:7px;margin:7px 0;color:#dbe3ef;font-size:13px;line-height:1.4}
+.relation-card form[data-oc-gestionar-asignacion] button{margin-top:8px;padding:8px 12px;border-radius:9px;background:#2563eb;border:1px solid #3b82f6;color:#fff;font-weight:600;cursor:pointer}
+.relation-card .oc-vinculo-revocar button{background:transparent;border-color:#4b3340;color:#fca5a5}

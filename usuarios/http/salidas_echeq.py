@@ -59,6 +59,8 @@ def pdf_salida(request, operacion_id):
     from usuarios.services.pendientes_bancarios import alcance_pendientes
     from usuarios.services.documentos_pdf import crear_documento
     try:
+        from usuarios.services.permisos_bancarios_accion import exigir
+        exigir(request.user,_empresa(request),'pendientes.salidas')
         empresa, alcance = alcance_pendientes(request.user, _empresa(request))
         if alcance is not None:
             raise PermissionDenied('No autorizado.')
@@ -100,6 +102,8 @@ def pdf_salida(request, operacion_id):
     from usuarios.services.pendientes_bancarios import alcance_pendientes
     from usuarios.services.documentos_pdf import crear_documento
     try:
+        from usuarios.services.permisos_bancarios_accion import exigir
+        exigir(request.user,_empresa(request),'pendientes.salidas')
         empresa, alcance = alcance_pendientes(request.user, _empresa(request))
         if alcance is not None:
             raise PermissionDenied('No autorizado.')

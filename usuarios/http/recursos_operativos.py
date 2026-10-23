@@ -1,4 +1,5 @@
 from usuarios.services.accesos_colaborador import exigir_abm
+from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import JsonResponse
@@ -97,7 +98,7 @@ def listar_recursos_operativos(request):
     )
 
 
-    contexto = exigir_abm(
+    contexto = exigir_abm_o_registro(
             request.user,
             empresa_id,
             'abm.recursos',
@@ -133,6 +134,9 @@ def listar_recursos_operativos(request):
     )
 
 
+    from usuarios.services.lectura_maestros_registros import limitar_recursos, limitar_centros
+    recursos = limitar_recursos(recursos,request.user,empresa)
+    centros = limitar_centros(centros,request.user,empresa)
     html = render_to_string(
         "usuarios/maestros/recursos_operativos.html",
         {

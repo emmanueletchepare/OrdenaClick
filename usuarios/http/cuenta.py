@@ -40,6 +40,15 @@ def seleccionar_perfil(request, perfil):
     }
 
     destino = destinos.get(perfil)
+    if perfil in ('contable','legal'):
+        from usuarios.models import RolFuncionalUsuarioEmpresa
+        from usuarios.services.accesos_colaborador import puede
+        from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
+        for empresa_id in RolFuncionalUsuarioEmpresa.objects.filter(
+                usuario=request.user,rol=perfil,activo=True).values_list('empresa_id',flat=True):
+            if puede(request.user,empresa_id,'nomina.total'):
+                from django.urls import reverse
+                return redirect(reverse('panel_administrar') + '?empresa=' + str(empresa_id))
 
     if destino is None:
         return redirect("home")

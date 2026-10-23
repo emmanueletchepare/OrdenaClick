@@ -27,3 +27,12 @@ Cada título tiene casilla y despliegue. Las casillas de títulos agrupan las ca
 ## Prohibiciones
 
 No copiar íntegramente paneles, no elevar permisos mediante rol visual, no presentar datos de otras Empresas, no esconder únicamente botones sin autorizar en servidor, no tocar Nómina ni Caja para esta etapa, no cambiar estética sin autorización, no instalar sobre hashes distintos, no incluir SQLite en commits.
+
+## CIERRE PERMISOS REGISTROS Y BANCARIOS 2026-10-22 — implementación controlada
+
+- Gestión de Accesos: Registros (consultar, crear, editar, Obligaciones informativas) y Pendientes bancarios (consultar, precargar, editar/auditar, confirmar, estado y salidas e-Cheq) disponibles por casillas explícitas y auditadas; ninguna función inexistente muta datos. La pantalla Obligaciones sigue informativa/en desarrollo.
+- Pendientes bancarios continúan GLOBALES dentro de la Empresa hasta la confirmación. El Centro Operativo se determina recién cuando el usuario confirma, y el backend valida los Centros de su alcance. Los Resueltos solo se ven por Centro autorizado, salvo administración general. No generar Caja, Pago, Recibo ni saldo por esa confirmación.
+- Asignaciones bancarias POR CENTRO previamente otorgadas mantienen compatibilidad. La primera configuración explícita desde Gestión de Accesos prevalece sobre concesiones legadas, incluyendo revocaciones de acciones; la auditoría permanece intacta.
+- Registros: leer selectores de ABM no permite modificarlos. Consultar/crear/editar comprobantes NO concede Registrar Pago, débito automático ni Caja; los endpoints de pago mantienen su autorización histórica independiente. Administrador de Centro queda limitado a sus Centros, sin abrir Configuración. La jerarquía Administrador general NO concede por sí sola la escritura de Movimientos, conforme a la prueba histórica de seguridad.
+- Un solo sidebar compartido, sin nuevos botones flotantes, sin cambiar jerarquías, CSS ni retornos. Nómina por Centro, claves propias y permisos de Caja permanecen independientes.
+- **Instalación y regresiones verificadas en Casa:** el helper aplicó los cambios, `manage.py check`, `makemigrations --check --dry-run` y la suite seleccionada terminaron sin fallos. **Aún falta aprobación visual/funcional por perfiles y commit selectivo.**
