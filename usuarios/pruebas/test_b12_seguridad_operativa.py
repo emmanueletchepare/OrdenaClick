@@ -227,9 +227,19 @@ class CierreSesionB12Tests(TestCase):
         self.assertRedirects(resultado, reverse("login"))
         self.assertNotIn("_auth_user_id", cliente.session)
 
+    def test_colaborador_historico_redirige_y_conserva_logout_seguro(self):
+        self.client.force_login(self.usuario)
+        respuesta = self.client.get(reverse('panel_colaborador'))
+        self.assertRedirects(respuesta, reverse('panel_administrar'))
+        pagina = self.client.get(reverse('panel_administrar'))
+        self.assertEqual(pagina.status_code, 200)
+        self.assertContains(pagina, f'action="{reverse("logout")}"')
+        self.assertNotContains(pagina, f'href="{reverse("logout")}"')
+        self.assertContains(pagina, 'name="csrfmiddlewaretoken"')
+
     def test_pantallas_tienen_formulario_post_y_no_link_get_logout(self):
         self.client.force_login(self.usuario)
-        for nombre in ("home", "panel_admin", "panel_colaborador", "panel_contable", "panel_legal"):
+        for nombre in ("home", "panel_admin", "panel_administrar", "panel_contable", "panel_legal"):
             with self.subTest(pantalla=nombre):
                 pagina = self.client.get(reverse(nombre))
                 self.assertEqual(pagina.status_code, 200)

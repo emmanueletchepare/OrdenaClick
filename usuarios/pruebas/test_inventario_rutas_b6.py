@@ -16,6 +16,10 @@ class InventarioDinamicoRutasB6Tests(TestCase):
     PUBLICAS = {"login", "registro", "recuperar_contrasena", "recuperar_contrasena_enviada", "recuperar_contrasena_confirmar", "recuperar_contrasena_completada"}
     PARAMETROS = {
         "empresa_id": 999999,
+        "empleado_id": 999999,
+        "caso_id": 999999,
+        "documento_id": 999999,
+        "operacion_id": 999999,
         "pendiente_id": 999999,
         "movimiento_id": 999999,
         "solicitud_id": 999999,

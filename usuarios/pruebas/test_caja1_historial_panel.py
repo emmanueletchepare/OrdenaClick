@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from usuarios.models import AsignacionUsuarioEmpresa, CentroOperativo, Caja, Empresa, MovimientoCaja
+from usuarios.models import AsignacionUsuarioEmpresa, CentroOperativo, Caja, Empresa, MovimientoCaja, PermisoAccesoColaborador
 from usuarios.services.identidades import obtener_identidad_usuario_empresa
 
 
@@ -29,6 +29,8 @@ class HistorialPanelCajaTests(TestCase):
         cls.caja_ajena = Caja.objects.create(empresa=cls.empresa_ajena, centro_operativo=cls.otra, nombre='Ajena', activo=True)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.general, jerarquia='admin_general', activo=True)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.admin, jerarquia='admin_centro', centro_operativo=cls.tandil, activo=True)
+        PermisoAccesoColaborador.objects.create(empresa=cls.empresa, usuario=cls.admin,
+            codigo='caja.total', activo=True, otorgado_por=cls.dueno)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.colaborador, jerarquia='colaborador', activo=True)
         cls.hoy = timezone.localdate()
         cls.ayer = cls.hoy - timedelta(days=1)
@@ -80,6 +82,12 @@ class HistorialPanelCajaTests(TestCase):
     def test_id_de_caja_fuera_de_alcance_da_403(self):
         self.assertEqual(self.historial(self.admin, self.caja_central.pk).status_code, 403)
         self.assertEqual(self.historial(self.dueno, self.caja_ajena.pk).status_code, 403)
+
+    def test_admin_centro_revocado_no_consulta_historial(self):
+        PermisoAccesoColaborador.objects.filter(
+            empresa=self.empresa, usuario=self.admin, codigo='caja.total',
+        ).update(activo=False)
+        self.assertEqual(self.historial(self.admin, 'todas').status_code, 403)
 
     def test_colaborador_no_gana_acceso_a_caja(self):
         self.assertEqual(self.historial(self.colaborador, 'todas').status_code, 403)

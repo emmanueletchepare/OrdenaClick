@@ -309,7 +309,7 @@ class JerarquiasSeguridadTests(TestCase):
     """
 
     def setUp(self):
-        from usuarios.models import AsignacionUsuarioEmpresa, Caja
+        from usuarios.models import AsignacionUsuarioEmpresa, Caja, PermisoAccesoColaborador
 
         self.propietario = User.objects.create_user(
             username="fundador_seguridad",
@@ -395,6 +395,10 @@ class JerarquiasSeguridadTests(TestCase):
             jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO,
             centro_operativo=self.centro_uno,
             activo=True,
+        )
+        PermisoAccesoColaborador.objects.create(
+            empresa=self.empresa, usuario=self.admin_centro, codigo='caja.total',
+            activo=True, otorgado_por=self.propietario,
         )
         AsignacionUsuarioEmpresa.objects.create(
             empresa=self.empresa,
@@ -494,6 +498,14 @@ class JerarquiasSeguridadTests(TestCase):
                 self.empresa.pk,
                 self.caja_dos.pk,
             )
+
+    def test_admin_centro_sin_permiso_explicitamente_denegado(self):
+        from usuarios.models import PermisoAccesoColaborador
+        PermisoAccesoColaborador.objects.filter(
+            empresa=self.empresa, usuario=self.admin_centro, codigo='caja.total',
+        ).update(activo=False)
+        with self.assertRaises(PermissionDenied):
+            cajas_autorizadas(self.admin_centro, self.empresa.pk)
 
     def test_colaborador_no_tiene_acceso_a_caja(self):
         with self.assertRaises(PermissionDenied):

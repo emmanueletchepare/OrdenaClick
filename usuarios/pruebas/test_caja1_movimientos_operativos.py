@@ -14,7 +14,7 @@ from django.urls import reverse
 
 from usuarios.models import (
     AsignacionUsuarioEmpresa, Caja, CentroOperativo, Empresa,
-    IdempotenciaMovimientoCaja, MovimientoCaja,
+    IdempotenciaMovimientoCaja, MovimientoCaja, PermisoAccesoColaborador,
 )
 from usuarios.services.caja_disponibilidad import saldo_efectivo_caja
 from usuarios.services.caja_movimientos import registrar_movimiento_caja
@@ -42,6 +42,8 @@ class MovimientosOperativosCaja1Tests(TestCase):
             jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_GENERAL, activo=True)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.admin_centro,
             jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_ADMIN_CENTRO, centro_operativo=cls.sucursal, activo=True)
+        PermisoAccesoColaborador.objects.create(empresa=cls.empresa, usuario=cls.admin_centro,
+            codigo='caja.total', activo=True, otorgado_por=cls.dueno)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.colaborador,
             jerarquia=AsignacionUsuarioEmpresa.JERARQUIA_COLABORADOR, activo=True)
         AsignacionUsuarioEmpresa.objects.create(empresa=cls.empresa, usuario=cls.inactivo,
@@ -147,6 +149,19 @@ class MovimientosOperativosCaja1Tests(TestCase):
         self.assertEqual(self.post(user=self.admin_centro, caja=self.caja_central).status_code, 403)
         self.assertEqual(self.post(user=self.admin_centro, caja=self.caja_sucursal).status_code, 201)
         self.assertFalse(MovimientoCaja.objects.filter(caja=self.caja_central).exists())
+
+    def test_admin_centro_revocado_no_consulta_ni_opera_caja(self):
+        PermisoAccesoColaborador.objects.filter(
+            empresa=self.empresa, usuario=self.admin_centro, codigo='caja.total',
+        ).update(activo=False)
+        self.client.force_login(self.admin_centro)
+        respuesta = self.client.get(reverse('vista_movimientos_caja'), {
+            'empresa': self.empresa.pk, 'caja': self.caja_sucursal.pk,
+        })
+        self.assertEqual(respuesta.status_code, 403)
+        respuesta = self.post(user=self.admin_centro, caja=self.caja_sucursal)
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertFalse(MovimientoCaja.objects.filter(caja=self.caja_sucursal).exists())
 
     def test_admin_general_puede_elegir_cualquier_caja_pero_no_empresa_ajena(self):
         self.assertEqual(self.post(user=self.general, caja=self.caja_central).status_code, 201)

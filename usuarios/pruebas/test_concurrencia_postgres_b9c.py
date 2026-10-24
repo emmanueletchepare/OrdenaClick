@@ -12,13 +12,14 @@ from threading import Barrier
 
 from django.contrib.auth.models import User
 from django.db import connection, connections
-from django.test import Client, TransactionTestCase
+from django.test import Client, TransactionTestCase, tag
 from django.urls import reverse
 
 from usuarios.models import (AplicacionPago, Ejercicio, Empresa,
                              IdempotenciaPagoManual, Movimiento, Pago)
 
 
+@tag('postgresql_only')
 class ConcurrenciaPostgresB9cTests(TransactionTestCase):
     def setUp(self):
         if connection.vendor != 'postgresql':

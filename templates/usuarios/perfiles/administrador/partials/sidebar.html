@@ -41,6 +41,40 @@ Ordena<span>click</span>
         {% endfor %}
     {% endif %}
     <a href="{% url 'home' %}" class="sidebar-nav-btn sidebar-nav-secondary">Volver al inicio</a>
+
+<form method="post" action="{% url 'logout' %}">
+{% csrf_token %}
+<button type="submit"
+    class="
+        sidebar-nav-btn
+        sidebar-nav-danger
+    "
+>
+
+<span class="sidebar-nav-icon">
+
+<svg viewBox="0 0 24 24">
+    <path d="M10 17l5-5-5-5"></path>
+    <path d="M15 12H3"></path>
+    <path
+        d="
+            M15 3h4
+            a2 2 0 0 1 2 2
+            v14
+            a2 2 0 0 1-2 2
+            h-4
+        "
+    ></path>
+</svg>
+
+</span>
+
+<span class="sidebar-nav-text">
+Salir
+</span>
+
+</button>
+</form>
 </div>
 {% else %}
 {% if not empresa_actual %}

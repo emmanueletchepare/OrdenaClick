@@ -770,7 +770,6 @@ urlpatterns = [
     path("gestion-bancaria/salidas/", listar_salidas, name="echeq_salidas_listar"),
     path("gestion-bancaria/salidas/confirmar/", confirmar_salida, name="echeq_salidas_confirmar"),
     path("gestion-bancaria/salidas/<int:operacion_id>/pdf/", pdf_salida, name="echeq_salida_pdf"),
-    path("gestion-bancaria/salidas/<int:operacion_id>/pdf/", pdf_salida, name="echeq_salida_pdf"),
     path("gestion-bancaria/echeq/<int:pendiente_id>/estado/", estado_echeq_detalle,
          name="estado_echeq_detalle"),
     path("gestion-bancaria/echeq/<int:pendiente_id>/registrar-estado/", estado_echeq_registrar,
