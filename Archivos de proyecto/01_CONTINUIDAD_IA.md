@@ -425,3 +425,18 @@ recién entonces commit/push código y docs por separado.
 - Registros: leer selectores de ABM no permite modificarlos. Consultar/crear/editar comprobantes NO concede Registrar Pago, débito automático ni Caja; los endpoints de pago mantienen su autorización histórica independiente. Administrador de Centro queda limitado a sus Centros, sin abrir Configuración. La jerarquía Administrador general NO concede por sí sola la escritura de Movimientos, conforme a la prueba histórica de seguridad.
 - Un solo sidebar compartido, sin nuevos botones flotantes, sin cambiar jerarquías, CSS ni retornos. Nómina por Centro, claves propias y permisos de Caja permanecen independientes.
 - **Instalación y regresiones verificadas en Casa:** el helper aplicó los cambios, `manage.py check`, `makemigrations --check --dry-run` y la suite seleccionada terminaron sin fallos. **Aún falta aprobación visual/funcional por perfiles y commit selectivo.**
+
+
+## Continuidad de implementación — Alertas Bloque A (23/10/2026)
+
+Baseline verificado GitHub `main`: `0c09140b4f38db3005d290d8120349e044b32b83`.
+La nota de 22/10 que indicaba "commit pendiente" es histórica: ese commit se publicó.
+La siguiente evolución aprobada separa Alertas como módulo principal del sidebar,
+sin reemplazar el panel Administrar ni agregar navegación superior. Próximos
+vencimientos conserva Hoy, Esta semana y Rango de fechas. La campanita conserva
+animación y sonido, con navegación dentro de `#contenido-operativo`.
+`alertas.ver` no sustituye permisos de origen ni habilita información sensible.
+No se configura aún suscripción/lectura por destinatario ni eventos de Pendientes
+bancarios u Órdenes de Pago. Helpers: `--plan`, `--apply`, SHA, backup externo,
+rollback y pruebas con aprobación visual antes de commit.
+La aplicación de este helper NO certifica Beta ni sustituye pruebas locales.

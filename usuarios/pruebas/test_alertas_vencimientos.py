@@ -134,7 +134,7 @@ class ProximosVencimientosViewTests(TestCase):
 
     def test_alertas_respeta_politica_de_tres_dias(self):
         """
-        El endpoint de Próximos Vencimientos debe utilizar
+        El endpoint independiente de Alertas debe utilizar
         la política central de Alertas.
 
         Un Movimiento que vence dentro de tres días debe
@@ -169,7 +169,7 @@ class ProximosVencimientosViewTests(TestCase):
 
         respuesta = self.client.get(
             reverse(
-                "listar_proximos_vencimientos"
+                "listar_alertas"
             ),
             {
                 "empresa": self.empresa.id,
@@ -241,7 +241,7 @@ class ProximosVencimientosViewTests(TestCase):
 
         respuesta = self.client.get(
             reverse(
-                "listar_proximos_vencimientos"
+                "listar_alertas"
             ),
             {
                 "empresa": self.empresa.id,

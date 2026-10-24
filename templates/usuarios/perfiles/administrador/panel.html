@@ -70,7 +70,7 @@ value="{{ empresa_actual.id }}">
 
 {% include 'usuarios/perfiles/administrador/partials/main.html' %}
 
-{% if not acceso_restringido %}
+{% if not acceso_restringido or puede_ver_alertas %}
 {% include 'usuarios/perfiles/administrador/partials/alertas.html' %}
 {% endif %}
 
@@ -98,8 +98,11 @@ value="{{ empresa_actual.id }}">
 {% if puede_ver_nomina %}
 <script src="{% static 'js/perfiles/administrador/nomina_en_panel.js' %}?v=50" defer></script>
 {% endif %}
-{% if puede_ver_vencimientos %}
-<script src="{% static 'js/componentes/vencimientos.js' %}?v=4"></script>
+{% if puede_ver_vencimientos or puede_ver_alertas %}
+<script src="{% static 'js/componentes/vencimientos.js' %}?v=5"></script>
+{% endif %}
+{% if puede_ver_alertas %}
+<script src="{% static 'js/componentes/llamador_alertas.js' %}?v=3"></script>
 {% endif %}
 {% if puede_ver_registros %}
 <script src="{% static 'js/perfiles/administrador/panel_carga_simple.js' %}?v=1"></script>
@@ -147,9 +150,9 @@ value="{{ empresa_actual.id }}">
 
 <script src="{% static 'js/comunes/sidebar.js' %}?v=1"></script>
 
-<script src="{% static 'js/componentes/vencimientos.js' %}?v=4"></script>
+<script src="{% static 'js/componentes/vencimientos.js' %}?v=5"></script>
 
-<script src="{% static 'js/componentes/llamador_alertas.js' %}?v=2"></script>
+<script src="{% static 'js/componentes/llamador_alertas.js' %}?v=3"></script>
 
 <script src="{% static 'js/caja/caja.js' %}?v=11"></script>
 

@@ -153,6 +153,7 @@ from .http.recursos_operativos import (
 from .http.vencimientos_alertas import (
     estado_llamador_alertas,
     listar_proximos_vencimientos,
+    listar_alertas,
 )
 
 from .http.movimientos_consultas import (
@@ -710,6 +711,11 @@ urlpatterns = [
         "alertas/llamador/",
         estado_llamador_alertas,
         name="estado_llamador_alertas",
+    ),
+    path(
+        "alertas/listado/",
+        listar_alertas,
+        name="listar_alertas",
     ),
 
 

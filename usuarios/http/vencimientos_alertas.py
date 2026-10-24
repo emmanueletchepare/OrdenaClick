@@ -11,6 +11,7 @@ from usuarios.services.financiero import (
 )
 from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empresa_administrable
 from usuarios.services.nomina import alertas_pendientes
+from usuarios.models import Movimiento
 from usuarios.services.accesos_colaborador import exigir, puede
 from usuarios.services.alcances_centros import centros_activos_de_usuario
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
@@ -42,15 +43,17 @@ def estado_llamador_alertas(request):
             status=400,
         )
 
-    empresa = exigir(request.user, empresa_id, 'vencimientos.ver')
+    empresa = exigir(request.user, empresa_id, 'alertas.ver')
     contexto = obtener_contexto_capacidades_empresa(request.user, empresa.pk)
     centros_permitidos = (centros_activos_de_usuario(request.user,empresa)
                           if contexto.jerarquia == 'admin_centro' else None)
 
-    movimientos = movimientos_en_alerta(empresa=empresa,fecha_referencia=date.today())
-    if centros_permitidos is not None:
-        movimientos = movimientos.filter(centro_operativo_id__in=centros_permitidos)
-    mostrar_llamador = movimientos.exists()
+    mostrar_llamador = False
+    if puede(request.user, empresa.pk, 'vencimientos.ver'):
+        movimientos = movimientos_en_alerta(empresa=empresa,fecha_referencia=date.today())
+        if centros_permitidos is not None:
+            movimientos = movimientos.filter(centro_operativo_id__in=centros_permitidos)
+        mostrar_llamador = movimientos.exists()
 
     # Las licencias sólo pueden activar el llamador para perfiles con permiso
     # real de Nómina; no filtrar su existencia a otros usuarios.
@@ -71,29 +74,25 @@ def estado_llamador_alertas(request):
 
 @login_required
 def listar_proximos_vencimientos(request):
-    """
-    Devuelve los Movimientos con saldo pendiente de una empresa
-    para alimentar la interfaz de Próximos Vencimientos.
+    """Consultar únicamente períodos económicos. Nunca devolver Alertas por esta ruta."""
+    return _listar_vencimientos_o_alertas(request, vista_alertas=False)
 
-    Los períodos "hoy" y "semana" incluyen también obligaciones
-    vencidas que continúan con saldo pendiente.
 
-    El período "alertas" utiliza la política central de Alertas
-    definida en el servicio financiero.
+@login_required
+def listar_alertas(request):
+    """Listar fuentes de Alertas visibles, sin ampliar permisos de origen."""
+    return _listar_vencimientos_o_alertas(request, vista_alertas=True)
 
-    La vista no calcula saldos ni estados financieros.
-    Toda regla financiera se obtiene desde el servicio central.
-    """
 
+def _listar_vencimientos_o_alertas(request, *, vista_alertas):
+    """Motor de presentación común; autorizaciones independientes por módulo."""
     empresa_id = (
         request.GET.get("empresa")
         or ""
     ).strip()
 
-    periodo = (
-        request.GET.get("periodo")
-        or "hoy"
-    ).strip()
+    periodo = ('alertas' if vista_alertas else
+               (request.GET.get('periodo') or 'hoy').strip())
 
     if not empresa_id:
         return JsonResponse(
@@ -104,7 +103,9 @@ def listar_proximos_vencimientos(request):
             status=400,
         )
 
-    empresa = exigir(request.user, empresa_id, 'vencimientos.ver')
+    empresa = exigir(request.user, empresa_id, 'alertas.ver' if vista_alertas else 'vencimientos.ver')
+    if not vista_alertas and periodo == 'alertas':
+        return JsonResponse({'ok': False, 'mensaje': 'Utilizá el módulo Alertas.'}, status=400)
     contexto = obtener_contexto_capacidades_empresa(request.user, empresa.pk)
     centros_permitidos = (centros_activos_de_usuario(request.user,empresa)
                           if contexto.jerarquia == 'admin_centro' else None)
@@ -115,19 +116,19 @@ def listar_proximos_vencimientos(request):
     fecha_hasta = None
 
     if periodo == "alertas":
-        movimientos = (
-            movimientos_en_alerta(
-                empresa=empresa,
-                fecha_referencia=hoy,
+        if puede(request.user, empresa.pk, 'vencimientos.ver'):
+            movimientos = (
+                movimientos_en_alerta(
+                    empresa=empresa,
+                    fecha_referencia=hoy,
+                )
+                .select_related(
+                    "proveedor", "tipo_gasto", "centro_operativo",
+                    "recurso_operativo", "cuenta_debito",
+                )
             )
-            .select_related(
-                "proveedor",
-                "tipo_gasto",
-                "centro_operativo",
-                "recurso_operativo",
-                "cuenta_debito",
-            )
-        )
+        else:
+            movimientos = Movimiento.objects.none()
 
     elif periodo == "hoy":
         fecha_hasta = hoy

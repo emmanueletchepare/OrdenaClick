@@ -146,17 +146,14 @@
     }
 
     const accion = elemento.dataset.ocSidebarAccion;
+    if (elemento.id === 'btnSidebarAlertas') {
+      limpiarMenuSuperior();
+      return;
+    }
     if (!accion) return;
     event.preventDefault();
     if (accion.startsWith('vencimientos-')) {
-      // La opción Acción inmediata conserva el manejador histórico del llamador.
-      if (accion === 'vencimientos-alertas') {
-        // El llamador puede activar esta opción aun con el grupo plegado.
-        if (grupo && !grupo.open) grupo.open = true;
-        limpiarMenuSuperior();
-        return;
-      }
-      if (document.body.dataset.accesoRestringido === '1' && !document.getElementById('btnProximosVencimientos')) return;
+      // Tres filtros exclusivos de Vencimientos; Alertas es otro módulo principal.
       const botones = {
         'vencimientos-hoy': 'btnVencimientosHoy',
         'vencimientos-semana': 'btnVencimientosSemana',
@@ -167,7 +164,8 @@
       limpiarMenuSuperior();
       // Reutilizamos la vista, los eventos y las consultas ya implementados.
       // No se lanza una consulta previa a Alertas que pueda pisar el filtro elegido.
-      if (!document.getElementById('tablaProximosVencimientos')) {
+      if (!document.getElementById('tablaProximosVencimientos') ||
+          document.querySelector('.vencimientos-contenedor[data-oc-vista="alertas"]')) {
         if (typeof window.construirEstructuraProximosVencimientos !== 'function' ||
             typeof window.conectarControlesProximosVencimientos !== 'function') return;
         window.construirEstructuraProximosVencimientos();

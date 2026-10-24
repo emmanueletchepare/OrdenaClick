@@ -5339,16 +5339,16 @@ async function volverAProximosVencimientos(){
 
 
     /*
-     * Reconstruimos la pantalla completa.
+     * El retorno preserva el módulo de origen: Alertas es una vista principal
+     * independiente de Próximos vencimientos. La navegación sigue en el sidebar.
      */
-    construirEstructuraProximosVencimientos();
-
-    conectarControlesProximosVencimientos();
-
-
-    const periodo =
-        contexto.periodo ||
-        "alertas";
+    const periodo = contexto.periodo || "hoy";
+    if(periodo === "alertas"){
+        construirEstructuraAlertas();
+    }else{
+        construirEstructuraProximosVencimientos();
+        conectarControlesProximosVencimientos();
+    }
 
 
     /*

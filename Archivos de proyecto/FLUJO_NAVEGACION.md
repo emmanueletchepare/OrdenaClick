@@ -386,3 +386,18 @@ Login → Selección de rol → Selección de Empresa autorizada
 **Observación UX de la precarga e-Cheqs, aún no desarrollada:** el listado temporal es herramienta de revisión: columnas independientes Número e-Cheq, Titular, Banco, Fecha de acreditación, Condición, Importe, Acciones. Validar antes de Agregar; ante error al Guardar todos identificar y enfocar fila/campo, conservar el lote completo.
 
 **Estado:** implementación de permisos granulares y Colaborador pendiente. El circuito Nómina bajo Herramientas está en código desde `902cdeb`, y el usuario indicó conformidad visual general de la revisión en Oficina, sin desglose por cada `[+]`. Referencia: `CONTINUIDAD_OPERATIVA_20261015.md`.
+
+
+## Actualización de navegación aprobada — Alertas independientes (23/10/2026)
+
+**Esta sección prevalece sobre la referencia histórica a `Próximos Vencimientos → Alertas`.**
+El sidebar único conserva el panel Administrar. **Alertas** pasa a ser una opción principal
+que carga su contenido en `#contenido-operativo`, sin ocultar ni reconstruir el sidebar.
+La campanita existente abre Alertas en la misma área; Próximos vencimientos conserva
+únicamente `Hoy`, `Esta semana` y `Rango de fechas` como subítems de su grupo.
+No hay botones de navegación duplicados en el contenido operativo. La estética se
+conserva siguiendo Caja, Vencimientos y Nómina; no se crean paneles ni estilos paralelos.
+La consulta Alertas exige `alertas.ver`, más autorización individual de su fuente
+(`vencimientos.ver` para movimientos y alcance Nómina para licencias). Esta primera
+etapa **no** instala configuraciones de destinatarios, lectura general ni nuevos eventos.
+El alcance técnico queda sujeto a pruebas y validación visual del supervisor.

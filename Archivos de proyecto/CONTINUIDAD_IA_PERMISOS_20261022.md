@@ -20,3 +20,19 @@ Tras `--plan` y `--apply`, confirmar `manage.py check`, `makemigrations usuarios
 ## Próximo bloque
 
 Elegir con el usuario: (1) Gestor de alertas por usuario/acción (incluida OP lista para imprimir y aplicar), (2) Mensajes al desarrollador, (3) Caja. No iniciar nuevos trabajos antes del commit aprobado.
+
+
+## Relevo de Alertas — Bloque A (23/10/2026, propuesto)
+
+El cierre anterior de permisos se publicó en GitHub `main` como `0c09140`.
+El bloque A autorizado incorpora un módulo Alertas separado de Próximos vencimientos,
+reutilizando campanita/sonido y renderizadores existentes, sin tocar Caja, Nómina,
+SQLite, migraciones ni reglas financieras. El permiso explícito `alertas.ver` autoriza
+abrir Alertas, **no** concede acceso a los datos de cada módulo; cada fuente conserva
+su permiso propio. Próximos vencimientos queda con Hoy/Semana/Rango y su ruta
+no acepta el periodo `alertas`. La campanita consulta un endpoint protegido por
+`alertas.ver` y abre Alertas dentro del área operativa, manteniendo sidebar visible.
+El helper no declara el desarrollo validado: comprobar HTTP, regresiones, permisos,
+visual y navegación en Casa y obtener aprobación antes del commit selectivo.
+Gestión de destinatarios, avisos opcionales por usuario y nuevos eventos corresponden
+a un bloque futuro no implementado en este helper.

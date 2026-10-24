@@ -343,3 +343,15 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - Registros: leer selectores de ABM no permite modificarlos. Consultar/crear/editar comprobantes NO concede Registrar Pago, débito automático ni Caja; los endpoints de pago mantienen su autorización histórica independiente. Administrador de Centro queda limitado a sus Centros, sin abrir Configuración. La jerarquía Administrador general NO concede por sí sola la escritura de Movimientos, conforme a la prueba histórica de seguridad.
 - Un solo sidebar compartido, sin nuevos botones flotantes, sin cambiar jerarquías, CSS ni retornos. Nómina por Centro, claves propias y permisos de Caja permanecen independientes.
 - **Instalación y regresiones verificadas en Casa:** el helper aplicó los cambios, `manage.py check`, `makemigrations --check --dry-run` y la suite seleccionada terminaron sin fallos. **Aún falta aprobación visual/funcional por perfiles y commit selectivo.**
+
+
+## Bloque A aprobado: separación de Alertas y Vencimientos — 23/10/2026
+
+- [ ] Ejecutar helper controlado desde `0c09140` y validar backup externo.
+- [ ] Comprobar Alertas como opción principal del mismo sidebar, cargada en el área operativa.
+- [ ] Comprobar Próximos vencimientos con sólo Hoy, Esta semana y Rango de fechas.
+- [ ] Comprobar campanita/sonido existente abriendo Alertas sin cambiar de panel.
+- [ ] Verificar `alertas.ver`, permisos propios de fuentes, revocación, Empresa y Centros.
+- [ ] Verificar alertas de Nómina sin movimientos, cero filtraciones y cero regresiones.
+- [ ] Validar visualmente con el supervisor y realizar commit selectivo.
+- [ ] Después, y sólo con autorización nueva: destinatarios/sonido por usuario, seguimiento y nuevas fuentes.

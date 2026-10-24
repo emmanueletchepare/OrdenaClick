@@ -485,36 +485,23 @@ function cerrarLlamadorAlertas(){
 
 
 /**
- * Abre Próximos Vencimientos en Alertas
- * utilizando la navegación ya existente.
+ * Abre el módulo independiente Alertas dentro del área operativa.
  */
 function abrirAlertasDesdeLlamador(){
 
     cerrarLlamadorAlertas();
 
 
-    const botonProximos =
-        document.getElementById(
-            "btnProximosVencimientos"
-        );
+    const botonAlertas =
+        document.getElementById("btnSidebarAlertas");
 
-
-    if(botonProximos){
-
-        botonProximos.click();
-
+    if(botonAlertas){
+        botonAlertas.click();
         return;
-
     }
 
-
-    if(
-        typeof mostrarProximosVencimientos ===
-        "function"
-    ){
-
-        mostrarProximosVencimientos();
-
+    if(typeof mostrarAlertasIndependientes === "function"){
+        mostrarAlertasIndependientes();
     }
 
 }

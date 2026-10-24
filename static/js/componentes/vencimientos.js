@@ -17,7 +17,7 @@ document.addEventListener(
 
         const boton =
             document.getElementById(
-                "btnProximosVencimientos"
+                "btnSidebarAlertas"
             );
 
         if(!boton){
@@ -28,7 +28,7 @@ document.addEventListener(
             "click",
             function(){
 
-                mostrarProximosVencimientos();
+                mostrarAlertasIndependientes();
 
             }
         );
@@ -571,6 +571,30 @@ function conectarControlesProximosVencimientos(){
 }
 
 
+// Constructor reutilizado al ingresar desde el sidebar y al volver de editar.
+function construirEstructuraAlertas(){
+    construirEstructuraProximosVencimientos();
+    conectarControlesProximosVencimientos();
+    const raiz = document.querySelector('#contenido-operativo .vencimientos-contenedor');
+    if(raiz){
+        raiz.dataset.ocVista = 'alertas';
+        const cabecera = document.createElement('div');
+        cabecera.className = 'caja-encabezado';
+        const titulo = document.createElement('h2');
+        titulo.textContent = 'Alertas';
+        cabecera.appendChild(titulo);
+        raiz.prepend(cabecera);
+    }
+}
+
+async function mostrarAlertasIndependientes(){
+    const empresa = obtenerEmpresaActivaVencimientos();
+    if(!empresa) return;
+    construirEstructuraAlertas();
+    await cargarProximosVencimientos('alertas');
+}
+
+
 async function mostrarProximosVencimientos(){
 
     const empresa =
@@ -590,8 +614,9 @@ async function mostrarProximosVencimientos(){
 
     conectarControlesProximosVencimientos();
 
+    marcarSegmentoVencimientosActivo(document.getElementById('btnVencimientosHoy'));
     await cargarProximosVencimientos(
-        "alertas"
+        "hoy"
     );
 
 }
@@ -630,16 +655,17 @@ async function cargarProximosVencimientos(
     estado.style.display =
         "block";
 
-    estado.textContent =
-        "Cargando vencimientos...";
+    estado.textContent = periodo === 'alertas'
+        ? "Cargando alertas..." : "Cargando vencimientos...";
 
     tabla.innerHTML = "";
 
-    let url =
-        `/proximos-vencimientos/?empresa=` +
-        encodeURIComponent(empresa) +
-        `&periodo=` +
-        encodeURIComponent(periodo);
+    window.__ocSolicitudVencimientos = (window.__ocSolicitudVencimientos || 0) + 1;
+    const solicitud = window.__ocSolicitudVencimientos;
+    let url = periodo === 'alertas'
+        ? `/alertas/listado/?empresa=` + encodeURIComponent(empresa)
+        : `/proximos-vencimientos/?empresa=` + encodeURIComponent(empresa) +
+          `&periodo=` + encodeURIComponent(periodo);
 
     if(periodo === "rango"){
 
@@ -659,6 +685,8 @@ async function cargarProximosVencimientos(
         const datos =
             await respuesta.json();
 
+        if(solicitud !== window.__ocSolicitudVencimientos || !tabla.isConnected) return;
+
         if(
             !respuesta.ok ||
             !datos.ok
@@ -673,11 +701,16 @@ async function cargarProximosVencimientos(
         }
 
         mostrarTablaProximosVencimientos(
-            datos.movimientos
+            datos.movimientos,
+            periodo === 'alertas',
+            datos.licencias_nomina || []
         );
-        mostrarAlertasLicenciasNomina(datos.licencias_nomina || []);
+        if(periodo === 'alertas'){
+            mostrarAlertasLicenciasNomina(datos.licencias_nomina || []);
+        }
 
     }catch(error){
+        if(solicitud !== window.__ocSolicitudVencimientos || !tabla.isConnected) return;
 
         console.error(
             "Error cargando próximos vencimientos:",
@@ -810,7 +843,9 @@ async function editarMovimientoDesdeVencimientos(
 }
 
 function mostrarTablaProximosVencimientos(
-    movimientos
+    movimientos,
+    esAlertas = false,
+    licenciasNomina = []
 ){
 
     const estado =
@@ -841,11 +876,11 @@ function mostrarTablaProximosVencimientos(
     ){
 
         estado.style.display =
-            "block";
+            (esAlertas && licenciasNomina.length) ? "none" : "block";
 
-
-        estado.textContent =
-            "No hay vencimientos pendientes para el período seleccionado.";
+        estado.textContent = esAlertas
+            ? "No hay alertas que requieran atención."
+            : "No hay vencimientos pendientes para el período seleccionado.";
 
 
         tabla.innerHTML =

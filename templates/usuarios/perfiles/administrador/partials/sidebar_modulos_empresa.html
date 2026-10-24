@@ -137,6 +137,17 @@ Dashboard
 
 
 {% endif %}
+{% if not acceso_restringido or puede_ver_alertas %}
+<button type="button" id="btnSidebarAlertas" class="sidebar-nav-btn" data-sidebar-item>
+    <span class="sidebar-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+        </svg>
+    </span>
+    <span class="sidebar-nav-text">Alertas</span>
+</button>
+{% endif %}
 {% if not acceso_restringido or puede_ver_vencimientos %}
 <details class="oc-sidebar-grupo" data-oc-grupo="vencimientos">
 <summary class="sidebar-nav-btn" data-sidebar-item>
@@ -161,15 +172,9 @@ Dashboard
 <span class="sidebar-nav-text">Próximos vencimientos</span>
 </summary>
 <div class="oc-sidebar-hijos">
-    <button type="button" id="btnProximosVencimientos" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-alertas">Acción inmediata</button>
-    <details class="oc-sidebar-subgrupo" data-oc-subgrupo="vencimientos-periodos">
-        <summary class="sidebar-nav-btn">Vencimientos</summary>
-        <div class="oc-sidebar-hijos">
-            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-hoy">Hoy</button>
-            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-semana">Esta semana</button>
-            <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-rango">Rango de fechas</button>
-        </div>
-    </details>
+    <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-hoy">Hoy</button>
+    <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-semana">Esta semana</button>
+    <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="vencimientos-rango">Rango de fechas</button>
 </div>
 </details>
 {% endif %}

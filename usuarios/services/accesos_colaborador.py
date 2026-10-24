@@ -17,7 +17,8 @@ ARBOL = (
                    ('Estado e historial', 'pendientes.estado'), ('Salidas e-Cheq', 'pendientes.salidas'))),
     ('Caja', (('Caja · centros autorizados', 'caja.total'),)),
     ('Dashboard', (('Dashboard', 'dashboard.ver'),)),
-    ('Próximos vencimientos', (('Acción inmediata, Hoy, Semana y Rango', 'vencimientos.ver'),)),
+    ('Alertas', (('Consultar alertas', 'alertas.ver'),)),
+    ('Próximos vencimientos', (('Hoy, Esta semana y Rango de fechas', 'vencimientos.ver'),)),
     ('Reportes', (('Reportes', 'reportes.ver'),)),
     ('Estado de Resultados', (('Estado de Resultados', 'resultados.ver'),)),
     ('Balance', (('Balance', 'balance.ver'),)),
@@ -36,7 +37,7 @@ ARBOL = (
 CODIGOS = frozenset(codigo for _,hojas in ARBOL for _,codigo in hojas)
 # Sólo las capacidades con comprobación real del backend son concedibles.
 # La lista visible es más amplia para mostrar TODOS los apartados del sidebar.
-CODIGOS_HABILITABLES = frozenset({'claves.propias','nomina.total','vencimientos.ver','caja.total',
+CODIGOS_HABILITABLES = frozenset({'claves.propias','nomina.total','vencimientos.ver','alertas.ver','caja.total',
                                    'registros.ver','registros.crear','registros.editar','registros.obligaciones',
                                    'pendientes.ver','pendientes.crear','pendientes.editar','pendientes.resolver',
                                    'pendientes.estado','pendientes.salidas',
