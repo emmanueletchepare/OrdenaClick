@@ -11,6 +11,7 @@ from usuarios.services.financiero import (
 )
 from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empresa_administrable
 from usuarios.services.nomina import alertas_pendientes
+from usuarios.services.destinatarios_alertas import suscripto_efectivo, sonido_habilitado
 from usuarios.models import Movimiento
 from usuarios.services.accesos_colaborador import exigir, puede
 from usuarios.services.alcances_centros import centros_activos_de_usuario
@@ -49,7 +50,7 @@ def estado_llamador_alertas(request):
                           if contexto.jerarquia == 'admin_centro' else None)
 
     mostrar_llamador = False
-    if puede(request.user, empresa.pk, 'vencimientos.ver'):
+    if suscripto_efectivo(request.user, empresa, 'FIN-01'):
         movimientos = movimientos_en_alerta(empresa=empresa,fecha_referencia=date.today())
         if centros_permitidos is not None:
             movimientos = movimientos.filter(centro_operativo_id__in=centros_permitidos)
@@ -57,7 +58,7 @@ def estado_llamador_alertas(request):
 
     # Las licencias sólo pueden activar el llamador para perfiles con permiso
     # real de Nómina; no filtrar su existencia a otros usuarios.
-    if not mostrar_llamador:
+    if not mostrar_llamador and suscripto_efectivo(request.user, empresa, 'NOM-01'):
         try:
             alertas = restringir_nomina(alertas_pendientes(empresa,date.today()),request.user,
                                        empresa.pk,'empleado__centro_operativo_id')
@@ -69,6 +70,7 @@ def estado_llamador_alertas(request):
         {
             "ok": True,
             "mostrar_llamador": mostrar_llamador,
+            "sonido_habilitado": bool(mostrar_llamador and sonido_habilitado(request.user, empresa)),
         }
     )
 

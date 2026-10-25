@@ -3627,6 +3627,7 @@ class DocumentoEmpleado(models.Model):
 
 # Permisos: registro Django desde módulo específico.
 from .models_accesos import PermisoAccesoColaborador, EventoPermisoAccesoColaborador
+from .models_alertas import DestinatarioAlerta, PreferenciaSonidoAlerta, EventoConfiguracionAlerta
 
 class CentroAdicionalAdministrador(models.Model):
     """Centros adicionales de un Administrador de Centro; el centro principal no se reemplaza."""

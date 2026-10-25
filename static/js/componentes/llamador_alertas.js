@@ -25,6 +25,7 @@ let temporizadorRecordatorioLlamadorAlertas =
 let llamadorAlertasAbierto = false;
 
 let audioLlamadorAlertas = null;
+let sonidoLlamadorPermitido = true;
 
 
 /**
@@ -284,7 +285,9 @@ function llamarAtencionAlertas(){
 
     animarLlamadorAlertas();
 
-    reproducirSonidoLlamadorAlertas();
+    if(sonidoLlamadorPermitido){
+        reproducirSonidoLlamadorAlertas();
+    }
 
 }
 
@@ -395,6 +398,7 @@ async function consultarEstadoLlamadorAlertas(){
             datos.mostrar_llamador === true
         ){
 
+            sonidoLlamadorPermitido = datos.sonido_habilitado === true;
             mostrarLlamadorAlertas();
 
             llamarAtencionAlertas();

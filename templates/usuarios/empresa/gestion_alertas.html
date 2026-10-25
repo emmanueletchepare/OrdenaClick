@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OrdenaClick · Gestión de Alertas</title>
+<link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}">
+<link rel="stylesheet" href="{% static 'css/empresa/gestion_accesos_colaborador.css' %}?v=3">
+<script src="{% static 'js/empresa/gestion_accesos_colaborador.js' %}?v=2" defer></script>
+</head><body><main class="gb-contenedor">
+<header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div>
+<h1>Gestión de Alertas</h1><p>{{ empresa.nombre_fantasia|default:empresa.razon_social }} · Destinatarios por usuario</p></div>
+<a class="gb-volver" href="{% url 'panel_administrar' %}?empresa={{ empresa.pk }}">Volver</a></header>
+<section class="gb-tarjeta">
+<form method="get"><label>Usuario <select name="usuario" data-oc-seleccionar-usuario>
+{% for u in colaboradores %}<option value="{{ u.pk }}" {% if u.pk == usuario_seleccionado %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}
+</select></label></form>
+{% if guardado %}<p role="status">Alertas guardadas y auditadas para este usuario.</p>{% endif %}
+{% if usuario_seleccionado %}
+<p>Seleccioná las alertas que recibirá el usuario. Esto no concede permisos de acceso a los módulos de origen.</p>
+<form method="post" class="oc-acceso-form">{% csrf_token %}
+<input type="hidden" name="formulario" value="destinatarios-usuario">
+<input type="hidden" name="usuario" value="{{ usuario_seleccionado }}">
+{% for seccion in secciones %}
+<details class="oc-acceso-grupo" open><summary>
+{% if seccion.tiene_habilitables %}<input type="checkbox" data-oc-grupo="{{ seccion.codigo }}" aria-label="Seleccionar toda la sección {{ seccion.titulo }}">{% endif %}
+{{ seccion.titulo }}</summary>
+<div class="oc-acceso-hijos">
+{% for funcion in seccion.hijos %}
+{% if funcion.habilitable %}
+<label><input type="checkbox" name="codigo" data-oc-hijo="{{ seccion.codigo }}" value="{{ funcion.tipo.codigo }}" {% if funcion.activo %}checked{% endif %}> {{ funcion.tipo.codigo }} · {{ funcion.tipo.nombre }}</label>
+{% else %}
+<span class="oc-acceso-informativo">{{ funcion.tipo.codigo }} · {{ funcion.tipo.nombre }} <small>· {{ funcion.ayuda }}</small></span>
+{% endif %}
+{% endfor %}
+</div></details>
+{% endfor %}
+<button type="submit" class="gb-btn">Guardar alertas del usuario</button></form>
+<p class="gb-ayuda">El sonido está activado por defecto. Cada destinatario puede silenciarlo o volver a activarlo desde su módulo Alertas.</p>
+{% else %}<p>No hay usuarios activos asignables en esta Empresa.</p>{% endif %}
+</section>
+<section class="gb-tarjeta"><h2>Sin destinatarios</h2>
+{% if sin_destinatarios %}<ul>
+{% for item in sin_destinatarios %}<li><strong>{{ item.tipo.codigo }} · {{ item.tipo.nombre }}</strong>
+{% if item.sin_receptores %}· Sin ningún destinatario autorizado{% endif %}
+{% if item.ocurrencias_sin_receptor %}· {{ item.ocurrencias_sin_receptor }} aviso(s) vigente(s) sin receptor para su Centro{% endif %}
+</li>{% endfor %}</ul>
+{% else %}<p>Todos los tipos operativos tienen destinatarios habilitados y sus avisos actuales están cubiertos.</p>{% endif %}
+<p>Se respetan los permisos y Centros actuales. Las alertas futuras no se consideran incidencias.</p>
+</section></main></body></html>

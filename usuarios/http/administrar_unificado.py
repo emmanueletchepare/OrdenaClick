@@ -95,6 +95,7 @@ def panel_administrar(request):
         nomina=puede(request.user,contexto.empresa.pk,'nomina.total')
         caja=puede(request.user,contexto.empresa.pk,'caja.total')
         alertas=puede(request.user,contexto.empresa.pk,'alertas.ver')
+        gestor_alertas=contexto.jerarquia == 'admin_general'
         vencimientos=puede(request.user,contexto.empresa.pk,'vencimientos.ver')
         registros={c:puede(request.user,contexto.empresa.pk,c) for c in (
             'registros.ver','registros.crear','registros.editar','registros.obligaciones')}
@@ -106,6 +107,7 @@ def panel_administrar(request):
             'puede_ver_pendientes': pendientes,
             'puede_gestion_claves':claves, 'puede_ver_nomina':nomina,
             'puede_ver_caja':caja, 'puede_ver_vencimientos':vencimientos, 'puede_ver_alertas':alertas,
+            'puede_gestion_alertas': gestor_alertas,
             'puede_ver_registros':any(registros.values()),
             'puede_ver_comprobantes':puede_comprobantes,
             'puede_ver_obligaciones':registros['registros.obligaciones'],

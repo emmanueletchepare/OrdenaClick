@@ -7,6 +7,7 @@ from .http.recuperacion import SolicitarRecuperacion, ConfirmarRecuperacion
 from .http.administrador import panel_admin
 from .http.administrar_unificado import panel_administrar
 from .http.accesos_colaborador import gestion_accesos
+from .http.gestion_alertas import gestion_alertas, sonido_alertas_usuario
 from .http.empresa_legado import (
     exportar_empresa,
     eliminar_empresa,
@@ -262,6 +263,8 @@ urlpatterns = [
 
     path('administrar/', panel_administrar, name='panel_administrar'),
     path('administrar/accesos/<int:empresa_id>/', gestion_accesos, name='gestion_accesos_colaborador'),
+    path('administrar/alertas/<int:empresa_id>/', gestion_alertas, name='gestion_alertas'),
+    path('alertas/sonido/', sonido_alertas_usuario, name='sonido_alertas_usuario'),
 
     path(
         'panel-admin/',

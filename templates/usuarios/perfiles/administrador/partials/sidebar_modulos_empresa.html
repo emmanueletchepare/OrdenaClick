@@ -375,7 +375,7 @@ ABMs
 {% endif %}
 
 
-{% if not acceso_restringido %}
+{% if not acceso_restringido or puede_gestion_alertas %}
 <details class="oc-sidebar-grupo" data-oc-grupo="configuracion">
 <summary
     class="sidebar-nav-btn"
@@ -431,9 +431,12 @@ Configuración
 
 </summary>
 <div class="oc-sidebar-hijos">
+{% if not acceso_restringido %}
 <button type="button" class="sidebar-nav-btn" data-oc-sidebar-accion="modificar-empresa" >Modificar Empresa</button>
 <button type="button" id="btn-designar-perfiles" class="sidebar-nav-btn" data-designar-perfiles-url="{% url 'gestionar_relaciones_empresa' empresa_actual.pk %}">Designar perfiles</button>
 <button type="button" class="sidebar-nav-btn" data-oc-gestion-accesos-url="{% url 'gestion_accesos_colaborador' empresa_actual.pk %}">Gestión de accesos</button>
+{% endif %}
+<button type="button" class="sidebar-nav-btn" data-oc-gestion-alertas-url="{% url 'gestion_alertas' empresa_actual.pk %}">Gestión de alertas</button>
 </div>
 </details>
 {% endif %}

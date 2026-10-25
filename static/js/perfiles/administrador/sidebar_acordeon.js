@@ -96,7 +96,9 @@
     else if (!grupo) marcarOpcion(null);
 
 
-    const gestion = elemento.dataset.ocGestionAccesosUrl;
+    const gestionAlertas = elemento.dataset.ocGestionAlertasUrl;
+    const gestion = elemento.dataset.ocGestionAccesosUrl || gestionAlertas;
+    const etiquetaGestion = gestionAlertas ? 'Gestión de alertas' : 'Gestión de accesos';
     if (gestion) {
       event.preventDefault();
       const destino = document.getElementById('contenido-operativo');
@@ -110,12 +112,12 @@
       destino.classList.add('oc-accesos-contenido');
       const frame = document.createElement('iframe');
       frame.id = 'ocGestionAccesosFrame';
-      frame.title = 'Gestión de accesos';
+      frame.title = etiquetaGestion;
       frame.src = gestion;
       frame.setAttribute('loading', 'eager');
       destino.replaceChildren(frame);
       const titulo = document.getElementById('titulo-panel');
-      if (titulo) titulo.textContent = 'Gestión de accesos';
+      if (titulo) titulo.textContent = etiquetaGestion;
       const principal = document.querySelector('.main');
       if (principal) principal.scrollTop = 0;
       const submenu = document.getElementById('submenu-dinamico');

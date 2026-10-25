@@ -584,6 +584,7 @@ function construirEstructuraAlertas(){
         titulo.textContent = 'Alertas';
         cabecera.appendChild(titulo);
         raiz.prepend(cabecera);
+        configurarSonidoPersonalAlertas(cabecera);
     }
 }
 
@@ -1434,4 +1435,65 @@ function mostrarAlertasLicenciasNomina(alertas) {
     });
     seccion.appendChild(btn);
     contenedor.appendChild(seccion);
+}
+
+// Preferencia individual: el gestor asigna avisos; el receptor controla su audio.
+async function configurarSonidoPersonalAlertas(cabecera){
+    const empresa = obtenerEmpresaActivaVencimientos();
+    if(!empresa || !cabecera) return;
+    const etiqueta = document.createElement('label');
+    etiqueta.className = 'oc-alertas-sonido-opcion';
+    const casilla = document.createElement('input');
+    casilla.type = 'checkbox';
+    casilla.disabled = true;
+    casilla.checked = true; // Preferencia inicial del servidor, hasta que llegue GET.
+    etiqueta.append(casilla, document.createTextNode(' Sonido de alertas'));
+    const estado = document.createElement('span');
+    estado.className = 'oc-alertas-sonido-estado';
+    estado.setAttribute('role', 'status');
+    cabecera.append(etiqueta, estado);
+    const url = '/alertas/sonido/?empresa=' + encodeURIComponent(empresa);
+    try {
+        const respuesta = await fetch(url, {credentials:'same-origin', cache:'no-store'});
+        if(!respuesta.ok) throw new Error('No autorizado.');
+        const datos = await respuesta.json();
+        if(datos.ok !== true || typeof datos.habilitado !== 'boolean') throw new Error('Respuesta inválida.');
+        if(!casilla.isConnected) return;
+        casilla.checked = datos.habilitado;
+        casilla.disabled = false;
+        if(typeof sonidoLlamadorPermitido !== 'undefined') sonidoLlamadorPermitido = datos.habilitado;
+    } catch (_) {
+        if(casilla.isConnected) estado.textContent = 'No se pudo consultar el sonido.';
+        return;
+    }
+    casilla.addEventListener('change', async () => {
+        const anterior = !casilla.checked;
+        const deseado = casilla.checked;
+        casilla.disabled = true;
+        estado.textContent = 'Guardando…';
+        const cookieCsrf = document.cookie.split('; ').find(c => c.startsWith('csrftoken='));
+        const token = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+            (cookieCsrf ? decodeURIComponent(cookieCsrf.slice('csrftoken='.length)) : '');
+        try {
+            if(!token) throw new Error('No se encontró token CSRF.');
+            const respuesta = await fetch(url, {
+                method:'POST', credentials:'same-origin',
+                headers:{'X-CSRFToken':token, 'Content-Type':'application/x-www-form-urlencoded'},
+                body:'habilitado=' + (deseado ? '1' : '0') + '&empresa=' + encodeURIComponent(empresa)
+            });
+            if(!respuesta.ok) throw new Error('No autorizado.');
+            const datos = await respuesta.json();
+            if(datos.ok !== true || datos.habilitado !== deseado) throw new Error('Respuesta inválida.');
+            if(!casilla.isConnected) return;
+            if(typeof sonidoLlamadorPermitido !== 'undefined') sonidoLlamadorPermitido = deseado;
+            estado.textContent = deseado ? 'Sonido activado' : 'Sonido silenciado';
+        } catch (_) {
+            if(casilla.isConnected) {
+                casilla.checked = anterior;
+                estado.textContent = 'No se pudo guardar el sonido.';
+            }
+        } finally {
+            if(casilla.isConnected) casilla.disabled = false;
+        }
+    });
 }
