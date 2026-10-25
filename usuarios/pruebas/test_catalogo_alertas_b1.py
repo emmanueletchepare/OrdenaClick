@@ -16,14 +16,14 @@ class CatalogoAlertasB1Tests(SimpleTestCase):
         self.assertEqual(set(codigos), set(TIPOS_POR_CODIGO))
         self.assertEqual(set(tipo.categoria for tipo in TIPOS_ALERTA), set(CATEGORIAS))
 
-    def test_solo_dos_fuentes_ya_integradas(self):
-        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'NOM-01'})
+    def test_fuentes_integradas(self):
+        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'FIN-02', 'FIN-03', 'NOM-01'})
         self.assertEqual({tipo.codigo for tipo in tipos_operativos()}, CODIGOS_OPERATIVOS)
         for codigo in CODIGOS_OPERATIVOS:
             self.assertTrue(tipo_operativo(codigo).operativa)
 
     def test_ideas_no_se_pueden_habilitar_accidentalmente(self):
-        for codigo in ('FIN-02', 'FIN-03', 'FIN-04', 'ADM-01', 'NOM-02',
+        for codigo in ('FIN-04', 'ADM-01', 'NOM-02',
                        'DOC-01', 'DOC-02', 'DOC-03', 'NO-EXISTE'):
             with self.subTest(codigo=codigo), self.assertRaises(ValueError):
                 tipo_operativo(codigo)

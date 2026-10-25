@@ -96,14 +96,14 @@ class DestinatariosB2Tests(TestCase):
         self.assertEqual(self.client.get(self.url).status_code, 200)
         r = self.client.get(reverse('panel_administrar'), {'empresa':self.empresa.pk})
         self.assertEqual(r.status_code, 200)
-        self.assertContains(r, 'Gestión de alertas')
-        self.assertContains(r, 'data-oc-gestion-alertas-url')
+        self.assertContains(r, 'Gestión de accesos y alertas')
+        self.assertContains(r, 'data-oc-gestion-accesos-url')
         self.assertEqual(self.client.get(reverse('gestion_alertas', args=[self.otra.pk])).status_code, 403)
 
     def test_no_se_configuran_tipos_futuros_o_usuarios_ajenos(self):
         self.permiso(self.operador,'alertas.ver')
         self.permiso(self.operador,'vencimientos.ver')
-        self.assertEqual(self.guardar(codigos=['FIN-02']).status_code,403)
+        self.assertEqual(self.guardar(codigos=['FIN-04']).status_code,403)
         self.assertEqual(self.guardar(usuario=self.ajeno.pk, codigos=['FIN-01']).status_code,403)
         self.assertFalse(DestinatarioAlerta.objects.exists())
 

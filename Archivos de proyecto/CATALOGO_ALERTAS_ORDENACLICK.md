@@ -7,8 +7,8 @@
 ## 1. Alertas financieras
 
 - [x] **FIN-01** · Vencimiento de Movimientos con saldo pendiente.
-- [ ] **FIN-02** · Vencimiento de cheques físicos.
-- [ ] **FIN-03** · Vencimiento de e-Cheqs.
+- [x] **FIN-02** · Vencimiento de cheques físicos (cartera y propios emitidos).
+- [x] **FIN-03** · Vencimiento de e-Cheqs (cartera electrónica y propios emitidos).
 - [ ] **FIN-04** · Vencimiento de cuotas de registros planificados.
 
 ## 2. Alertas administrativas

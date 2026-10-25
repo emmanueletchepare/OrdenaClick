@@ -1,37 +1,56 @@
 {% load static %}
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OrdenaClick · Gestión de accesos</title>
+<title>OrdenaClick · Gestión de accesos y alertas</title>
 <link rel="stylesheet" href="{% static 'css/caja/pendientes.css' %}">
-<link rel="stylesheet" href="{% static 'css/empresa/gestion_accesos_colaborador.css' %}?v=3">
-<script src="{% static 'js/empresa/gestion_accesos_colaborador.js' %}?v=2" defer></script></head>
+<link rel="stylesheet" href="{% static 'css/empresa/gestion_accesos_colaborador.css' %}?v=4">
+<script src="{% static 'js/empresa/gestion_accesos_colaborador.js' %}?v=3" defer></script></head>
 <body><main class="gb-contenedor">
-<header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div><h1>Gestión de accesos</h1><p>{{ empresa.nombre_fantasia|default:empresa.razon_social }} · Permisos por miembro autorizado</p></div>
+<header class="gb-header"><div><div class="gb-marca">Ordena<span>click</span></div><h1>Gestión de accesos y alertas</h1>
+<p>{{ empresa.nombre_fantasia|default:empresa.razon_social }} · Configuración por usuario</p></div>
 <a class="gb-volver" href="{% url 'panel_administrar' %}?empresa={{ empresa.pk }}">Volver</a></header>
-<section class="gb-tarjeta"><form method="get"><label>Usuario <select name="usuario" data-oc-seleccionar-usuario>
+<section class="gb-tarjeta">
+<form method="get" class="oc-selector-form"><label for="oc-usuario-select">Usuario</label>
+<div class="oc-selector-contenedor"><select id="oc-usuario-select" name="usuario" data-oc-seleccionar-usuario>
 {% for u in colaboradores %}<option value="{{ u.pk }}" {% if u.pk == usuario_seleccionado %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}
-</select></label></form>
-{% if guardado %}<p role="status">Permisos guardados y auditados.</p>{% endif %}
+</select></div></form>
+{% if guardado %}<p class="oc-guardado" role="status">Accesos y alertas guardados y auditados para el usuario.</p>{% endif %}
 {% if usuario_seleccionado %}
-<form method="post" class="oc-acceso-form">{% csrf_token %}<input type="hidden" name="usuario" value="{{ usuario_seleccionado }}">
+<p class="oc-acceso-explicacion">En cada fila podés definir el <strong>Acceso</strong> al módulo y si recibirá su <strong>Alerta</strong>. La alerta no concede acceso. Cada destinatario gestiona su propio sonido.</p>
+{% if permisos_inherentes %}<p class="oc-acceso-aclaracion">Los accesos de este usuario provienen de su jerarquía. Podés configurar sus alertas, pero no cambiar sus permisos inherentes.</p>{% endif %}
+<form method="post" class="oc-acceso-form" data-oc-unificado="1" data-oc-permisos-inherentes="{% if permisos_inherentes %}1{% else %}0{% endif %}" data-oc-banco-actual="{% if lectura_bancaria %}1{% else %}0{% endif %}">
+{% csrf_token %}<input type="hidden" name="formulario" value="accesos-alertas">
+<input type="hidden" name="usuario" value="{{ usuario_seleccionado }}">
 {% for seccion in arbol %}
-<details class="oc-acceso-grupo" open><summary>{% if seccion.tiene_habilitables %}<input type="checkbox" data-oc-grupo="{{ seccion.codigo }}" aria-label="Seleccionar toda la sección {{ seccion.titulo }}">{% endif %} {{ seccion.titulo }}</summary>
+<details class="oc-acceso-grupo" open><summary>{% if seccion.tiene_habilitables %}<input type="checkbox" data-oc-grupo="{{ seccion.codigo }}" aria-label="Seleccionar accesos de {{ seccion.titulo }}">{% endif %} {{ seccion.titulo }}</summary>
+<div class="oc-acceso-cabecera"><span>Función</span><span>Acceso</span><span>Alerta</span></div>
 <div class="oc-acceso-hijos">
-{% for funcion in seccion.hijos %}{% if funcion.habilitable %}<label><input type="checkbox" name="capacidad" data-oc-hijo="{{ seccion.codigo }}" value="{{ funcion.codigo }}" {% if funcion.activo %}checked{% endif %}> {{ funcion.nombre }}</label>{% else %}<span class="oc-acceso-informativo">{{ funcion.nombre }} <small>· {{ funcion.ayuda }}</small></span>{% endif %}{% endfor %}
+{% for funcion in seccion.hijos %}
+<div class="oc-acceso-fila">
+<span class="oc-acceso-nombre">{{ funcion.nombre }}</span>
+<div class="oc-acceso-casilla">
+{% if funcion.habilitable %}<label><input type="checkbox" name="capacidad" data-oc-hijo="{{ seccion.codigo }}" value="{{ funcion.codigo }}" {% if funcion.activo %}checked{% endif %} aria-label="Acceso: {{ funcion.nombre }}"><span class="oc-solo-lectores">Acceso</span></label>
+{% elif funcion.heredado %}<span class="oc-acceso-inherente" title="Acceso por jerarquía">Incluido</span>
+{% else %}<span class="oc-acceso-informativo" title="{{ funcion.ayuda }}">—</span>{% endif %}
+</div>
+<div class="oc-acceso-casilla">
+{% if funcion.alerta %}<label class="oc-alerta-label" title="{{ funcion.alerta.codigo }} · {{ funcion.alerta.nombre }}"><input type="checkbox" name="alerta" value="{{ funcion.alerta.codigo }}" data-oc-alerta="{{ funcion.alerta.codigo }}" {% if funcion.alerta.activo %}checked{% endif %} aria-label="Recibir alerta: {{ funcion.alerta.nombre }}"><span class="oc-alerta-codigo">{{ funcion.alerta.codigo }}</span></label>
+{% else %}<span class="oc-acceso-informativo">—</span>{% endif %}
+</div></div>
+{% endfor %}
 </div></details>
 {% endfor %}
-<fieldset class="oc-nomina-centros" data-oc-nomina-centros>
-<legend>Nómina · alcance de empleados</legend>
-{% if es_admin_centro %}
-<p>El Administrador de Centro utiliza automáticamente los Centros autorizados desde Designar perfiles.</p>
-{% elif mostrar_centros_nomina %}
-<p>Marcá los Centros que podrá gestionar en Nómina. El permiso habilita todas las funciones existentes.</p>
-{% for centro in centros_nomina %}
-<label><input type="checkbox" name="nomina_centro" value="{{ centro.pk }}"
-{% if centro.pk in centros_nomina_ids %}checked{% endif %}> {{ centro.nombre }}</label>
-{% endfor %}
+{% if puede_editar_accesos %}
+<fieldset class="oc-nomina-centros" data-oc-nomina-centros><legend>Nómina · alcance de empleados</legend>
+{% if es_admin_centro %}<p>El Administrador de Centro utiliza los Centros autorizados desde Designar perfiles.</p>
+{% elif mostrar_centros_nomina %}<p>Marcá los Centros que podrá gestionar en Nómina. La autorización se valida en servidor.</p>
+{% for centro in centros_nomina %}<label><input type="checkbox" name="nomina_centro" value="{{ centro.pk }}" {% if centro.pk in centros_nomina_ids %}checked{% endif %}> {{ centro.nombre }}</label>{% endfor %}
+{% endif %}</fieldset>
 {% endif %}
-</fieldset>
-<button type="submit" class="gb-btn">Guardar accesos</button></form>
-<p class="gb-ayuda">Una casilla nunca sustituye la validación de permisos y Centro Operativo en el servidor. Las autorizaciones de módulos nuevos se activan al integrar sus endpoints.</p>
-{% else %}<p>No hay colaboradores ni administradores de centro activos para configurar.</p>{% endif %}
-</section></main></body></html>
+<p class="oc-alerta-error" role="alert" aria-live="polite" hidden></p>
+<button type="submit" class="gb-btn">Guardar accesos y alertas</button></form>
+<p class="gb-ayuda">La seguridad se valida en el backend por usuario, Empresa, Centro y acción. Las casillas de alerta sólo seleccionan notificaciones de fuentes autorizadas.</p>
+{% else %}<p>No hay usuarios activos configurables en esta Empresa.</p>{% endif %}
+</section>
+{% if sin_destinatarios %}<section class="gb-tarjeta"><h2>Alertas sin destinatarios</h2><p class="gb-ayuda">Tipos operativos sin usuarios autorizados o avisos sin receptor en su Centro.</p>
+<ul class="oc-alertas-sin-destinatarios">{% for item in sin_destinatarios %}<li>{{ item.codigo }}{% if item.sin_receptores %} · Sin destinatario autorizado{% endif %}{% if item.ocurrencias_sin_receptor %} · {{ item.ocurrencias_sin_receptor }} aviso(s) sin receptor{% endif %}</li>{% endfor %}</ul></section>{% endif %}
+</main></body></html>

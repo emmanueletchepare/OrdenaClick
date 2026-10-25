@@ -16,6 +16,9 @@ from usuarios.services.alcance_nomina import alcance_nomina
 from usuarios.services.alcances_centros import centros_activos_de_usuario
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.catalogo_alertas import CODIGOS_OPERATIVOS, tipo_operativo
+from usuarios.services.alertas_instrumentos import (
+    permisos_lectura_tipo, fuentes_instrumentos, aviso_autorizado,
+)
 
 
 def miembros_empresa(empresa):
@@ -40,6 +43,8 @@ def alcance_fuente(usuario, empresa, codigo):
         if centros is not None and not centros:
             return False, frozenset()
         return True, centros
+    if codigo in ('FIN-02', 'FIN-03'):
+        return permisos_lectura_tipo(usuario, empresa, codigo), None
     if codigo == 'NOM-01':
         try:
             _, centros = alcance_nomina(usuario, empresa.pk)
@@ -100,6 +105,14 @@ def alertas_sin_destinatarios(empresa):
         if not rec or cantidad:
             filas.append({'codigo': codigo, 'sin_receptores': not bool(rec),
                           'ocurrencias_sin_receptor': cantidad})
+    avisos = fuentes_instrumentos(empresa, date.today())
+    for codigo in ('FIN-02', 'FIN-03'):
+        rec = receptores[codigo]
+        descubiertos = sum(1 for aviso in avisos if aviso['codigo'] == codigo
+            and not any(aviso_autorizado(u, empresa, aviso) for u, _ in rec))
+        if not rec or descubiertos:
+            filas.append({'codigo': codigo, 'sin_receptores': not bool(rec),
+                          'ocurrencias_sin_receptor': descubiertos})
     return filas
 
 

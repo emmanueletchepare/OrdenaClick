@@ -704,10 +704,11 @@ async function cargarProximosVencimientos(
         mostrarTablaProximosVencimientos(
             datos.movimientos,
             periodo === 'alertas',
-            datos.licencias_nomina || []
+            (datos.licencias_nomina || []).concat(datos.alertas_instrumentos || [])
         );
         if(periodo === 'alertas'){
             mostrarAlertasLicenciasNomina(datos.licencias_nomina || []);
+            mostrarAlertasInstrumentos(datos.alertas_instrumentos || []);
         }
 
     }catch(error){
@@ -1408,6 +1409,44 @@ function mostrarTablaProximosVencimientos(
 
 }
 
+
+/* Alertas de Cartera y propios: lectura informativa, sin acciones financieras. */
+function mostrarAlertasInstrumentos(avisos) {
+    if (!Array.isArray(avisos) || !avisos.length) return;
+    const contenedor = document.getElementById('tablaProximosVencimientos');
+    if (!contenedor) return;
+    const grupos = [
+        ['cartera_fisica', 'Cheques físicos recibidos · Cartera'],
+        ['cartera_electronica', 'e-Cheqs recibidos · Cartera electrónica'],
+        ['propio_fisico', 'Cheques propios emitidos'],
+        ['propio_electronico', 'e-Cheqs propios emitidos']
+    ];
+    const seccion = document.createElement('section');
+    seccion.className = 'nm-licencias-pendientes';
+    const titulo = document.createElement('h3');
+    titulo.textContent = 'Cheques y e-Cheqs que requieren atención';
+    seccion.appendChild(titulo);
+    grupos.forEach(([clave, nombre]) => {
+        const items = avisos.filter(a => a.grupo === clave);
+        if (!items.length) return;
+        const subtitulo = document.createElement('h4');
+        subtitulo.textContent = nombre;
+        seccion.appendChild(subtitulo);
+        items.forEach(a => {
+            const fila = document.createElement('p');
+            const proxima = a.estado_alerta === 'Vencido' ? 'Vencido' :
+                a.estado_alerta === 'En atencion' ? 'En atención' :
+                a.estado_alerta === 'Hoy' ? 'Hoy' : 'Próximo';
+            fila.textContent = 'N.º ' + String(a.numero || '') +
+                ' · ' + proxima + ' · acreditación ' +
+                formatearFechaVencimiento(String(a.fecha_acreditacion || '')) +
+                (clave.startsWith('cartera_') ?
+                  ' · límite ' + formatearFechaVencimiento(String(a.fecha_limite || '')) : '');
+            seccion.appendChild(fila);
+        });
+    });
+    contenedor.appendChild(seccion);
+}
 
 /* Alertas laborales: sin mezclar documentos con importes financieros. */
 function mostrarAlertasLicenciasNomina(alertas) {

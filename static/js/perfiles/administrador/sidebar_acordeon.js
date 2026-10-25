@@ -98,7 +98,7 @@
 
     const gestionAlertas = elemento.dataset.ocGestionAlertasUrl;
     const gestion = elemento.dataset.ocGestionAccesosUrl || gestionAlertas;
-    const etiquetaGestion = gestionAlertas ? 'Gestión de alertas' : 'Gestión de accesos';
+    const etiquetaGestion = gestionAlertas ? 'Gestión de alertas' : 'Gestión de accesos y alertas';
     if (gestion) {
       event.preventDefault();
       const destino = document.getElementById('contenido-operativo');
