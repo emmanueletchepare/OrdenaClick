@@ -707,8 +707,7 @@ async function cargarProximosVencimientos(
             (datos.licencias_nomina || []).concat(datos.alertas_instrumentos || [])
         );
         if(periodo === 'alertas'){
-            mostrarAlertasLicenciasNomina(datos.licencias_nomina || []);
-            mostrarAlertasInstrumentos(datos.alertas_instrumentos || []);
+            construirPanelAlertasSegmentado(datos);
         }
 
     }catch(error){
@@ -1410,10 +1409,137 @@ function mostrarTablaProximosVencimientos(
 }
 
 
-/* Alertas de Cartera y propios: lectura informativa, sin acciones financieras. */
-function mostrarAlertasInstrumentos(avisos) {
-    if (!Array.isArray(avisos) || !avisos.length) return;
+/* Segmentacion SOLO visual: datos ya filtrados por el servidor.
+ * No cambia destinatarios, fechas, permisos ni reglas de cada fuente.
+ * La tabla de compromisos existente se mueve sin recrear sus eventos.
+ */
+function construirPanelAlertasSegmentado(datos) {
     const contenedor = document.getElementById('tablaProximosVencimientos');
+    const raiz = contenedor?.closest('[data-oc-vista="alertas"]');
+    if (!contenedor || !raiz) return;
+
+    const movimientos = Array.isArray(datos.movimientos) ? datos.movimientos : [];
+    const instrumentos = Array.isArray(datos.alertas_instrumentos) ? datos.alertas_instrumentos : [];
+    const documentos = Array.isArray(datos.licencias_nomina) ? datos.licencias_nomina : [];
+
+    // Retenemos los nodos y sus listeners (ej. editar Movimiento).
+    const tablaCompromisos = document.createDocumentFragment();
+    while (contenedor.firstChild) tablaCompromisos.appendChild(contenedor.firstChild);
+
+    const capa = document.createElement('div');
+    capa.className = 'oc-alertas-segmentadas';
+    const introduccion = document.createElement('p');
+    introduccion.className = 'oc-alertas-introduccion';
+    introduccion.textContent = 'Avisos que podés consultar según tus permisos actuales.';
+    capa.appendChild(introduccion);
+
+    const navegacion = document.createElement('div');
+    navegacion.className = 'oc-alertas-categorias';
+    navegacion.setAttribute('role', 'tablist');
+    navegacion.setAttribute('aria-label', 'Categorías de alertas');
+    capa.appendChild(navegacion);
+
+    const secciones = [
+        {clave: 'compromisos', nombre: 'Compromisos', cantidad: movimientos.length,
+         explicacion: 'Compromisos económicos con saldo pendiente.'},
+        {clave: 'instrumentos', nombre: 'Cheques y e-Cheqs', cantidad: instrumentos.length,
+         explicacion: 'Cartera física, cartera electrónica e instrumentos propios emitidos.'},
+        {clave: 'documentacion', nombre: 'Documentación', cantidad: documentos.length,
+         explicacion: 'Licencias y documentación con vencimiento.'}
+    ];
+    const botones = [];
+    const paneles = [];
+
+    for (const segmento of secciones) {
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.className = 'oc-alertas-categoria';
+        boton.id = 'oc-alertas-tab-' + segmento.clave;
+        boton.setAttribute('role', 'tab');
+        boton.setAttribute('aria-controls', 'oc-alertas-panel-' + segmento.clave);
+        const nombre = document.createElement('span');
+        nombre.textContent = segmento.nombre;
+        const cantidad = document.createElement('span');
+        cantidad.className = 'oc-alertas-cantidad';
+        cantidad.textContent = String(segmento.cantidad);
+        boton.append(nombre, cantidad);
+        navegacion.appendChild(boton);
+        botones.push(boton);
+
+        const panel = document.createElement('section');
+        panel.className = 'oc-alertas-panel';
+        panel.id = 'oc-alertas-panel-' + segmento.clave;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', boton.id);
+        panel.tabIndex = 0;
+        const descripcion = document.createElement('p');
+        descripcion.className = 'oc-alertas-descripcion';
+        descripcion.textContent = segmento.explicacion;
+        panel.appendChild(descripcion);
+        capa.appendChild(panel);
+        paneles.push(panel);
+    }
+
+    function vacio(panel, mensaje) {
+        const parrafo = document.createElement('p');
+        parrafo.className = 'oc-alertas-vacio';
+        parrafo.textContent = mensaje;
+        panel.appendChild(parrafo);
+    }
+
+    if (movimientos.length) {
+        paneles[0].appendChild(tablaCompromisos);
+    } else {
+        vacio(paneles[0], 'No hay compromisos que requieran atención.');
+    }
+    if (instrumentos.length) {
+        mostrarAlertasInstrumentos(instrumentos, paneles[1]);
+    } else {
+        vacio(paneles[1], 'No hay cheques ni e-Cheqs que requieran atención.');
+    }
+    if (documentos.length) {
+        mostrarAlertasLicenciasNomina(documentos, paneles[2]);
+    } else {
+        vacio(paneles[2], 'No hay vencimientos de documentación que requieran atención.');
+    }
+    const pendientes = document.createElement('p');
+    pendientes.className = 'oc-alertas-fuentes-futuras';
+    pendientes.textContent = 'Habilitaciones y renovaciones de autoridades: fuentes todavía no operativas; no generan avisos.';
+    paneles[2].appendChild(pendientes);
+
+    function activar(indice, moverFoco = false) {
+        botones.forEach((boton, i) => {
+            const elegido = i === indice;
+            boton.setAttribute('aria-selected', String(elegido));
+            boton.tabIndex = elegido ? 0 : -1;
+            paneles[i].hidden = !elegido;
+        });
+        if (moverFoco) botones[indice].focus();
+    }
+    botones.forEach((boton, indice) => {
+        boton.addEventListener('click', () => activar(indice));
+        boton.addEventListener('keydown', evento => {
+            let siguiente = indice;
+            if (evento.key === 'ArrowRight') siguiente = (indice + 1) % botones.length;
+            else if (evento.key === 'ArrowLeft') siguiente = (indice + botones.length - 1) % botones.length;
+            else if (evento.key === 'Home') siguiente = 0;
+            else if (evento.key === 'End') siguiente = botones.length - 1;
+            else return;
+            evento.preventDefault();
+            activar(siguiente, true);
+        });
+    });
+    const inicial = Math.max(0, secciones.findIndex(s => s.cantidad > 0));
+    activar(inicial);
+    contenedor.appendChild(capa);
+    const estado = document.getElementById('estadoProximosVencimientos');
+    if (estado) estado.style.display = 'none';
+}
+
+/* Alertas de Cartera y propios: lectura informativa, sin acciones financieras. */
+function mostrarAlertasInstrumentos(avisos, contenedorDestino = null) {
+    if (!Array.isArray(avisos) || !avisos.length) return;
+    const contenedor = contenedorDestino || document.getElementById('tablaProximosVencimientos');
     if (!contenedor) return;
     const grupos = [
         ['cartera_fisica', 'Cheques físicos recibidos · Cartera'],
@@ -1449,9 +1575,9 @@ function mostrarAlertasInstrumentos(avisos) {
 }
 
 /* Alertas laborales: sin mezclar documentos con importes financieros. */
-function mostrarAlertasLicenciasNomina(alertas) {
+function mostrarAlertasLicenciasNomina(alertas, contenedorDestino = null) {
     if (!Array.isArray(alertas) || !alertas.length) return;
-    const contenedor = document.getElementById('tablaProximosVencimientos');
+    const contenedor = contenedorDestino || document.getElementById('tablaProximosVencimientos');
     if (!contenedor) return;
     const seccion = document.createElement('section');
     seccion.className = 'nm-licencias-pendientes';
