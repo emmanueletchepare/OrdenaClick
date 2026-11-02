@@ -1,4 +1,4 @@
-﻿import re
+import re
 
 from datetime import datetime, timedelta
 
@@ -71,6 +71,16 @@ def panel_admin(request):
         return None
 
     if request.method == 'POST':
+        from usuarios.services.documentos_empresa_b10a import leer_vencimientos_documentales
+        try:
+            vencimientos_documentales = leer_vencimientos_documentales(request.POST)
+        except ValueError as error:
+            return _respuesta_archivo_rechazado(str(error),
+                'modificar' if request.POST.get('guardar_cambios_empresa') else 'alta')
+
+        # Marcador explícito: POST histórico sin el control no cambia la marca.
+        acta_cubre = (request.POST.get('acta_incluye_designacion') == '1'
+                      if 'acta_incluye_designacion_presente' in request.POST else None)
 
         # ================================
         # NUEVA EMPRESA
@@ -94,6 +104,11 @@ def panel_admin(request):
             # El reemplazo autorizado usa exclusivamente Backup Empresa v1.
             request.session.pop("empresa_reemplazar", None)
             request.session.pop("confirmar_reemplazo", None)
+
+            if acta_cubre and not request.FILES.get('acta'):
+                return _respuesta_archivo_rechazado(
+                    'Para indicar que el acta incluye la designación, adjuntá el acta de asamblea.',
+                    'alta')
 
             nueva_empresa = Empresa.objects.create(
 
@@ -181,7 +196,11 @@ def panel_admin(request):
                 if request.FILES.get(
                     'designacion'
                 )
-                else None
+                else None,
+                acta_directorio=request.FILES.get('acta_directorio'),
+                fecha_acta_directorio=(timezone.now() if request.FILES.get('acta_directorio') else None),
+                acta_incluye_designacion=bool(acta_cubre),
+                **vencimientos_documentales,
             )
 
             CentroOperativo.objects.create(
@@ -333,6 +352,19 @@ def panel_admin(request):
                 empresa_actual.fecha_designacion = (
                     timezone.now()
                 )
+
+            if request.FILES.get('acta_directorio'):
+                empresa_actual.acta_directorio = request.FILES['acta_directorio']
+                empresa_actual.fecha_acta_directorio = timezone.now()
+            for campo, fecha in vencimientos_documentales.items():
+                setattr(empresa_actual, campo, fecha)
+
+            if acta_cubre is not None:
+                if acta_cubre and not (empresa_actual.acta or request.FILES.get('acta')):
+                    return _respuesta_archivo_rechazado(
+                        'Para indicar que el acta incluye la designación, adjuntá el acta de asamblea.',
+                        'modificar')
+                empresa_actual.acta_incluye_designacion = acta_cubre
 
             empresa_actual.save()
 

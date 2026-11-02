@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET
 from usuarios.services.seguridad import obtener_empresa_autorizada
 
 
-CAMPOS_DOCUMENTO = frozenset({"estatuto", "acta", "designacion"})
+CAMPOS_DOCUMENTO = frozenset({"estatuto", "acta", "designacion", "acta_directorio"})
 
 
 @login_required

@@ -19,6 +19,10 @@ from usuarios.services.catalogo_alertas import CODIGOS_OPERATIVOS, tipo_operativ
 from usuarios.services.alertas_instrumentos import (
     permisos_lectura_tipo, fuentes_instrumentos, aviso_autorizado,
 )
+from usuarios.services.alertas_documentales import (
+    CODIGOS as CODIGOS_DOC, alcance_documental, predeterminado_documental,
+    fuentes_documentales, aviso_documental_autorizado,
+)
 
 
 def miembros_empresa(empresa):
@@ -45,6 +49,8 @@ def alcance_fuente(usuario, empresa, codigo):
         return True, centros
     if codigo in ('FIN-02', 'FIN-03'):
         return permisos_lectura_tipo(usuario, empresa, codigo), None
+    if codigo in CODIGOS_DOC:
+        return alcance_documental(usuario, empresa, codigo)
     if codigo == 'NOM-01':
         try:
             _, centros = alcance_nomina(usuario, empresa.pk)
@@ -58,11 +64,13 @@ def receptores_efectivos(empresa, codigo):
     """Lista de (usuario, centros o None) válida AHORA, con revocaciones aplicadas."""
     tipo_operativo(codigo)
     miembros = {u.pk: u for u in miembros_empresa(empresa)}
-    asignados = DestinatarioAlerta.objects.filter(empresa=empresa, codigo=codigo, activo=True)
+    filas = {d.usuario_id: d.activo for d in DestinatarioAlerta.objects.filter(
+        empresa=empresa, codigo=codigo)}
     resultado = []
-    for usuario_id in asignados.values_list('usuario_id', flat=True):
-        usuario = miembros.get(usuario_id)
-        if usuario is not None:
+    for usuario_id, usuario in miembros.items():
+        activo = filas.get(usuario_id, predeterminado_documental(usuario, empresa, codigo)
+                           if codigo in CODIGOS_DOC else False)
+        if activo:
             permitido, centros = alcance_fuente(usuario, empresa, codigo)
             if permitido:
                 resultado.append((usuario, centros))
@@ -74,10 +82,11 @@ def suscripto_efectivo(usuario, empresa, codigo):
     tipo_operativo(codigo)
     if not any(u.pk == usuario.pk for u in miembros_empresa(empresa)):
         return False
-    if not DestinatarioAlerta.objects.filter(empresa=empresa, usuario=usuario,
-                                             codigo=codigo, activo=True).exists():
-        return False
-    return alcance_fuente(usuario, empresa, codigo)[0]
+    fila = DestinatarioAlerta.objects.filter(empresa=empresa, usuario=usuario,
+                                             codigo=codigo).values_list('activo', flat=True).first()
+    activo = (fila if fila is not None else
+              predeterminado_documental(usuario, empresa, codigo) if codigo in CODIGOS_DOC else False)
+    return bool(activo and alcance_fuente(usuario, empresa, codigo)[0])
 
 
 def sonido_habilitado(usuario, empresa):
@@ -110,6 +119,14 @@ def alertas_sin_destinatarios(empresa):
         rec = receptores[codigo]
         descubiertos = sum(1 for aviso in avisos if aviso['codigo'] == codigo
             and not any(aviso_autorizado(u, empresa, aviso) for u, _ in rec))
+        if not rec or descubiertos:
+            filas.append({'codigo': codigo, 'sin_receptores': not bool(rec),
+                          'ocurrencias_sin_receptor': descubiertos})
+    documentos = fuentes_documentales(empresa, date.today())
+    for codigo in CODIGOS_DOC:
+        rec = receptores[codigo]
+        descubiertos = sum(1 for aviso in documentos if aviso['codigo'] == codigo and
+            not any(aviso_documental_autorizado(u, empresa, aviso) for u, _ in rec))
         if not rec or descubiertos:
             filas.append({'codigo': codigo, 'sin_receptores': not bool(rec),
                           'ocurrencias_sin_receptor': descubiertos})
@@ -146,20 +163,24 @@ def guardar_destinatarios(*, administrador, empresa_id, codigos_usuario, sonidos
         sonidos.add(usuario_id)
     previos = {(d.codigo, d.usuario_id): d for d in DestinatarioAlerta.objects.select_for_update().filter(empresa=empresa)}
     # Incluye filas históricas para impedir reactivar avisos tras desvincular y revincular.
-    for clave in sorted(set(previos) | seleccionados):
+    doc_por_defecto = {(codigo, u.pk) for codigo in CODIGOS_DOC for u in usuarios.values()
+                       if predeterminado_documental(u, empresa, codigo)}
+    for clave in sorted(set(previos) | seleccionados | doc_por_defecto):
+        codigo, usuario_id = clave
         antes_obj = previos.get(clave)
-        antes = bool(antes_obj and antes_obj.activo)
+        antes = (bool(antes_obj.activo) if antes_obj is not None else
+                 predeterminado_documental(usuarios[usuario_id], empresa, codigo)
+                 if codigo in CODIGOS_DOC else False)
         despues = clave in seleccionados
         if antes == despues:
             continue
-        codigo, usuario_id = clave
         if antes_obj:
             antes_obj.activo = despues
             antes_obj.configurado_por = administrador
             antes_obj.save(update_fields=['activo', 'configurado_por', 'modificado'])
         else:
             DestinatarioAlerta.objects.create(empresa=empresa, usuario_id=usuario_id,
-                codigo=codigo, activo=True, configurado_por=administrador)
+                codigo=codigo, activo=despues, configurado_por=administrador)
         EventoConfiguracionAlerta.objects.create(empresa=empresa, usuario_id=usuario_id,
             actor=administrador, codigo=codigo, activo=despues)
     preferencias = {p.usuario_id: p for p in PreferenciaSonidoAlerta.objects.select_for_update().filter(empresa=empresa)}
@@ -197,9 +218,13 @@ def guardar_destinatarios_usuario(*, administrador, empresa_id, usuario_id, codi
             raise PermissionDenied('La fuente no está autorizada para el usuario.')
     previos = {d.codigo: d for d in DestinatarioAlerta.objects.select_for_update().filter(
         empresa=empresa, usuario_id=usuario_id)}
-    for codigo in sorted(set(previos) | nuevos):
+    predeterminados = {codigo for codigo in CODIGOS_DOC
+                        if predeterminado_documental(usuario, empresa, codigo)}
+    for codigo in sorted(set(previos) | nuevos | predeterminados):
         anterior = previos.get(codigo)
-        antes = bool(anterior and anterior.activo)
+        antes = (bool(anterior.activo) if anterior is not None else
+                 predeterminado_documental(usuario, empresa, codigo)
+                 if codigo in CODIGOS_DOC else False)
         despues = codigo in nuevos
         if antes == despues:
             continue
@@ -209,7 +234,7 @@ def guardar_destinatarios_usuario(*, administrador, empresa_id, usuario_id, codi
             anterior.save(update_fields=['activo', 'configurado_por', 'modificado'])
         else:
             DestinatarioAlerta.objects.create(empresa=empresa, usuario=usuario,
-                codigo=codigo, activo=True, configurado_por=administrador)
+                codigo=codigo, activo=despues, configurado_por=administrador)
         EventoConfiguracionAlerta.objects.create(empresa=empresa, usuario=usuario,
             actor=administrador, codigo=codigo, activo=despues)
     return nuevos

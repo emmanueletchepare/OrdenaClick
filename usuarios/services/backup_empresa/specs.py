@@ -19,6 +19,7 @@ MODEL_SPECS = (
     ModelSpec("proveedores", models.Proveedor, "empresa"),
     ModelSpec("tipos_gasto_proveedores", models.TipoGastoProveedor, "tipo_gasto__empresa"),
     ModelSpec("centros_operativos", models.CentroOperativo, "empresa"),
+    ModelSpec("habilitaciones_centros", models.HabilitacionCentro, "centro__empresa"),
     ModelSpec("recursos_operativos", models.RecursoOperativo, "empresa"),
     ModelSpec("recursos_centros", models.RecursoOperativoCentro, "recurso_operativo__empresa"),
     ModelSpec("clientes", models.Cliente, "empresa"),
@@ -75,4 +76,4 @@ FORMAT_ID = "ordenaclick_empresa"
 FORMAT_VERSION = 1
 
 # Componentes adicionales de Caja 2: opcionales al leer un Backup v1 anterior.
-OPTIONAL_NEW_KEYS = frozenset({"correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq", "operaciones_salida_echeq", "items_salida_echeq", "empleados", "eventos_empleados", "alertas_licencia_empleados", "casos_empleados", "actuaciones_casos_empleados", "documentos_empleados"})
+OPTIONAL_NEW_KEYS = frozenset({"habilitaciones_centros", "correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq", "operaciones_salida_echeq", "items_salida_echeq", "empleados", "eventos_empleados", "alertas_licencia_empleados", "casos_empleados", "actuaciones_casos_empleados", "documentos_empleados"})

@@ -7,6 +7,10 @@ from .http.recuperacion import SolicitarRecuperacion, ConfirmarRecuperacion
 from .http.administrador import panel_admin
 from .http.administrar_unificado import panel_administrar
 from .http.accesos_colaborador import gestion_accesos
+from .http.habilitaciones_centros import (
+    agregar_habilitacion_centro, archivar_habilitacion_centro,
+    descargar_habilitacion_centro,
+)
 from .http.gestion_alertas import gestion_alertas, sonido_alertas_usuario
 from .http.empresa_legado import (
     exportar_empresa,
@@ -265,6 +269,12 @@ urlpatterns = [
     path('administrar/accesos/<int:empresa_id>/', gestion_accesos, name='gestion_accesos_colaborador'),
     path('administrar/alertas/<int:empresa_id>/', gestion_alertas, name='gestion_alertas'),
     path('alertas/sonido/', sonido_alertas_usuario, name='sonido_alertas_usuario'),
+    path('centros/habilitaciones/agregar/', agregar_habilitacion_centro,
+         name='agregar_habilitacion_centro'),
+    path('centros/habilitaciones/archivar/', archivar_habilitacion_centro,
+         name='archivar_habilitacion_centro'),
+    path('empresa/<int:empresa_id>/centro/<int:centro_id>/habilitacion/<int:habilitacion_id>/',
+         descargar_habilitacion_centro, name='descargar_habilitacion_centro'),
 
     path(
         'panel-admin/',

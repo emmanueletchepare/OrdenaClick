@@ -24,12 +24,13 @@
 
 **Documentación de Empresa**
 
-- [ ] **DOC-01** · Renovación o revisión de acta de directorio.
+- [x] **DOC-01** · Renovación o revisión de acta de directorio.
 - [ ] **DOC-02** · Renovación o revisión de acta de asamblea.
 
 **Documentación de cada Centro Operativo**
 
-- [ ] **DOC-03** · Vencimiento de habilitación municipal.
+- [x] **DOC-03** · Vencimiento de habilitación municipal o Centro sin habilitación registrada.
+- [x] **DOC-04** · Vencimiento de designación de autoridades.
 
 ---
 
@@ -42,3 +43,5 @@ Antes de implementar una línea pendiente, completar su **registro de origen, ve
 **Gestor de Alertas:** debe incluir **«Sin destinatarios»** para tipos realmente operativos y ocurrencias activas sin receptores autorizados. Una alerta futura no debe aparecer allí como incidencia.
 
 **Estado del documento:** propuesta de catálogo para incorporar al repositorio con aprobación; ninguna línea pendiente implica una función existente.
+
+**Actualización 02/11/2026:** DOC-02 queda únicamente como código histórico, sin alerta independiente. Directorio: DOC-01. Designación de Autoridades (Asamblea): DOC-04.

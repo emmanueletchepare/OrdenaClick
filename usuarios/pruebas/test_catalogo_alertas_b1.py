@@ -17,21 +17,20 @@ class CatalogoAlertasB1Tests(SimpleTestCase):
         self.assertEqual(set(tipo.categoria for tipo in TIPOS_ALERTA), set(CATEGORIAS))
 
     def test_fuentes_integradas(self):
-        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'FIN-02', 'FIN-03', 'NOM-01'})
+        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'FIN-02', 'FIN-03', 'NOM-01', 'DOC-01', 'DOC-03', 'DOC-04'})
         self.assertEqual({tipo.codigo for tipo in tipos_operativos()}, CODIGOS_OPERATIVOS)
         for codigo in CODIGOS_OPERATIVOS:
             self.assertTrue(tipo_operativo(codigo).operativa)
 
     def test_ideas_no_se_pueden_habilitar_accidentalmente(self):
-        for codigo in ('FIN-04', 'ADM-01', 'NOM-02',
-                       'DOC-01', 'DOC-02', 'DOC-03', 'NO-EXISTE'):
+        for codigo in ('FIN-04', 'ADM-01', 'NOM-02', 'DOC-02', 'NO-EXISTE'):
             with self.subTest(codigo=codigo), self.assertRaises(ValueError):
                 tipo_operativo(codigo)
 
     def test_habilitacion_municipal_asociada_al_centro(self):
         tipo = TIPOS_POR_CODIGO['DOC-03']
         self.assertEqual(tipo.alcance, 'Centro Operativo')
-        self.assertFalse(tipo.operativa)
+        self.assertTrue(tipo.operativa)
 
     def test_catalogo_md_refleja_codigos_y_estados(self):
         base = Path(settings.BASE_DIR) / 'Archivos de proyecto'

@@ -1,0 +1,43 @@
+/* ABM Centros: presentación modernizada sin alterar las operaciones originales. */
+.oc-centros-vista{max-width:1100px;box-sizing:border-box}
+.oc-centros-vista .input-box{min-height:43px;border-radius:11px;border:1px solid #34445c;background:#101722;color:#e9f1ff}
+.oc-centros-vista .input-box:focus{border-color:#65a7f0;outline:1px solid #65a7f0}
+.oc-centros-vista #btnGuardarCentroOperativo{border-radius:11px;background:#387fec;font-weight:700}
+.oc-centros-vista #btnCancelarCentroOperativo{border-radius:11px}
+.oc-centros-vista .tarjeta-centro-operativo-abm{border-radius:13px!important;background:#1a2435!important;border:1px solid #344761!important;transition:border-color .18s,background .18s}
+.oc-centros-vista .tarjeta-centro-operativo-abm:hover{border-color:#6282ad!important;background:#1c2b41!important}
+.oc-centros-vista .tarjeta-centro-operativo-abm .action-btn{border-radius:10px}
+.oc-centros-vista .tarjeta-centro-operativo-abm .action-btn:focus-visible,.oc-centros-vista .file-btn:focus-within{outline:2px solid #86baff;outline-offset:2px}
+.oc-centros-documentacion{border:1px solid #354c6b;background:#142034;border-radius:15px;padding:18px;margin:24px 0 8px;color:#e8f3ff}
+.oc-centros-documentacion-cabecera{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.oc-centros-documentacion>summary{cursor:pointer;list-style:none}
+.oc-centros-documentacion>summary::-webkit-details-marker{display:none}
+.oc-centros-documentacion>summary:focus-visible{outline:2px solid #8ab8ff;outline-offset:3px}
+.oc-centros-documentacion>summary::before{content:'▸';color:#9dc6ff;font-size:15px;align-self:center}
+.oc-centros-documentacion[open]>summary::before{content:'▾'}
+.oc-centros-doc-titulo{font-size:17px;font-weight:700;color:#f2f7ff;flex:1}
+.oc-centros-documentacion-bajada{font-size:13px;margin:14px 0 4px;color:#a3bad6;line-height:1.5}
+.oc-centros-doc-seleccion{display:inline-flex;border:1px solid #3d618b;background:#1f3550;color:#b5dbff;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700}
+.oc-centros-doc-ayuda{font-size:13px;color:#b3c5db;margin:14px 0 2px;line-height:1.55}
+.oc-habilitaciones-centro[hidden]{display:none!important}
+.oc-habilitaciones-centro{border-top:1px solid #324862;padding-top:10px;margin-top:12px;min-width:0}
+.oc-habilitaciones-lista{display:grid;gap:9px;margin:10px 0 17px}
+.oc-habilitacion-item{display:flex;justify-content:space-between;align-items:center;gap:13px;flex-wrap:wrap;padding:13px 15px;background:#1a2a3c;border:1px solid #344f6d;border-radius:12px;font-size:13px}
+.oc-habilitacion-descripcion{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.oc-habilitacion-descripcion strong{font-size:14px;color:#e6f4ff}
+.oc-habilitacion-descripcion span{color:#a9c2dc;font-size:12px}
+.oc-habilitacion-acciones{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.oc-habilitacion-acciones .action-btn{min-height:36px;border-radius:9px;padding:8px 13px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.oc-habilitacion-archivada{opacity:.63;background:#202533}
+.oc-habilitacion-faltante{color:#e8b779;font-size:13px;margin:4px 0}
+.oc-habilitacion-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;padding-top:15px;border-top:1px solid #344963}
+.oc-habilitacion-form>label,.oc-habilitacion-adjunto{display:flex;flex-direction:column;gap:7px;color:#bed2eb;font-size:12px;min-width:0}
+.oc-habilitacion-form input{width:100%;min-width:0;box-sizing:border-box}
+.oc-habilitacion-adjunto .file-btn{height:44px;min-height:44px;width:100%;box-sizing:border-box;background:#1c293a;color:#e5edff;border:1px solid #39516f;border-radius:11px;font-size:13px;text-align:center;padding:0 10px}
+.oc-habilitacion-adjunto .file-btn:hover{background:#25374f;border-color:#74adf2}
+.oc-habilitacion-adjunto .file-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.oc-habilitacion-adjunto input[type=file][hidden]{display:none!important}
+.oc-habilitacion-guardar{display:flex;flex-direction:column;gap:8px;justify-content:end}
+.oc-habilitacion-guardar .guardar{height:44px;border-radius:11px;max-width:260px;font-weight:700;margin:0}
+.oc-habilitacion-estado{font-size:12px;color:#a7dcff;margin:0;min-height:0}
+@media(max-width:750px){.oc-habilitacion-form{grid-template-columns:1fr}.oc-centros-documentacion{padding:13px}.oc-habilitacion-acciones{width:100%}}

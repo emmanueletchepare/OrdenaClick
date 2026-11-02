@@ -12,6 +12,7 @@ from usuarios.services.financiero import (
 from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empresa_administrable
 from usuarios.services.nomina import alertas_pendientes
 from usuarios.services.alertas_instrumentos import avisos_visibles, avisos_publicos
+from usuarios.services.alertas_documentales import avisos_documentales_visibles, avisos_documentales_publicos
 from usuarios.services.destinatarios_alertas import suscripto_efectivo, sonido_habilitado
 from usuarios.models import Movimiento
 from usuarios.services.accesos_colaborador import exigir, puede
@@ -72,6 +73,12 @@ def estado_llamador_alertas(request):
         mostrar_llamador = any(
             suscripto_efectivo(request.user, empresa, codigo)
             for codigo in {a['codigo'] for a in avisos_visibles(request.user, empresa)}
+        )
+
+    if not mostrar_llamador:
+        mostrar_llamador = any(
+            suscripto_efectivo(request.user, empresa, codigo)
+            for codigo in {a['codigo'] for a in avisos_documentales_visibles(request.user, empresa)}
         )
 
     return JsonResponse(
@@ -313,6 +320,8 @@ def _listar_vencimientos_o_alertas(request, *, vista_alertas):
 
     alertas_instrumentos = (avisos_publicos(request.user, empresa)
                            if periodo == 'alertas' else [])
+    alertas_documentales = (avisos_documentales_publicos(request.user, empresa)
+                            if periodo == 'alertas' else [])
     licencias_nomina = []
     if periodo == 'alertas':
         try:
@@ -320,7 +329,9 @@ def _listar_vencimientos_o_alertas(request, *, vista_alertas):
                                        empresa.pk,'empleado__centro_operativo_id')
             licencias_nomina = [
                 {'empleado_id': a.empleado_id, 'nombre': a.empleado.nombre_apellido,
-                 'vence': a.fecha_vencimiento.isoformat()}
+                 'vence': a.fecha_vencimiento.isoformat(),
+                 'estado_alerta': ('Vencido' if a.fecha_vencimiento < hoy else
+                                   'Hoy' if a.fecha_vencimiento == hoy else 'Proximo')}
                 for a in alertas
             ]
         except PermissionDenied:
@@ -331,6 +342,7 @@ def _listar_vencimientos_o_alertas(request, *, vista_alertas):
             "ok": True,
             "licencias_nomina": licencias_nomina,
             "alertas_instrumentos": alertas_instrumentos,
+            "alertas_documentales": alertas_documentales,
             "periodo": periodo,
             "fecha_desde": (
                 fecha_desde.isoformat()

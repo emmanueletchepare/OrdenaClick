@@ -1,4 +1,4 @@
-from usuarios.services.accesos_colaborador import exigir_abm
+from usuarios.services.accesos_colaborador import exigir_abm, puede
 from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -32,11 +32,17 @@ def listar_centros_operativos(request):
 
     from usuarios.services.lectura_maestros_registros import limitar_centros
     centros = limitar_centros(centros,request.user,empresa)
+    habilitaciones_autorizadas = (puede(request.user, empresa.pk, 'abm.centros') and
+        (contexto.es_superusuario or contexto.es_propietario or
+         contexto.jerarquia in ('admin_general', 'admin_centro')))
+    if habilitaciones_autorizadas:
+        centros = centros.prefetch_related('habilitaciones')
     html = render_to_string(
         "usuarios/maestros/centros_operativos.html",
         {
             "empresa": empresa,
-            "centros": centros
+            "centros": centros,
+            "puede_documentos_centro": habilitaciones_autorizadas,
         },
         request=request
     )

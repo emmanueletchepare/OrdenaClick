@@ -21,4 +21,21 @@
 [data-oc-vista="alertas"] .oc-alertas-panel .nm-licencias-pendientes h3{font-size:16px;margin:8px 0 13px;color:#eef4ff}
 [data-oc-vista="alertas"] .oc-alertas-panel .nm-licencias-pendientes h4{font-size:14px;color:#b9d7fc;margin:16px 0 8px}
 [data-oc-vista="alertas"] .oc-alertas-panel .nm-licencias-pendientes p{font-size:13px;line-height:1.55;overflow-wrap:anywhere}
-@media(max-width:760px){[data-oc-vista="alertas"] .oc-alertas-categorias{grid-template-columns:1fr;gap:7px}[data-oc-vista="alertas"] .oc-alertas-categoria{min-height:47px}[data-oc-vista="alertas"] .oc-alertas-panel{padding:12px 8px}}
+/* La presentación comparte la gramática visual de Próximos/Vencidos de Compromisos. */
+[data-oc-vista="alertas"] .oc-alertas-valores-grupo{margin:12px 0 20px}
+[data-oc-vista="alertas"] .oc-alertas-valores-titulo{font-size:16px;font-weight:700;color:#f3f7ff;margin:0 2px 12px}
+[data-oc-vista="alertas"] .oc-alertas-valores-estado{border-radius:13px;border:1px solid;padding:14px 13px 9px;margin:10px 0}
+[data-oc-vista="alertas"] .oc-alertas-valores-proximo{background:rgba(11,85,82,.13);border-color:#176c6a}
+[data-oc-vista="alertas"] .oc-alertas-valores-vencido{background:rgba(109,34,48,.12);border-color:#783744}
+[data-oc-vista="alertas"] .oc-alertas-valores-estado h4{display:flex;gap:12px;align-items:center;margin:2px 4px 14px;font-size:15px;font-weight:700}
+[data-oc-vista="alertas"] .oc-alertas-valores-proximo h4{color:#37dfc6}
+[data-oc-vista="alertas"] .oc-alertas-valores-vencido h4{color:#ff7581}
+[data-oc-vista="alertas"] .oc-alertas-valores-contador{padding:4px 10px;border-radius:20px;background:#294352;color:#fff;font-size:12px}
+[data-oc-vista="alertas"] .oc-alertas-valores-vencido .oc-alertas-valores-contador{background:#783746}
+[data-oc-vista="alertas"] .oc-alertas-valores-fila{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;gap:12px;align-items:center;border:1px solid #2d3d55;background:#161e2d;padding:13px 14px;border-radius:9px;margin-bottom:8px;font-size:13px;color:#d5e1f4}
+[data-oc-vista="alertas"] .oc-alertas-valores-fila strong{overflow-wrap:anywhere;color:#f2f7ff}
+[data-oc-vista="alertas"] .oc-alertas-valores-fila span{overflow-wrap:anywhere}
+[data-oc-vista="alertas"] .oc-alertas-valores-etiqueta{background:#26364d;border-radius:7px;padding:5px 9px;font-weight:650;white-space:nowrap}
+[data-oc-vista="alertas"] .oc-alertas-valores-vencido .oc-alertas-valores-etiqueta{color:#ff99a0}
+@media(max-width:760px){[data-oc-vista="alertas"] .oc-alertas-valores-fila{grid-template-columns:1fr;gap:6px}
+[data-oc-vista="alertas"] .oc-alertas-categorias{grid-template-columns:1fr;gap:7px}[data-oc-vista="alertas"] .oc-alertas-categoria{min-height:47px}[data-oc-vista="alertas"] .oc-alertas-panel{padding:12px 8px}}

@@ -17,7 +17,8 @@
 {% if usuario_seleccionado %}
 <p class="oc-acceso-explicacion">En cada fila podés definir el <strong>Acceso</strong> al módulo y si recibirá su <strong>Alerta</strong>. La alerta no concede acceso. Cada destinatario gestiona su propio sonido.</p>
 {% if permisos_inherentes %}<p class="oc-acceso-aclaracion">Los accesos de este usuario provienen de su jerarquía. Podés configurar sus alertas, pero no cambiar sus permisos inherentes.</p>{% endif %}
-<form method="post" class="oc-acceso-form" data-oc-unificado="1" data-oc-permisos-inherentes="{% if permisos_inherentes %}1{% else %}0{% endif %}" data-oc-banco-actual="{% if lectura_bancaria %}1{% else %}0{% endif %}">
+<form method="post" class="oc-acceso-form" data-oc-unificado="1" data-oc-permisos-inherentes="{% if permisos_inherentes %}1{% else %}0{% endif %}" data-oc-banco-actual="{% if lectura_bancaria %}1{% else %}0{% endif %}"
+ data-oc-admin-centro="{% if es_admin_centro %}1{% else %}0{% endif %}">
 {% csrf_token %}<input type="hidden" name="formulario" value="accesos-alertas">
 <input type="hidden" name="usuario" value="{{ usuario_seleccionado }}">
 {% for seccion in arbol %}

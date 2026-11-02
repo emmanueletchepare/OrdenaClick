@@ -1,0 +1,18 @@
+/* Ajuste acotado al formulario societario existente de OrdenaClick. */
+.oc-sociedad-documento{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.8fr);grid-template-rows:auto auto auto auto;column-gap:12px;align-content:start;min-width:0}
+.oc-sociedad-documento>label.label:first-child{grid-column:1;grid-row:1;align-self:end;margin-top:10px!important;min-width:0}
+.oc-sociedad-documento>div:not(.oc-vencimiento-societario){grid-column:1;grid-row:2;align-self:start;min-height:40px;overflow-wrap:anywhere}
+.oc-sociedad-documento>.oc-vencimiento-societario{grid-column:2;grid-row:1 / span 2;margin:0;align-self:start;gap:6px;min-width:0}
+.oc-sociedad-documento>.oc-vencimiento-societario>.label{font-size:12px;color:#a9c7e8;margin:0;line-height:18px}
+.oc-sociedad-documento>.oc-vencimiento-societario>.input-box{width:100%;max-width:none;min-width:0;height:38px;box-sizing:border-box;font-size:12px;padding:0 10px}
+.oc-sociedad-documento>a.sidebar-btn{grid-column:1 / -1;grid-row:3;box-sizing:border-box;min-width:0;margin:0 0 8px!important}
+.oc-sociedad-documento>label.file-btn{grid-column:1 / -1;grid-row:4;min-width:0;box-sizing:border-box}
+.oc-sociedad-documento.oc-acta-directorio>div.oc-documento-actual{color:#8096b6;font-size:13px;line-height:1.4}
+@media(max-width:690px){.oc-sociedad-documento{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;gap:6px}.oc-sociedad-documento>label.label:first-child,.oc-sociedad-documento>div:not(.oc-vencimiento-societario),.oc-sociedad-documento>.oc-vencimiento-societario,.oc-sociedad-documento>a.sidebar-btn,.oc-sociedad-documento>label.file-btn{grid-column:1;grid-row:auto}.oc-sociedad-documento>div:not(.oc-vencimiento-societario){min-height:0}.oc-sociedad-documento>.oc-vencimiento-societario{margin:2px 0 6px}.oc-sociedad-documento>.oc-vencimiento-societario>.input-box{max-width:240px}}
+
+/* Documento societario: formato de OrdenaClick, sin recuadros ni controles extra. */
+.oc-sociedad-simple>.oc-sociedad-estatuto{grid-column:1 / -1;min-width:0}
+.oc-sociedad-simple>.oc-sociedad-estatuto>a.sidebar-btn,
+.oc-sociedad-simple>.oc-sociedad-estatuto>.file-btn{width:100%;box-sizing:border-box}
+.oc-sociedad-simple>.oc-sociedad-documento{min-width:0}
+@media(max-width:690px){.oc-sociedad-simple{grid-template-columns:minmax(0,1fr)}}

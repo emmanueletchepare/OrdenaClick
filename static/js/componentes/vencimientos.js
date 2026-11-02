@@ -1421,6 +1421,7 @@ function construirPanelAlertasSegmentado(datos) {
     const movimientos = Array.isArray(datos.movimientos) ? datos.movimientos : [];
     const instrumentos = Array.isArray(datos.alertas_instrumentos) ? datos.alertas_instrumentos : [];
     const documentos = Array.isArray(datos.licencias_nomina) ? datos.licencias_nomina : [];
+    const documentales = Array.isArray(datos.alertas_documentales) ? datos.alertas_documentales : [];
 
     // Retenemos los nodos y sus listeners (ej. editar Movimiento).
     const tablaCompromisos = document.createDocumentFragment();
@@ -1444,7 +1445,7 @@ function construirPanelAlertasSegmentado(datos) {
          explicacion: 'Compromisos económicos con saldo pendiente.'},
         {clave: 'instrumentos', nombre: 'Cheques y e-Cheqs', cantidad: instrumentos.length,
          explicacion: 'Cartera física, cartera electrónica e instrumentos propios emitidos.'},
-        {clave: 'documentacion', nombre: 'Documentación', cantidad: documentos.length,
+        {clave: 'documentacion', nombre: 'Documentación', cantidad: documentos.length + documentales.length,
          explicacion: 'Licencias y documentación con vencimiento.'}
     ];
     const botones = [];
@@ -1497,15 +1498,11 @@ function construirPanelAlertasSegmentado(datos) {
     } else {
         vacio(paneles[1], 'No hay cheques ni e-Cheqs que requieran atención.');
     }
-    if (documentos.length) {
-        mostrarAlertasLicenciasNomina(documentos, paneles[2]);
+    if (documentos.length || documentales.length) {
+        mostrarAlertasDocumentacion(documentales, documentos, paneles[2]);
     } else {
         vacio(paneles[2], 'No hay vencimientos de documentación que requieran atención.');
     }
-    const pendientes = document.createElement('p');
-    pendientes.className = 'oc-alertas-fuentes-futuras';
-    pendientes.textContent = 'Habilitaciones y renovaciones de autoridades: fuentes todavía no operativas; no generan avisos.';
-    paneles[2].appendChild(pendientes);
 
     function activar(indice, moverFoco = false) {
         botones.forEach((boton, i) => {
@@ -1536,70 +1533,100 @@ function construirPanelAlertasSegmentado(datos) {
     if (estado) estado.style.display = 'none';
 }
 
-/* Alertas de Cartera y propios: lectura informativa, sin acciones financieras. */
+/* Alertas informativas, mismo patrón próximo/vencido que Compromisos. */
+function crearGrupoVisualAlerta(destino, titulo, items, detalles) {
+    if (!items.length) return;
+    const seccion = document.createElement('section');
+    seccion.className = 'oc-alertas-valores-grupo';
+    const encabezado = document.createElement('h3');
+    encabezado.className = 'oc-alertas-valores-titulo';
+    encabezado.textContent = titulo;
+    seccion.appendChild(encabezado);
+    for (const [vencidos, rotulo] of [[false, 'Próximos a vencer / requieren atención'], [true, 'Vencidos / documentación faltante']]) {
+        const filas = items.filter(a => vencidos ?
+            (a.estado_alerta === 'Vencido' || a.estado_alerta === 'Sin habilitacion') :
+            (a.estado_alerta !== 'Vencido' && a.estado_alerta !== 'Sin habilitacion'));
+        if (!filas.length) continue;
+        const bloque = document.createElement('section');
+        bloque.className = 'oc-alertas-valores-estado ' + (vencidos ? 'oc-alertas-valores-vencido' : 'oc-alertas-valores-proximo');
+        const resumen = document.createElement('h4');
+        resumen.textContent = rotulo;
+        const contador = document.createElement('span');
+        contador.className = 'oc-alertas-valores-contador';
+        contador.textContent = String(filas.length);
+        resumen.appendChild(contador);
+        bloque.appendChild(resumen);
+        for (const item of filas) {
+            const fila = document.createElement('div');
+            fila.className = 'oc-alertas-valores-fila';
+            const principal = document.createElement('strong');
+            principal.textContent = detalles(item).nombre;
+            const fecha = document.createElement('span');
+            fecha.textContent = detalles(item).detalle;
+            const estado = document.createElement('span');
+            estado.className = 'oc-alertas-valores-etiqueta';
+            estado.textContent = item.estado_alerta === 'Sin habilitacion' ? 'Sin habilitación' :
+                item.estado_alerta === 'En atencion' ? 'En atención' :
+                item.estado_alerta === 'Proximo' ? 'Próximo' : item.estado_alerta;
+            fila.append(principal, fecha, estado);
+            bloque.appendChild(fila);
+        }
+        seccion.appendChild(bloque);
+    }
+    destino.appendChild(seccion);
+}
+
 function mostrarAlertasInstrumentos(avisos, contenedorDestino = null) {
     if (!Array.isArray(avisos) || !avisos.length) return;
-    const contenedor = contenedorDestino || document.getElementById('tablaProximosVencimientos');
-    if (!contenedor) return;
-    const grupos = [
+    const destino = contenedorDestino || document.getElementById('tablaProximosVencimientos');
+    if (!destino) return;
+    for (const [clave, titulo] of [
         ['cartera_fisica', 'Cheques físicos recibidos · Cartera'],
         ['cartera_electronica', 'e-Cheqs recibidos · Cartera electrónica'],
         ['propio_fisico', 'Cheques propios emitidos'],
         ['propio_electronico', 'e-Cheqs propios emitidos']
-    ];
-    const seccion = document.createElement('section');
-    seccion.className = 'nm-licencias-pendientes';
-    const titulo = document.createElement('h3');
-    titulo.textContent = 'Cheques y e-Cheqs que requieren atención';
-    seccion.appendChild(titulo);
-    grupos.forEach(([clave, nombre]) => {
-        const items = avisos.filter(a => a.grupo === clave);
-        if (!items.length) return;
-        const subtitulo = document.createElement('h4');
-        subtitulo.textContent = nombre;
-        seccion.appendChild(subtitulo);
-        items.forEach(a => {
-            const fila = document.createElement('p');
-            const proxima = a.estado_alerta === 'Vencido' ? 'Vencido' :
-                a.estado_alerta === 'En atencion' ? 'En atención' :
-                a.estado_alerta === 'Hoy' ? 'Hoy' : 'Próximo';
-            fila.textContent = 'N.º ' + String(a.numero || '') +
-                ' · ' + proxima + ' · acreditación ' +
-                formatearFechaVencimiento(String(a.fecha_acreditacion || '')) +
-                (clave.startsWith('cartera_') ?
-                  ' · límite ' + formatearFechaVencimiento(String(a.fecha_limite || '')) : '');
-            seccion.appendChild(fila);
-        });
-    });
-    contenedor.appendChild(seccion);
+    ]) {
+        crearGrupoVisualAlerta(destino, titulo, avisos.filter(a => a.grupo === clave), a => ({
+            nombre: 'N.º ' + String(a.numero || ''),
+            detalle: 'Acreditación ' + formatearFechaVencimiento(a.fecha_acreditacion) +
+                (clave.startsWith('cartera_') ? ' · Límite ' + formatearFechaVencimiento(a.fecha_limite) : '')
+        }));
+    }
 }
 
-/* Alertas laborales: sin mezclar documentos con importes financieros. */
-function mostrarAlertasLicenciasNomina(alertas, contenedorDestino = null) {
-    if (!Array.isArray(alertas) || !alertas.length) return;
-    const contenedor = contenedorDestino || document.getElementById('tablaProximosVencimientos');
-    if (!contenedor) return;
-    const seccion = document.createElement('section');
-    seccion.className = 'nm-licencias-pendientes';
-    const titulo = document.createElement('h3');
-    titulo.textContent = 'Licencias de conducir que requieren atención';
-    seccion.appendChild(titulo);
-    for (const dato of alertas) {
-        const linea = document.createElement('p');
-        linea.textContent = String(dato.nombre || '') + ' · vence ' +
-            formatearFechaVencimiento(String(dato.vence || ''));
-        seccion.appendChild(linea);
+function mostrarAlertasDocumentacion(documentales, licencias, destino) {
+    const grupos = [
+        ['societaria', 'Documentación societaria'],
+        ['habilitaciones', 'Habilitaciones municipales por Centro']
+    ];
+    for (const [grupo, titulo] of grupos) {
+        crearGrupoVisualAlerta(destino, titulo, documentales.filter(a => a.grupo === grupo), a => ({
+            nombre: String(a.nombre || ''),
+            detalle: a.fecha_vencimiento ? 'Vencimiento ' + formatearFechaVencimiento(a.fecha_vencimiento) :
+                     'Centro activo sin habilitación registrada'
+        }));
     }
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = 'Abrir Nómina de Empleados';
-    btn.className = 'nm-abrir-desde-alertas';
-    btn.addEventListener('click', () => {
-        if (typeof mostrarSubmenu === 'function') mostrarSubmenu('herramientas');
-        document.getElementById('btnNominaEmpleados')?.click();
-    });
-    seccion.appendChild(btn);
-    contenedor.appendChild(seccion);
+    if (licencias.length) {
+        crearGrupoVisualAlerta(destino, 'Licencias de conducir', licencias, a => ({
+            nombre: String(a.nombre || ''),
+            detalle: 'Vencimiento ' + formatearFechaVencimiento(a.vence)
+        }));
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Abrir Nómina de Empleados';
+        btn.className = 'nm-abrir-desde-alertas';
+        btn.addEventListener('click', () => {
+            if (typeof mostrarSubmenu === 'function') mostrarSubmenu('herramientas');
+            document.getElementById('btnNominaEmpleados')?.click();
+        });
+        destino.appendChild(btn);
+    }
+}
+
+/* Contrato de compatibilidad de la fuente Nómina para consumidores previos. */
+function mostrarAlertasLicenciasNomina(alertas, contenedorDestino = null) {
+    const contenedor = contenedorDestino || document.getElementById('tablaProximosVencimientos');
+    if (contenedor) mostrarAlertasDocumentacion([], Array.isArray(alertas) ? alertas : [], contenedor);
 }
 
 // Preferencia individual: el gestor asigna avisos; el receptor controla su audio.

@@ -134,6 +134,14 @@ class Empresa(models.Model):
         null=True
     )
 
+    # Documentación societaria; fecha de carga != vencimiento real.
+    acta_directorio = models.FileField(upload_to='documentos/', blank=True, null=True)
+    fecha_acta_directorio = models.DateTimeField(blank=True, null=True)
+    vencimiento_acta_directorio = models.DateField(blank=True, null=True)
+    vencimiento_acta = models.DateField(blank=True, null=True)
+    vencimiento_designacion = models.DateField(blank=True, null=True)
+    acta_incluye_designacion = models.BooleanField(default=False)
+
     def __str__(self):
 
         return self.nombre_fantasia or self.razon_social
@@ -1851,6 +1859,29 @@ class CentroOperativo(models.Model):
     def __str__(self):
 
         return self.nombre
+
+class HabilitacionCentro(models.Model):
+    """Habilitaciones históricas: un Centro puede tener varias y renovarlas.
+
+    'activo' significa documento registrado como vigente, no certifica que
+    el organismo lo considere vigente. La alerta nunca cambia este estado.
+    """
+    centro = models.ForeignKey('CentroOperativo', on_delete=models.PROTECT,
+                               related_name='habilitaciones')
+    descripcion = models.CharField(max_length=160)
+    organismo = models.CharField(max_length=160, blank=True)
+    numero = models.CharField(max_length=100, blank=True)
+    vencimiento = models.DateField(blank=True, null=True)
+    archivo = models.FileField(upload_to='documentos/habilitaciones/', blank=True, null=True)
+    activo = models.BooleanField(default=True)
+    creado_por = models.CharField(max_length=150, blank=True)
+    actualizado_por = models.CharField(max_length=150, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('centro_id', '-activo', '-creado', '-pk')
+
 
 class IdentidadUsuarioEmpresa(models.Model):
     """

@@ -409,9 +409,9 @@ Documentación societaria
 
 </div>
 
-<div class="form-grid">
+<div class="form-grid oc-sociedad-simple">
 
-<div class="field">
+<div class="field field-full oc-sociedad-estatuto">
 
 <label
 class="label"
@@ -492,7 +492,23 @@ onchange="mostrarNombreArchivo(this,'texto-estatuto')">
 
 </div>
 
-<div class="field">
+<div class="field oc-acta-directorio oc-sociedad-documento">
+<label class="label">Acta de directorio</label>
+{% if empresa_actual and empresa_actual.acta_directorio %}
+<div class="oc-documento-actual">Archivo cargado: {{ empresa_actual.acta_directorio.name|cut:'documentos/' }}
+ · {{ empresa_actual.fecha_acta_directorio|date:'d/m/Y' }}</div>
+<a href="{% url 'descargar_documento_empresa' empresa_actual.id 'acta_directorio' %}"
+   target="_blank" rel="noopener" class="sidebar-btn">Ver archivo</a>
+{% else %}<div class="oc-documento-actual">Sin archivo cargado</div>{% endif %}
+<label class="file-btn"><span id="texto-acta-directorio">📄 Adjuntar archivo</span>
+<input type="file" name="acta_directorio" hidden
+ onchange="mostrarNombreArchivo(this,'texto-acta-directorio')"></label>
+<div class="oc-vencimiento-societario"><label class="label" for="vencimiento_acta_directorio">Vencimiento</label>
+<input type="date" class="input-box" id="vencimiento_acta_directorio" name="vencimiento_acta_directorio"
+ value="{% if empresa_importada %}{{ empresa_importada.vencimiento_acta_directorio }}{% elif empresa_actual %}{{ empresa_actual.vencimiento_acta_directorio|date:'Y-m-d' }}{% endif %}"></div>
+</div>
+
+<div class="field oc-sociedad-documento">
 
 <label
 class="label"
@@ -501,90 +517,7 @@ display:block;
 margin-top:20px;
 ">
 
-Acta Asamblea
-
-</label>
-
-{% if empresa_actual and empresa_actual.acta %}
-
-<div style="
-margin-bottom:8px;
-font-size:13px;
-color:#64748b;
-">
-
-Archivo cargado:
-
-<strong>
-
-{{ empresa_actual.acta.name|cut:"documentos/" }}
-
-</strong>
-
-<br>
-
-Fecha:
-
-{{ empresa_actual.fecha_acta|date:"d/m/Y" }}
-
-</div>
-
-<a
-href="{% url "descargar_documento_empresa" empresa_actual.id "acta" %}"
-target="_blank"
-class="sidebar-btn"
-style="
-height:38px;
-font-size:13px;
-margin-bottom:8px;
-">
-
-Ver archivo
-
-</a>
-
-{% else %}
-
-<div style="
-margin-bottom:8px;
-font-size:13px;
-color:#64748b;
-">
-
-Sin archivo cargado
-
-</div>
-
-{% endif %}
-
-<label class="file-btn">
-
-<span id="texto-acta">
-
-📄 Adjuntar archivo
-
-</span>
-
-<input
-type="file"
-name="acta"
-hidden
-onchange="mostrarNombreArchivo(this,'texto-acta')">
-
-</label>
-
-</div>
-
-<div class="field field-full">
-
-<label
-class="label"
-style="
-display:block;
-margin-top:20px;
-">
-
-Designación
+Acta de designación de autoridades (Asamblea)
 
 </label>
 
@@ -655,7 +588,9 @@ hidden
 onchange="mostrarNombreArchivo(this,'texto-designacion')">
 
 </label>
-
+<div class="oc-vencimiento-societario"><label class="label" for="vencimiento_designacion">Vencimiento</label>
+<input type="date" class="input-box" id="vencimiento_designacion" name="vencimiento_designacion"
+ value="{% if empresa_importada %}{{ empresa_importada.vencimiento_designacion }}{% elif empresa_actual %}{{ empresa_actual.vencimiento_designacion|date:'Y-m-d' }}{% endif %}"></div>
 </div>
 
 </div>

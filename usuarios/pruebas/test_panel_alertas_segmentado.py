@@ -31,14 +31,14 @@ class PanelAlertasSegmentadoTests(SimpleTestCase):
     def test_reutiliza_componentes_sin_perder_acciones_existentes(self):
         self.assertIn('while (contenedor.firstChild) tablaCompromisos.appendChild(contenedor.firstChild);', self.js)
         self.assertIn('mostrarAlertasInstrumentos(instrumentos, paneles[1]);', self.js)
-        self.assertIn('mostrarAlertasLicenciasNomina(documentos, paneles[2]);', self.js)
+        self.assertIn('mostrarAlertasDocumentacion(documentales, documentos, paneles[2]);', self.js)
         self.assertIn('function mostrarProximosVencimientos()', self.js)
         self.assertIn("/proximos-vencimientos/?empresa=", self.js)
         self.assertIn("/alertas/listado/?empresa=", self.js)
 
     def test_sin_falsas_alertas_documentales(self):
-        self.assertIn('fuentes todavía no operativas; no generan avisos', self.js)
-        self.assertIn("clave: 'documentacion', nombre: 'Documentación', cantidad: documentos.length", self.js)
+        self.assertIn('datos.alertas_documentales', self.js)
+        self.assertIn("clave: 'documentacion', nombre: 'Documentación', cantidad: documentos.length + documentales.length", self.js)
 
     def test_pestanas_accesibles_y_estilos_aislados(self):
         for marca in ('aria-selected', 'aria-controls', 'role', 'tabpanel', 'ArrowRight', 'ArrowLeft'):

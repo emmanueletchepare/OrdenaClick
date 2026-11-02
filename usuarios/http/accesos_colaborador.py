@@ -21,7 +21,7 @@ from usuarios.services.accesos_colaborador import (
 from usuarios.services.catalogo_alertas import TIPOS_POR_CODIGO
 from usuarios.services.destinatarios_alertas import (
     alcance_fuente, alertas_sin_destinatarios, guardar_destinatarios_usuario,
-    miembros_empresa)
+    miembros_empresa, suscripto_efectivo)
 from usuarios.services.permisos_bancarios_accion import permitido as permiso_bancario
 
 # Sólo se muestran alertas operativas; los tipos futuros no adquieren permisos.
@@ -31,6 +31,8 @@ ALERTAS_POR_CAPACIDAD = {
     'caja.total': 'FIN-02',
     'vencimientos.ver': 'FIN-01',
     'nomina.total': 'NOM-01',
+    'abm.centros': 'DOC-03',
+    'config.empresa': 'DOC-01',
 }
 
 
@@ -137,7 +139,7 @@ def gestion_accesos(request, empresa_id):
             if tipo is not None and tipo.operativa and elegido is not None:
                 alerta = {
                     'codigo': tipo.codigo, 'nombre': tipo.nombre,
-                    'activo': tipo.codigo in asignados,
+                    'activo': suscripto_efectivo(usuarios[elegido], empresa, tipo.codigo),
                     'efectivo': alcance_fuente(usuarios[elegido], empresa, tipo.codigo)[0],
                 }
             hijos.append({
@@ -156,6 +158,17 @@ def gestion_accesos(request, empresa_id):
                           else 'Disponible al integrar este módulo' ),
                 'alerta': alerta,
             })
+        if titulo == 'Configuración' and elegido is not None and privilegiado:
+            for codigo, nombre in (
+                ('DOC-04', 'Acta de designación de autoridades (Asamblea)'),
+            ):
+                tipo = TIPOS_POR_CODIGO[codigo]
+                hijos.append({'nombre': nombre, 'codigo': 'aviso.' + codigo,
+                    'activo': False, 'habilitable': False, 'heredado': True,
+                    'ayuda': 'Documento de Empresa',
+                    'alerta': {'codigo': tipo.codigo, 'nombre': tipo.nombre,
+                        'activo': suscripto_efectivo(usuarios[elegido], empresa, codigo),
+                        'efectivo': alcance_fuente(usuarios[elegido], empresa, codigo)[0]}})
         arbol.append({'titulo': titulo, 'codigo': str(indice), 'hijos': hijos,
             'tiene_habilitables': any(h['habilitable'] for h in hijos)})
     centros = list(CentroOperativo.objects.filter(

@@ -94,7 +94,7 @@ class RestauradorEmpresaV1:
 
     def _restaurar_archivos_empresa(self, empresa, source):
         replacements = self.config.get("documentos", {})
-        for field_name in ("estatuto", "acta", "designacion"):
+        for field_name in ("estatuto", "acta", "designacion", "acta_directorio"):
             replacement_path = replacements.get(field_name)
             content = None
             filename = None
@@ -116,7 +116,7 @@ class RestauradorEmpresaV1:
         empresa.save()
         # Preservamos las fechas documentales de origen sólo si no se reemplazó el archivo.
         updates = {}
-        for field_name in ("estatuto", "acta", "designacion"):
+        for field_name in ("estatuto", "acta", "designacion", "acta_directorio"):
             date_name = f"fecha_{field_name}"
             if field_name not in replacements and date_name in source.get("fields", {}):
                 field = Empresa._meta.get_field(date_name)

@@ -164,6 +164,8 @@
     if (codigo==='FIN-02') return marcado('caja.total')||propios;
     if (codigo==='FIN-03') return marcado('pendientes.ver')||propios;
     if (codigo==='NOM-01') return marcado('nomina.total');
+    if (codigo==='DOC-03') return raiz.dataset.ocAdminCentro==='1';
+    if (codigo==='DOC-01'||codigo==='DOC-02'||codigo==='DOC-04') return false;
     return false;
   }
   raiz.addEventListener('change',()=>{alertaError.hidden=true;});

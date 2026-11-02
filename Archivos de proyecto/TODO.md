@@ -355,3 +355,31 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 - [ ] Verificar alertas de Nómina sin movimientos, cero filtraciones y cero regresiones.
 - [ ] Validar visualmente con el supervisor y realizar commit selectivo.
 - [ ] Después, y sólo con autorización nueva: destinatarios/sonido por usuario, seguimiento y nuevas fuentes.
+
+## Actualización de pendientes — Alertas documentales, 02/11/2026
+
+**Esta sección prevalece sobre las casillas históricas del Bloque A (23/10) y la propuesta de Nómina/gestor anterior.** No se reabren características ya publicadas de FIN-02/FIN-03 ni el gestor unificado.
+
+### Hecho en el bloque local, sujeto a publicación selectiva
+
+- [x] Segmentación visual de Alertas (Compromisos / Cheques y e-Cheqs / Documentación), sin cambiar Próximos vencimientos.
+- [x] Presentación coherente de cheques/e-Cheqs y avisos documentales; mantiene la fuente y los permisos de cada aviso.
+- [x] DOC-01 (Directorio), DOC-03 (habilitaciones municipales por Centro) y DOC-04 (Designación de Autoridades/Asamblea) incorporadas a Alertas y al gestor de destinatarios. **DOC-02 histórico sin aviso operativo**.
+- [x] Estatuto a ancho completo, Directorio y Designación/Asamblea en dos columnas con vencimientos. Sin un cuarto campo Asamblea visible ni acordeón/checkbox societario.
+- [x] Habilitaciones con adjuntos privados e historial desde formulario superior del ABM Centros; listado sólo informativo. Centro activo sin habilitación genera aviso.
+- [x] Compatibilidad con Backup Empresa v1 para habilitaciones nuevas y restauración de copias antiguas; permisos no se importan.
+- [x] Respaldo SQLite verificado antes de `0057`; migración `0057` aplicada localmente; 59 pruebas dirigidas OK y otras 17 OK en cortes previos; aceptación visual del usuario.
+
+### Antes de cerrar y publicar este bloque
+
+- [ ] Comprobar `python manage.py showmigrations usuarios` y dejar constancia de si `0058` está aplicada en la base operativa; si no, respaldar y aplicar de forma controlada.
+- [ ] Ejecutar regresión dirigida **sobre la rectificación societaria definitiva** (incluidos tests de Documentación, Destinatarios, Accesos, Backup y UX) y registrar el resultado.
+- [ ] Revisar `git diff --check` y `git diff --cached --check`, hacer staging por lista blanca (no `git add .`; excluir `ordenaclick/settings.py`, SQLite y helpers), commit y push verificables.
+- [ ] Eliminar helpers temporales sólo después de confirmar `main == origin/main` y la aceptación final.
+
+### Pendientes globales que no cierra este trabajo
+
+- [ ] Pruebas adversariales y restauración real de Backup Empresa v1 en entorno descartable; cierre pre-Beta, permisos y despliegue real.
+- [ ] Auditoría de acciones y permisos por Empresa/Centro, adjuntos y concurrencia donde corresponda; no interpretar suite SQLite como prueba de producción PostgreSQL.
+- [ ] Completar transferencias internas, arqueos, disponibilidad bancaria y Orden de Pago según el diseño vigente; sin alterar Caja en este bloque documental.
+- [ ] Actualizar el resto de documentos de continuidad cuando se complete una nueva fase relevante; conservar historial y no confundir documentación con funcionalidades operativas.

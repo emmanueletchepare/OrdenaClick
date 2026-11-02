@@ -33,11 +33,13 @@ TIPOS_ALERTA = (
     TipoAlerta('NOM-02', 'Nómina', 'Vencimiento de plazos de documentación de cese laboral',
                'Documentación de cese laboral', 'Empresa/Centro por definir'),
     TipoAlerta('DOC-01', 'Documentales', 'Renovación o revisión de acta de directorio',
-               'Documentación de Empresa', 'Empresa'),
+               'Documentación de Empresa', 'Empresa', True),
     TipoAlerta('DOC-02', 'Documentales', 'Renovación o revisión de acta de asamblea',
                'Documentación de Empresa', 'Empresa'),
     TipoAlerta('DOC-03', 'Documentales', 'Vencimiento de habilitación municipal',
-               'Habilitación del Centro Operativo (pendiente de diseñar)', 'Centro Operativo'),
+               'Habilitaciones del Centro Operativo', 'Centro Operativo', True),
+    TipoAlerta('DOC-04', 'Documentales', 'Vencimiento de designación de autoridades',
+               'Documentación de Empresa', 'Empresa', True),
 )
 
 TIPOS_POR_CODIGO = {tipo.codigo: tipo for tipo in TIPOS_ALERTA}

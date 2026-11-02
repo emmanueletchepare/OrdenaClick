@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card oc-centros-vista" data-oc-centros-ui>
 
     <div
     style="
@@ -127,6 +127,51 @@
 
     </div>
 
+{% if puede_documentos_centro %}
+<details class="oc-centros-documentacion">
+  <summary class="oc-centros-documentacion-cabecera">
+    <span class="oc-centros-doc-titulo">Habilitaciones municipales</span>
+    <span class="oc-centros-doc-seleccion" data-oc-doc-centro-nombre>Elegí un Centro</span>
+  </summary>
+  <p class="oc-centros-documentacion-bajada">Documentación de cada Centro Operativo, con sus antecedentes.</p>
+  <p class="oc-centros-doc-ayuda" data-oc-doc-ayuda>Para consultar o registrar habilitaciones, presioná <strong>Modificar</strong> en la tarjeta del Centro. Sus datos se cargarán en el formulario superior.</p>
+  {% for centro in centros %}
+  <div class="oc-habilitaciones-centro" data-oc-habilitaciones-centro="{{ centro.pk }}"
+       data-oc-centro-nombre="{{ centro.nombre }}" hidden>
+    <div class="oc-habilitaciones-lista">
+    {% for habilitacion in centro.habilitaciones.all %}
+      <div class="oc-habilitacion-item {% if not habilitacion.activo %}oc-habilitacion-archivada{% endif %}">
+        <div class="oc-habilitacion-descripcion"><strong>{{ habilitacion.descripcion }}</strong>
+          <span>{{ habilitacion.organismo }}{% if habilitacion.numero %} · N.º {{ habilitacion.numero }}{% endif %}</span>
+          <span>{% if habilitacion.vencimiento %}Vence {{ habilitacion.vencimiento|date:'d/m/Y' }}{% else %}Sin fecha de vencimiento{% endif %} · {% if habilitacion.activo %}Registrada{% else %}Archivada{% endif %}</span></div>
+        <div class="oc-habilitacion-acciones">
+          {% if habilitacion.archivo %}<a class="action-btn" href="{% url 'descargar_habilitacion_centro' empresa.pk centro.pk habilitacion.pk %}" target="_blank" rel="noopener">Ver archivo</a>{% endif %}
+          {% if habilitacion.activo %}<button type="button" class="action-btn" data-oc-habilitacion-archivar="{{ habilitacion.pk }}">Archivar antecedente</button>{% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <p class="oc-habilitacion-faltante">Este Centro todavía no tiene habilitaciones registradas.</p>
+    {% endfor %}
+    </div>
+    <form class="oc-habilitacion-form" data-oc-habilitacion-registrar="{{ centro.pk }}" enctype="multipart/form-data">
+      <label>Habilitación<input class="input-box" name="descripcion" maxlength="160" required placeholder="Ej.: Habilitación municipal"></label>
+      <label>Organismo<input class="input-box" name="organismo" maxlength="160"></label>
+      <label>Número<input class="input-box" name="numero" maxlength="100"></label>
+      <label>Vencimiento<input type="date" class="input-box" name="vencimiento"></label>
+      <div class="oc-habilitacion-adjunto">
+        <span>Adjunto privado (PDF, JPG, PNG)</span>
+        <label class="file-btn"><span data-oc-archivo-nombre>📄 Adjuntar archivo</span>
+          <input type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+        </label>
+      </div>
+      <div class="oc-habilitacion-guardar"><button type="submit" class="guardar">Registrar habilitación</button>
+        <p class="oc-habilitacion-estado" role="status" aria-live="polite"></p></div>
+    </form>
+  </div>
+  {% endfor %}
+</details>
+{% endif %}
+
     <div
     style="
     border-top:1px solid #2b3447;
@@ -222,6 +267,7 @@
                 <button
                 type="button"
                 class="action-btn"
+                data-oc-centro-editar-documentacion="{{ centro.pk }}"
                 onclick="modificarCentroOperativo(
                     '{{ centro.id }}',
                     '{{ centro.nombre|escapejs }}',

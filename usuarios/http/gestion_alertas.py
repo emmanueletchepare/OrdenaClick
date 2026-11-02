@@ -13,7 +13,7 @@ from usuarios.services.accesos_colaborador import exigir, exigir_administrar_per
 from usuarios.services.catalogo_alertas import CATEGORIAS, TIPOS_ALERTA, tipos_operativos
 from usuarios.services.destinatarios_alertas import (
     alertas_sin_destinatarios, alcance_fuente, guardar_destinatarios_usuario,
-    guardar_sonido_propio, miembros_empresa, sonido_habilitado,
+    guardar_sonido_propio, miembros_empresa, sonido_habilitado, suscripto_efectivo,
 )
 
 
@@ -73,7 +73,7 @@ def gestion_alertas(request, empresa_id):
             hijos.append({
                 'tipo': tipo,
                 'habilitable': elegible,
-                'activo': elegible and tipo.codigo in activos,
+                'activo': elegible and suscripto_efectivo(elegido_obj, empresa, tipo.codigo),
                 'ayuda': ('Todavía no operativa' if not tipo.operativa else
                           'Sin acceso vigente al módulo de origen' if not elegible else ''),
             })

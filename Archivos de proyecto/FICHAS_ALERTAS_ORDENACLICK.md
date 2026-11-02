@@ -6,7 +6,24 @@ Este archivo guarda las decisiones de diseño **sin recargar la lista rápida**.
 
 ## DOC-03 · Vencimiento de habilitación municipal
 
-**Estado:** idea catalogada; **no implementada**.
+**Estado:** fuente documental implementada en este bloque, pendiente de validación local, migración y aceptación visual.
+
+**Implementación inicial:** varias habilitaciones por Centro, registro/archivo privado,
+archivado conservando antecedentes, alerta por vencimiento y por Centro activo sin
+habilitaciones registradas. Anticipación de 30 días (política inicial a confirmar
+con uso real). Una alerta no certifica vigencia municipal ni reemplaza trámites.
+Administrador general/propietario: todos los Centros; administrador de Centro:
+únicamente Centros autorizados y con permiso Alertas. Destinatarios por defecto
+con opción de desactivar, registro B2 auditado.
+
+**DOC-01, DOC-02 y DOC-04:** vencimientos de acta de directorio, asamblea y
+designación de autoridades vinculados a Empresa; fecha de carga independiente.
+Anticipación inicial de 30 días; solo administración general/propietario y
+superusuario autorizados. No se inventan fechas si el campo está vacío.
+
+**Revisiones futuras:** criterios legales específicos según municipio, mecanismo
+de versionado de documentación societaria más allá del reemplazo existente,
+y recorrido de wizzard de Empresa cuando éste se diseñe.
 
 **Registro documental previo:**
 
@@ -31,7 +48,10 @@ Este archivo guarda las decisiones de diseño **sin recargar la lista rápida**.
 
 **Pruebas mínimas al implementar:** centros y empresas ajenos denegados; alta y renovación con histórico; vencimientos reales y ausentes; control de adjuntos; revocación inmediata; destinatarios efectivos; alertas duplicadas o canceladas; regresión de permisos existentes.
 
-**Decisiones abiertas:** estructura del registro documental, permisos de lectura/edición, campos obligatorios, política de vencimientos, usuarios destinatarios y forma final en el panel. Requieren aprobación específica.
+**Validaciones abiertas:** aceptación de la anticipación inicial de 30 días,
+criterios de vigencia de cada municipio, historial societario más amplio,
+restauración con adjuntos reales, recorrido del futuro wizard de Empresas y
+validación completa con los perfiles autorizados antes de declarar el bloque cerrado.
 
 ## Plantilla breve para cada alerta futura
 
@@ -51,3 +71,24 @@ Copiar esta ficha por identificador (`FIN-02`, `ADM-01`, etc.) cuando llegue su 
 «Sin destinatarios» muestra **tipos de alertas habilitados sin usuarios efectivos** y, donde exista soporte real, **ocurrencias vigentes sin receptor autorizado**. No mezcla ideas no implementadas con incidencias actuales. La asignación no sustituye Gestión de Accesos, ni permite leer datos sin permiso de origen.
 
 **Límite:** este anexo documenta el análisis preliminar; no introduce funciones ni modifica el repositorio.
+
+## Cierre societario — acta de asamblea y designación (02/11/2026)
+
+- Estatuto y Acta de Asamblea continúan como registros principales de Empresa.
+- Una marca explícita `acta_incluye_designacion` permite declarar que el acta de asamblea acredita también la designación de autoridades. **No se presume automáticamente** para Empresas existentes.
+- Acta de Directorio y Designación separada quedan como documentación complementaria opcional; no se borran PDFs, fechas ni antecedentes existentes.
+- Si la marca está activa, **DOC-04 no genera una segunda ocurrencia** por el mismo mandato: DOC-02 concentra el aviso, utilizando el vencimiento de Asamblea o, si no lo hay, la fecha histórica de Designación. No se cambia ninguna fecha en la base.
+- La fecha etiquetada como vencimiento se interpreta como seguimiento o fin de mandato cuando corresponda, no como vencimiento legal automático del PDF ni del acta. No se imponen plazos legales inventados.
+- Una alerta no acredita vigencia, ni concede acceso a un archivo, y los destinatarios siguen dependiendo del gestor y permisos ya implementados.
+- Sólo se agrega migración `0058` con booleano por defecto `False`; compatible con datos actuales y Backup Empresa v1.
+
+## Rectificación de documentación societaria — 02/11/2026
+
+El formulario de Empresa conserva sólo Estatuto (ancho completo), Acta de Directorio y
+Acta de Designación de Autoridades (Asamblea). La Asamblea individual anterior no
+se solicita en pantalla, ni genera aviso separado DOC-02. DOC-01 sigue Directorio;
+DOC-04 sigue la fecha de Designación; DOC-03 corresponde a habilitaciones de Centros.
+No se borran la fecha `vencimiento_acta`, el adjunto `acta` ni la marca
+`acta_incluye_designacion` históricos. La UI no los utiliza. La marca preexistente
+sólo autoriza fallback desde el vencimiento previo de Asamblea cuando Designación
+carece de vencimiento propio. No se agrega ni revierte una migración.

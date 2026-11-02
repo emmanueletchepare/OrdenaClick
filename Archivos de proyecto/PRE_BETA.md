@@ -182,3 +182,12 @@ Antes de retomar el desarrollo funcional intensivo:
 - [ ] `manage.py check --deploy` ejecutado sobre configuración candidata.
 
 La excepción actual de acceso global del superusuario se mantiene por decisión de producto y no se considera un fallo mientras permanezca limitada a superusuario.
+
+## Corte documental local — estado de validación, 02/11/2026
+
+**La incorporación de documentación societaria y habilitaciones NO cierra la Beta ni las verificaciones de producción** enumeradas arriba. Es una evolución funcional aditiva y aislada.
+
+- Confirmado por salida de consola: `usuarios.0057` aplicada a la base local; el estado de `usuarios.0058` debe comprobarse antes del commit/uso operativo definitivo.
+- Evidencia compartida en etapas previas: **59 tests dirigidos OK** para el bloque documental, destinatarios, respaldo y permisos; **17 tests OK** para el ajuste visual del ABM/Alertas. Se informó conformidad visual final. **El resultado del conjunto dirigido posterior a la rectificación final aún debe registrarse**.
+- Permanecen pendientes la suite candidata a Beta, restauración real/adversarial de backup, revisión final de rutas y acceso privado, regresiones de seguridad, PostgreSQL/proxy/TLS/HSTS, configuración `check --deploy` real y recorrido integral de todos los módulos.
+- Las incidencias de producción se documentan por separado; el aviso documental no altera datos jurídicos, financieros, permisos de Caja ni saldos. `settings.py` de desarrollo y los respaldos de SQLite quedan fuera del commit.
