@@ -308,15 +308,15 @@ no en bandeja; no conceden Caja. `Volver` lleva al menú de origen. Consulte
 
 ## Pendientes surgidos en operación real — 15/10/2026
 
-**FASE ACTUAL: RECOLECCIÓN DE OBSERVACIONES. NO DESARROLLAR HASTA ORDEN EXPRESA DEL USUARIO.** La lista no revoca otras prioridades estructurales.
+**Estado al 03/11/2026:** el usuario autorizó abordar estos hallazgos. Los dos ajustes de columnas ya estaban implementados en `babc4c7`; no reconstruir el listado. Se refuerza validación UX de precarga sin alterar estados ni movimientos financieros. La aceptación visual y las pruebas en el entorno de uso siguen pendientes.
 
 ### Caja 2 — revisión de lote e-Cheqs
 
-- [ ] Separar **Número e-Cheq** de **Titular / Cliente** en columnas distintas del listado de precarga.
-- [ ] Mostrar **Fecha de acreditación** de cada e-Cheq en ese mismo listado de revisión.
-- [ ] Investigar error «El importe no es válido. El lote permanece en pantalla para reintentar.» al Guardar todos; determinar registro/valor real y si existe fallo de formato es-AR, sin asumirlo.
-- [ ] Validar importes al **Agregar**, al **Editar** y en backend; si hay error, informar fila/campo, resaltar/dirigir foco y conservar todos los renglones; mantener guardado atómico y seguridad.
-- [ ] Completar pruebas unitarias, regresión Caja/finanzas y pruebas visuales con datos seguros, siguiendo la estética actual; no alterar movimientos reales sin permiso.
+- [x] **Número e-Cheq** y **Titular / Cliente** ya están en columnas distintas del listado de precarga (verificar en navegador).
+- [x] **Fecha de acreditación** ya se muestra por fila en el listado de precarga (verificar en navegador).
+- [ ] Diagnóstico del error «El importe no es válido»: el parser actual admite `126.785,71` en JS y backend; no se confirmó la causa histórica. El backend ya informa fila/campo, y la nueva validación también revisa importes de borradores anteriores antes del POST. Confirmar con pruebas y datos no sensibles.
+- [ ] **Agregar / Editar / Guardar todos:** se incorporó mensaje de fila y campo, foco en el importe o la fila para editar y conservación completa del lote; pendiente regresión y revisión visual reales.
+- [ ] Completar regresión Caja/finanzas y pruebas visuales con datos seguros antes de publicar; no alterar movimientos reales sin permiso.
 
 ### Colaborador / Permisos
 

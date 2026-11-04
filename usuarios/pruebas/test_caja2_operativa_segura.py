@@ -162,6 +162,37 @@ class Caja2SeguridadTests(TestCase):
         r=self.lote([buenas,malas]);self.assertEqual(r.status_code,400)
         self.assertFalse(PendienteBancario.objects.exists())
 
+    def test_echeq_importe_ar_y_error_por_fila_sin_guardado_parcial(self):
+        self.activar()
+        buena = {
+            'clave': str(uuid.uuid4()), 'titular': 'Titular A', 'numero': '00000185',
+            'banco_id': self.banco.pk, 'importe': '126.785,71',
+            'acreditacion': date.today().isoformat(),
+        }
+        segunda = {
+            **buena, 'clave': str(uuid.uuid4()), 'titular': 'Titular B',
+            'numero': '00000186', 'importe': '126.785,7x',
+        }
+        respuesta = self.lote([buena, segunda], clase='echeqs')
+        self.assertEqual(respuesta.status_code, 400, respuesta.content)
+        self.assertEqual(respuesta.json()['fila'], 2)
+        self.assertEqual(respuesta.json()['campo'], 'importe')
+        self.assertIn('Fila 2', respuesta.json()['mensaje'])
+        self.assertFalse(PendienteBancario.objects.exists())
+        segunda['importe'] = '10.000,20'
+        respuesta = self.lote([buena, segunda], clase='echeqs')
+        self.assertEqual(respuesta.status_code, 200, respuesta.content)
+        self.assertEqual(PendienteBancario.objects.count(), 2)
+        importes = list(PendienteBancario.objects.order_by('echeq_numero').values_list('importe', flat=True))
+        self.assertEqual(importes, [Decimal('126785.71'), Decimal('10000.20')])
+
+    def test_precarga_echeq_tiene_columnas_separadas_y_acreditacion(self):
+        self.activar()
+        html = self.client.get(reverse('gestion_bancaria')).content.decode()
+        self.assertIn('<th>Número e-Cheq</th><th>Titular / Cliente</th>', html)
+        self.assertIn('<th>Fecha acreditación</th>', html)
+        self.assertIn('id="gbListaEcheqs"', html)
+
     def test_lote_idempotente_y_conflicto_reutilizacion(self):
         self.activar()
         filas=[self.fila(),self.fila(importe='200.00')]

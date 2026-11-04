@@ -187,6 +187,49 @@
         input.setCustomValidity(valido ? '' : 'El importe debe ser positivo y menor a un billón.');
         return valido;
     }
+    // La validación de Agregar/Editar identifica el campo y la fila antes de tocar el lote.
+    function informarImporteInvalido(clase, form) {
+        const input = form.elements.importe;
+        const indice = edicion[clase];
+        const numero = indice === null ? lotes[clase].length + 1 : indice + 1;
+        const detalle = input.validationMessage || 'Revisá el importe (ejemplo: 126.785,71).';
+        $(`[data-mensaje-lote="${clase}"]`).textContent = `Fila ${numero} · Importe: ${detalle} La precarga no cambió.`;
+        if (indice !== null) {
+            errorFila[clase] = {indice, campo:'importe'};
+            render(clase);
+        }
+        input.focus();
+        form.reportValidity();
+    }
+    function enfocarFilaError(clase) {
+        const error = errorFila[clase];
+        if (!error) return;
+        const tabla = $(clase === 'bancos' ? '#gbListaBancos' : '#gbListaEcheqs');
+        const fila = tabla && tabla.rows[error.indice];
+        if (!fila) return;
+        fila.scrollIntoView({block:'center', behavior:'smooth'});
+        const editar = fila.querySelector('button[data-accion-fila="editar"]');
+        if (editar) editar.focus({preventScroll:true});
+    }
+    // Un borrador recuperado puede contener datos de una versión anterior.
+    // Se controla antes de pedir a Django guardar el lote completo.
+    function validarImportesLoteEcheqs(mensaje) {
+        for (const [indice, fila] of lotes.echeqs.entries()) {
+            const temporal = document.createElement('input');
+            temporal.type = 'text';
+            temporal.value = fila && typeof fila.importe === 'string' ? fila.importe : '';
+            if (temporal.value.length > 30) temporal.setCustomValidity('Máximo 30 caracteres.');
+            else validarImportePrecarga(temporal);
+            if (!temporal.validity.valid) {
+                errorFila.echeqs = {indice, campo:'importe'};
+                mensaje.textContent = `Fila ${indice + 1} · Importe: ${temporal.validationMessage || 'Importe inválido.'} Editá esa fila; se conserva todo el lote.`;
+                render('echeqs');
+                enfocarFilaError('echeqs');
+                return false;
+            }
+        }
+        return true;
+    }
     function agregar(clase, form) {
         if (clase === 'echeqs' && !actualizarBancoSeleccionado(form)) {
             form.elements.banco.setCustomValidity('Elegí un banco registrado o crealo con [+].');
@@ -194,7 +237,11 @@
             return;
         }
         if (clase === 'echeqs') normalizarNumeroEcheq(form.elements.numero);
-        if (!validarImportePrecarga(form.elements.importe)) {form.reportValidity();return;}
+        if (!validarImportePrecarga(form.elements.importe)) {
+            if (clase === 'echeqs') informarImporteInvalido(clase, form);
+            else form.reportValidity();
+            return;
+        }
         normalizarImporteInput(form.elements.importe);
         if (!form.reportValidity()) return;
         const fila = {};
@@ -236,6 +283,7 @@
         const cuenta = clase === 'bancos' ? form.elements.cuenta.value : null;
         const mensaje = $(`[data-mensaje-lote="${clase}"]`);
         if (clase === 'bancos' && !cuenta) {mensaje.textContent = 'Seleccioná la cuenta bancaria antes de guardar.'; return;}
+        if (clase === 'echeqs' && !validarImportesLoteEcheqs(mensaje)) return;
         errorFila[clase] = null;
         guardando = true; render(clase); mensaje.textContent = 'Guardando el lote...';
         try {
@@ -257,14 +305,22 @@
             await actualizarBandeja();
         } catch (error) {
             mensaje.textContent = error.message + ' El lote permanece en pantalla para reintentar.';
-        } finally {guardando=false; render(clase);}
+        } finally {
+            guardando = false;
+            render(clase);
+            if (clase === 'echeqs' && errorFila[clase]) enfocarFilaError(clase);
+        }
     }
     for (const clase of ['bancos','echeqs']) {
         const form = $('#gbCarga' + (clase === 'bancos' ? 'Bancos' : 'Echeqs'));
         if (form) form.addEventListener('submit', ev => {
             ev.preventDefault();
             if (clase === 'echeqs') normalizarNumeroEcheq(form.elements.numero);
-            if (!validarImportePrecarga(form.elements.importe)) {form.reportValidity();return;}
+            if (!validarImportePrecarga(form.elements.importe)) {
+            if (clase === 'echeqs') informarImporteInvalido(clase, form);
+            else form.reportValidity();
+            return;
+        }
             normalizarImporteInput(form.elements.importe);
             if (form.reportValidity()) agregar(clase, form);
         });
