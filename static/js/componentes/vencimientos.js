@@ -1422,6 +1422,7 @@ function construirPanelAlertasSegmentado(datos) {
     const instrumentos = Array.isArray(datos.alertas_instrumentos) ? datos.alertas_instrumentos : [];
     const documentos = Array.isArray(datos.licencias_nomina) ? datos.licencias_nomina : [];
     const documentales = Array.isArray(datos.alertas_documentales) ? datos.alertas_documentales : [];
+    const bancarias = Array.isArray(datos.alertas_bancarias) ? datos.alertas_bancarias : [];
 
     // Retenemos los nodos y sus listeners (ej. editar Movimiento).
     const tablaCompromisos = document.createDocumentFragment();
@@ -1441,7 +1442,7 @@ function construirPanelAlertasSegmentado(datos) {
     capa.appendChild(navegacion);
 
     const secciones = [
-        {clave: 'compromisos', nombre: 'Compromisos', cantidad: movimientos.length,
+        {clave: 'compromisos', nombre: 'Compromisos', cantidad: movimientos.length + bancarias.length,
          explicacion: 'Compromisos económicos con saldo pendiente.'},
         {clave: 'instrumentos', nombre: 'Cheques y e-Cheqs', cantidad: instrumentos.length,
          explicacion: 'Cartera física, cartera electrónica e instrumentos propios emitidos.'},
@@ -1490,7 +1491,14 @@ function construirPanelAlertasSegmentado(datos) {
 
     if (movimientos.length) {
         paneles[0].appendChild(tablaCompromisos);
-    } else {
+    }
+    if (bancarias.length) {
+        crearGrupoVisualAlerta(paneles[0], 'Acuerdos de descubierto', bancarias, a => ({
+            nombre: String(a.nombre || ''),
+            detalle: 'Vencimiento ' + formatearFechaVencimiento(a.fecha_vencimiento)
+        }));
+    }
+    if (!movimientos.length && !bancarias.length) {
         vacio(paneles[0], 'No hay compromisos que requieran atención.');
     }
     if (instrumentos.length) {

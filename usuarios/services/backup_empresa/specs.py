@@ -34,6 +34,8 @@ MODEL_SPECS = (
         "empresa",
         exclude_fields=("usuario",),
     ),
+    ModelSpec('saldos_bancarios_informados', models.SaldoInformadoCuentaBancaria, 'empresa'),
+    ModelSpec("eventos_acuerdos_descubierto", models.EventoAcuerdoDescubierto, "empresa"),
     ModelSpec(
         "gestion_claves",
         models.GestionClave,
@@ -76,4 +78,4 @@ FORMAT_ID = "ordenaclick_empresa"
 FORMAT_VERSION = 1
 
 # Componentes adicionales de Caja 2: opcionales al leer un Backup v1 anterior.
-OPTIONAL_NEW_KEYS = frozenset({"habilitaciones_centros", "correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq", "operaciones_salida_echeq", "items_salida_echeq", "empleados", "eventos_empleados", "alertas_licencia_empleados", "casos_empleados", "actuaciones_casos_empleados", "documentos_empleados"})
+OPTIONAL_NEW_KEYS = frozenset({"eventos_acuerdos_descubierto", "saldos_bancarios_informados", "habilitaciones_centros", "correcciones_movimientos_caja", "pendientes_bancarios", "eventos_pendientes_bancarios", "revisiones_pendientes_bancarios", "estados_cartera_echeq", "operaciones_salida_echeq", "items_salida_echeq", "empleados", "eventos_empleados", "alertas_licencia_empleados", "casos_empleados", "actuaciones_casos_empleados", "documentos_empleados"})

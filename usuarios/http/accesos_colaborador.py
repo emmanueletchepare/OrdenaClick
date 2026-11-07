@@ -29,6 +29,7 @@ from usuarios.services.permisos_bancarios_accion import permitido as permiso_ban
 ALERTAS_POR_CAPACIDAD = {
     'pendientes.ver': 'FIN-03',
     'caja.total': 'FIN-02',
+    'caja.bancos_actualizar': 'FIN-05',
     'vencimientos.ver': 'FIN-01',
     'nomina.total': 'NOM-01',
     'abm.centros': 'DOC-03',
@@ -128,6 +129,7 @@ def gestion_accesos(request, empresa_id):
                   else {'nomina.total'} if editable else set())
     if rol != 'admin_centro':
         permitidos.discard('caja.total')
+        permitidos.discard('caja.bancos_actualizar')
     arbol = []
     for indice, (titulo, hojas) in enumerate(ARBOL):
         hijos = []
@@ -154,7 +156,7 @@ def gestion_accesos(request, empresa_id):
                              puede(usuarios[elegido], empresa.pk, codigo),
                 'ayuda': ('Reservado a administración general' if codigo.startswith('config.')
                           else 'Acceso definido por jerarquía' if not editable
-                          else 'No disponible para este perfil' if codigo == 'caja.total'
+                          else 'No disponible para este perfil' if codigo in ('caja.total', 'caja.bancos_actualizar')
                           else 'Disponible al integrar este módulo' ),
                 'alerta': alerta,
             })

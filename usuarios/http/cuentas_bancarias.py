@@ -1,10 +1,16 @@
 from usuarios.services.accesos_colaborador import exigir_abm
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import Banco, CuentaBancaria
+from usuarios.services.caja_bancos_informados import puede_ver_bancos
+from usuarios.services.cuentas_bancarias_descubierto import (
+    CAMPOS, leer_acuerdo, aplicar_acuerdo, auditar_acuerdo,
+)
 from usuarios.services.capacidades import (
     CAPACIDAD_EMPRESA_ADMINISTRAR,
     exigir_capacidad_empresa,
@@ -47,6 +53,7 @@ def listar_cuentas_bancarias(request):
         "nombre"
     )
 
+    acceso_descubierto = puede_ver_bancos(request.user, empresa.pk)
     html = render_to_string(
         "usuarios/maestros/cuentas_bancarias.html",
         {
@@ -55,6 +62,7 @@ def listar_cuentas_bancarias(request):
             "bancos": bancos,
             "tipos_cuenta": CuentaBancaria.TIPOS_CUENTA,
             "monedas": CuentaBancaria.MONEDAS,
+            "acceso_descubierto": acceso_descubierto,
         },
         request=request
     )
@@ -73,6 +81,12 @@ def listar_cuentas_bancarias(request):
                 "numero_cuenta": cuenta.numero_cuenta,
                 "cbu": cuenta.cbu,
                 "alias": cuenta.alias,
+                **({
+                    "descubierto_importe": str(cuenta.descubierto_importe) if cuenta.descubierto_importe is not None else "",
+                    "descubierto_vencimiento": cuenta.descubierto_vencimiento.isoformat() if cuenta.descubierto_vencimiento else "",
+                    "descubierto_alerta_dias": cuenta.descubierto_alerta_dias,
+                    "descubierto_alerta_habilitada": cuenta.descubierto_alerta_habilitada,
+                } if acceso_descubierto else {}),
             }
             for cuenta in cuentas
         ]
@@ -81,6 +95,7 @@ def listar_cuentas_bancarias(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def guardar_cuenta_bancaria(request):
     """
     Crea una cuenta bancaria para la empresa activa.
@@ -159,6 +174,9 @@ def guardar_cuenta_bancaria(request):
             'abm.cuentas',
         )
     empresa = contexto.empresa
+    acceso_descubierto = puede_ver_bancos(request.user, empresa.pk)
+    if not acceso_descubierto and any(campo in request.POST for campo in CAMPOS):
+        raise PermissionDenied('No autorizado a modificar acuerdos de descubierto.')
 
     try:
 
@@ -205,12 +223,23 @@ def guardar_cuenta_bancaria(request):
                 "numero_cuenta": cuenta_existente.numero_cuenta,
                 "cbu": cuenta_existente.cbu,
                 "alias": cuenta_existente.alias,
+                **({
+                    "descubierto_importe": str(cuenta_existente.descubierto_importe) if cuenta_existente.descubierto_importe is not None else "",
+                    "descubierto_vencimiento": cuenta_existente.descubierto_vencimiento.isoformat() if cuenta_existente.descubierto_vencimiento else "",
+                    "descubierto_alerta_dias": cuenta_existente.descubierto_alerta_dias,
+                    "descubierto_alerta_habilitada": cuenta_existente.descubierto_alerta_habilitada,
+                } if acceso_descubierto else {}),
             },
             "mensaje": (
                 "La cuenta bancaria ya existe pero está inactiva. "
                 "Puede reactivarla."
             )
         })
+
+    try:
+        acuerdo = leer_acuerdo(request.POST)
+    except ValueError as exc:
+        return JsonResponse({"ok": False, "mensaje": str(exc)}, status=400)
 
     cuenta = CuentaBancaria.objects.create(
         empresa=empresa,
@@ -220,8 +249,11 @@ def guardar_cuenta_bancaria(request):
         moneda=moneda,
         numero_cuenta=numero_cuenta,
         cbu=cbu,
-        alias=alias
+        alias=alias,
+        **acuerdo,
     )
+    auditar_acuerdo(cuenta, {'importe': None, 'vencimiento': None,
+        'dias': 3, 'alerta': False}, request.user)
 
     return JsonResponse({
         "ok": True,
@@ -234,6 +266,7 @@ def guardar_cuenta_bancaria(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def modificar_cuenta_bancaria(request):
     """
     Modifica una cuenta bancaria activa perteneciente
@@ -250,6 +283,9 @@ def modificar_cuenta_bancaria(request):
             'abm.cuentas',
         )
     empresa = contexto.empresa
+    acceso_descubierto = puede_ver_bancos(request.user, empresa.pk)
+    if not acceso_descubierto and any(campo in request.POST for campo in CAMPOS):
+        raise PermissionDenied('No autorizado a modificar acuerdos de descubierto.')
 
     cuenta_id = request.POST.get(
         "cuenta"
@@ -318,7 +354,7 @@ def modificar_cuenta_bancaria(request):
 
     try:
 
-        cuenta = CuentaBancaria.objects.get(
+        cuenta = CuentaBancaria.objects.select_for_update().get(
             id=cuenta_id,
             empresa=empresa,
             activo=True
@@ -368,6 +404,12 @@ def modificar_cuenta_bancaria(request):
             )
         })
 
+    try:
+        acuerdo = leer_acuerdo(request.POST, cuenta)
+    except ValueError as exc:
+        return JsonResponse({"ok": False, "mensaje": str(exc)}, status=400)
+    antes_acuerdo = aplicar_acuerdo(cuenta, acuerdo)
+
     cuenta.banco = banco
     cuenta.nombre = nombre
     cuenta.tipo_cuenta = tipo_cuenta
@@ -385,8 +427,11 @@ def modificar_cuenta_bancaria(request):
             "numero_cuenta",
             "cbu",
             "alias",
+            *CAMPOS,
         ]
     )
+
+    auditar_acuerdo(cuenta, antes_acuerdo, request.user)
 
     return JsonResponse({
         "ok": True
@@ -449,6 +494,7 @@ def eliminar_cuenta_bancaria(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def reactivar_cuenta_bancaria(request):
     """
     Reactiva una cuenta bancaria inactiva y permite
@@ -465,6 +511,9 @@ def reactivar_cuenta_bancaria(request):
             'abm.cuentas',
         )
     empresa = contexto.empresa
+    acceso_descubierto = puede_ver_bancos(request.user, empresa.pk)
+    if not acceso_descubierto and any(campo in request.POST for campo in CAMPOS):
+        raise PermissionDenied('No autorizado a modificar acuerdos de descubierto.')
 
     cuenta_id = request.POST.get(
         "cuenta"
@@ -500,7 +549,7 @@ def reactivar_cuenta_bancaria(request):
 
     try:
 
-        cuenta = CuentaBancaria.objects.get(
+        cuenta = CuentaBancaria.objects.select_for_update().get(
             id=cuenta_id,
             empresa=empresa,
             activo=False
@@ -553,6 +602,12 @@ def reactivar_cuenta_bancaria(request):
             )
         })
 
+    try:
+        acuerdo = leer_acuerdo(request.POST, cuenta)
+    except ValueError as exc:
+        return JsonResponse({"ok": False, "mensaje": str(exc)}, status=400)
+    antes_acuerdo = aplicar_acuerdo(cuenta, acuerdo)
+
     cuenta.banco = banco
     cuenta.nombre = nombre
     cuenta.tipo_cuenta = tipo_cuenta
@@ -571,9 +626,12 @@ def reactivar_cuenta_bancaria(request):
             "numero_cuenta",
             "cbu",
             "alias",
+            *CAMPOS,
             "activo",
         ]
     )
+
+    auditar_acuerdo(cuenta, antes_acuerdo, request.user)
 
     return JsonResponse({
         "ok": True

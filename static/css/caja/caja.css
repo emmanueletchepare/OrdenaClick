@@ -540,6 +540,53 @@
 }
 
 
+/* El detalle de cada Caja sólo se muestra al elegir Total general. */
+.caja-dashboard-titulo[data-caja-detalle-titulo][hidden] {
+    display: none;
+}
+
+/* Detalle por Caja y bancos: mismo panel visual, sin tarjetas grandes duplicadas. */
+.caja-total-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+.caja-total-fila {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.6fr) repeat(3, minmax(120px, 1fr));
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--panel);
+}
+.caja-total-identidad strong,
+.caja-total-identidad span,
+.caja-total-importe > span,
+.caja-total-importe > strong { display: block; }
+.caja-total-identidad strong { color: var(--text); font-size: 14px; font-weight: 700; }
+.caja-total-identidad span, .caja-total-importe > span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.caja-total-importe strong { margin-top: 5px; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.caja-total-ars strong { color: #45dfbd; }
+.caja-total-usd strong { color: #67b7ff; }
+.caja-total-cheques strong { color: #b9a2ff; }
+.caja-banco-actualizado { font-size: 13px !important; }
+.caja-bancos-edicion { margin-top: 16px; padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.caja-bancos-campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 14px 0; }
+.caja-bancos-edicion h4 { margin: 0; color: var(--text); }
+.caja-bancos-edicion p { color: var(--muted); }
+@media (max-width: 900px) {
+    .caja-total-fila { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .caja-total-identidad { grid-column: 1 / -1; }
+}
+@media (max-width: 650px) {
+    .caja-total-fila { grid-template-columns: 1fr; }
+    .caja-total-identidad { grid-column: auto; }
+    .caja-bancos-campos { grid-template-columns: 1fr; }
+}
+
 /* =========================================
    DISPONIBILIDAD
 ========================================= */
@@ -843,4 +890,277 @@
         width: 100%;
         justify-content: flex-start;
     }
+}
+
+/* Total general: detalle dentro de los tres boxes de disponibilidad.
+   La selección de una Caja individual conserva sus tarjetas originales. */
+.caja-total-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 14px;
+}
+
+.caja-total-columna {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.caja-total-tarjeta {
+    justify-content: flex-start;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.caja-total-tarjeta .caja-disponibilidad-label {
+    margin-bottom: 12px;
+}
+
+.caja-total-lista {
+    width: 100%;
+}
+
+.caja-total-renglon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.caja-total-renglon:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.caja-total-denominacion {
+    flex: 1 1 48%;
+    min-width: 0;
+}
+
+.caja-total-centro,
+.caja-total-nombre {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.caja-total-centro {
+    color: #cad3e2;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.caja-total-nombre {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.caja-total-tarjeta .caja-total-valor {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.35;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.caja-total-contador {
+    display: block;
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+.caja-total-pie {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex: 0 0 auto;
+    min-height: 58px;
+    padding: 12px 20px;
+}
+
+.caja-total-pie > span {
+    color: #c3cbd8;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.caja-total-pie > strong {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.25;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 1000px) {
+    .caja-total-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .caja-total-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Otras disponibilidades: dos cuentas en el box de Bancos, sin tarjetas externas.
+   Sólo se ajusta esta grilla; Caja y Total general conservan su diseño. */
+.caja-otras-disponibilidades {
+    align-items: stretch;
+}
+
+.caja-bancos-integrados {
+    grid-column: span 2;
+    min-width: 0;
+    justify-content: flex-start;
+}
+
+.caja-bancos-resumen {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.caja-bancos-resumen-moneda {
+    min-width: 0;
+}
+
+.caja-bancos-resumen-moneda > span {
+    color: #9cddeb;
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.caja-bancos-integrados .caja-bancos-resumen-moneda > strong {
+    font-size: 20px;
+    margin-bottom: 0;
+    overflow-wrap: anywhere;
+}
+
+.caja-bancos-lista {
+    margin-top: 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.caja-bancos-renglon {
+    padding: 11px 0;
+}
+
+.caja-bancos-valor {
+    text-align: right;
+    min-width: 0;
+    flex: 0 1 48%;
+}
+
+.caja-bancos-integrados .caja-bancos-valor > strong {
+    font-size: 15px;
+    line-height: 1.35;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.caja-bancos-actualizacion {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.caja-bancos-nota {
+    display: block;
+    padding-top: 8px;
+}
+
+@media (max-width: 650px) {
+    .caja-bancos-integrados {
+        grid-column: auto;
+    }
+}
+
+/* Caja · Bancos: tres columnas dentro del box celeste, sin tarjetas exteriores. */
+.caja-bancos-integrados .caja-bancos-tabla { margin-top: 14px; }
+.caja-bancos-encabezado,
+.caja-bancos-integrados .caja-bancos-renglon {
+    display: grid;
+    grid-template-columns: minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);
+    gap: 14px;
+    align-items: center;
+}
+.caja-bancos-encabezado { color: #9cddeb; font-size: 11px; font-weight: 600; padding-bottom: 8px; }
+.caja-bancos-integrados .caja-bancos-renglon {
+    padding: 11px 0;
+    border-top: 1px solid rgba(148,163,184,.16);
+}
+.caja-bancos-identidad, .caja-bancos-saldo, .caja-bancos-descubierto { min-width: 0; }
+.caja-bancos-identidad strong, .caja-bancos-saldo strong, .caja-bancos-descubierto strong {
+    display: block; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere;
+}
+.caja-bancos-identidad small,
+.caja-bancos-saldo small,
+.caja-bancos-descubierto small { display: block; margin-top: 3px; font-size: 11px; color: #a5b9d0; }
+.caja-bancos-saldo, .caja-bancos-descubierto { text-align: right; }
+.caja-bancos-editar-importe {
+    border: 0; padding: 2px 0; background: transparent; color: #67dfff;
+    font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    max-width: 100%; text-align: right; overflow-wrap: anywhere;
+}
+.caja-bancos-editar-importe:hover { text-decoration: underline; }
+.caja-bancos-editar-importe:focus-visible { outline: 2px solid #6bbfff; outline-offset: 3px; }
+.caja-bancos-descubierto strong { color: #67dfff; }
+.caja-bancos-descubierto .caja-bancos-sin-descubierto { color: #a9b7ca; font-size: 12px; }
+/* Alineación común: encabezado, valores y totales en las mismas columnas. */
+.caja-bancos-encabezado span:nth-child(n+2) { text-align: right; }
+.caja-bancos-totales {
+    display: grid;
+    grid-template-columns: minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);
+    gap: 14px; align-items: start;
+    padding-top: 12px; border-top: 1px solid rgba(148,163,184,.25);
+}
+.caja-bancos-totales small { font-size: 11px; color: #a5b9d0; }
+.caja-bancos-totales-importes {
+    min-width: 0; grid-column: 2;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+}
+.caja-bancos-totales-importes span {
+    font-size: 13px; font-weight: 700; color: #67dfff;
+    font-variant-numeric: tabular-nums; text-align: right;
+}
+.caja-bancos-dialogo {
+    position: fixed; inset: 0; margin: auto;
+    width: min(92vw, 480px); max-height: 90vh; overflow: auto;
+    border-radius: 16px; border: 1px solid #285579;
+    background: #151d2b; color: #e5edf8; padding: 22px 24px;
+    box-shadow: 0 20px 80px rgba(0,0,0,.55);
+}
+.caja-bancos-dialogo::backdrop { background: rgba(2,6,15,.74); }
+.caja-bancos-dialogo h4 { margin: 0 0 12px; font-size: 19px; }
+.caja-bancos-dialogo p { color: #a5b9d0; font-size: 12px; }
+.caja-bancos-dialogo .field { display: block; margin: 16px 0; }
+.caja-bancos-dialogo .label { display: block; margin-bottom: 5px; }
+.caja-bancos-dialogo .input-box { width: 100%; }
+.caja-bancos-dialogo-acciones { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 720px) {
+  .caja-bancos-encabezado, .caja-bancos-integrados .caja-bancos-renglon {
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px;
+  }
+  .caja-bancos-encabezado span:first-child { display: none; }
+  .caja-bancos-encabezado { padding-left: 0; }
+  .caja-bancos-integrados .caja-bancos-identidad { grid-column: 1 / -1; }
+  .caja-bancos-totales { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .caja-bancos-totales small { grid-column: 1 / -1; }
+  .caja-bancos-totales-importes { grid-column: 2; }
 }

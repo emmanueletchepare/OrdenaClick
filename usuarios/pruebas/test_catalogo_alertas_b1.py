@@ -17,7 +17,7 @@ class CatalogoAlertasB1Tests(SimpleTestCase):
         self.assertEqual(set(tipo.categoria for tipo in TIPOS_ALERTA), set(CATEGORIAS))
 
     def test_fuentes_integradas(self):
-        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'FIN-02', 'FIN-03', 'NOM-01', 'DOC-01', 'DOC-03', 'DOC-04'})
+        self.assertEqual(CODIGOS_OPERATIVOS, {'FIN-01', 'FIN-02', 'FIN-03', 'FIN-05', 'NOM-01', 'DOC-01', 'DOC-03', 'DOC-04'})
         self.assertEqual({tipo.codigo for tipo in tipos_operativos()}, CODIGOS_OPERATIVOS)
         for codigo in CODIGOS_OPERATIVOS:
             self.assertTrue(tipo_operativo(codigo).operativa)

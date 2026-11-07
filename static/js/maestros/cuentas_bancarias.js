@@ -2,6 +2,50 @@ let cuentaBancariaEditandoId = null;
 let cuentaBancariaReactivandoId = null;
 let ultimaCuentaBancariaCreada = null;
 
+/* Nuevos campos del acuerdo: misma edición, alta y reactivación del ABM. */
+function cargarAcuerdoDescubiertoCuenta(importe, fecha, dias, alerta) {
+    const campos = {
+        descubiertoImporteCuenta: importe || '',
+        descubiertoVencimientoCuenta: fecha || '',
+        descubiertoAlertaDiasCuenta: dias === undefined || dias === null ? '3' : String(dias)
+    };
+    Object.entries(campos).forEach(([id, valor]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = valor;
+    });
+    const check = document.getElementById('descubiertoAlertaActivaCuenta');
+    if (check) check.checked = alerta === true || alerta === '1';
+    const campoImporte = document.getElementById('descubiertoImporteCuenta');
+    if (campoImporte) formatearAcuerdoDescubiertoCampo(campoImporte);
+}
+
+function agregarAcuerdoDescubiertoCuenta(formulario) {
+    // Sin permisos de Bancos, el ABM sólo edita sus campos heredados.
+    if (!document.getElementById('descubiertoImporteCuenta')) return;
+    const valor = id => document.getElementById(id);
+    formulario.append('descubierto_importe', valor('descubiertoImporteCuenta')?.value || '');
+    formulario.append('descubierto_vencimiento', valor('descubiertoVencimientoCuenta')?.value || '');
+    formulario.append('descubierto_alerta_dias', valor('descubiertoAlertaDiasCuenta')?.value || '3');
+    formulario.append('descubierto_alerta_habilitada',
+        valor('descubiertoAlertaActivaCuenta')?.checked ? '1' : '0');
+}
+
+function formatearAcuerdoDescubiertoCampo(campo) {
+    const valor = campo.value.trim();
+    if (!valor) return;
+    let normalizado = valor;
+    if (/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(valor)) {
+        normalizado = valor.replace(/\./g,'').replace(',','.');
+    } else if (/^\d{1,12}(?:[.,]\d{1,2})?$/.test(valor)) {
+        normalizado = valor.replace(',','.');
+    } else { return; } // No ocultar un valor inválido; el backend lo rechazará.
+    const n = Number(normalizado);
+    if (Number.isFinite(n)) campo.value = n.toLocaleString('es-AR', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+}
+
+
 
 /* =========================================
    INICIALIZACIÓN
@@ -96,6 +140,12 @@ function iniciarABMCuentasBancarias(){
     }
 
 
+    const importeDescubierto = document.getElementById('descubiertoImporteCuenta');
+    if (importeDescubierto) {
+        importeDescubierto.addEventListener('blur', () =>
+            formatearAcuerdoDescubiertoCampo(importeDescubierto));
+    }
+
     if(inputCBU){
 
         inputCBU.addEventListener(
@@ -151,7 +201,11 @@ function iniciarABMCuentasBancarias(){
                             tarjeta.dataset.cuentaMoneda,
                             tarjeta.dataset.cuentaNumero,
                             tarjeta.dataset.cuentaCbu,
-                            tarjeta.dataset.cuentaAlias
+                            tarjeta.dataset.cuentaAlias,
+                            tarjeta.dataset.cuentaDescubierto,
+                            tarjeta.dataset.cuentaDescubiertoVto,
+                            tarjeta.dataset.cuentaDescubiertoDias,
+                            tarjeta.dataset.cuentaDescubiertoAlerta
                         );
 
                     }
@@ -582,6 +636,7 @@ async function guardarCuentaBancaria(){
         "alias",
         alias
     );
+    agregarAcuerdoDescubiertoCuenta(formulario);
 
 
     let url =
@@ -774,7 +829,11 @@ function modificarCuentaBancaria(
     moneda,
     numeroCuenta,
     cbu,
-    alias
+    alias,
+    descubiertoImporte,
+    descubiertoVencimiento,
+    descubiertoDias,
+    descubiertoAlerta
 ){
 
     cuentaBancariaReactivandoId =
@@ -878,6 +937,8 @@ function modificarCuentaBancaria(
     }
 
 
+    cargarAcuerdoDescubiertoCuenta(descubiertoImporte, descubiertoVencimiento,
+        descubiertoDias, descubiertoAlerta);
     configurarModoEdicionCuentaBancaria(
         "Actualizar"
     );
@@ -994,6 +1055,9 @@ function cargarCuentaBancariaParaReactivar(
     }
 
 
+    cargarAcuerdoDescubiertoCuenta(cuenta.descubierto_importe,
+        cuenta.descubierto_vencimiento, cuenta.descubierto_alerta_dias,
+        cuenta.descubierto_alerta_habilitada);
     configurarModoEdicionCuentaBancaria(
         "Reactivar"
     );
@@ -1102,6 +1166,8 @@ function limpiarFormularioCuentaBancaria(){
         }
     );
 
+
+    cargarAcuerdoDescubiertoCuenta('', '', '3', false);
 
     const btnGuardar =
         document.getElementById(

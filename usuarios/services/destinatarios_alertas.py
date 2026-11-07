@@ -16,6 +16,8 @@ from usuarios.services.alcance_nomina import alcance_nomina
 from usuarios.services.alcances_centros import centros_activos_de_usuario
 from usuarios.services.capacidades import obtener_contexto_capacidades_empresa
 from usuarios.services.catalogo_alertas import CODIGOS_OPERATIVOS, tipo_operativo
+from usuarios.services.caja_bancos_informados import puede_ver_bancos
+from usuarios.services.alertas_bancos import fuentes_bancos, aviso_bancario_autorizado
 from usuarios.services.alertas_instrumentos import (
     permisos_lectura_tipo, fuentes_instrumentos, aviso_autorizado,
 )
@@ -47,6 +49,8 @@ def alcance_fuente(usuario, empresa, codigo):
         if centros is not None and not centros:
             return False, frozenset()
         return True, centros
+    if codigo == 'FIN-05':
+        return puede_ver_bancos(usuario, empresa.pk), None
     if codigo in ('FIN-02', 'FIN-03'):
         return permisos_lectura_tipo(usuario, empresa, codigo), None
     if codigo in CODIGOS_DOC:
@@ -122,6 +126,13 @@ def alertas_sin_destinatarios(empresa):
         if not rec or descubiertos:
             filas.append({'codigo': codigo, 'sin_receptores': not bool(rec),
                           'ocurrencias_sin_receptor': descubiertos})
+    avisos_bancarios = fuentes_bancos(empresa, date.today())
+    bancarios = receptores['FIN-05']
+    sin_receptor = sum(1 for aviso in avisos_bancarios if not any(
+        aviso_bancario_autorizado(u, empresa, aviso) for u, _ in bancarios))
+    if not bancarios or sin_receptor:
+        filas.append({'codigo': 'FIN-05', 'sin_receptores': not bool(bancarios),
+                      'ocurrencias_sin_receptor': sin_receptor})
     documentos = fuentes_documentales(empresa, date.today())
     for codigo in CODIGOS_DOC:
         rec = receptores[codigo]

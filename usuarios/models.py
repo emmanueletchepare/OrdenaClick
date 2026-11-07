@@ -2943,6 +2943,14 @@ class CuentaBancaria(models.Model):
         default=3
     )
 
+    # Acuerdo de descubierto bancario: NO es dinero disponible en Caja.
+    descubierto_importe = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True,
+    )
+    descubierto_vencimiento = models.DateField(null=True, blank=True)
+    descubierto_alerta_dias = models.PositiveSmallIntegerField(default=3)
+    descubierto_alerta_habilitada = models.BooleanField(default=False)
+
     activo = models.BooleanField(
         default=True
     )
@@ -2953,6 +2961,40 @@ class CuentaBancaria(models.Model):
             f"{self.banco.nombre} - "
             f"{self.nombre}"
         )
+
+class EventoAcuerdoDescubierto(models.Model):
+    """Auditoría inmutable del acuerdo (sin modificar saldos bancarios)."""
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT)
+    cuenta_bancaria = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT,
+                                       related_name='eventos_descubierto')
+    actor = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT)
+    antes = models.JSONField(default=dict)
+    despues = models.JSONField(default=dict)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+
+
+class SaldoInformadoCuentaBancaria(models.Model):
+    """Posición informada manualmente para planificación; no es saldo contable.
+
+    Cada actualización crea un nuevo hecho histórico con actor y fecha. No
+    modifica Cuentas, Pendientes bancarios, cheques, Pagos ni Movimientos.
+    """
+    empresa = models.ForeignKey('Empresa', on_delete=models.PROTECT, related_name='saldos_bancarios_informados')
+    cuenta_bancaria = models.ForeignKey('CuentaBancaria', on_delete=models.PROTECT, related_name='posiciones_informadas')
+    importe = models.DecimalField(max_digits=14, decimal_places=2)
+    creado_por = models.ForeignKey('IdentidadUsuarioEmpresa', on_delete=models.PROTECT, related_name='posiciones_bancarias_informadas')
+    creado = models.DateTimeField(auto_now_add=True)
+    clave = models.UUIDField()
+
+    class Meta:
+        ordering = ['-creado', '-pk']
+        constraints = [
+            models.UniqueConstraint(fields=['empresa', 'cuenta_bancaria', 'clave'], name='uniq_posicion_banco_cuenta_clave'),
+        ]
+
 
 # =========================================
 # TARJETAS

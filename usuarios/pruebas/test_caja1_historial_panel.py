@@ -131,3 +131,38 @@ class HistorialPanelCajaTests(TestCase):
         html = self.historial(self.dueno, self.caja_central.pk).json()['html']
         self.assertNotIn('<script>evil</script>', html)
         self.assertIn('&lt;script&gt;', html)
+
+    def test_selector_casa_central_por_defecto_y_total_con_detalle(self):
+        self.client.force_login(self.dueno)
+        respuesta = self.client.get(reverse('panel_caja'), {'empresa': self.empresa.pk})
+        self.assertEqual(respuesta.status_code, 200)
+        html = respuesta.json()['html']
+        self.assertIn('id="cajaFiltroDisponibilidad"', html)
+        self.assertIn('value="todas">Total general</option>', html)
+        self.assertIn('data-caja-resumen="todas"', html)
+        self.assertIn('data-valor="400.00"', html)  # 4 ingresos x 100 ARS
+        self.assertLess(html.index(f'value="{self.caja_central.pk}"'),
+                        html.index(f'value="{self.caja_tandil.pk}"'))
+        self.assertIn('data-caja-detalle-titulo', html)
+        self.assertNotIn('SECRETO AJENO', html)
+
+    def test_selector_admin_centro_solo_su_caja_sin_total_empresa(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse('panel_caja'), {'empresa': self.empresa.pk})
+        self.assertEqual(respuesta.status_code, 200)
+        html = respuesta.json()['html']
+        self.assertIn(f'data-caja-resumen="{self.caja_tandil.pk}"', html)
+        self.assertNotIn(f'data-caja-resumen="{self.caja_central.pk}"', html)
+        self.assertNotIn('data-caja-resumen="todas"', html)
+        self.assertNotIn('value="todas"', html)
+
+    def test_selector_identifica_dos_cajas_de_un_centro(self):
+        Caja.objects.create(empresa=self.empresa, centro_operativo=self.central,
+                            nombre='Auxiliar', activo=True)
+        self.client.force_login(self.general)
+        respuesta = self.client.get(reverse('panel_caja'), {'empresa': self.empresa.pk})
+        self.assertEqual(respuesta.status_code, 200)
+        html = respuesta.json()['html']
+        self.assertIn('Casa Central · Olavarria · Principal', html)
+        self.assertIn('Casa Central · Olavarria · Auxiliar', html)
+        self.assertIn('Total general', html)

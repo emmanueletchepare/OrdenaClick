@@ -24,6 +24,8 @@ TIPOS_ALERTA = (
                'Cartera física y cheques propios emitidos', 'Empresa/Caja/Centro y origen', True),
     TipoAlerta('FIN-03', 'Financieras', 'Vencimiento de e-Cheqs',
                'Cartera electrónica y e-Cheqs propios emitidos', 'Empresa/Centro y origen', True),
+    TipoAlerta('FIN-05', 'Financieras', 'Vencimiento de acuerdo de descubierto',
+               'Cuentas bancarias', 'Empresa / permiso Bancos', True),
     TipoAlerta('FIN-04', 'Financieras', 'Vencimiento de cuotas de registros planificados',
                'Registro planificado', 'Empresa/Centro por definir'),
     TipoAlerta('ADM-01', 'Administrativas', 'Orden de Pago lista para imprimir o aplicar',

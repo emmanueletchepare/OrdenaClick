@@ -3,10 +3,12 @@ import re
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from usuarios.models import CentroOperativo, Ejercicio, Empresa, Movimiento
+from usuarios.services.cajas_iniciales import asegurar_caja_inicial
 
 
 @login_required
@@ -203,16 +205,15 @@ def panel_admin(request):
                 **vencimientos_documentales,
             )
 
-            CentroOperativo.objects.create(
-
-                 empresa=nueva_empresa,
-
-                 nombre='CASA CENTRAL',
-
-                 tipo='Casa Central',
-
-                 direccion=nueva_empresa.direccion_real or ''
-             )
+            # Alta inicial: Casa Central recibe una Caja, nunca saldo ficticio.
+            with transaction.atomic():
+                centro_inicial = CentroOperativo.objects.create(
+                    empresa=nueva_empresa,
+                    nombre='CASA CENTRAL',
+                    tipo='Casa Central',
+                    direccion=nueva_empresa.direccion_real or '',
+                )
+                asegurar_caja_inicial(centro_inicial)
 
             if nueva_empresa.inicio_contable:
 

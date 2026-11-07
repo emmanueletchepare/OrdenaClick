@@ -92,3 +92,24 @@ No se borran la fecha `vencimiento_acta`, el adjunto `acta` ni la marca
 `acta_incluye_designacion` históricos. La UI no los utiliza. La marca preexistente
 sólo autoriza fallback desde el vencimiento previo de Asamblea cuando Designación
 carece de vencimiento propio. No se agrega ni revierte una migración.
+
+
+## FIN-05 · Vencimiento de acuerdo de descubierto bancario (07/11/2026)
+
+- **Origen:** CuentaBancaria activa de la Empresa; campos `descubierto_importe`,
+  `descubierto_vencimiento`, `descubierto_alerta_dias`, `descubierto_alerta_habilitada`.
+- **Disparador:** si la alerta está habilitada y el acuerdo existe, mostrar desde
+  `vencimiento - dias` inclusive; conservar aviso vencido mientras exista acuerdo
+  habilitado, sin modificarlo ni generar valores financieros.
+- **Alcance:** Empresa autorizada. Leer sólo con `alertas.ver` y permiso de
+  disponibilidad bancaria (administración general; administración de Centro
+  con Caja y `caja.bancos_actualizar` explícitos). No revelar datos a Colaboradores.
+- **Destinatarios:** un código FIN-05 asignable por administración general mediante
+  Gestión de Accesos / Alertas existente; marcar la casilla del ABM NO concede
+  permisos ni asigna destinatarios por sí sola.
+- **Privacidad:** el aviso público sólo muestra nombre de cuenta/banco y fecha;
+  no muestra saldos, importe del acuerdo ni movimientos bancarios.
+- **Integridad:** no suma descubierto al saldo informado ni a Caja; en el panel,
+  después del vencimiento se informa `Sin descubierto` y no se altera el acuerdo.
+- **Backup Empresa v1:** los campos viajan con CuentaBancaria y los eventos
+  históricos del acuerdo en un componente opcional para respaldos anteriores.

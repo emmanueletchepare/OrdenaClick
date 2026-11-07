@@ -9,6 +9,7 @@
 - [x] **FIN-01** · Vencimiento de Movimientos con saldo pendiente.
 - [x] **FIN-02** · Vencimiento de cheques físicos (cartera y propios emitidos).
 - [x] **FIN-03** · Vencimiento de e-Cheqs (cartera electrónica y propios emitidos).
+- [x] **FIN-05** · Vencimiento del acuerdo de descubierto bancario (sólo cuentas con aviso habilitado).
 - [ ] **FIN-04** · Vencimiento de cuotas de registros planificados.
 
 ## 2. Alertas administrativas

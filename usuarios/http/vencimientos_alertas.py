@@ -13,6 +13,7 @@ from usuarios.services.seguridad import obtener_empresa_autorizada, obtener_empr
 from usuarios.services.nomina import alertas_pendientes
 from usuarios.services.alertas_instrumentos import avisos_visibles, avisos_publicos
 from usuarios.services.alertas_documentales import avisos_documentales_visibles, avisos_documentales_publicos
+from usuarios.services.alertas_bancos import avisos_bancos_visibles, avisos_bancos_publicos
 from usuarios.services.destinatarios_alertas import suscripto_efectivo, sonido_habilitado
 from usuarios.models import Movimiento
 from usuarios.services.accesos_colaborador import exigir, puede
@@ -80,6 +81,9 @@ def estado_llamador_alertas(request):
             suscripto_efectivo(request.user, empresa, codigo)
             for codigo in {a['codigo'] for a in avisos_documentales_visibles(request.user, empresa)}
         )
+
+    if not mostrar_llamador and suscripto_efectivo(request.user, empresa, 'FIN-05'):
+        mostrar_llamador = bool(avisos_bancos_visibles(request.user, empresa))
 
     return JsonResponse(
         {
@@ -322,6 +326,8 @@ def _listar_vencimientos_o_alertas(request, *, vista_alertas):
                            if periodo == 'alertas' else [])
     alertas_documentales = (avisos_documentales_publicos(request.user, empresa)
                             if periodo == 'alertas' else [])
+    alertas_bancarias = (avisos_bancos_publicos(request.user, empresa)
+                        if periodo == 'alertas' else [])
     licencias_nomina = []
     if periodo == 'alertas':
         try:
@@ -343,6 +349,7 @@ def _listar_vencimientos_o_alertas(request, *, vista_alertas):
             "licencias_nomina": licencias_nomina,
             "alertas_instrumentos": alertas_instrumentos,
             "alertas_documentales": alertas_documentales,
+            "alertas_bancarias": alertas_bancarias,
             "periodo": periodo,
             "fecha_desde": (
                 fecha_desde.isoformat()

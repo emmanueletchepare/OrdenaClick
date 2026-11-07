@@ -62,6 +62,7 @@ from .http.caja_movimientos import (
     historial_movimientos_caja_http,
 )
 from .http.caja_correcciones import corregir_movimiento_caja_http
+from .http.caja_bancos_informados import actualizar_disponibles_bancarios
 from .http.revisiones_pendientes_bancarios import revisar_pendiente_http
 from .http.estados_echeq import estado_echeq_detalle, estado_echeq_registrar, estado_echeq_regularizar_rechazo
 from .http.salidas_echeq import listar_salidas, confirmar_salida, pdf_salida, pdf_salida
@@ -767,6 +768,7 @@ urlpatterns = [
         name="historial_movimientos_caja",
     ),
 
+    path('caja/bancos/actualizar/', actualizar_disponibles_bancarios, name='actualizar_disponibles_bancarios'),
     path("caja/movimientos/corregir/<int:movimiento_id>/", corregir_movimiento_caja_http,
          name="corregir_movimiento_caja"),
     # Nómina: autorización real por Empresa en cada GET/POST/descarga.

@@ -1,3 +1,4 @@
+{% load l10n %}
 <div class="card">
 
     <div
@@ -231,53 +232,44 @@
                 placeholder="Alias de la cuenta"
             >
 
-            <div>
+        </div>
 
-                <label
-                    class="label"
-                    for="diasAvisoChequesPropios"
-                >
-                    Avisar cheques propios
-                </label>
-
-                <div
-                    style="
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                    "
-                >
-
-                    <input
-                        id="diasAvisoChequesPropios"
-                        type="number"
-                        min="0"
-                        max="365"
-                        step="1"
-                        value="3"
-                        class="input-box"
-                        style="
-                            text-align:right;
-                        "
-                    >
-
-                    <span
-                        style="
-                            color:#8b93a7;
-                            white-space:nowrap;
-                        "
-                    >
-                        días antes
-                    </span>
-
-                </div>
-
+        <div class="oc-cuentas-aviso-cheques">
+            <label class="label" for="diasAvisoChequesPropios">Avisar cheques propios</label>
+            <div class="oc-cuentas-aviso-cheques-fila">
+                <input id="diasAvisoChequesPropios" type="number"
+                    min="0" max="365" step="1" value="3" class="input-box">
+                <span>días antes</span>
             </div>
-
         </div>
 
     </div>
 
+
+    {% if acceso_descubierto %}
+    <!-- Acuerdo de descubierto por Cuenta: no es un saldo disponible informado. -->
+    <div class="oc-acuerdo-descubierto">
+        <div class="oc-acuerdo-campo">
+            <label class="label" for="descubiertoImporteCuenta">Importe descubierto</label>
+            <input id="descubiertoImporteCuenta" class="input-box" type="text"
+                inputmode="decimal" maxlength="32" autocomplete="off"
+                placeholder="0,00">
+        </div>
+        <div class="oc-acuerdo-campo">
+            <label class="label" for="descubiertoVencimientoCuenta">Vto.</label>
+            <input id="descubiertoVencimientoCuenta" class="input-box" type="date">
+        </div>
+        <div class="oc-acuerdo-campo">
+            <label class="label" for="descubiertoAlertaDiasCuenta">Alerta · días antes</label>
+            <input id="descubiertoAlertaDiasCuenta" class="input-box" type="number"
+                min="0" max="365" step="1" value="3">
+        </div>
+        <label class="oc-acuerdo-habilitar" for="descubiertoAlertaActivaCuenta">
+            <input id="descubiertoAlertaActivaCuenta" type="checkbox">
+            Habilitar alerta
+        </label>
+    </div>
+    {% endif %}
 
     <div
         style="
@@ -376,6 +368,13 @@
                 data-cuenta-cbu="{{ cuenta.cbu|escape }}"
 
                 data-cuenta-alias="{{ cuenta.alias|escape }}"
+
+                {% if acceso_descubierto %}
+                data-cuenta-descubierto="{% if cuenta.descubierto_importe is not None %}{{ cuenta.descubierto_importe|unlocalize }}{% endif %}"
+                data-cuenta-descubierto-vto="{{ cuenta.descubierto_vencimiento|date:'Y-m-d' }}"
+                data-cuenta-descubierto-dias="{{ cuenta.descubierto_alerta_dias }}"
+                data-cuenta-descubierto-alerta="{{ cuenta.descubierto_alerta_habilitada|yesno:'1,0' }}"
+                {% endif %}
 
                 data-busqueda="
                     {{ cuenta.nombre|default:''|escape }}

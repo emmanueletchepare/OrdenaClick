@@ -2,10 +2,12 @@ from usuarios.services.accesos_colaborador import exigir_abm, puede
 from usuarios.services.lectura_maestros_registros import exigir_abm_o_registro
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db import transaction
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
 
 from usuarios.models import CentroOperativo
+from usuarios.services.cajas_iniciales import asegurar_caja_inicial
 from usuarios.services.capacidades import (
     CAPACIDAD_EMPRESA_ADMINISTRAR,
     exigir_capacidad_empresa,
@@ -108,12 +110,15 @@ def guardar_centro_operativo(request):
             "mensaje": "Ese centro operativo ya existe."
         })
 
-    centro = CentroOperativo.objects.create(
-        empresa=empresa,
-        nombre=nombre,
-        tipo=tipo,
-        direccion=direccion
-    )
+    # Crear Centro y Caja inicial en una sola transacción. Depósito no tiene Caja.
+    with transaction.atomic():
+        centro = CentroOperativo.objects.create(
+            empresa=empresa,
+            nombre=nombre,
+            tipo=tipo,
+            direccion=direccion
+        )
+        asegurar_caja_inicial(centro)
 
     return JsonResponse({
         "ok": True,

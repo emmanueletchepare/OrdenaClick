@@ -18,8 +18,12 @@
     function visibilidadCajas() {
         const selector = document.getElementById('cajaFiltroDisponibilidad');
         if (!selector) { return; }
+        // La vista consolidada tiene su propio detalle compacto.
         document.querySelectorAll('[data-caja-resumen]').forEach(function (seccion) {
-            seccion.hidden = selector.value !== 'todas' && seccion.dataset.cajaResumen !== selector.value;
+            seccion.hidden = seccion.dataset.cajaResumen !== selector.value;
+        });
+        document.querySelectorAll('[data-caja-detalle-titulo]').forEach(function (titulo) {
+            titulo.hidden = true;
         });
     }
 

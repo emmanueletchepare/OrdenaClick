@@ -3,34 +3,95 @@
 
     {% if resumenes %}
 
-        {% if resumenes|length > 1 %}
-
+        {# Selector único y persistente, en el encabezado del resumen físico. #}
+        <div class="caja-dashboard-titulo">
             <div class="caja-filtro-disponibilidad">
-
-                <label for="cajaFiltroDisponibilidad">
-                    Ver Caja
-                </label>
-
-                <select
-                    id="cajaFiltroDisponibilidad"
-                    class="input-box"
-                >
-                    <option value="todas">
-                        Todas
-                    </option>
-
+                <label for="cajaFiltroDisponibilidad">Ver Caja</label>
+                <select id="cajaFiltroDisponibilidad" class="input-box">
                     {% for resumen in resumenes %}
-                        <option
-                            value="{{ resumen.caja.id }}"
-                            {% if forloop.first %}selected{% endif %}
-                        >
-                            {{ resumen.caja.centro_operativo.nombre }}
-                        </option>
+                    <option value="{{ resumen.caja.id }}" {% if forloop.first %}selected{% endif %}>{{ resumen.etiqueta_selector }}</option>
                     {% endfor %}
+                    {% if resumenes|length > 1 %}<option value="todas">Total general</option>{% endif %}
                 </select>
+            </div>
+        </div>
 
+        {% if resumenes|length > 1 %}
+        <section class="caja-dashboard-seccion" data-caja-resumen="todas" hidden>
+            <div class="caja-dashboard-titulo">
+                <div>
+                    <h3>Total general · Cajas autorizadas</h3>
+                    <span>Detalle por Caja dentro de cada disponibilidad.</span>
+                </div>
             </div>
 
+            {# Cada disponibilidad agrupa sus Cajas. El total va en una franja separada. #}
+            <div class="caja-total-grid" data-caja-total-grid>
+                <div class="caja-total-columna">
+                    <article class="caja-disponibilidad-card caja-card-ars caja-total-tarjeta">
+                        <span class="caja-disponibilidad-label">Efectivo ARS</span>
+                        <div class="caja-total-lista">
+                            {% for resumen in resumenes %}
+                            <div class="caja-total-renglon">
+                                <div class="caja-total-denominacion">
+                                    <span class="caja-total-centro">{{ resumen.caja.centro_operativo.nombre }}</span>
+                                    <small class="caja-total-nombre">{{ resumen.caja.nombre }}</small>
+                                </div>
+                                <strong class="caja-total-valor">$ <span data-caja-importe data-valor="{{ resumen.efectivo.ARS|unlocalize }}"></span></strong>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                    <div class="caja-disponibilidad-card caja-card-ars caja-total-pie">
+                        <span>Total general</span>
+                        <strong>$ <span data-caja-importe data-valor="{{ total_general.efectivo.ARS|unlocalize }}"></span></strong>
+                    </div>
+                </div>
+
+                <div class="caja-total-columna">
+                    <article class="caja-disponibilidad-card caja-card-usd caja-total-tarjeta">
+                        <span class="caja-disponibilidad-label">Efectivo USD</span>
+                        <div class="caja-total-lista">
+                            {% for resumen in resumenes %}
+                            <div class="caja-total-renglon">
+                                <div class="caja-total-denominacion">
+                                    <span class="caja-total-centro">{{ resumen.caja.centro_operativo.nombre }}</span>
+                                    <small class="caja-total-nombre">{{ resumen.caja.nombre }}</small>
+                                </div>
+                                <strong class="caja-total-valor">USD <span data-caja-importe data-valor="{{ resumen.efectivo.USD|unlocalize }}"></span></strong>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </article>
+                    <div class="caja-disponibilidad-card caja-card-usd caja-total-pie">
+                        <span>Total general</span>
+                        <strong>USD <span data-caja-importe data-valor="{{ total_general.efectivo.USD|unlocalize }}"></span></strong>
+                    </div>
+                </div>
+
+                <div class="caja-total-columna">
+                    <article class="caja-disponibilidad-card caja-card-cheques caja-total-tarjeta">
+                        <span class="caja-disponibilidad-label">Cheques físicos</span>
+                        <div class="caja-total-lista">
+                            {% for resumen in resumenes %}
+                            <div class="caja-total-renglon">
+                                <div class="caja-total-denominacion">
+                                    <span class="caja-total-centro">{{ resumen.caja.centro_operativo.nombre }}</span>
+                                    <small class="caja-total-nombre">{{ resumen.caja.nombre }}</small>
+                                </div>
+                                <strong class="caja-total-valor">$ <span data-caja-importe data-valor="{{ resumen.total_cheques|unlocalize }}"></span></strong>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="caja-total-contador">{{ total_general.cantidad_cheques }} valor{{ total_general.cantidad_cheques|pluralize:"es" }} disponible{{ total_general.cantidad_cheques|pluralize:"s" }}</small>
+                    </article>
+                    <div class="caja-disponibilidad-card caja-card-cheques caja-total-pie">
+                        <span>Total general</span>
+                        <strong>$ <span data-caja-importe data-valor="{{ total_general.total_cheques|unlocalize }}"></span></strong>
+                    </div>
+                </div>
+            </div>
+        </section>
         {% endif %}
 
 
@@ -44,7 +105,7 @@
                 {% endif %}
             >
 
-                <div class="caja-dashboard-titulo">
+                <div class="caja-dashboard-titulo" data-caja-detalle-titulo hidden>
                     <div>
                         <h3>
                             {{ resumen.caja.nombre }}
@@ -132,37 +193,121 @@
             </div>
         </div>
 
-        <div class="caja-disponibilidad-grid">
+        <div class="caja-disponibilidad-grid caja-otras-disponibilidades">
 
             <article
                 class="caja-disponibilidad-card caja-card-echeq"
             >
                 <span class="caja-disponibilidad-label">
-                    e-Cheqs en cartera
+                    E-cheqs en cartera
                 </span>
 
-                <strong>—</strong>
-
-                <small>
-                    Disponibilidad electrónica pendiente de integrar
-                </small>
+                <strong>$ <span data-caja-importe data-valor="{{ cartera_echeqs.total|unlocalize }}"></span></strong>
+                <small>{{ cartera_echeqs.cantidad }} e-Cheq{{ cartera_echeqs.cantidad|pluralize:"s" }} en cartera · No equivale a acreditación bancaria</small>
             </article>
 
-            <article
-                class="caja-disponibilidad-card caja-card-bancos"
-            >
-                <span class="caja-disponibilidad-label">
-                    Bancos
-                </span>
+            <article class="caja-disponibilidad-card caja-card-bancos caja-bancos-integrados">
+                <span class="caja-disponibilidad-label">Bancos</span>
 
+                {% if acceso_bancos %}
+                <div class="caja-bancos-tabla" data-caja-bancos-detalle>
+                    <div class="caja-bancos-encabezado" aria-hidden="true">
+                        <span>Cuenta bancaria</span>
+                        <span>Disponible informado</span>
+                        <span>Descubierto disponible</span>
+                    </div>
+                    {% for fila in bancos_informados.filas %}
+                    <div class="caja-bancos-renglon">
+                        <div class="caja-bancos-identidad">
+                            <strong>{{ fila.cuenta.banco.nombre }}</strong>
+                            <small>{{ fila.cuenta.nombre }} · {{ fila.cuenta.moneda }}</small>
+                        </div>
+                        <div class="caja-bancos-saldo">
+                            <button type="button" class="caja-bancos-editar-importe"
+                                data-caja-banco-abrir="{{ fila.cuenta.pk }}"
+                                aria-label="Informar disponible de {{ fila.cuenta.nombre }}">
+                                {% if fila.posicion %}
+                                    {% if fila.cuenta.moneda == 'USD' %}USD {% else %}$ {% endif %}<span data-caja-importe data-valor="{{ fila.posicion.importe|unlocalize }}"></span>
+                                {% else %}Sin informar{% endif %}
+                            </button>
+                            <small class="caja-bancos-actualizacion">
+                                {% if fila.posicion %}
+                                    {{ fila.posicion.creado|date:'d/m/Y H:i' }}
+                                {% else %}Sin actualización{% endif %}
+                            </small>
+                        </div>
+                        <div class="caja-bancos-descubierto">
+                            {% if fila.descubierto_vigente %}
+                                <strong>{% if fila.cuenta.moneda == 'USD' %}USD {% else %}$ {% endif %}<span data-caja-importe data-valor="{{ fila.cuenta.descubierto_importe|unlocalize }}"></span></strong>
+                                <small>Vto. {{ fila.cuenta.descubierto_vencimiento|date:'d/m/Y' }}</small>
+                            {% else %}
+                                <strong class="caja-bancos-sin-descubierto">Sin descubierto</strong>
+                                {% if fila.cuenta.descubierto_vencimiento %}
+                                <small>Vto. {{ fila.cuenta.descubierto_vencimiento|date:'d/m/Y' }}</small>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="caja-bancos-nota">No hay cuentas bancarias activas.</p>
+                    {% endfor %}
+                </div>
+                <div class="caja-bancos-totales">
+                    <small>Totales informados (sin sumar descubiertos)</small>
+                    <div class="caja-bancos-totales-importes">
+                        {% if bancos_informados.informadas.ARS %}
+                        <span>ARS $ <b data-caja-importe data-valor="{{ bancos_informados.totales.ARS|unlocalize }}"></b></span>
+                        {% endif %}
+                        {% if bancos_informados.informadas.USD %}
+                        <span>USD <b data-caja-importe data-valor="{{ bancos_informados.totales.USD|unlocalize }}"></b></span>
+                        {% endif %}
+                        {% if not bancos_informados.informadas.ARS and not bancos_informados.informadas.USD %}
+                        <span>—</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <small class="caja-bancos-nota">Disponible informado · {{ bancos_informados.faltantes }} cuenta{{ bancos_informados.faltantes|pluralize:"s" }} sin informar</small>
+                {% else %}
                 <strong>—</strong>
-
-                <small>
-                    Disponible informado pendiente de integrar
-                </small>
+                <small>Disponible informado · Acceso restringido</small>
+                {% endif %}
             </article>
 
         </div>
+
+        {% if acceso_bancos and bancos_informados.filas %}
+        <dialog id="cajaBancosEdicion" class="caja-bancos-dialogo" aria-labelledby="cajaBancosTitulo">
+            <form id="cajaBancosForm" method="post" data-empresa="{{ empresa.pk }}">
+                {% csrf_token %}
+                <h4 id="cajaBancosTitulo">Actualizar disponible informado</h4>
+                <p>Importe declarado por cuenta. No modifica Pendientes bancarios ni Caja.</p>
+                <label class="field" for="cajaBancosCuenta">
+                    <span class="label">Cuenta bancaria</span>
+                    <select class="input-box" id="cajaBancosCuenta" required>
+                        <option value="">Seleccione una cuenta...</option>
+                        {% for fila in bancos_informados.filas %}
+                        <option value="{{ fila.cuenta.pk }}"
+                            data-moneda="{{ fila.cuenta.moneda }}"
+                            data-importe="{% if fila.posicion %}{{ fila.posicion.importe|unlocalize }}{% endif %}">
+                            {{ fila.cuenta.banco.nombre }} · {{ fila.cuenta.nombre }} ({{ fila.cuenta.moneda }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="field" for="cajaBancosImporte">
+                    <span class="label">Disponible informado</span>
+                    <input class="input-box" id="cajaBancosImporte" type="text"
+                        inputmode="decimal" maxlength="32" autocomplete="off"
+                        placeholder="0,00" required>
+                </label>
+                <p id="cajaBancosMensaje" role="status" aria-live="polite"></p>
+                <div class="caja-bancos-dialogo-acciones">
+                    <button type="button" class="caja-btn-secundario" data-caja-bancos-cancelar>Cancelar</button>
+                    <button type="submit" class="sidebar-nav-btn" id="cajaBancosGuardar">Guardar importe</button>
+                </div>
+            </form>
+        </dialog>
+        {% endif %}
 
     </section>
 
@@ -215,7 +360,7 @@
                 type="button"
                 class="sidebar-nav-btn"
                 data-caja-accion="actualizar-bancos"
-                disabled
+                {% if not acceso_bancos or not bancos_informados.filas %}disabled{% endif %}
             >
                 Actualizar Bancos
             </button>

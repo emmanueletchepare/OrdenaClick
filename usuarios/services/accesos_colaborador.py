@@ -15,7 +15,8 @@ ARBOL = (
     ('Pendientes bancarios', (('Consultar', 'pendientes.ver'), ('Cargar', 'pendientes.crear'),
                    ('Editar / auditoría', 'pendientes.editar'), ('Confirmar', 'pendientes.resolver'),
                    ('Estado e historial', 'pendientes.estado'), ('Salidas e-Cheq', 'pendientes.salidas'))),
-    ('Caja', (('Caja · centros autorizados', 'caja.total'),)),
+    ('Caja', (('Caja · centros autorizados', 'caja.total'),
+              ('Actualizar Bancos · disponible informado', 'caja.bancos_actualizar'))),
     ('Dashboard', (('Dashboard', 'dashboard.ver'),)),
     ('Alertas', (('Consultar alertas', 'alertas.ver'),)),
     ('Próximos vencimientos', (('Hoy, Esta semana y Rango de fechas', 'vencimientos.ver'),)),
@@ -37,7 +38,7 @@ ARBOL = (
 CODIGOS = frozenset(codigo for _,hojas in ARBOL for _,codigo in hojas)
 # Sólo las capacidades con comprobación real del backend son concedibles.
 # La lista visible es más amplia para mostrar TODOS los apartados del sidebar.
-CODIGOS_HABILITABLES = frozenset({'claves.propias','nomina.total','vencimientos.ver','alertas.ver','caja.total',
+CODIGOS_HABILITABLES = frozenset({'claves.propias','nomina.total','vencimientos.ver','alertas.ver','caja.total','caja.bancos_actualizar',
                                    'registros.ver','registros.crear','registros.editar','registros.obligaciones',
                                    'pendientes.ver','pendientes.crear','pendientes.editar','pendientes.resolver',
                                    'pendientes.estado','pendientes.salidas',
@@ -54,13 +55,13 @@ def puede(usuario, empresa_id, codigo):
     try: c=contexto_empresa(usuario, empresa_id)
     except (PermissionDenied, ValueError, TypeError): return False
     if c.es_superusuario or c.es_propietario or c.jerarquia=='admin_general': return True
-    if codigo == 'caja.total':
+    if codigo in ('caja.total', 'caja.bancos_actualizar'):
         # Caja no se concede por rol: requiere autorización explícita, activa y
         # dentro de los Centros operativos que ya autoriza la jerarquía.
         return (c.jerarquia == 'admin_centro'
             and bool(centros_activos_de_usuario(usuario, c.empresa))
             and PermisoAccesoColaborador.objects.filter(
-                empresa=c.empresa, usuario=usuario, codigo='caja.total', activo=True).exists())
+                empresa=c.empresa, usuario=usuario, codigo=codigo, activo=True).exists())
     if c.jerarquia == 'admin_centro':
         if not centros_activos_de_usuario(usuario, c.empresa): return False
     elif c.jerarquia != 'colaborador':
@@ -99,8 +100,8 @@ def guardar_accesos(*, administrador, empresa_id, colaborador_id, codigos):
     if not colaborador_activo(empresa,colaborador_id):
         raise PermissionDenied('No es un miembro configurable activo de esta Empresa.')
     contexto_destino = contexto_empresa(get_user_model().objects.get(pk=colaborador_id), empresa.pk)
-    if 'caja.total' in nuevo and contexto_destino.jerarquia != 'admin_centro':
-        raise PermissionDenied('Sólo Administrador de Centro puede recibir Caja.')
+    if nuevo.intersection({'caja.total', 'caja.bancos_actualizar'}) and contexto_destino.jerarquia != 'admin_centro':
+        raise PermissionDenied('Sólo Administrador de Centro puede recibir Caja o Actualizar Bancos.')
     if (contexto_destino.jerarquia not in ('colaborador','admin_centro')
             and (nuevo - {'nomina.total'})):
         raise PermissionDenied('Un rol funcional solo puede recibir Nómina.')

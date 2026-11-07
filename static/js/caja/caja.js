@@ -1652,9 +1652,66 @@
         }
     }
 
+        // Disponible informado: un importe por vez, modal del mismo panel.
+        function abrirEditorBancos(cuentaId = '') {
+            const dialogo = document.getElementById('cajaBancosEdicion');
+            const form = document.getElementById('cajaBancosForm');
+            const cuenta = document.getElementById('cajaBancosCuenta');
+            const importe = document.getElementById('cajaBancosImporte');
+            const mensaje = document.getElementById('cajaBancosMensaje');
+            const guardar = document.getElementById('cajaBancosGuardar');
+            if (!dialogo || !form || !cuenta || !importe) return;
+            cuenta.value = String(cuentaId);
+            delete form.dataset.clave; // Cada nueva edición usa una nueva clave idempotente.
+            if (cuenta.value) {
+                const valor = cuenta.selectedOptions[0]?.dataset.importe || '';
+                importe.value = valor ? formatearImporteCampo(valor.replace('.', ',')) : '';
+            } else {
+                importe.value = '';
+            }
+            if (mensaje) mensaje.textContent = '';
+            if (guardar) guardar.disabled = false;
+            if (!dialogo.open) dialogo.showModal();
+            (cuenta.value ? importe : cuenta).focus();
+        }
+
+        document.addEventListener('change', function (evento) {
+            if (evento.target.id !== 'cajaBancosCuenta') return;
+            const cuenta = evento.target;
+            const form = document.getElementById('cajaBancosForm');
+            const importe = document.getElementById('cajaBancosImporte');
+            if (form) delete form.dataset.clave;
+            if (!importe) return;
+            const valor = cuenta.selectedOptions[0]?.dataset.importe || '';
+            importe.value = valor ? formatearImporteCampo(valor.replace('.', ',')) : '';
+        });
+
+        document.addEventListener('focusout', function (evento) {
+            if (evento.target.id !== 'cajaBancosImporte') return;
+            const valor = evento.target.value.trim();
+            // Sólo formatear entradas válidas; no disfrazar errores de tipeo.
+            if (/^-?\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(valor) ||
+                /^-?\d{1,12}(?:[.,]\d{1,2})?$/.test(valor)) {
+                evento.target.value = formatearImporteCampo(
+                    valor.includes('.') && !valor.includes(',') &&
+                    /^-?\d+\.\d{1,2}$/.test(valor) ? valor.replace('.',',') : valor
+                );
+            }
+        });
+
         document.addEventListener(
             "click",
             function (evento) {
+                const abrirImporte = evento.target.closest('[data-caja-banco-abrir]');
+                if (abrirImporte) {
+                    abrirEditorBancos(abrirImporte.dataset.cajaBancoAbrir);
+                    return;
+                }
+                if (evento.target.closest('[data-caja-bancos-cancelar]')) {
+                    const dialogo = document.getElementById('cajaBancosEdicion');
+                    if (dialogo?.open) dialogo.close();
+                    return;
+                }
 
                 const botonCaja =
                     evento.target.closest(
@@ -1683,6 +1740,11 @@
                                 return;
                             }
 
+                            if (accion.dataset.cajaAccion === "actualizar-bancos") {
+                                abrirEditorBancos();
+                                return;
+                            }
+
                             if (
                                 accion.dataset.cajaAccion ===
                                 "volver-caja"
@@ -1692,6 +1754,51 @@
             }
         );
 
+
+        // Formulario interno de Caja: no cambia sidebar ni menú operativo.
+        document.addEventListener('submit', async function (evento) {
+            if (evento.target.id !== 'cajaBancosForm') { return; }
+            evento.preventDefault();
+            const form = evento.target;
+            const boton = document.getElementById('cajaBancosGuardar');
+            const mensaje = document.getElementById('cajaBancosMensaje');
+            if (!boton || boton.disabled) { return; }
+            boton.disabled = true;
+            mensaje.textContent = 'Registrando disponibles informados...';
+            const cuenta = document.getElementById('cajaBancosCuenta');
+            const importe = document.getElementById('cajaBancosImporte');
+            if (!cuenta?.value || !importe?.value.trim()) {
+                mensaje.textContent = 'Seleccione una cuenta e ingrese el importe.';
+                boton.disabled = false;
+                return;
+            }
+            const filas = [{cuenta_id: Number(cuenta.value), importe: importe.value}];
+            const selector = document.getElementById('cajaFiltroDisponibilidad');
+            const cajaAnterior = selector ? selector.value : '';
+            try {
+                const respuesta = await fetch('/caja/bancos/actualizar/', {
+                    method:'POST', credentials:'same-origin', cache:'no-store',
+                    headers:{'Content-Type':'application/json',
+                        'X-CSRFToken':form.elements.csrfmiddlewaretoken.value},
+                    body:JSON.stringify({empresa:form.dataset.empresa, filas:filas,
+                        clave:form.dataset.clave || (form.dataset.clave = crypto.randomUUID())})
+                });
+                const resultado = await respuesta.json();
+                if (!respuesta.ok || !resultado.ok) {
+                    throw new Error(resultado.mensaje || 'No se pudo actualizar Bancos.');
+                }
+                mensaje.textContent = 'Posiciones informadas registradas correctamente.';
+                await mostrarCaja();
+                const siguiente = document.getElementById('cajaFiltroDisponibilidad');
+                if (siguiente && cajaAnterior) {
+                    siguiente.value = cajaAnterior;
+                    siguiente.dispatchEvent(new Event('change', {bubbles:true}));
+                }
+            } catch (error) {
+                mensaje.textContent = error.message + ' Los datos permanecen en pantalla.';
+                boton.disabled = false;
+            }
+        });
 
         window.mostrarCaja =
             mostrarCaja;
